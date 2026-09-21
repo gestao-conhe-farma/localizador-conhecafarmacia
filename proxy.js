@@ -16,9 +16,14 @@ export async function proxy(request) {
   // 'unsafe-eval' em script-src.
   const nonce = Buffer.from(crypto.randomUUID()).toString('base64')
 
+  // Em desenvolvimento o React precisa de 'unsafe-eval' (React Refresh/HMR e
+  // reconstrução de callstacks — "React requires eval() in development mode").
+  // Em produção a CSP mantém-se estrita, sem unsafe-eval.
+  const isDev = process.env.NODE_ENV === 'development'
+
   const csp = [
     `default-src 'self'`,
-    `script-src 'self' 'nonce-${nonce}' https://vercel.live`,
+    `script-src 'self' 'nonce-${nonce}'${isDev ? " 'unsafe-eval'" : ''} https://vercel.live`,
     `style-src 'self' 'unsafe-inline'`,
     `img-src 'self' data: blob: https://*.supabase.co https://vercel.live`,
     `media-src 'self' blob: https://*.supabase.co`,

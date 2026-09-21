@@ -1,4 +1,4 @@
-import Header from '@/components/layout/Header'
+import AppHeader from '@/components/layout/AppHeader'
 import Footer from '@/components/layout/Footer'
 import PharmacyStock from '@/components/search/PharmacyStock'
 
@@ -18,7 +18,7 @@ export default async function FarmaciaPage({ params }) {
 
   return (
     <>
-      <Header />
+      <AppHeader />
       <main>
         <PharmacyStock slug={slug} />
       </main>

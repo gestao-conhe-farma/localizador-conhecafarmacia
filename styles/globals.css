@@ -898,4 +898,172 @@ html.dark .form-note {
   .search-cta-sub {
     @apply text-sm text-brand-deep/60 mb-5;
   }
+
+  /* ============================================
+     HEADER FUNCIONAL DAS PÁGINAS REAIS
+     (distinto do header de camuflagem da landing)
+     ============================================ */
+  .app-header {
+    @apply sticky top-0 z-50 border-b border-brand-divider/60 bg-brand-bg/90;
+    backdrop-filter: blur(10px);
+    -webkit-backdrop-filter: blur(10px);
+  }
+
+  html.dark .app-header {
+    @apply bg-brand-deep/90;
+  }
+
+  .app-header-inner {
+    @apply max-w-5xl mx-auto px-6 h-16 flex items-center gap-6;
+  }
+
+  .app-header-logo {
+    @apply flex items-center gap-2.5 flex-shrink-0;
+  }
+
+  .app-header-product {
+    @apply text-sm font-bold uppercase tracking-wide text-brand-accent;
+    border-left: 2px solid var(--color-brand-divider);
+    padding-left: 10px;
+  }
+
+  html.dark .app-header-product {
+    border-left-color: rgba(255, 255, 255, 0.15);
+  }
+
+  .app-header-nav {
+    @apply hidden md:flex items-center gap-1 flex-1;
+  }
+
+  .app-header-link {
+    @apply px-3.5 py-2 rounded-lg text-sm font-medium text-brand-deep/70;
+    transition: all 0.15s ease;
+  }
+
+  .app-header-link:hover {
+    @apply text-brand-deep bg-brand-bg-alt;
+  }
+
+  html.dark .app-header-link:hover {
+    @apply text-white;
+    background: rgba(255, 255, 255, 0.06);
+  }
+
+  .app-header-link--active {
+    @apply text-brand-primary bg-brand-accent/10 font-semibold;
+  }
+
+  html.dark .app-header-link--active {
+    @apply text-brand-accent;
+    background: rgba(10, 132, 79, 0.15);
+  }
+
+  .app-header-right {
+    @apply flex items-center gap-3 flex-shrink-0 ml-auto;
+  }
+
+  .app-header-external {
+    @apply hidden sm:inline-flex items-center gap-1 text-sm text-brand-deep/60;
+    transition: color 0.15s ease;
+  }
+
+  .app-header-external:hover {
+    @apply text-brand-accent;
+  }
+
+  html.dark .app-header-external {
+    @apply text-white/60;
+  }
+
+  .app-header-mobile {
+    @apply md:hidden border-t border-brand-divider/60 px-6 pb-4 pt-2;
+  }
+
+  .app-header-mobile-link {
+    @apply block py-2.5 text-brand-deep/80 font-medium;
+  }
+
+  .app-header-mobile-link--active {
+    @apply text-brand-accent font-semibold;
+  }
+
+  /* ============================================
+     LISTA DE FARMÁCIAS (/farmacia)
+     ============================================ */
+  .ph-list-head {
+    @apply flex flex-wrap items-center justify-between gap-4 mb-8;
+  }
+
+  .ph-count {
+    @apply text-sm text-brand-deep/60;
+  }
+
+  .ph-count strong {
+    @apply text-brand-deep;
+  }
+
+  .ph-grid {
+    @apply grid gap-5;
+  }
+
+  @media (min-width: 640px) {
+    .ph-grid {
+      grid-template-columns: repeat(2, minmax(0, 1fr));
+    }
+  }
+
+  .ph-card {
+    @apply bg-brand-card border border-brand-divider/40 rounded-[20px] p-6 flex flex-col gap-3;
+    transition: border-color 0.2s ease, transform 0.2s ease, box-shadow 0.2s ease;
+    box-shadow: 0 2px 12px rgba(0, 42, 50, 0.05);
+  }
+
+  .ph-card:hover {
+    @apply border-brand-accent/50;
+    transform: translateY(-2px);
+    box-shadow: 0 10px 30px rgba(0, 42, 50, 0.08);
+  }
+
+  html.dark .ph-card {
+    background: rgba(255, 255, 255, 0.04);
+    border-color: rgba(255, 255, 255, 0.1);
+    box-shadow: none;
+  }
+
+  html.dark .ph-card:hover {
+    border-color: rgba(10, 132, 79, 0.5);
+  }
+
+  .ph-card-name {
+    @apply text-lg font-bold text-brand-deep;
+  }
+
+  .ph-card-name:hover {
+    @apply text-brand-accent;
+  }
+
+  .ph-card-loc {
+    @apply text-sm text-brand-deep/60 flex-1;
+  }
+
+  .ph-card-foot {
+    @apply flex flex-wrap items-center justify-between gap-3 pt-3 border-t border-brand-divider/30;
+  }
+
+  html.dark .ph-card-foot {
+    border-top-color: rgba(255, 255, 255, 0.1);
+  }
+
+  .ph-card-hint {
+    @apply text-sm text-brand-deep/50 italic;
+  }
+
+  .ph-toolbar {
+    @apply flex flex-wrap justify-center gap-2;
+  }
+
+  /* Reaproveita .chip / .chip--active existentes para o filtro */
+  .ph-toolbar .chip {
+    @apply text-xs px-3 py-1;
+  }
 }

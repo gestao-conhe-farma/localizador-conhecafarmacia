@@ -84,7 +84,7 @@ export default function DrugSearch() {
     try {
       const supabase = createClient()
       // Busca por nome OU molécula (ilike em ambas)
-      const orFilter = `name.ilike.%${q}%,molecule.ilike.%${q}%`
+      const orFilter = `drug_name.ilike.%${q}%,drug_molecule.ilike.%${q}%`
       let req = supabase
         .from('stock_confirmed')
         .select('*')

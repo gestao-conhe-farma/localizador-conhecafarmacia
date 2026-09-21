@@ -38,3 +38,5 @@ devout.log
 # credenciais locais (nunca commitar — contém tokens)
 credenciais.txt
 .env*
+
+.vercel

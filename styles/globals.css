@@ -1090,9 +1090,9 @@ html.dark .form-note {
      DETALHES DA FARMÁCIA — Críticos + Accordions por forma
      ============================================ */
 
-  /* Hero da farmácia (mantém o padrão do principal, mais compacto) */
+  /* Hero da farmácia — mesmo fundo da zona de busca, como na /pesquisa */
   .ph-hero {
-    @apply bg-brand-bg-alt border-b border-brand-divider/40 py-10;
+    @apply bg-brand-bg border-b border-brand-divider/40 py-10;
   }
 
   .ph-hero-inner {
@@ -1264,6 +1264,12 @@ html.dark .form-note {
 
   .acc-body {
     @apply border-t border-brand-divider/30;
+  }
+
+  /* Corpo do accordion escondido quando fechado (o botão alterna a classe
+     acc--open no cabeçalho) */
+  .acc:not(.acc--open) .acc-body {
+    display: none;
   }
 
   /* Badge de receita dentro do nome (inline) */

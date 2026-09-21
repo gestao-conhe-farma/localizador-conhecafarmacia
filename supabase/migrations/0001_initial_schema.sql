@@ -2,44 +2,19 @@
 -- Localizador de Medicamentos — Conheça Farmácia
 -- Migração inicial (fase 1: leads; fases 2–3 preparadas)
 --
+-- ORDEM OBRIGATÓRIA: tabelas → helpers → RLS → view.
+-- As funções security definer são criadas DEPOIS das tabelas que
+-- referenciam (o PostgreSQL valida o corpo de funções SQL na
+-- criação), e ANTES das policies que as usam.
+--
 -- Aplicar no SQL Editor do dashboard do Supabase
--- (projecto mxqhmtpshlpnbkninawt) ou via supabase db push.
+-- (projecto mxqhmtpshlpnbkninawt) ou via Management API.
 -- ============================================================
 
 -- ------------------------------------------------------------
 -- 0. Extensões
 -- ------------------------------------------------------------
 create extension if not exists pg_trgm; -- busca fuzzy por nome de medicamento
-
--- ============================================================
--- HELPERS (security definer para evitar recursão de RLS)
--- Definidos antes das policies, que referenciam estas funções.
--- ============================================================
-create or replace function public.is_admin()
-returns boolean
-language sql
-security definer
-set search_path = public
-as $$
-  select exists (
-    select 1 from public.admin_users
-    where user_id = auth.uid() and role = 'admin'
-  );
-$$;
-
-create or replace function public.is_own_pharmacy(pid uuid)
-returns boolean
-language sql
-security definer
-set search_path = public
-as $$
-  select exists (
-    select 1 from public.admin_users
-    where user_id = auth.uid()
-      and role = 'farmacia'
-      and pharmacy_id = pid
-  );
-$$;
 
 -- ------------------------------------------------------------
 -- 1. Farmácias
@@ -98,7 +73,7 @@ create index if not exists drugs_name_trgm_idx on public.drugs using gin (name g
 -- ------------------------------------------------------------
 -- 4. Stock confirmado pelas farmácias
 --    Regra de ouro: só aparece como "confirmado" se confirmed_at
---    tiver menos de 72 horas (visto na view public_stock).
+--    tiver menos de 72 horas (aplicada na view stock_confirmed).
 -- ------------------------------------------------------------
 create table if not exists public.stock_items (
   id           uuid primary key default gen_random_uuid(),
@@ -142,6 +117,7 @@ create index if not exists reservations_pharmacy_status_idx
 -- ------------------------------------------------------------
 -- 6. Leads de farmácias (fase 1 — formulário da landing)
 --    Escrito apenas via service role (route handler /api/leads).
+--    SEM policies → deny all para anon/authenticated.
 -- ------------------------------------------------------------
 create table if not exists public.pharmacy_leads (
   id            uuid primary key default gen_random_uuid(),
@@ -157,6 +133,41 @@ create table if not exists public.pharmacy_leads (
                 check (status in ('novo','em_conversa','demonstracao','acordo','onboarded','descartado')),
   created_at    timestamptz not null default now()
 );
+
+-- ============================================================
+-- HELPERS (security definer para evitar recursão de RLS)
+-- NOTA: o Supabase recomenda mantê-las fora de schemas expostos.
+-- Ficam em public por conveniência do projecto (mesma prática do
+-- site principal), mas sem EXECUTE para anon.
+-- ============================================================
+create or replace function public.is_admin()
+returns boolean
+language sql
+security definer
+set search_path = public
+as $$
+  select exists (
+    select 1 from public.admin_users
+    where user_id = auth.uid() and role = 'admin'
+  );
+$$;
+
+create or replace function public.is_own_pharmacy(pid uuid)
+returns boolean
+language sql
+security definer
+set search_path = public
+as $$
+  select exists (
+    select 1 from public.admin_users
+    where user_id = auth.uid()
+      and role = 'farmacia'
+      and pharmacy_id = pid
+  );
+$$;
+
+revoke execute on function public.is_admin() from public, anon;
+revoke execute on function public.is_own_pharmacy(uuid) from public, anon;
 
 -- ============================================================
 -- ROW LEVEL SECURITY
@@ -216,11 +227,14 @@ create policy "reservations pharmacy update"
 
 -- ============================================================
 -- VIEW PÚBLICA DO LOCALIZADOR (regra das 72 horas)
--- Só expõe stock confirmado nas últimas 72h de farmácias activas.
+-- security_invoker = true: a view NÃO contorna a RLS das tabelas
+-- subjacentes (Postgres 15+, requisito do Supabase). Como
+-- stock_items tem policy de SELECT pública e pharmacies expõe
+-- apenas linhas activas, o resultado público é o pretendido.
 -- A busca da fase 2 lê exclusivamente desta view.
 -- ============================================================
 create or replace view public.stock_confirmed
-with (security_invoker = false) as
+with (security_invoker = true) as
 select
   s.id            as stock_item_id,
   d.id            as drug_id,

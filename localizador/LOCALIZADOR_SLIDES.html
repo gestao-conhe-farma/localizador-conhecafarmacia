@@ -1,0 +1,440 @@
+<!DOCTYPE html>
+<html lang="pt">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Localizador de Medicamentos — Slides | Conheça Farmácia</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Fraunces:ital,opsz,wght@0,9..144,500;0,9..144,600;0,9..144,700;1,9..144,500&family=Inter:wght@400;500;600;700;800&display=swap" rel="stylesheet">
+<style>
+  :root {
+    --brand-primary: #00493a;
+    --brand-accent:  #0a844f;
+    --brand-deep:    #002a32;
+    --bg:            #ffffff;
+    --bg-alt:        #f9f9f9;
+    --divider:       #dddddd;
+    --font-sans:    'Inter', ui-sans-serif, system-ui, sans-serif;
+    --font-display: 'Fraunces', Georgia, serif;
+  }
+  * { margin: 0; padding: 0; box-sizing: border-box; }
+  html, body { height: 100%; overflow: hidden; background: #06110e; }
+  body { font-family: var(--font-sans); }
+
+  /* ===== Stage: letterboxing em torno do slide 1920×1080 ===== */
+  #stage {
+    position: fixed; inset: 0;
+    display: flex; align-items: center; justify-content: center;
+  }
+  #deck {
+    width: 1920px; height: 1080px;
+    position: relative;
+    transform-origin: center center;
+    background: var(--bg);
+    box-shadow: 0 40px 120px rgba(0,0,0,.5);
+  }
+
+  /* ===== Slides ===== */
+  .slide {
+    position: absolute; inset: 0;
+    padding: 110px 130px 130px;
+    display: none; flex-direction: column;
+    background: var(--bg);
+    color: var(--brand-deep);
+  }
+  .slide.active { display: flex; }
+  .slide.dark { background: var(--brand-deep); color: #fff; }
+  .slide.alt { background: var(--bg-alt); }
+
+  .kicker {
+    font-size: 17px; font-weight: 700; letter-spacing: .2em;
+    text-transform: uppercase; color: var(--brand-accent); margin-bottom: 22px;
+  }
+  h1 {
+    font-family: var(--font-display); font-weight: 600;
+    font-size: 84px; line-height: 1.08; letter-spacing: -0.015em;
+    color: var(--brand-primary);
+  }
+  .slide.dark h1 { color: #fff; }
+  h1 em, h2 em { font-style: italic; color: var(--brand-accent); }
+  .slide.dark h1 em { color: #7fc9a6; }
+  h2 {
+    font-family: var(--font-display); font-weight: 600;
+    font-size: 62px; line-height: 1.12; color: var(--brand-primary);
+  }
+  .slide.dark h2 { color: #fff; }
+  .lead { font-size: 27px; line-height: 1.5; opacity: .88; max-width: 26em; }
+  .slide.dark .lead { opacity: .85; }
+
+  .foot {
+    position: absolute; left: 130px; right: 130px; bottom: 52px;
+    display: flex; justify-content: space-between; align-items: center;
+    font-size: 15px; opacity: .5; letter-spacing: .04em;
+  }
+  .slide.dark .foot { opacity: .45; }
+
+  .emblem-sm { width: 40px; height: auto; }
+  .logo-foot { height: 34px; width: auto; }
+
+  /* ===== S1 hero ===== */
+  .s-hero { justify-content: center; }
+  .s-hero .emblem { width: 92px; height: auto; margin-bottom: 34px; }
+  .s-hero h1 { font-size: 96px; max-width: 11.5em; }
+  .s-hero .lead { margin-top: 28px; font-size: 30px; }
+
+  /* ===== S2 problema ===== */
+  .pains { display: grid; grid-template-columns: repeat(3, 1fr); gap: 28px; margin-top: 56px; }
+  .pain {
+    background: var(--bg); border: 1px solid var(--divider); border-radius: 20px;
+    padding: 40px 34px; box-shadow: 0 4px 20px rgba(0,42,50,.05);
+  }
+  .pain .q { font-family: var(--font-display); font-size: 56px; color: var(--brand-accent); line-height: 1; }
+  .pain h3 { font-size: 27px; margin-top: 18px; color: var(--brand-primary); font-weight: 700; }
+  .pain p { font-size: 21px; line-height: 1.55; margin-top: 10px; opacity: .82; }
+
+  /* ===== S3 ideia ===== */
+  .s-idea { justify-content: center; }
+  .idea-big {
+    font-family: var(--font-display); font-weight: 500;
+    font-size: 58px; line-height: 1.32; max-width: 20em;
+  }
+  .idea-big strong { color: var(--brand-primary); }
+  .idea-big .hl { background: linear-gradient(transparent 60%, rgba(10,132,79,.22) 60%); }
+
+  /* ===== S4 como funciona ===== */
+  .flows { display: grid; grid-template-columns: 1fr 1fr; gap: 32px; margin-top: 52px; }
+  .flow {
+    background: var(--bg); border: 1px solid var(--divider); border-radius: 22px;
+    padding: 44px 42px; box-shadow: 0 4px 20px rgba(0,42,50,.05);
+  }
+  .flow .who {
+    font-size: 16px; font-weight: 800; letter-spacing: .14em; text-transform: uppercase;
+    color: var(--brand-accent); margin-bottom: 24px;
+  }
+  .step-line { display: flex; gap: 18px; align-items: flex-start; padding: 14px 0; }
+  .step-line + .step-line { border-top: 1px dashed var(--divider); }
+  .step-line .n {
+    width: 44px; height: 44px; border-radius: 50%; flex-shrink: 0;
+    background: var(--brand-primary); color: #fff;
+    font-size: 20px; font-weight: 800;
+    display: flex; align-items: center; justify-content: center;
+  }
+  .step-line p { font-size: 22px; line-height: 1.45; padding-top: 7px; }
+  .step-line p strong { color: var(--brand-primary); }
+
+  /* ===== S5 compromissos ===== */
+  .promises { display: grid; grid-template-columns: repeat(3, 1fr); gap: 28px; margin-top: 56px; }
+  .promise {
+    border-left: 5px solid var(--brand-accent); background: var(--bg);
+    border-top: 1px solid var(--divider); border-right: 1px solid var(--divider);
+    border-bottom: 1px solid var(--divider);
+    border-radius: 0 18px 18px 0; padding: 36px 32px;
+  }
+  .promise h3 { font-size: 27px; color: var(--brand-primary); font-weight: 700; }
+  .promise p { font-size: 20.5px; line-height: 1.55; margin-top: 12px; opacity: .82; }
+
+  /* ===== S6 farmácia ganha (lista simples) ===== */
+  .gain { display: grid; grid-template-columns: 1fr 1fr; gap: 22px 40px; margin-top: 54px; }
+  .gain-item { display: flex; gap: 18px; align-items: flex-start; }
+  .gain-item .tick {
+    width: 44px; height: 44px; border-radius: 50%; flex-shrink: 0;
+    background: var(--brand-accent); color: #fff; font-size: 20px; font-weight: 800;
+    display: flex; align-items: center; justify-content: center;
+  }
+  .gain-item h3 { font-size: 24px; color: var(--brand-primary); font-weight: 700; }
+  .gain-item p { font-size: 19px; line-height: 1.5; margin-top: 4px; opacity: .8; }
+
+  /* ===== S7 FAQ ===== */
+  .faqs { display: grid; grid-template-columns: 1fr 1fr; gap: 22px 44px; margin-top: 52px; }
+  .faq-item { border-top: 2px solid var(--brand-primary); padding-top: 16px; }
+  .faq-item .q { font-size: 23px; font-weight: 700; color: var(--brand-primary); line-height: 1.35; }
+  .faq-item .a { font-size: 19px; line-height: 1.5; margin-top: 8px; opacity: .78; }
+
+  /* ===== S8 CTA final ===== */
+  .s-cta { justify-content: center; align-items: flex-start; }
+  .s-cta .contact-card {
+    margin-top: 48px; background: rgba(255,255,255,.07);
+    border: 1px solid rgba(255,255,255,.18); border-radius: 20px;
+    padding: 36px 44px; font-size: 26px; line-height: 1.7;
+  }
+  .s-cta .contact-card strong { font-size: 30px; }
+  .s-cta .contact-card a { color: #7fc9a6; text-decoration: none; }
+  .s-cta .brand-line { margin-top: 40px; display: flex; align-items: center; gap: 16px; opacity: .85; }
+  .s-cta .brand-line img { height: 44px; width: auto; }
+  .s-cta .brand-line span { font-size: 20px; }
+
+  /* ===== Chrome do deck (não sai nos slides) ===== */
+  #chrome {
+    position: fixed; left: 0; right: 0; bottom: 0; z-index: 100;
+    display: flex; justify-content: center; align-items: center; gap: 18px;
+    padding: 10px; font-family: var(--font-sans);
+    color: rgba(255,255,255,.55); font-size: 13px;
+    background: linear-gradient(transparent, rgba(0,0,0,.35));
+  }
+  #chrome button {
+    background: rgba(255,255,255,.1); color: #fff; border: none;
+    width: 34px; height: 34px; border-radius: 8px; cursor: pointer;
+    font-size: 16px;
+  }
+  #chrome button:hover { background: rgba(255,255,255,.22); }
+  #progress { position: fixed; top: 0; left: 0; height: 3px; background: var(--brand-accent); z-index: 101; transition: width .25s ease; }
+</style>
+</head>
+<body>
+
+<div id="progress"></div>
+
+<div id="stage"><div id="deck">
+
+  <!-- S1 · Hero -->
+  <section class="slide s-hero active">
+    <svg class="emblem" viewBox="0 0 40.05 40.39" aria-hidden="true">
+      <path fill="#0a844f" d="m3.59,40.39l7.39-7.39c3.03,2.23,6.75,3.56,10.79,3.56,10.08,0,18.28-8.2,18.28-18.28S31.85,0,21.77,0,3.5,8.2,3.5,18.28c0,4.21,1.45,8.08,3.85,11.18l-7.34,7.34,3.59,3.59ZM21.77,5.08c7.28,0,13.2,5.92,13.2,13.2s-5.92,13.2-13.2,13.2-13.2-5.92-13.2-13.2,5.92-13.2,13.2-13.2Z"/>
+      <polygon fill="#0a844f" points="24.77 11.83 19.69 11.83 19.69 16.04 15.49 16.04 15.49 21.12 19.69 21.12 19.69 25.32 24.77 25.32 24.77 21.12 28.97 21.12 28.97 16.04 24.77 16.04 24.77 11.83"/>
+    </svg>
+    <div class="kicker">Uma ideia da Conheça Farmácia</div>
+    <h1>E se soubesses <em>onde</em> está o medicamento antes de sair de casa?</h1>
+    <p class="lead">Um serviço gratuito que mostra, em segundos, quais as farmácias de Luanda que têm o medicamento que procuras — e permite reservá-lo.</p>
+    <div class="foot"><span>Conheça Farmácia</span><span>Localizador de Medicamentos</span></div>
+  </section>
+
+  <!-- S2 · Problema -->
+  <section class="slide alt">
+    <div class="kicker">O problema</div>
+    <h2>Conheces esta história?</h2>
+    <div class="pains">
+      <div class="pain">
+        <div class="q">“?”</div>
+        <h3>Farmácia atrás de farmácia</h3>
+        <p>Insulinas, anticonvulsivantes, medicamentos oncológicos: quem precisa anda de balcão em balcão sem saber onde procurar primeiro.</p>
+      </div>
+      <div class="pain">
+        <div class="q">“…”</div>
+        <h3>Dinheiro e horas perdidas</h3>
+        <p>Transporte, filas, tarde de trabalho — e no fim, muitas vezes, a resposta é “não temos, mas talvez na outra…”.</p>
+      </div>
+      <div class="pain">
+        <div class="q">“↻”</div>
+        <h3>Informação espalhada</h3>
+        <p>A informação existe, mas vive em telefonemas, conhecimentos e grupos de WhatsApp. Ninguém a consulta num só sítio.</p>
+      </div>
+    </div>
+    <div class="foot"><span>Conheça Farmácia</span><span>02 · O problema</span></div>
+  </section>
+
+  <!-- S3 · A ideia -->
+  <section class="slide s-idea">
+    <div class="kicker">A ideia, em uma frase</div>
+    <p class="idea-big">
+      Um <strong>website gratuito</strong> onde qualquer pessoa pesquisa o medicamento e vê,
+      em segundos, <span class="hl">quais as farmácias de Luanda que o têm em stock</span> —
+      e pode <strong>reservá-lo directamente</strong>.
+    </p>
+    <div class="foot"><span>Conheça Farmácia</span><span>03 · A ideia</span></div>
+  </section>
+
+  <!-- S4 · Como funciona -->
+  <section class="slide alt">
+    <div class="kicker">Como funciona</div>
+    <h2>Simples para os dois lados</h2>
+    <div class="flows">
+      <div class="flow">
+        <div class="who">Para quem procura</div>
+        <div class="step-line"><span class="n">1</span><p><strong>Pesquisa</strong> o nome do medicamento.</p></div>
+        <div class="step-line"><span class="n">2</span><p><strong>Vê</strong> as farmácias com stock confirmado, com a data da última confirmação.</p></div>
+        <div class="step-line"><span class="n">3</span><p><strong>Reserva</strong> e levanta no balcão — ou combina a entrega com a farmácia.</p></div>
+      </div>
+      <div class="flow">
+        <div class="who">Para a farmácia parceira</div>
+        <div class="step-line"><span class="n">1</span><p><strong>Actualiza</strong> o stock em 5 minutos, 2–3×/semana, no telemóvel.</p></div>
+        <div class="step-line"><span class="n">2</span><p><strong>Recebe</strong> as reservas no painel e confirma.</p></div>
+        <div class="step-line"><span class="n">3</span><p><strong>Ganha</strong> clientes novos — sem pagar nada.</p></div>
+      </div>
+    </div>
+    <div class="foot"><span>Conheça Farmácia</span><span>04 · Como funciona</span></div>
+  </section>
+
+  <!-- S5 · Compromissos -->
+  <section class="slide">
+    <div class="kicker">A confiança é o produto principal</div>
+    <h2>Três compromissos</h2>
+    <div class="promises">
+      <div class="promise">
+        <h3>Informação com data</h3>
+        <p>Cada stock tem a hora de confirmação visível. Passadas 72 horas sem actualização, deixa de aparecer como “confirmado”. Melhor poucos medicamentos fiáveis do que muitos errados.</p>
+      </div>
+      <div class="promise">
+        <h3>Não vendemos medicamentos</h3>
+        <p>Somos educação em saúde. Indicamos onde está e encaminhamos; a venda e a entrega são sempre da farmácia. O pagamento acontece no balcão.</p>
+      </div>
+      <div class="promise">
+        <h3>Privacidade desde o dia um</h3>
+        <p>O contacto do cliente serve apenas para a reserva e é visível apenas à farmácia escolhida. Nunca é partilhado com terceiros.</p>
+      </div>
+    </div>
+    <div class="foot"><span>Conheça Farmácia</span><span>05 · Compromissos</span></div>
+  </section>
+
+  <!-- S6 · O que a farmácia ganha -->
+  <section class="slide alt">
+    <div class="kicker">Para a farmácia</div>
+    <h2>O que a farmácia ganha</h2>
+    <div class="gain">
+      <div class="gain-item">
+        <div class="tick">✓</div>
+        <div><h3>Clientes novos, sem custo</h3><p>Doentes que procuram activamente o medicamento que a farmácia tem.</p></div>
+      </div>
+      <div class="gain-item">
+        <div class="tick">✓</div>
+        <div><h3>Menos telefonemas repetidos</h3><p>O stock fica publicado uma vez; dezenas de pessoas vêem.</p></div>
+      </div>
+      <div class="gain-item">
+        <div class="tick">✓</div>
+        <div><h3>Reservas organizadas</h3><p>Pedido pelo site, confirmação no painel, atendimento no balcão.</p></div>
+      </div>
+      <div class="gain-item">
+        <div class="tick">✓</div>
+        <div><h3>Perfil público verificado</h3><p>Morada, horário, mapa e selo “stock confirmado”.</p></div>
+      </div>
+    </div>
+    <div class="foot"><span>Conheça Farmácia</span><span>06 · A farmácia</span></div>
+  </section>
+
+  <!-- S7 · FAQ -->
+  <section class="slide">
+    <div class="kicker">Perguntas frequentes</div>
+    <h2>Já adivinhamos as perguntas</h2>
+    <div class="faqs">
+      <div class="faq-item">
+        <div class="q">Como sabem o que cada farmácia tem?</div>
+        <div class="a">As farmácias actualizam o stock num painel simples; a nossa equipa valida regularmente. Só publicamos o confirmado.</div>
+      </div>
+      <div class="faq-item">
+        <div class="q">E se estiver desactualizado?</div>
+        <div class="a">Passadas 72 horas sem actualização, deixa de aparecer como “confirmado”. E recomendamos sempre confirmar por telefone nos casos urgentes.</div>
+      </div>
+      <div class="faq-item">
+        <div class="q">Vendem medicamentos?</div>
+        <div class="a">Não. Encaminhamos; a venda e a entrega são sempre da farmácia, com pagamento no balcão.</div>
+      </div>
+      <div class="faq-item">
+        <div class="q">Não é concorrência das apps existentes?</div>
+        <div class="a">Não. Somos informação e encaminhamento — ajudamos as farmácias a receber clientes. Qualquer farmácia pode participar.</div>
+      </div>
+      <div class="faq-item">
+        <div class="q">Como é que se sustenta?</div>
+        <div class="a">Lançamento gratuito. No futuro, parcerias institucionais e serviços — nunca comissão sobre medicamentos.</div>
+      </div>
+      <div class="faq-item">
+        <div class="q">E os dados das pessoas?</div>
+        <div class="a">O contacto serve apenas para a reserva e é visível apenas à farmácia escolhida. Nunca partilhado.</div>
+      </div>
+    </div>
+    <div class="foot"><span>Conheça Farmácia</span><span>07 · FAQ</span></div>
+  </section>
+
+  <!-- S8 · CTA final -->
+  <section class="slide dark s-cta">
+    <div class="kicker" style="color:#7fc9a6;">Próximo passo</div>
+    <h1 style="font-size:76px; max-width:12em;">Queres acompanhar este <em>projecto</em>?</h1>
+    <p class="lead" style="margin-top:26px;">Estamos a falar com as primeiras farmácias de Luanda. Se quiseres apoiar, participar ou apenas saber quando arranca:</p>
+    <div class="contact-card">
+      <strong>+244 925 696 002</strong> — chamadas e WhatsApp<br>
+      <a href="mailto:geral@conhecafarmacia.com">geral@conhecafarmacia.com</a> · conhecafarmacia.com
+    </div>
+    <div class="brand-line">
+      <img src="../public/logo/logo-secundário-branco.svg" alt="" onerror="this.onerror=null;this.style.display='none';">
+      <span>Conheça Farmácia — organização angolana de educação e promoção da saúde</span>
+    </div>
+    <div class="foot"><span>08 · Fim</span><span>Obrigado</span></div>
+  </section>
+
+</div></div>
+
+<div id="chrome">
+  <button id="prev" aria-label="Anterior">‹</button>
+  <span id="counter">1 / 8</span>
+  <button id="next" aria-label="Seguinte">›</button>
+  <span style="opacity:.7;">← → ou Espaço para navegar · N para notas</span>
+</div>
+
+<script>
+(function () {
+  var slides = document.querySelectorAll('.slide');
+  var total = slides.length;
+  var counter = document.getElementById('counter');
+  var progress = document.getElementById('progress');
+  var deck = document.getElementById('deck');
+  var storageKey = 'localizador-deck-slide';
+  var current = 0;
+
+  // Retomar onde ficou (localStorage)
+  try {
+    var saved = parseInt(localStorage.getItem(storageKey), 10);
+    if (!isNaN(saved) && saved >= 0 && saved < total) current = saved;
+  } catch (e) {}
+
+  function show(i) {
+    current = Math.max(0, Math.min(total - 1, i));
+    slides.forEach(function (s, idx) { s.classList.toggle('active', idx === current); });
+    counter.textContent = (current + 1) + ' / ' + total;
+    progress.style.width = ((current + 1) / total * 100) + '%';
+    try { localStorage.setItem(storageKey, String(current)); } catch (e) {}
+  }
+
+  // Auto-scale + letterboxing (1920×1080 → viewport)
+  function fit() {
+    var scale = Math.min(window.innerWidth / 1920, window.innerHeight / 1080);
+    deck.style.transform = 'scale(' + scale + ')';
+  }
+  window.addEventListener('resize', fit);
+  fit();
+
+  document.getElementById('prev').addEventListener('click', function () { show(current - 1); });
+  document.getElementById('next').addEventListener('click', function () { show(current + 1); });
+
+  document.addEventListener('keydown', function (e) {
+    if (e.key === 'ArrowRight' || e.key === ' ' || e.key === 'PageDown') { e.preventDefault(); show(current + 1); }
+    else if (e.key === 'ArrowLeft' || e.key === 'PageUp') { e.preventDefault(); show(current - 1); }
+    else if (e.key === 'Home') { show(0); }
+    else if (e.key === 'End') { show(total - 1); }
+    else if (e.key === 'n' || e.key === 'N') { toggleNotes(); }
+  });
+
+  // ===== Speaker notes (N para mostrar/esconder) =====
+  var notesEl = null;
+  var notes = [
+    'Boa-vindas. A pergunta é retórica — deixar 2 segundos de silêncio. Quem já perdeu um dia a procurar medicamento sabe do que falamos.',
+    'As três dores reais de Luanda. Se houver alguém que viveu isto na sala, convidar a partilhar em uma frase — é o momento mais forte da apresentação.',
+    'A frase inteira da ideia. Ler devagar. Não adicionar nada — a simplicidade É o argumento.',
+    'Dois fluxos, um de cada lado. Sublinhar: a farmácia não instala nada e não paga nada. E o doente vê a DATA da confirmação — confiança por defeito.',
+    'Os três compromissos são a resposta antecipada às dúvidas: dados velhos, desconfiança comercial, privacidade. As 72h são a regra que torna tudo crível.',
+    'Slide para sessões com farmácias. Reforçar: sem comissão, sem exclusividade, saída livre, controlo total do catálogo.',
+    'FAQ ao vivo: convidar perguntas que não estão aqui. As respostas estão na apresentação completa (LOCALIZADOR_APRESENTACAO.html).',
+    'Fechar com o pedido concreto: acompanhar, partilhar, ou marcar conversa. Deixar o contacto no ecrã enquanto agradece.'
+  ];
+  function toggleNotes() {
+    if (!notesEl) {
+      notesEl = document.createElement('div');
+      notesEl.style.cssText = 'position:fixed;left:0;right:0;bottom:56px;max-height:38vh;overflow:auto;z-index:102;background:rgba(0,20,15,.94);color:#d9efe4;font:14px/1.6 ' + "'Inter',sans-serif;padding:16px 26px;border-top:2px solid #0a844f;";
+      document.body.appendChild(notesEl);
+    }
+    if (notesEl.style.display === 'none') { notesEl.style.display = 'block'; renderNotes(); }
+    else { notesEl.style.display = 'none'; }
+  }
+  function renderNotes() {
+    if (!notesEl || notesEl.style.display === 'none') return;
+    notesEl.innerHTML = '<strong style="color:#7fc9a6;">Notas — slide ' + (current + 1) + ':</strong> ' + (notes[current] || '—');
+  }
+
+  // Mostrar slide guardado + notas em sync
+  show(current);
+  var origShow = show;
+  show = function (i) { origShow(i); renderNotes(); };
+  renderNotes();
+})();
+</script>
+
+</body>
+</html>

@@ -1,0 +1,384 @@
+<!DOCTYPE html>
+<html lang="pt">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Localizador de Medicamentos — Uma ideia da Conheça Farmácia</title>
+<meta name="description" content="Pesquise o medicamento e veja em segundos quais farmácias de Luanda o têm em stock. Uma ideia da Conheça Farmácia.">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Fraunces:ital,opsz,wght@0,9..144,500;0,9..144,600;0,9..144,700;1,9..144,500&family=Inter:wght@400;500;600;700;800&display=swap" rel="stylesheet">
+<style>
+  :root {
+    /* Tokens do site (styles/globals.css) */
+    --brand-primary: #00493a;
+    --brand-accent:  #0a844f;
+    --brand-deep:    #002a32;
+    --bg:            #ffffff;
+    --bg-alt:        #f9f9f9;
+    --divider:       #dddddd;
+    --brand-svg:     #004b3d;
+    --font-sans:    'Inter', ui-sans-serif, system-ui, sans-serif;
+    --font-display: 'Fraunces', Georgia, serif;
+    --shadow-soft: 0 4px 20px rgba(0, 42, 50, 0.05);
+    --shadow-md-soft: 0 10px 30px rgba(0, 42, 50, 0.08);
+  }
+  * { margin: 0; padding: 0; box-sizing: border-box; }
+  html { scroll-behavior: smooth; -webkit-print-color-adjust: exact; print-color-adjust: exact; }
+  body {
+    font-family: var(--font-sans);
+    color: var(--brand-deep);
+    background: var(--bg);
+    line-height: 1.6;
+  }
+  .wrap { max-width: 880px; margin: 0 auto; padding: 0 24px; }
+
+  /* ===== Header ===== */
+  header.site {
+    border-bottom: 1px solid var(--divider);
+    background: var(--bg);
+    position: sticky; top: 0; z-index: 50;
+  }
+  header.site .wrap {
+    display: flex; justify-content: space-between; align-items: center;
+    height: 72px;
+  }
+  .logo img { height: 44px; width: auto; display: block; }
+  .header-cta {
+    display: inline-flex; align-items: center; gap: 8px;
+    background: var(--brand-primary); color: #fff;
+    text-decoration: none; font-weight: 600; font-size: 14px;
+    padding: 10px 18px; border-radius: 10px;
+    transition: background .2s ease, transform .2s ease;
+  }
+  .header-cta:hover { background: var(--brand-accent); transform: translateY(-1px); }
+
+  /* ===== Hero ===== */
+  .hero { padding: 72px 0 56px; text-align: center; position: relative; overflow: hidden; }
+  .hero .emblem { width: 56px; height: auto; margin: 0 auto 20px; display: block; }
+  .kicker {
+    font-size: 12px; font-weight: 700; letter-spacing: 0.18em;
+    text-transform: uppercase; color: var(--brand-accent); margin-bottom: 14px;
+  }
+  h1 {
+    font-family: var(--font-display); font-weight: 600;
+    font-size: clamp(34px, 6vw, 54px); line-height: 1.12;
+    color: var(--brand-primary); letter-spacing: -0.01em;
+    max-width: 16em; margin: 0 auto;
+  }
+  h1 em { font-style: italic; color: var(--brand-accent); }
+  .hero p.lead {
+    margin: 20px auto 0; max-width: 640px;
+    font-size: 17px; color: var(--brand-deep); opacity: .85;
+  }
+  .hero-actions { margin-top: 30px; display: flex; gap: 12px; justify-content: center; flex-wrap: wrap; }
+  .btn {
+    display: inline-flex; align-items: center; justify-content: center;
+    padding: 14px 26px; border-radius: 12px; font-weight: 700; font-size: 15px;
+    text-decoration: none; transition: all .2s ease;
+  }
+  .btn-primary { background: var(--brand-primary); color: #fff; }
+  .btn-primary:hover { background: var(--brand-accent); transform: translateY(-2px); box-shadow: var(--shadow-md-soft); }
+  .btn-ghost { border: 1.5px solid var(--divider); color: var(--brand-primary); background: var(--bg); }
+  .btn-ghost:hover { border-color: var(--brand-primary); }
+
+  /* ===== Secções ===== */
+  section { padding: 56px 0; }
+  section.alt { background: var(--bg-alt); border-top: 1px solid var(--divider); border-bottom: 1px solid var(--divider); }
+  h2 {
+    font-family: var(--font-display); font-weight: 600;
+    font-size: clamp(26px, 4vw, 34px); color: var(--brand-primary);
+    line-height: 1.2; margin-bottom: 8px;
+  }
+  h2 em { font-style: italic; color: var(--brand-accent); }
+  .section-sub { max-width: 620px; font-size: 15.5px; opacity: .8; margin-bottom: 32px; }
+
+  /* Problema — cartões de dor */
+  .pains { display: grid; grid-template-columns: repeat(3, 1fr); gap: 16px; }
+  .pain {
+    background: var(--bg); border: 1px solid var(--divider); border-radius: 14px;
+    padding: 22px 20px; box-shadow: var(--shadow-soft);
+  }
+  .pain .q { font-family: var(--font-display); font-size: 30px; color: var(--brand-accent); line-height: 1; }
+  .pain h3 { font-size: 15px; margin-top: 10px; color: var(--brand-primary); }
+  .pain p { font-size: 13.5px; margin-top: 6px; opacity: .8; }
+
+  /* A ideia — frase grande */
+  .idea-big {
+    font-family: var(--font-display); font-weight: 500;
+    font-size: clamp(22px, 3.6vw, 32px); line-height: 1.35;
+    color: var(--brand-deep); max-width: 820px;
+  }
+  .idea-big strong { color: var(--brand-primary); }
+  .idea-big .hl { background: linear-gradient(transparent 62%, rgba(10, 132, 79, 0.18) 62%); }
+
+  /* Como funciona — duas colunas */
+  .flows { display: grid; grid-template-columns: 1fr 1fr; gap: 20px; }
+  .flow {
+    background: var(--bg); border: 1px solid var(--divider);
+    border-radius: 16px; padding: 26px 24px; box-shadow: var(--shadow-soft);
+  }
+  .flow .who {
+    font-size: 11px; font-weight: 700; letter-spacing: 0.12em; text-transform: uppercase;
+    color: var(--brand-accent); margin-bottom: 14px;
+  }
+  .step-line { display: flex; gap: 12px; align-items: flex-start; padding: 10px 0; }
+  .step-line + .step-line { border-top: 1px dashed var(--divider); }
+  .step-line .n {
+    width: 26px; height: 26px; border-radius: 50%; flex-shrink: 0;
+    background: var(--brand-primary); color: #fff;
+    font-size: 13px; font-weight: 800;
+    display: flex; align-items: center; justify-content: center; margin-top: 1px;
+  }
+  .step-line p { font-size: 14px; }
+  .step-line p strong { color: var(--brand-primary); }
+
+  /* Compromissos */
+  .promises { display: grid; grid-template-columns: repeat(3, 1fr); gap: 16px; }
+  .promise {
+    border-left: 3px solid var(--brand-accent);
+    background: var(--bg); padding: 18px 20px;
+    border-radius: 0 12px 12px 0; border-top: 1px solid var(--divider);
+    border-right: 1px solid var(--divider); border-bottom: 1px solid var(--divider);
+  }
+  .promise h3 { font-size: 15px; color: var(--brand-primary); }
+  .promise p { font-size: 13.5px; margin-top: 6px; opacity: .8; }
+
+  /* FAQ */
+  .faq { max-width: 760px; }
+  details {
+    background: var(--bg); border: 1px solid var(--divider); border-radius: 12px;
+    margin-top: 10px; overflow: hidden;
+  }
+  details[open] { border-color: var(--brand-accent); }
+  summary {
+    cursor: pointer; list-style: none;
+    padding: 16px 52px 16px 20px;
+    font-weight: 700; font-size: 15px; color: var(--brand-primary);
+    position: relative; user-select: none;
+  }
+  summary::-webkit-details-marker { display: none; }
+  summary::after {
+    content: '+'; position: absolute; right: 20px; top: 50%;
+    transform: translateY(-50%);
+    font-size: 22px; font-weight: 400; color: var(--brand-accent);
+    transition: transform .2s ease; line-height: 1;
+  }
+  details[open] summary::after { transform: translateY(-50%) rotate(45deg); }
+  details .a { padding: 0 20px 18px; font-size: 14.5px; opacity: .85; }
+
+  /* CTA final */
+  .cta-final {
+    background: var(--brand-deep); color: #fff;
+    border-radius: 20px; padding: 44px 36px; text-align: center;
+  }
+  .cta-final h2 { color: #fff; }
+  .cta-final p { max-width: 560px; margin: 10px auto 26px; opacity: .85; font-size: 15.5px; }
+  .cta-final .btn-primary { background: var(--brand-accent); }
+  .cta-final .btn-primary:hover { background: #0d995f; }
+  .cta-final .brand-line {
+    margin-top: 28px; display: flex; align-items: center; justify-content: center; gap: 12px;
+    font-size: 13px; opacity: .75;
+  }
+  .cta-final .brand-line img { height: 30px; width: auto; }
+
+  footer { padding: 34px 0 44px; text-align: center; font-size: 12.5px; opacity: .6; }
+
+  @media (max-width: 720px) {
+    .pains, .promises { grid-template-columns: 1fr; }
+    .flows { grid-template-columns: 1fr; }
+    .hero { padding: 48px 0 40px; }
+  }
+</style>
+</head>
+<body>
+
+<header class="site">
+  <div class="wrap">
+    <a class="logo" href="#" aria-label="Conheça Farmácia">
+      <img src="../public/logo/logo-principal-verde.svg"
+           alt="Conheça Farmácia"
+           onerror="this.onerror=null;this.src='https://conhecafarmacia.com/logo/logo-principal-verde.svg';">
+    </a>
+    <a class="header-cta" href="#faq">Perguntas frequentes</a>
+  </div>
+</header>
+
+<!-- Hero -->
+<div class="hero">
+  <div class="wrap">
+    <svg class="emblem" viewBox="0 0 40.05 40.39" aria-hidden="true">
+      <path fill="#0a844f" d="m3.59,40.39l7.39-7.39c3.03,2.23,6.75,3.56,10.79,3.56,10.08,0,18.28-8.2,18.28-18.28S31.85,0,21.77,0,3.5,8.2,3.5,18.28c0,4.21,1.45,8.08,3.85,11.18l-7.34,7.34,3.59,3.59ZM21.77,5.08c7.28,0,13.2,5.92,13.2,13.2s-5.92,13.2-13.2,13.2-13.2-5.92-13.2-13.2,5.92-13.2,13.2-13.2Z"/>
+      <polygon fill="#0a844f" points="24.77 11.83 19.69 11.83 19.69 16.04 15.49 16.04 15.49 21.12 19.69 21.12 19.69 25.32 24.77 25.32 24.77 21.12 28.97 21.12 28.97 16.04 24.77 16.04 24.77 11.83"/>
+    </svg>
+    <div class="kicker">Uma ideia da Conheça Farmácia</div>
+    <h1>E se soubesses <em>onde</em> está o medicamento antes de sair de casa?</h1>
+    <p class="lead">
+      Estamos a criar um serviço gratuito que mostra, em segundos, quais as farmácias de
+      Luanda que têm o medicamento que procuras — e permite reservá-lo directamente.
+    </p>
+    <div class="hero-actions">
+      <a class="btn btn-primary" href="#ideia">Conhecer a ideia</a>
+      <a class="btn btn-ghost" href="#faq">Ver perguntas frequentes</a>
+    </div>
+  </div>
+</div>
+
+<!-- Problema -->
+<section class="alt" id="problema">
+  <div class="wrap">
+    <h2>Conheces esta história?</h2>
+    <p class="section-sub">Em Luanda, encontrar certos medicamentos tornou-se uma caça ao tesouro — e quem mais precisa é quem menos pode estar a perder tempo.</p>
+    <div class="pains">
+      <div class="pain">
+        <div class="q">“?”</div>
+        <h3>Farmácia atrás de farmácia</h3>
+        <p>Insulinas, anticonvulsivantes, medicamentos oncológicos: quem precisa anda de balcão em balcão sem saber onde procurar primeiro.</p>
+      </div>
+      <div class="pain">
+        <div class="q">“…”</div>
+        <h3>Dinheiro e horas perdidas</h3>
+        <p>Transporte, filas, tarde de trabalho — e no fim, muitas vezes, a resposta é “não temos, mas talvez na outra…”. </p>
+      </div>
+      <div class="pain">
+        <div class="q">“↻”</div>
+        <h3>Informação espalhada</h3>
+        <p>A informação existe, mas vive em telefonemas, conhecimentos e grupos de WhatsApp. Ninguém a consegue consultar num só sítio.</p>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- A ideia -->
+<section id="ideia">
+  <div class="wrap">
+    <h2>A ideia, em uma frase</h2>
+    <p class="idea-big">
+      Um <strong>website gratuito</strong> onde qualquer pessoa pesquisa o medicamento e vê,
+      em segundos, <span class="hl">quais as farmácias de Luanda que o têm em stock</span> —
+      e pode <strong>reservá-lo directamente</strong> para levantar no balcão ou combinar a entrega.
+    </p>
+  </div>
+</section>
+
+<!-- Como funciona -->
+<section class="alt" id="como">
+  <div class="wrap">
+    <h2>Como funciona</h2>
+    <p class="section-sub">Simples para quem procura, simples para a farmácia — sem instalar nada.</p>
+    <div class="flows">
+      <div class="flow">
+        <div class="who">Para quem procura um medicamento</div>
+        <div class="step-line"><span class="n">1</span><p><strong>Pesquisa</strong> o nome do medicamento no site.</p></div>
+        <div class="step-line"><span class="n">2</span><p><strong>Vê</strong> as farmácias com stock confirmado — morada, horário e contacto, com a data da última confirmação.</p></div>
+        <div class="step-line"><span class="n">3</span><p><strong>Reserva</strong> e vai ao balcão, ou combina a entrega directamente com a farmácia.</p></div>
+      </div>
+      <div class="flow">
+        <div class="who">Para a farmácia parceira</div>
+        <div class="step-line"><span class="n">1</span><p><strong>Actualiza</strong> o stock 2–3 vezes por semana num ecrã de botões “temos / não temos” (5 minutos, no telemóvel).</p></div>
+        <div class="step-line"><span class="n">2</span><p><strong>Recebe</strong> as reservas dos clientes no painel da farmácia e confirma.</p></div>
+        <div class="step-line"><span class="n">3</span><p><strong>Ganha</strong> clientes novos que de outra forma nunca a encontrariam — sem pagar nada.</p></div>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- Compromissos -->
+<section id="compromissos">
+  <div class="wrap">
+    <h2>Três compromissos que fazem isto funcionar</h2>
+    <p class="section-sub">A confiança é o produto principal. Sem ela, nada disto vale nada.</p>
+    <div class="promises">
+      <div class="promise">
+        <h3>Informação com data</h3>
+        <p>Cada stock tem a hora de confirmação visível. Passadas 72 horas sem actualização, deixa de aparecer como “confirmado”. Melhor poucos medicamentos fiáveis do que muitos errados.</p>
+      </div>
+      <div class="promise">
+        <h3>Não vendemos medicamentos</h3>
+        <p>Somos uma organização de educação em saúde. Indicamos onde está e encaminhamos; a venda e a entrega são sempre responsabilidade da farmácia. O pagamento acontece no balcão.</p>
+      </div>
+      <div class="promise">
+        <h3>Privacidade desde o dia um</h3>
+        <p>O contacto do cliente serve apenas para a reserva e é visível apenas à farmácia escolhida. Nunca é partilhado com terceiros.</p>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- FAQ -->
+<section class="alt" id="faq">
+  <div class="wrap">
+    <h2>Perguntas frequentes</h2>
+    <p class="section-sub">As perguntas que já adivinhamos — respondidas sem letra pequena.</p>
+    <div class="faq">
+      <details>
+        <summary>Como é que sabem o que cada farmácia tem em stock?</summary>
+        <div class="a">As próprias farmácias parceiras actualizam o seu stock num painel simples, e a nossa equipa acompanha e valida regularmente, especialmente no início. Só publicamos o que a farmácia confirmou.</div>
+      </details>
+      <details>
+        <summary>E se a informação estiver desactualizada?</summary>
+        <div class="a">Toda a informação de stock tem data de confirmação visível. Passadas 72 horas sem actualização, deixa de aparecer como “confirmado” até a farmácia actualizar. Mesmo assim, recomendamos confirmar por telefone nos casos urgentes — a honestidade é parte do serviço.</div>
+      </details>
+      <details>
+        <summary>Vocês vendem medicamentos?</summary>
+        <div class="a">Não. Somos uma organização de educação em saúde. Mostramos onde o medicamento está disponível e encaminhamos o cliente; a farmácia fica responsável por atender o pedido e entregar. A compra faz-se sempre na farmácia.</div>
+      </details>
+      <details>
+        <summary>Como é que o projecto se sustenta? Isto vai custar às farmácias?</summary>
+        <div class="a">O lançamento é gratuito — para farmácias e para utilizadores. No futuro, a sustentabilidade virá de parcerias institucionais e de serviços às farmácias parceiras, nunca de comissão sobre medicamentos.</div>
+      </details>
+      <details>
+        <summary>E os medicamentos sujeitos a receita médica?</summary>
+        <div class="a">Funcionam da mesma forma: a pessoa pode reservar, mas o levantamento no balcão exige a apresentação da receita, conforme a lei angolana. O site deixa isso sempre claro.</div>
+      </details>
+      <details>
+        <summary>O que fazem com os meus dados?</summary>
+        <div class="a">O telefone do cliente é usado apenas para a reserva e é visível apenas à farmácia escolhida. Não partilhamos dados com terceiros e não usamos contactos para marketing sem autorização.</div>
+      </details>
+      <details>
+        <summary>Não é concorrência das aplicações de farmácia que já existem?</summary>
+        <div class="a">Não. Somos um serviço de informação e encaminhamento: não temos stock próprio, não entregamos, não concorremos com as farmácias — ajudamos é a levá-las clientes. As farmácias de qualquer grupo ou rede podem participar, incluindo as que já têm as suas próprias aplicações.</div>
+      </details>
+      <details>
+        <summary>Porque começam só com alguns medicamentos e só em Luanda?</summary>
+        <div class="a">Porque preferimos dez medicamentos com informação fiável a mil com informação errada. Luanda concentra a nossa rede inicial de farmácias. Quando o modelo estiver validado, expandimos para os medicamentos do dia-a-dia e para outras províncias.</div>
+      </details>
+      <details>
+        <summary>Quando arranca?</summary>
+        <div class="a">[previsão — ex.: “O piloto arranca no 1.º trimestre de 2027.”] Neste momento estamos na fase de parcerias com as primeiras farmácias de Luanda.</div>
+      </details>
+      <details>
+        <summary>Como posso apoiar ou participar?</summary>
+        <div class="a">Se é farmácia, fale connosco — a adesão do lançamento tem benefícios de destaque. Se é profissional de saúde, professor ou apenas alguém que acredita na ideia: partilhe esta apresentação e acompanhe o lançamento em conhecafarmacia.com.</div>
+      </details>
+    </div>
+  </div>
+</section>
+
+<!-- CTA final -->
+<section>
+  <div class="wrap">
+    <div class="cta-final">
+      <h2>Queres acompanhar este projecto?</h2>
+      <p>Estamos a falar com as primeiras farmácias de Luanda. Se quiseres apoiar, participar ou apenas saber quando arranca, fala connosco.</p>
+      <a class="btn btn-primary" href="mailto:geral@conhecafarmacia.com?subject=Localizador%20de%20Medicamentos">Falar com a equipa</a>
+      <a class="btn btn-ghost" href="https://wa.me/244925696002" target="_blank" rel="noopener">WhatsApp: +244 925 696 002</a>
+      <div class="brand-line">
+        <img src="../public/logo/logo-secundário-branco.svg"
+             alt=""
+             onerror="this.onerror=null;this.style.display='none';">
+        <span>Conheça Farmácia — conhecafarmacia.com</span>
+      </div>
+    </div>
+  </div>
+</section>
+
+<footer>
+  <div class="wrap">
+    Conheça Farmácia · Organização angolana de educação e promoção da saúde · Não vendemos medicamentos<br>
+    +244 925 696 002 (chamadas e WhatsApp) · geral@conhecafarmacia.com
+  </div>
+</footer>
+
+</body>
+</html>

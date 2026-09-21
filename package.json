@@ -1,0 +1,30 @@
+{
+  "name": "localizador-conhecafarmacia",
+  "version": "0.1.0",
+  "description": "Localizador de Medicamentos — Conheça Farmácia (localizador.conhecafarmacia.com)",
+  "private": true,
+  "scripts": {
+    "dev": "next dev",
+    "build": "next build",
+    "start": "next start",
+    "lint": "next lint",
+    "format": "npx prettier --write ."
+  },
+  "dependencies": {
+    "@supabase/ssr": "^0.6.0",
+    "@supabase/supabase-js": "^2.103.3",
+    "@vercel/analytics": "^2.0.1",
+    "@vercel/speed-insights": "^2.0.0",
+    "lucide-react": "^0.500.0",
+    "next": "^16.2.11",
+    "react": "19.2.4",
+    "react-dom": "19.2.4",
+    "tailwindcss": "^4.2.2"
+  },
+  "devDependencies": {
+    "@tailwindcss/postcss": "^4",
+    "eslint": "^9",
+    "eslint-config-next": "16.2.6",
+    "prettier": "3.8.3"
+  }
+}

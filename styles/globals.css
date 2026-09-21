@@ -601,7 +601,31 @@ html.dark .form-note {
    ============================================ */
 @layer components {
   .search-page {
-    @apply min-h-[70vh] py-14 md:py-20;
+    @apply min-h-[70vh] flex flex-col;
+  }
+
+  /* Hero curto — só o título (padrão /artigos do site principal, mas baixo) */
+  .search-hero {
+    @apply bg-brand-bg pt-10 pb-6 md:pt-12 md:pb-8 text-center;
+  }
+
+  .search-hero-title {
+    @apply text-2xl md:text-3xl font-bold text-brand-deep mb-2;
+  }
+
+  .search-hero-sub {
+    @apply text-brand-deep/60 text-sm md:text-base;
+  }
+
+  /* Zona de "header": busca + filtros sobre o fundo principal,
+     com borda inferior a separar da zona de conteúdo */
+  .search-filter-section {
+    @apply bg-brand-bg border-b border-brand-divider/30 pb-8 md:pb-10;
+  }
+
+  /* Zona de conteúdo: fundo alternativo, como a grelha de artigos */
+  .search-results-section {
+    @apply flex-1 bg-brand-bg-alt py-10 md:py-12;
   }
 
   .search-container {
@@ -671,7 +695,7 @@ html.dark .form-note {
 
   /* Chips de município */
   .chip-row {
-    @apply flex flex-wrap justify-center gap-2 mt-8;
+    @apply flex flex-wrap justify-center gap-2 mt-6;
   }
 
   .chip {
@@ -888,7 +912,7 @@ html.dark .form-note {
 
   .search-cta {
     @apply text-center mt-14 p-7 rounded-[20px] border border-brand-divider/40;
-    background: var(--color-brand-bg-alt);
+    background: var(--color-brand-card);
   }
 
   .search-cta-title {

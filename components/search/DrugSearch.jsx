@@ -153,14 +153,19 @@ export default function DrugSearch() {
     : 0
 
   return (
-    <div className="search-container">
-      <h1 className="search-title">Que medicamento procura?</h1>
-      <p className="search-sub">
-        Stock confirmado pelas farmácias nas últimas 72 horas · Luanda
-      </p>
+    <>
+      {/* Hero curto — só título e subtítulo, como /artigos mas baixo */}
+      <section className="search-hero">
+        <h1 className="search-hero-title">Que medicamento procura?</h1>
+        <p className="search-hero-sub">
+          Stock confirmado pelas farmácias nas últimas 72 horas · Luanda
+        </p>
+      </section>
 
-      {/* Caixa de busca */}
-      <div className="search-box" ref={boxRef}>
+      {/* Busca + filtros — zona de "header" da página */}
+      <section className="search-filter-section">
+        <div className="search-container">
+          <div className="search-box" ref={boxRef}>
         <span className="search-box-icon" aria-hidden="true">
           <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
             <circle cx="11" cy="11" r="8" />
@@ -245,10 +250,14 @@ export default function DrugSearch() {
             {m}
           </button>
         ))}
-      </div>
+          </div>
+        </div>
+      </section>
 
-      {/* Resultados */}
-      <div className="mt-2">
+      {/* Resultados — zona de conteúdo com fundo alternativo */}
+      <section className="search-results-section">
+        <div className="search-container">
+          <div className="mt-2">
         {loading && (
           <div className="empty-state" role="status">
             <div className="spinner" />
@@ -370,7 +379,9 @@ export default function DrugSearch() {
             Quero participar
           </a>
         </div>
-      </div>
-    </div>
+          </div>
+        </div>
+      </section>
+    </>
   )
 }

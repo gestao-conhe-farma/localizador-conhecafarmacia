@@ -71,14 +71,19 @@ export default function PharmacyList() {
 
   return (
     <>
-      <h1 className="search-title">Farmácias parceiras</h1>
-      <p className="search-sub">
-        Farmácias de Luanda que confirmam o stock no Localizador — sempre com dados
-        das últimas 72 horas.
-      </p>
+      {/* Hero curto — só título e subtítulo */}
+      <section className="search-hero">
+        <h1 className="search-hero-title">Farmácias parceiras</h1>
+        <p className="search-hero-sub">
+          Farmácias de Luanda que confirmam o stock no Localizador — sempre com dados
+          das últimas 72 horas.
+        </p>
+      </section>
 
-      {/* Filtro por município */}
-      <div className="ph-toolbar" role="group" aria-label="Filtrar por município">
+      {/* Filtro — zona de "header" da página */}
+      <section className="search-filter-section">
+        <div className="search-container">
+          <div className="ph-toolbar" role="group" aria-label="Filtrar por município">
         <button
           type="button"
           className={`chip${municipio === '' ? ' chip--active' : ''}`}
@@ -95,10 +100,15 @@ export default function PharmacyList() {
           >
             {m}
           </button>
-        ))}
-      </div>
+          ))}
+          </div>
+        </div>
+      </section>
 
-      <div className="mt-10">
+      {/* Conteúdo — fundo alternativo */}
+      <section className="search-results-section">
+        <div className="search-container">
+          <div className="mt-10">
         {error && (
           <div className="empty-state" role="alert">
             <p className="empty-title">Algo falhou</p>
@@ -196,7 +206,9 @@ export default function PharmacyList() {
             )}
           </>
         )}
-      </div>
+          </div>
+        </div>
+      </section>
     </>
   )
 }

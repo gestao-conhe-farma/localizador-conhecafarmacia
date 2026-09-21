@@ -18,9 +18,7 @@ export default function FarmaciasPage() {
     <>
       <AppHeader />
       <main className="search-page">
-        <div className="search-container">
-          <PharmacyList />
-        </div>
+        <PharmacyList />
       </main>
       <Footer />
     </>

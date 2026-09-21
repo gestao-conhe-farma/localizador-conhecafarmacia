@@ -166,8 +166,12 @@ as $$
   );
 $$;
 
-revoke execute on function public.is_admin() from public, anon;
-revoke execute on function public.is_own_pharmacy(uuid) from public, anon;
+grant execute on function public.is_admin() to public;
+grant execute on function public.is_own_pharmacy(uuid) to public;
+-- NOTA: EXECUTE é concedido (não revogado) porque as funções são usadas
+-- como predicados nas policies de RLS: com security_invoker=true na view,
+-- o papel anon precisa de as avaliar. Devolvem apenas true/false e os
+-- dados subjacentes (admin_users) nunca ficam expostos.
 
 -- ============================================================
 -- ROW LEVEL SECURITY

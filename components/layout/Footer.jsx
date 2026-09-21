@@ -30,6 +30,7 @@ export default function Footer({
           <div className="footer-links">
             <h4>Navegação</h4>
             <ul>
+              <li><a href="/pesquisa" className="text-white/70 hover:text-brand-accent transition-colors text-sm">Pesquisar medicamentos</a></li>
               <li><a href="/#o-problema" className="text-white/70 hover:text-brand-accent transition-colors text-sm">O problema</a></li>
               <li><a href="/#como-funciona" className="text-white/70 hover:text-brand-accent transition-colors text-sm">Como funciona</a></li>
               <li><a href="/#farmacias" className="text-white/70 hover:text-brand-accent transition-colors text-sm">Farmácias</a></li>

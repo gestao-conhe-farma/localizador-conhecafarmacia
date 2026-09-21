@@ -595,3 +595,307 @@ html.dark .form-note {
     transform: scale(0.95);
   }
 }
+
+/* ============================================
+   BUSCA DO LOCALIZADOR (/pesquisa, /farmacia)
+   ============================================ */
+@layer components {
+  .search-page {
+    @apply min-h-[70vh] py-14 md:py-20;
+  }
+
+  .search-container {
+    @apply max-w-4xl mx-auto px-6;
+  }
+
+  .search-title {
+    @apply text-3xl md:text-4xl font-bold text-brand-deep text-center mb-3;
+  }
+
+  .search-sub {
+    @apply text-brand-deep/60 text-center mb-10;
+  }
+
+  /* Caixa de busca principal */
+  .search-box {
+    @apply relative flex items-center bg-brand-card border-2 border-brand-divider rounded-2xl shadow-soft;
+    transition: border-color 0.2s ease, box-shadow 0.2s ease;
+  }
+
+  .search-box:focus-within {
+    border-color: var(--color-brand-accent);
+    box-shadow: 0 0 0 4px rgba(10, 132, 79, 0.12);
+  }
+
+  .search-box-icon {
+    @apply pl-5 pr-3 text-brand-deep/40 flex-shrink-0;
+  }
+
+  .search-input {
+    @apply flex-1 bg-transparent border-none outline-none py-4 pr-4 text-lg text-brand-deep;
+  }
+
+  .search-input::placeholder {
+    color: var(--color-brand-deep);
+    opacity: 0.35;
+  }
+
+  .search-clear {
+    @apply mr-4 w-8 h-8 rounded-full grid place-items-center text-brand-deep/40 hover:text-brand-deep hover:bg-brand-bg-alt cursor-pointer flex-shrink-0;
+    background: none;
+    border: none;
+  }
+
+  /* Autocomplete */
+  .suggest-list {
+    @apply absolute top-full left-0 right-0 mt-2 bg-brand-card border border-brand-divider rounded-xl shadow-md-soft overflow-hidden z-40;
+  }
+
+  .suggest-item {
+    @apply w-full text-left px-5 py-3 flex items-center justify-between gap-3 cursor-pointer border-none bg-transparent;
+    transition: background 0.15s ease;
+  }
+
+  .suggest-item:hover,
+  .suggest-item--active {
+    background: rgba(10, 132, 79, 0.08);
+  }
+
+  .suggest-name {
+    @apply text-brand-deep font-medium;
+  }
+
+  .suggest-meta {
+    @apply text-xs text-brand-deep/50;
+  }
+
+  /* Chips de município */
+  .chip-row {
+    @apply flex flex-wrap justify-center gap-2 mt-8;
+  }
+
+  .chip {
+    @apply px-4 py-1.5 rounded-full text-sm font-medium border-2 border-brand-divider text-brand-deep cursor-pointer bg-transparent;
+    transition: all 0.2s ease;
+  }
+
+  .chip:hover {
+    border-color: var(--color-brand-accent);
+    color: var(--color-brand-accent);
+  }
+
+  .chip--active {
+    @apply bg-brand-primary border-brand-primary text-white;
+  }
+
+  .chip--active:hover {
+    color: #ffffff;
+  }
+
+  /* Cabeçalho de resultados */
+  .results-head {
+    @apply flex items-baseline justify-between gap-4 mt-12 mb-5;
+  }
+
+  .results-count {
+    @apply text-sm text-brand-deep/60;
+  }
+
+  .results-count strong {
+    @apply text-brand-deep;
+  }
+
+  /* Cartão de resultado: medicamento + farmácias com stock */
+  .drug-result {
+    @apply bg-brand-card border border-brand-divider/40 rounded-[20px] overflow-hidden mb-5;
+    box-shadow: 0 2px 12px rgba(0, 42, 50, 0.05);
+  }
+
+  .drug-result-head {
+    @apply px-6 py-4 border-b border-brand-divider/40 flex flex-wrap items-center justify-between gap-3;
+    background: var(--color-brand-bg-alt);
+  }
+
+  .drug-name {
+    @apply font-bold text-brand-deep text-lg;
+  }
+
+  .drug-meta {
+    @apply text-xs text-brand-deep/50;
+  }
+
+  .rx-badge {
+    @apply text-[11px] font-bold uppercase tracking-wide px-2 py-0.5 rounded-full;
+    background: rgba(255, 108, 35, 0.12);
+    color: #d9531e;
+  }
+
+  .pharmacy-row {
+    @apply px-6 py-4 flex flex-wrap items-start gap-4 border-b border-brand-divider/20 last:border-b-0;
+  }
+
+  .pharmacy-row-info {
+    @apply flex-1 min-w-[220px];
+  }
+
+  .pharmacy-row-name {
+    @apply font-semibold text-brand-deep;
+  }
+
+  .pharmacy-row-name:hover {
+    @apply text-brand-accent;
+  }
+
+  .pharmacy-row-addr {
+    @apply text-sm text-brand-deep/60 mt-0.5;
+  }
+
+  .pharmacy-row-actions {
+    @apply flex items-center gap-2 flex-wrap;
+  }
+
+  .btn-mini {
+    @apply inline-flex items-center gap-1.5 px-3.5 py-2 rounded-lg text-sm font-semibold;
+    transition: all 0.2s ease;
+  }
+
+  .btn-mini--phone {
+    @apply border-2 border-brand-primary text-brand-primary;
+  }
+
+  .btn-mini--phone:hover {
+    @apply bg-brand-primary/10;
+  }
+
+  .btn-mini--wa {
+    background: #25d366;
+    color: #ffffff;
+  }
+
+  .btn-mini--wa:hover {
+    background: #1da851;
+  }
+
+  .btn-mini--soon {
+    @apply border-2 border-brand-divider text-brand-deep/40 cursor-default;
+  }
+
+  /* Selo de confirmação */
+  .confirmed-badge {
+    @apply inline-flex items-center gap-1.5 text-xs font-semibold;
+    color: var(--color-brand-accent);
+  }
+
+  .confirmed-dot {
+    width: 8px;
+    height: 8px;
+    border-radius: 999px;
+    background: var(--color-brand-accent);
+    box-shadow: 0 0 0 3px rgba(10, 132, 79, 0.15);
+    flex-shrink: 0;
+  }
+
+  /* Perfil da farmácia */
+  .pharmacy-hero {
+    @apply bg-brand-bg-alt border-b border-brand-divider/40 py-12;
+  }
+
+  .pharmacy-hero-inner {
+    @apply max-w-4xl mx-auto px-6 flex flex-wrap items-center justify-between gap-6;
+  }
+
+  .pharmacy-name {
+    @apply text-3xl md:text-4xl font-bold text-brand-deep mb-1;
+  }
+
+  .pharmacy-loc {
+    @apply text-brand-deep/60;
+  }
+
+  .pharmacy-badges {
+    @apply flex gap-2 flex-wrap;
+  }
+
+  .badge {
+    @apply text-xs font-bold uppercase tracking-wide px-3 py-1 rounded-full;
+  }
+
+  .badge--verified {
+    background: rgba(10, 132, 79, 0.12);
+    color: var(--color-brand-accent);
+  }
+
+  .stock-section {
+    @apply max-w-4xl mx-auto px-6 py-12;
+  }
+
+  .stock-list {
+    @apply bg-brand-card border border-brand-divider/40 rounded-[20px] overflow-hidden;
+    box-shadow: 0 2px 12px rgba(0, 42, 50, 0.05);
+  }
+
+  .stock-row {
+    @apply px-6 py-4 flex flex-wrap items-center justify-between gap-3 border-b border-brand-divider/20 last:border-b-0;
+  }
+
+  .stock-row-name {
+    @apply font-semibold text-brand-deep;
+  }
+
+  .stock-row-meta {
+    @apply text-xs text-brand-deep/50;
+  }
+
+  .stock-confirmed-at {
+    @apply text-xs text-brand-deep/50 flex items-center gap-1.5;
+  }
+
+  /* Estado vazio */
+  .empty-state {
+    @apply text-center py-16 px-6;
+  }
+
+  .empty-title {
+    @apply text-xl font-bold text-brand-deep mb-2;
+  }
+
+  .empty-sub {
+    @apply text-brand-deep/60 text-sm mb-6;
+  }
+
+  /* Skeleton */
+  .skeleton-line {
+    @apply rounded-full;
+    background: var(--color-brand-divider);
+    animation: pulse 1.5s ease-in-out infinite;
+  }
+
+  .spinner {
+    width: 22px;
+    height: 22px;
+    border: 2.5px solid rgba(10, 132, 79, 0.2);
+    border-top-color: var(--color-brand-accent);
+    border-radius: 999px;
+    animation: spin 0.7s linear infinite;
+    margin: 0 auto;
+  }
+
+  @keyframes spin {
+    to {
+      transform: rotate(360deg);
+    }
+  }
+
+  .search-cta {
+    @apply text-center mt-14 p-7 rounded-[20px] border border-brand-divider/40;
+    background: var(--color-brand-bg-alt);
+  }
+
+  .search-cta-title {
+    @apply font-bold text-brand-deep text-lg mb-2;
+  }
+
+  .search-cta-sub {
+    @apply text-sm text-brand-deep/60 mb-5;
+  }
+}

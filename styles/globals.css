@@ -903,18 +903,17 @@ html.dark .form-note {
      HEADER FUNCIONAL DAS PÁGINAS REAIS
      (distinto do header de camuflagem da landing)
      ============================================ */
+  /* Dark mode: como os tokens --color-brand-* já são redefinidos em html.dark,
+     todas as cores derivam dos tokens e adaptam-se sozinhas — só há um
+     override de tema (contraste do link activo, mais abaixo). */
   .app-header {
     @apply sticky top-0 z-50 border-b border-brand-divider/60 bg-brand-bg/90;
     backdrop-filter: blur(10px);
     -webkit-backdrop-filter: blur(10px);
   }
 
-  html.dark .app-header {
-    @apply bg-brand-deep/90;
-  }
-
   .app-header-inner {
-    @apply max-w-5xl mx-auto px-6 h-16 flex items-center gap-6;
+    @apply max-w-5xl mx-auto px-6 h-16 flex items-center;
   }
 
   .app-header-logo {
@@ -927,12 +926,10 @@ html.dark .form-note {
     padding-left: 10px;
   }
 
-  html.dark .app-header-product {
-    border-left-color: rgba(255, 255, 255, 0.15);
-  }
-
+  /* Nav centrada: flex-1 + justify-center centra os links entre o logo
+     e as acções da direita em qualquer largura de ecrã. */
   .app-header-nav {
-    @apply hidden md:flex items-center gap-1 flex-1;
+    @apply hidden md:flex items-center justify-center flex-1 gap-1;
   }
 
   .app-header-link {
@@ -944,22 +941,18 @@ html.dark .form-note {
     @apply text-brand-deep bg-brand-bg-alt;
   }
 
-  html.dark .app-header-link:hover {
-    @apply text-white;
-    background: rgba(255, 255, 255, 0.06);
-  }
-
   .app-header-link--active {
     @apply text-brand-primary bg-brand-accent/10 font-semibold;
   }
 
+  /* Único override de tema: no escuro o verde-primário não tem contraste
+     suficiente sobre o fundo — usa o acento mais claro. */
   html.dark .app-header-link--active {
-    @apply text-brand-accent;
-    background: rgba(10, 132, 79, 0.15);
+    color: var(--color-brand-accent);
   }
 
   .app-header-right {
-    @apply flex items-center gap-3 flex-shrink-0 ml-auto;
+    @apply flex items-center gap-3 flex-shrink-0;
   }
 
   .app-header-external {
@@ -969,10 +962,6 @@ html.dark .form-note {
 
   .app-header-external:hover {
     @apply text-brand-accent;
-  }
-
-  html.dark .app-header-external {
-    @apply text-white/60;
   }
 
   .app-header-mobile {
@@ -1065,5 +1054,57 @@ html.dark .form-note {
   /* Reaproveita .chip / .chip--active existentes para o filtro */
   .ph-toolbar .chip {
     @apply text-xs px-3 py-1;
+  }
+
+  /* ============================================
+     SOBRE (/sobre)
+     ============================================ */
+  .about-hero {
+    @apply text-center pt-14 pb-10 md:pt-20 md:pb-14;
+  }
+
+  .about-hero-title {
+    @apply text-4xl md:text-5xl font-bold text-brand-deep mb-4;
+  }
+
+  .about-hero-sub {
+    @apply text-brand-deep/60 max-w-xl mx-auto;
+  }
+
+  .about-section {
+    @apply py-10 border-t border-brand-divider/40;
+  }
+
+  .about-kicker {
+    @apply text-xs font-bold uppercase tracking-widest text-brand-accent mb-3;
+  }
+
+  .about-h2 {
+    @apply text-2xl md:text-3xl font-bold text-brand-deep font-display mb-4;
+  }
+
+  .about-p {
+    @apply text-brand-deep/70 leading-relaxed mb-4;
+  }
+
+  .about-points {
+    @apply space-y-3.5 mt-6;
+  }
+
+  .about-point {
+    @apply flex items-start gap-3;
+  }
+
+  .about-point .confirmed-dot {
+    margin-top: 7px;
+  }
+
+  .about-point-text {
+    @apply text-brand-deep/80 leading-relaxed;
+  }
+
+  .about-cta {
+    @apply text-center mt-6 p-8 rounded-[20px] border border-brand-divider/40;
+    background: var(--color-brand-bg-alt);
   }
 }

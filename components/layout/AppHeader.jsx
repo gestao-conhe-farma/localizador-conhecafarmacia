@@ -9,7 +9,7 @@ import ThemeToggle from '@/components/ui/ThemeToggle'
 const NAV = [
   { href: '/pesquisa', label: 'Pesquisar' },
   { href: '/farmacia', label: 'Farmácias' },
-  // 'Sobre' entra aqui quando a landing sair da homepage e ganhar rota própria.
+  { href: '/sobre', label: 'Sobre' },
 ]
 
 export default function AppHeader() {

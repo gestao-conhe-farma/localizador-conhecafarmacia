@@ -5,6 +5,7 @@ import Link from 'next/link'
 import Image from 'next/image'
 import { usePathname } from 'next/navigation'
 import ThemeToggle from '@/components/ui/ThemeToggle'
+import MobileDrawer from '@/components/layout/MobileDrawer'
 
 const NAV = [
   { href: '/pesquisa', label: 'Pesquisar' },
@@ -24,8 +25,13 @@ export default function AppHeader() {
   const isActive = (href) =>
     pathname === href || pathname.startsWith(href + '/')
 
+  // O drawer TEM de viver FORA do <header>: o efeito push aplica um transform
+  // ao header, e um ancestral com transform faz os filhos position:fixed
+  // ancorarem a ele — o drawer sairia voando junto com o header. Como irmão,
+  // fica ancorado à viewport (como no site principal).
   return (
-    <header className="app-header">
+    <>
+      <header className="app-header">
       <div className="app-header-inner">
         <Link href="/pesquisa" className="app-header-logo" aria-label="Localizador — início">
           <Image src="/logo/3.png" alt="Conheça Farmácia" width={104} height={35} priority />
@@ -70,28 +76,9 @@ export default function AppHeader() {
           </button>
         </div>
       </div>
+      </header>
 
-      {navOpen && (
-        <div className="app-header-mobile">
-          {NAV.map((item) => (
-            <Link
-              key={item.href}
-              href={item.href}
-              className={`app-header-mobile-link${isActive(item.href) ? ' app-header-mobile-link--active' : ''}`}
-            >
-              {item.label}
-            </Link>
-          ))}
-          <a
-            href="https://conhecafarmacia.com"
-            target="_blank"
-            rel="noopener noreferrer"
-            className="app-header-mobile-link"
-          >
-            conhecafarmacia.com →
-          </a>
-        </div>
-      )}
-    </header>
+      <MobileDrawer open={navOpen} onClose={() => setNavOpen(false)} />
+    </>
   )
 }

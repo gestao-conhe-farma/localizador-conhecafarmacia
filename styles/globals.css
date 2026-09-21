@@ -976,7 +976,7 @@ html.dark .form-note {
   }
 
   .app-header-right {
-    @apply flex items-center gap-3 flex-shrink-0;
+    @apply flex items-center gap-3 flex-shrink-0 ml-auto;
   }
 
   .app-header-external {
@@ -1022,6 +1022,12 @@ html.dark .form-note {
   @media (min-width: 640px) {
     .ph-grid {
       grid-template-columns: repeat(2, minmax(0, 1fr));
+    }
+  }
+
+  @media (min-width: 1024px) {
+    .ph-grid {
+      grid-template-columns: repeat(3, minmax(0, 1fr));
     }
   }
 
@@ -1130,5 +1136,201 @@ html.dark .form-note {
   .about-cta {
     @apply text-center mt-6 p-8 rounded-[20px] border border-brand-divider/40;
     background: var(--color-brand-bg-alt);
+  }
+
+  /* ============================================
+     DRAWER MOBILE — mesmo padrão do site principal:
+     overlay + painel verde deslizante com efeito push.
+     ============================================ */
+
+  /* Overlay: backdrop semi-transparente */
+  .drawer-overlay {
+    position: fixed;
+    inset: 0;
+    background: rgba(0, 0, 0, 0.5);
+    z-index: 52;
+    opacity: 0;
+    visibility: hidden;
+    transition:
+      opacity 0.8s cubic-bezier(0.16, 1, 0.3, 1),
+      visibility 0.8s cubic-bezier(0.16, 1, 0.3, 1);
+  }
+
+  .drawer-overlay.active {
+    opacity: 1;
+    visibility: visible;
+  }
+
+  /* Painel: 64px = altura do app-header (no principal é a utility bar) */
+  .mobile-drawer {
+    position: fixed;
+    top: 64px;
+    right: 0;
+    width: 78%;
+    max-width: 380px;
+    height: calc(100dvh - 64px);
+    z-index: 55;
+    background: linear-gradient(180deg, #00493a 0%, #003529 100%);
+    box-shadow: -8px 0 30px rgba(0, 42, 50, 0.18);
+    display: flex;
+    flex-direction: column;
+    padding: 1.25rem 1rem 1rem;
+    transform: translateX(100%);
+    transition: transform 0.8s cubic-bezier(0.16, 1, 0.3, 1);
+    overflow-y: auto;
+    overscroll-behavior: contain;
+  }
+
+  .mobile-drawer.open {
+    transform: translateX(0);
+  }
+
+  html.dark .mobile-drawer {
+    background: linear-gradient(180deg, #01332a 0%, #012019 100%);
+  }
+
+  .drawer-close {
+    position: absolute;
+    top: 1rem;
+    right: 1rem;
+    width: 36px;
+    height: 36px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    background: rgba(255, 255, 255, 0.1);
+    border: none;
+    color: #ffffff;
+    cursor: pointer;
+    border-radius: 50%;
+    transition: background 0.2s ease;
+    padding: 0;
+  }
+
+  .drawer-close:hover {
+    background: rgba(255, 255, 255, 0.2);
+  }
+
+  .drawer-close svg {
+    width: 22px;
+    height: 22px;
+  }
+
+  .drawer-logo {
+    display: flex;
+    justify-content: center;
+    padding-top: 0.5rem;
+    padding-bottom: 1.375rem;
+  }
+
+  .drawer-logo img {
+    height: 44px;
+    width: auto;
+  }
+
+  .drawer-links {
+    list-style: none;
+    padding: 0;
+    margin: 0;
+    display: flex;
+    flex-direction: column;
+    gap: 0.125rem;
+    flex: 1;
+  }
+
+  .drawer-links li a {
+    display: block;
+    padding: 0.7rem 0.875rem;
+    font-size: 1rem;
+    font-weight: 500;
+    color: rgba(255, 255, 255, 0.82);
+    text-decoration: none;
+    border-radius: 12px;
+    transition:
+      background 0.2s ease,
+      color 0.2s ease;
+  }
+
+  .drawer-links li a:hover {
+    background: rgba(255, 255, 255, 0.08);
+    color: #ffffff;
+  }
+
+  /* Página activa: barra mint à esquerda + fundo translúcido (como no principal) */
+  .drawer-links li a.drawer-link-active {
+    background: rgba(255, 255, 255, 0.14);
+    color: #ffffff;
+    font-weight: 700;
+    border-left: 3px solid #7fd4ab;
+    padding-left: 0.7rem;
+    border-radius: 4px 12px 12px 4px;
+  }
+
+  .drawer-footer {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    gap: 1rem;
+    padding-top: 1.25rem;
+    padding-bottom: 0.75rem;
+    border-top: 1px solid rgba(255, 255, 255, 0.15);
+    margin-top: auto;
+  }
+
+  .drawer-footer-row {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    width: 100%;
+  }
+
+  .drawer-brand-mini {
+    font-size: 0.625rem;
+    font-weight: 600;
+    letter-spacing: 0.2em;
+    text-transform: uppercase;
+    color: rgba(255, 255, 255, 0.4);
+  }
+
+  /* ThemeToggle em versão branca dentro do drawer (vem depois de .theme-toggle
+     no ficheiro, por isso sobrepõe a base) */
+  .drawer-theme-toggle {
+    background: none;
+    border: 1px solid rgba(255, 255, 255, 0.25);
+    color: #ffffff;
+    padding: 0;
+    width: 38px;
+    height: 38px;
+    border-radius: 50%;
+  }
+
+  /* Efeito push + bloqueio de scroll com o drawer aberto.
+     A transição vive no estado BASE (dentro de mobile, onde o drawer
+     existe) para animar também o fecho — como no site principal. */
+  body.drawer-open {
+    overflow: hidden;
+  }
+
+  @media (max-width: 767px) {
+    main,
+    .app-header {
+      transition:
+        transform 0.8s cubic-bezier(0.16, 1, 0.3, 1),
+        background-color 0.2s ease,
+        color 0.2s ease,
+        border-color 0.2s ease;
+    }
+
+    body.drawer-open main,
+    body.drawer-open .app-header {
+      transform: translateX(-72%);
+      border-radius: 20px 0 0 20px;
+      box-shadow: -4px 0 30px rgba(0, 42, 50, 0.15);
+    }
+  }
+
+  /* Hamburger com contraste no dark mode (brand-primary fica escuro demais) */
+  html.dark .hamburger span {
+    background: var(--color-brand-deep);
   }
 }

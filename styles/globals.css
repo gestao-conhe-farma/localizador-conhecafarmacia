@@ -1306,14 +1306,14 @@ html.dark .form-note {
 
   /* Efeito push + bloqueio de scroll com o drawer aberto.
      A transição vive no estado BASE (dentro de mobile, onde o drawer
-     existe) para animar também o fecho — como no site principal. */
+     existe) para animar também o fecho. Só o conteúdo (main) empurra —
+     o header permanece fixo no lugar. */
   body.drawer-open {
     overflow: hidden;
   }
 
   @media (max-width: 767px) {
-    main,
-    .app-header {
+    main {
       transition:
         transform 0.8s cubic-bezier(0.16, 1, 0.3, 1),
         background-color 0.2s ease,
@@ -1321,8 +1321,7 @@ html.dark .form-note {
         border-color 0.2s ease;
     }
 
-    body.drawer-open main,
-    body.drawer-open .app-header {
+    body.drawer-open main {
       transform: translateX(-72%);
       border-radius: 20px 0 0 20px;
       box-shadow: -4px 0 30px rgba(0, 42, 50, 0.15);

@@ -2,12 +2,15 @@
 
 import { useTheme } from '@/components/providers/ThemeProvider'
 
-export default function ThemeToggle({ className = 'theme-toggle' }) {
+export default function ThemeToggle({ className = '' }) {
   const { theme, toggleTheme } = useTheme()
 
+  // A classe base .theme-toggle é SEMPRE mantida — é dela que vêm as regras
+  // de visibilidade dos ícones sol/lua. Classes extra (ex.: drawer-theme-toggle)
+  // apenas sobrepõem cor/estilo.
   return (
     <button
-      className={className}
+      className={`theme-toggle${className ? ` ${className}` : ''}`}
       onClick={toggleTheme}
       onMouseDown={(e) => e.preventDefault()}
       aria-label="Alternar modo escuro"

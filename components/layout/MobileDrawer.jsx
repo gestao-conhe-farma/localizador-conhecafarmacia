@@ -84,7 +84,14 @@ export default function MobileDrawer({ open, onClose }) {
 
         <div className="drawer-footer">
           <div className="drawer-footer-row">
-            <span className="drawer-brand-mini">Conheça Farmácia</span>
+            <a
+              className="drawer-brand-mini"
+              href="https://conhecafarmacia.com"
+              target="_blank"
+              rel="noopener noreferrer"
+            >
+              Conheça Farmácia
+            </a>
             <ThemeToggle className="drawer-theme-toggle" />
           </div>
         </div>

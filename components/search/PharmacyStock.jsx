@@ -12,6 +12,38 @@ import { formatOptionLabel, formatPerBase, unitLabel } from '@/lib/sale-options'
 
 const fmtKz = (n) => new Intl.NumberFormat('pt-AO', { maximumFractionDigits: 0 }).format(n) + ' Kz'
 
+/** Bandeira da origem (0013) — emoji por país; fallback globe. */
+const ORIGIN_FLAGS = {
+  Portugal: '🇵🇹',
+  Índia: '🇮🇳',
+  China: '🇨🇳',
+  Alemanha: '🇩🇪',
+  França: '🇫🇷',
+  Brasil: '🇧🇷',
+  EUA: '🇺🇸',
+  'Reino Unido': '🇬🇧',
+  Egipto: '🇪🇬',
+  'África do Sul': '🇿🇦',
+  Japão: '🇯🇵',
+  Turquia: '🇹🇷',
+}
+const originFlag = (o) => ORIGIN_FLAGS[o] || '🌍'
+
+/** Etiquetas de origem/marca (0013) — reutilizadas nas duas vistas. */
+function OriginBrandTags({ item }) {
+  if (!item.origin && !item.brand) return null
+  return (
+    <div className="drug-card-origin">
+      {item.brand && <span className="origin-tag origin-tag--brand">{item.brand}</span>}
+      {item.origin && (
+        <span className="origin-tag">
+          {originFlag(item.origin)} {item.origin}
+        </span>
+      )}
+    </div>
+  )
+}
+
 /**
  * Preço com opções de venda (0012): se o item tem opções, mostra uma
  * etiqueta por forma ("Lâmina · 100 Kz" / "Caixa (3 lâminas) · 300 Kz");
@@ -286,6 +318,7 @@ export default function PharmacyStock({ slug, initialItems = null }) {
                               <span className="rx-badge rx-badge--inline">Receita médica</span>
                             )}
                           </div>
+                          <OriginBrandTags item={it} />
                           <div className="crit-meta">
                             {[it.drug_form, it.drug_dosage].filter(Boolean).join(' · ')}
                             {it.price != null ? ` · confirmado ${timeAgo(it.confirmed_at)}` : ''}
@@ -376,6 +409,7 @@ export default function PharmacyStock({ slug, initialItems = null }) {
                                     </span>
                                   )}
                                 </div>
+                                <OriginBrandTags item={it} />
                                 <div className="stock-row-meta">
                                   {it.drug_dosage ? `${it.drug_dosage} · ` : ''}
                                   <span className="stock-confirmed-at">

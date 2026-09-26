@@ -1,7 +1,7 @@
 'use client'
 
 import { useEffect, useMemo, useRef, useState } from 'react'
-import { getMyStockSnapshot, updateStockItem } from '@/lib/actions/pharmacy-portal'
+import { getMyStockSnapshot, updateStockItem, uploadDrugImage } from '@/lib/actions/pharmacy-portal'
 import { countExpiryBuckets, expiryStatus, expirySummary } from '@/lib/expiry'
 import DrugCreateForm from '@/components/portal/DrugCreateForm'
 import { setSaleOptions } from '@/lib/actions/pharmacy-portal'
@@ -82,6 +82,27 @@ const SORTS = [
   { id: 'expiry', label: 'Validade' },
 ]
 
+/**
+ * Origens (0013) — a lista pesa na decisão do cliente angolano:
+ * "é português?" é pergunta de balcão. Select fechado (dados limpos,
+ * tags comparáveis); se a embalagem for de outro país, fica sem
+ * origem até a lista crescer — melhor nada do que texto solto.
+ */
+export const ORIGINS = [
+  'Portugal',
+  'Índia',
+  'China',
+  'Alemanha',
+  'França',
+  'Brasil',
+  'EUA',
+  'Reino Unido',
+  'Egipto',
+  'África do Sul',
+  'Japão',
+  'Turquia',
+]
+
 /** Quantos cards mostrar por “página” do scroll infinito. */
 const PAGE_SIZE = 24
 
@@ -100,6 +121,11 @@ function StockEditModal({ item, saving, onClose, onSave, onSaveOptions }) {
   const [availableFrom, setAvailableFrom] = useState(
     item.available_from ? item.available_from.slice(0, 10) : '',
   )
+  // Origem/marca/foto (0013).
+  const [origin, setOrigin] = useState(item.origin || '')
+  const [brand, setBrand] = useState(item.brand || '')
+  const [imagePath, setImagePath] = useState(item.image_path || '')
+  const [uploading, setUploading] = useState(false)
   // Opções de venda (0012). Sem opções registadas: começa vazio — o
   // botão "sugerir formas de venda" preenche com defaults pela forma.
   const [opts, setOpts] = useState(
@@ -166,6 +192,9 @@ function StockEditModal({ item, saving, onClose, onSave, onSaveOptions }) {
               available_from_input: availableFrom,
               available_from: availableFrom || null,
               sale_options: opts,
+              origin,
+              brand,
+              image_path: imagePath,
             })
           }}
         >
@@ -211,6 +240,72 @@ function StockEditModal({ item, saving, onClose, onSave, onSaveOptions }) {
                 value={price}
                 onChange={(e) => setPrice(e.target.value)}
               />
+            </label>
+          </div>
+
+          {/* Origem e marca (0013) — a origem pesa na decisão em Angola.
+              Marca livre ("Panadol", "Ben-u-ron"), origem da lista. */}
+          <div className="portal-form-grid portal-form-grid--three">
+            <label className="portal-label">
+              Origem
+              <select
+                className="portal-input"
+                value={origin}
+                onChange={(e) => setOrigin(e.target.value)}
+              >
+                <option value="">— não indicada —</option>
+                {ORIGINS.map((o) => (
+                  <option key={o} value={o}>
+                    {o}
+                  </option>
+                ))}
+              </select>
+            </label>
+            <label className="portal-label">
+              Marca
+              <input
+                type="text"
+                className="portal-input"
+                placeholder="Ex.: Ben-u-ron"
+                maxLength={80}
+                value={brand}
+                onChange={(e) => setBrand(e.target.value)}
+              />
+            </label>
+            <label className="portal-label">
+              Foto da embalagem
+              <input
+                type="file"
+                accept="image/jpeg,image/png,image/webp"
+                className="portal-input"
+                disabled={uploading}
+                onChange={async (e) => {
+                  const f = e.target.files?.[0]
+                  if (!f) return
+                  setUploading(true)
+                  const up = await uploadDrugImage({ drugId: item.drug_id, file: f })
+                  setUploading(false)
+                  if (up.ok) {
+                    setImagePath(up.path)
+                    setToast('Foto carregada — guarda para publicar.')
+                    setTimeout(() => setToast(''), 2500)
+                  } else {
+                    setToast(
+                      up.error === 'FICHEIRO_GRANDE'
+                        ? 'Imagem acima de 2 MB — comprime ou tira de novo.'
+                        : up.error === 'TIPO_INVALIDO'
+                          ? 'Só JPEG, PNG ou WebP.'
+                          : 'Não foi possível carregar a foto.',
+                    )
+                    setTimeout(() => setToast(''), 3500)
+                    e.target.value = ''
+                  }
+                }}
+              />
+              {uploading && <span className="portal-hint">A carregar…</span>}
+              {!uploading && imagePath && (
+                <span className="portal-hint">Foto carregada ✓ (guarda para publicar)</span>
+              )}
             </label>
           </div>
 
@@ -520,6 +615,12 @@ export default function StockPanel({ compact = false }) {
       price: next.price ?? '',
       availableFrom: patch.available_from_input ?? asDateInput(it.available_from),
       expiresAt: patch.expires_at_input ?? asDateInput(it.expires_at),
+      // Origem/marca/foto só viajam quando o patch as trouxe (o modal
+      // envia sempre; os toggles da fila/atenção nunca) — evita apagar
+      // o que estava num guardado que não tocou nestes campos.
+      ...(patch.origin !== undefined && { origin: patch.origin }),
+      ...(patch.brand !== undefined && { brand: patch.brand }),
+      ...(patch.image_path !== undefined && { imagePath: patch.image_path }),
     })
     setSavingId(null)
     if (res.ok) {
@@ -528,6 +629,10 @@ export default function StockPanel({ compact = false }) {
           row.drug_id === it.drug_id
             ? {
                 ...next,
+                origin: patch.origin !== undefined ? patch.origin || null : row.origin,
+                brand: patch.brand !== undefined ? patch.brand || null : row.brand,
+                image_path:
+                  patch.image_path !== undefined ? patch.image_path || null : row.image_path,
                 confirmed_at: new Date().toISOString(),
                 stock_item_id: row.stock_item_id || 'x',
               }

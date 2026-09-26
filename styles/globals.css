@@ -819,6 +819,38 @@ html.dark .form-note {
     @apply text-xs text-brand-deep/50 mt-0.5;
   }
 
+  /* Origem/marca (0013) — tags discretas sob o nome da farmácia:
+     a marca em peso normal, a origem com bandeira emoji. */
+  .drug-card-origin {
+    @apply flex items-center gap-1.5 flex-wrap mt-1;
+  }
+
+  .origin-tag {
+    @apply text-[11px] font-semibold px-2 py-0.5 rounded-full;
+    background: color-mix(in srgb, var(--color-brand-primary) 8%, transparent);
+    color: var(--color-brand-deep);
+  }
+
+  .origin-tag--brand {
+    background: color-mix(in srgb, var(--color-brand-accent) 12%, transparent);
+    color: var(--color-brand-primary);
+  }
+
+  /* Foto da embalagem no card do Localizador — pequena, à esquerda
+     do bloco de preços; some em ecrãs muito estreitos. */
+  .drug-card-img {
+    @apply rounded-lg border object-cover;
+    width: 52px;
+    height: 52px;
+    border-color: var(--color-brand-line);
+  }
+
+  @media (max-width: 40rem) {
+    .drug-card-img {
+      display: none;
+    }
+  }
+
   .drug-card-meta .fresh {
     @apply font-semibold;
     color: var(--color-brand-accent);

@@ -28,6 +28,23 @@ const MUNICIPIOS = [
 
 const fmtKz = (n) => new Intl.NumberFormat('pt-AO', { maximumFractionDigits: 0 }).format(n) + ' Kz'
 
+/** Bandeira da origem (0013) — emoji por país; fallback globe. */
+const ORIGIN_FLAGS = {
+  Portugal: '🇵🇹',
+  Índia: '🇮🇳',
+  China: '🇨🇳',
+  Alemanha: '🇩🇪',
+  França: '🇫🇷',
+  Brasil: '🇧🇷',
+  EUA: '🇺🇸',
+  'Reino Unido': '🇬🇧',
+  Egipto: '🇪🇬',
+  'África do Sul': '🇿🇦',
+  Japão: '🇯🇵',
+  Turquia: '🇹🇷',
+}
+const originFlag = (o) => ORIGIN_FLAGS[o] || '🌍'
+
 function timeAgo(iso) {
   const s = Math.max(0, (Date.now() - new Date(iso).getTime()) / 1000)
   if (s < 3600) return `há ${Math.max(1, Math.round(s / 60))} min`
@@ -465,12 +482,38 @@ export default function DrugSearch() {
                                 Melhor preço
                               </span>
                             )}
+                            {/* Origem/marca (0013) — pesa na decisão do
+                                cliente; bandeira emoji por país. */}
+                            {(p.origin || p.brand) && (
+                              <div className="drug-card-origin">
+                                {p.brand && (
+                                  <span className="origin-tag origin-tag--brand">{p.brand}</span>
+                                )}
+                                {p.origin && (
+                                  <span className="origin-tag">
+                                    {originFlag(p.origin)} {p.origin}
+                                  </span>
+                                )}
+                              </div>
+                            )}
                             <div className="drug-card-meta">
                               {p.pharmacy_municipio}
                               {p.pharmacy_address ? ` · ${p.pharmacy_address}` : ''} ·{' '}
                               <span className="fresh">confirmado {timeAgo(p.confirmed_at)}</span>
                             </div>
                           </div>
+
+                          {/* Foto da embalagem (0013) — a caixa real que
+                              está na prateleira. Sem imagem, o card fica
+                              como sempre (legado). */}
+                          {p.image_path && (
+                            <img
+                              src={`${process.env.NEXT_PUBLIC_SUPABASE_URL}/storage/v1/object/public/drug-images/${p.image_path}`}
+                              alt={`Embalagem de ${r.drug_name} — ${p.pharmacy_name}`}
+                              loading="lazy"
+                              className="drug-card-img"
+                            />
+                          )}
 
                           <div className="drug-card-side">
                             {opts.length > 0 ? (

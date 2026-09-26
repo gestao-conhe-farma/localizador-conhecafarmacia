@@ -1,6 +1,16 @@
 /** @type {import('next').NextConfig} */
 const nextConfig = {
   poweredByHeader: false, // reduz fingerprinting
+
+  // Cache persistente do Turbopack DESLIGADO (Next 16). No Windows a escrita
+  // do cache em .next/dev/cache/turbopack é dolorosamente lenta (vimos 4.9min
+  // num único write-back) e cache corrompido deixa o dev server "wedged"
+  // (vercel/next.js #95495, discussion #87283). Sem o cache de disco as
+  // compilações são só em memória: primeiro arranque mais lento, depois
+  // rápido e estável. Remover esta linha quando o bug upstream fechar.
+  experimental: {
+    turbopackFileSystemCacheForDev: false,
+  },
   images: {
     remotePatterns: [
       {

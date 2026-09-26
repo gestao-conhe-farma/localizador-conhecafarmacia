@@ -243,6 +243,9 @@ export default function ReservationsQueue() {
       saleUnitPrice: r.stock_sale_options?.price,
       saleBaseUnit: (r.item_options || []).find((o) => o.is_default && o.id !== r.sale_option_id)
         ?.unit,
+      // Origem/marca (0013) — entram na mensagem ao cliente.
+      origin: r.origin,
+      brand: r.brand,
     })
     const link = msg ? waLink(r.requester_phone, msg.text) : null
     if (link) window.open(link, '_blank', 'noopener,noreferrer')

@@ -17,6 +17,23 @@ const ERRORES = { ...ERRORES_BASE, PAYLOAD_INVALIDO: ERRORES_BASE.FALHA_CRIAR }
 
 const fmt = (n) => new Intl.NumberFormat('pt-AO', { maximumFractionDigits: 2 }).format(Number(n))
 
+/** Bandeira da origem (0013) — a mesma tabela de DrugSearch/PharmacyStock. */
+const ORIGIN_FLAGS = {
+  Portugal: '🇵🇹',
+  Índia: '🇮🇳',
+  China: '🇨🇳',
+  Alemanha: '🇩🇪',
+  França: '🇫🇷',
+  Brasil: '🇧🇷',
+  EUA: '🇺🇸',
+  'Reino Unido': '🇬🇧',
+  Egipto: '🇪🇬',
+  'África do Sul': '🇿🇦',
+  Japão: '🇯🇵',
+  Turquia: '🇹🇷',
+}
+const originFlag = (o) => ORIGIN_FLAGS[o] || '🌍'
+
 /**
  * Modal de reserva do lado do cliente — o fecho do ciclo (fase 5 do
  * plano). Sucesso devolve o link de acompanhamento /reserva/[id]: é
@@ -131,6 +148,19 @@ export default function ReserveModal({ item, onClose, onCreated }) {
               {item.pharmacy_municipio ? ` · ${item.pharmacy_municipio}` : ''} — a farmácia responde
               em até 72 horas.
             </p>
+
+            {/* Origem/marca (0013) — o cliente confirma que é a apresentação
+                certa antes de reservar ("é o Ben-u-ron português?"). */}
+            {(item.brand || item.origin) && (
+              <div className="drug-card-origin">
+                {item.brand && <span className="origin-tag origin-tag--brand">{item.brand}</span>}
+                {item.origin && (
+                  <span className="origin-tag">
+                    {originFlag(item.origin)} {item.origin}
+                  </span>
+                )}
+              </div>
+            )}
 
             {opts.length > 0 && (
               <label className="portal-label">

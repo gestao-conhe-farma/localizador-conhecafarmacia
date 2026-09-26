@@ -48,6 +48,17 @@ const NAV = [
         ),
       },
       {
+        href: '/portal/entrada',
+        label: 'Entrada de stock',
+        icon: (
+          <>
+            <path d="M12 21V9" />
+            <path d="m7 14 5-5 5 5" />
+            <path d="M5 3h14" />
+          </>
+        ),
+      },
+      {
         href: '/portal/reservas',
         label: 'Reservas',
         icon: (

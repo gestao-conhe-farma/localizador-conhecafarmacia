@@ -3164,6 +3164,104 @@ html.dark .form-note {
     @apply w-4 h-4;
   }
 
+  /* ── Entrada de stock (reposição) — linhas densas com saldo à direita,
+     campo «chegaram» e botão Somar. Mesma família dos .portal-attention-*. ── */
+  .restock-list {
+    @apply flex flex-col rounded-lg border overflow-hidden;
+    background: var(--color-brand-bg-alt);
+    border-color: var(--color-brand-divider);
+  }
+
+  .restock-row {
+    @apply flex items-center gap-4 px-4 py-3 flex-wrap;
+    border-bottom: 1px solid var(--color-brand-divider);
+  }
+
+  .restock-row:last-child {
+    border-bottom: none;
+  }
+
+  /* Fora do ar (esgotado): tint verde suave — é o caso prioritário,
+     o mesmo papel do .stock-card--in / portal-stock-row--in. */
+  .restock-row--out {
+    background: color-mix(in srgb, var(--color-brand-accent) 6%, transparent);
+  }
+
+  .restock-main {
+    @apply flex flex-col min-w-[220px] flex-1;
+  }
+
+  .restock-name {
+    @apply font-semibold text-brand-deep text-sm flex items-center gap-2 flex-wrap;
+  }
+
+  .restock-meta {
+    @apply text-xs text-brand-deep/55 mt-0.5;
+  }
+
+  .restock-balance {
+    @apply flex flex-col items-center min-w-[64px];
+  }
+
+  .restock-balance-n {
+    @apply text-lg font-bold leading-none;
+    font-variant-numeric: tabular-nums;
+    color: var(--color-brand-deep);
+  }
+
+  .restock-balance-k {
+    @apply text-[10px] uppercase tracking-wide;
+    color: color-mix(in srgb, var(--color-brand-deep) 45%, transparent);
+  }
+
+  .restock-form {
+    @apply flex items-end gap-2;
+  }
+
+  .restock-field {
+    @apply flex flex-col gap-1;
+  }
+
+  .restock-field-k {
+    @apply text-[11px] font-semibold;
+    color: color-mix(in srgb, var(--color-brand-deep) 55%, transparent);
+  }
+
+  .restock-input {
+    @apply w-24 px-3 py-2 text-sm;
+  }
+
+  .restock-save {
+    @apply px-4 py-2 text-xs;
+  }
+
+  .restock-save:disabled {
+    @apply opacity-60 cursor-wait;
+  }
+
+  .restock-more {
+    @apply mx-auto mt-4 block;
+  }
+
+  .restock-log {
+    @apply mt-10 p-5 rounded-lg border;
+    background: var(--color-brand-card);
+    border-color: var(--color-brand-line);
+  }
+
+  .restock-log ul {
+    @apply mt-3 flex flex-col gap-1.5 text-sm list-none;
+    color: var(--color-brand-deep);
+  }
+
+  .restock-log li b {
+    color: var(--color-brand-accent);
+  }
+
+  .restock-log .portal-hint {
+    @apply mt-3;
+  }
+
   /* ── Toolbar do stock: pesquisa + filtros + botão novo fármaco, num só
      bloco centrado (pedido: botão abaixo dos filtros, tudo centrado). ── */
   .stock-toolbar {

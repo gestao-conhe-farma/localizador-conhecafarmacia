@@ -1,6 +1,7 @@
 'use client'
 
 import { useEffect, useMemo, useState } from 'react'
+import { useSearchParams } from 'next/navigation'
 import { getMyStockSnapshot, addStockUnits } from '@/lib/actions/pharmacy-portal'
 import { expiryStatus, monthYear } from '@/lib/expiry'
 
@@ -35,10 +36,16 @@ const PAGE_SIZE = 40
  *
  * Filtros: «Repor» (esgotados/fora do ar, os que mais precisam), «Todos»
  * e «Validade» (em stock com validade a vencer — entrada de lote novo).
- */
+ *
+ * Deep-link a partir da página "Precisa de atenção": `?q=Paracetamol`
+ * pré-filtra a pesquisa (o botão «Repor» de um aviso abre aqui com o
+ * medicamento já isolado na lista, pronto para o atendente escrever a
+ * quantidade que chegou). `useSearchParams` exige <Suspense> no caller —
+ * a página já embrulha. */
 export default function RestockPanel() {
+  const searchParams = useSearchParams()
   const [items, setItems] = useState(null)
-  const [query, setQuery] = useState('')
+  const [query, setQuery] = useState(() => searchParams.get('q') || '')
   const [filter, setFilter] = useState('restock')
   const [units, setUnits] = useState({}) // drug_id -> texto do input
   const [savingId, setSavingId] = useState(null)
@@ -65,6 +72,33 @@ export default function RestockPanel() {
       alive = false
     }
   }, [])
+
+  // Deep-link da atenção: se o q= do URL casa um único medicamento, o foco
+  // vai logo ao campo «Chegaram» dessa linha — o atendente chega, digita,
+  // soma. Corre após o load (só há linha quando items já chegou).
+  const [autofocusDone, setAutofocusDone] = useState(false)
+  useEffect(() => {
+    if (autofocusDone || items === null) return
+    const q = (searchParams.get('q') || '').trim().toLowerCase()
+    if (!q) {
+      setAutofocusDone(true)
+      return
+    }
+    const matches = (items || []).filter(
+      (it) =>
+        it.name?.toLowerCase().includes(q) ||
+        it.molecule?.toLowerCase().includes(q) ||
+        [it.form, it.dosage].filter(Boolean).join(' ').toLowerCase().includes(q),
+    )
+    if (matches.length === 1) {
+      setAutofocusDone(true)
+      queueMicrotask(() => {
+        document
+          .querySelector(`input[aria-label="Unidades recebidas de ${matches[0].name}"]`)
+          ?.focus()
+      })
+    }
+  }, [items, searchParams, autofocusDone])
 
   useEffect(() => {
     queueMicrotask(() => setVisibleCount(PAGE_SIZE))

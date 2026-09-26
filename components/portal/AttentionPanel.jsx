@@ -1,6 +1,7 @@
 'use client'
 
 import { useCallback, useEffect, useMemo, useState } from 'react'
+import Link from 'next/link'
 import { getMyAttentionFeed, updateStockItem } from '@/lib/actions/pharmacy-portal'
 import { getRestockAck, setRestockAck } from '@/lib/restock'
 import { expiryStatus, monthYear } from '@/lib/expiry'
@@ -29,7 +30,7 @@ function asDateInput(v) {
 }
 
 const RESTOCK_HINT =
-  'Repondo, o produto volta a aparecer no Localizador imediatamente (confirme que o lote está na prateleira).'
+  'Repondo, o produto volta a aparecer no Localizador imediatamente (confirme que o lote está na prateleira). «Repor na entrada» soma as unidades recebidas ao saldo; «Repor sem qtd.» apenas religa o produto.'
 
 /**
  * "Precisa de Atenção" — tudo o que exige decisão da farmácia hoje,
@@ -201,26 +202,23 @@ export default function AttentionPanel({ pharmacyId }) {
                   {it.when && ` · ${timeAgo(it.when)}`}
                 </span>
                 <div className="portal-attention-form">
-                  <input
-                    type="number"
-                    min="0"
-                    className="portal-input portal-input--qty"
-                    placeholder="Qtd. em prateleira"
-                    aria-label={`Quantidade a repor de ${it.name}`}
-                    defaultValue=""
-                    onBlur={(e) => {
-                      const v = e.target.value
-                      if (v === '') return // só guarda com quantidade escrita
-                      save(it, { in_stock: true, quantity: v })
-                    }}
-                  />
+                  {/* Repor agora passa pela Entrada de stock: deep-link com
+                      ?q= pré-filtra a lista no medicamento e o foco vai ao
+                      campo «Chegaram» — o fluxo de mercadoria recebida é
+                      somar ao saldo, não sobrescrever. */}
+                  <Link
+                    href={`/portal/entrada?q=${encodeURIComponent(it.name)}`}
+                    className="btn-mini portal-act-ok"
+                  >
+                    Repor na entrada →
+                  </Link>
                   <button
                     type="button"
                     className="btn-mini portal-act-ok"
                     disabled={busy === `restock:${it.drug_id}`}
                     onClick={() => save(it, { in_stock: true })}
                   >
-                    {busy === `restock:${it.drug_id}` ? '…' : 'Repor (sem qtd.)'}
+                    {busy === `restock:${it.drug_id}` ? '…' : 'Repor sem qtd.'}
                   </button>
                   <button
                     type="button"

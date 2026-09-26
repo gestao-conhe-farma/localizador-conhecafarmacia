@@ -263,11 +263,22 @@ export default function AttentionPanel({ pharmacyId }) {
                   {expiryStatus(it.expires_at)?.label || 'Expirado'}
                 </span>
                 <div className="portal-attention-form">
+                  {/* Corrigir validade agora passa pela Entrada de stock:
+                      deep-link por id (?drug=) isola a linha, força o
+                      filtro «Todos» e destaca-a — o lote novo que chegou
+                      soma-se aí, e a validade edifica-se no modal de
+                      stock (acessível pelo nome na lista). */}
+                  <Link
+                    href={`/portal/entrada?drug=${it.drug_id}`}
+                    className="btn-mini portal-act-ok"
+                  >
+                    Corrigir na entrada →
+                  </Link>
                   <input
                     type="date"
                     className="portal-input portal-input--date"
                     aria-label={`Nova validade de ${it.name}`}
-                    title="Nova validade (lote novo)"
+                    title="Nova validade (lote novo) — guarda logo ao mudar"
                     defaultValue={asDateInput(it.expires_at)}
                     onBlur={(e) => {
                       const v = e.target.value

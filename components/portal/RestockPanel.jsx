@@ -41,7 +41,13 @@ const PAGE_SIZE = 40
  * pré-filtra a pesquisa (o botão «Repor» de um aviso abre aqui com o
  * medicamento já isolado na lista, pronto para o atendente escrever a
  * quantidade que chegou). `useSearchParams` exige <Suspense> no caller —
- * a página já embrulha. */
+ * a página já embrulha.
+ *
+ * Deep-link por id (`?drug=<drug_id>`), usado pelo aviso de validade:
+ * força o filtro «Todos» (o item pode ter saldo e estar fora do chip
+ * «Para repor»), isola a linha pelo nome, foca o campo e destaca-a
+ * em laranja uns segundos — o atendente vê logo onde tocar.
+ */
 export default function RestockPanel() {
   const searchParams = useSearchParams()
   const [items, setItems] = useState(null)
@@ -77,9 +83,28 @@ export default function RestockPanel() {
   // vai logo ao campo «Chegaram» dessa linha — o atendente chega, digita,
   // soma. Corre após o load (só há linha quando items já chegou).
   const [autofocusDone, setAutofocusDone] = useState(false)
+  // Linha destacada por deep-link ?drug= (apaga-se sozinha).
+  const [highlightId, setHighlightId] = useState(null)
   useEffect(() => {
     if (autofocusDone || items === null) return
+    const drugId = searchParams.get('drug')
     const q = (searchParams.get('q') || '').trim().toLowerCase()
+    // ?drug= (validade): isola pelo id e força «Todos» — o item tem saldo,
+    // o chip «Para repor» escondia-o.
+    if (drugId) {
+      const it = (items || []).find((row) => row.drug_id === drugId)
+      setAutofocusDone(true)
+      if (it) {
+        setFilter('all')
+        setQuery(it.name)
+        setHighlightId(drugId)
+        setTimeout(() => setHighlightId(null), 6000)
+        queueMicrotask(() => {
+          document.querySelector(`input[aria-label="Unidades recebidas de ${it.name}"]`)?.focus()
+        })
+      }
+      return
+    }
     if (!q) {
       setAutofocusDone(true)
       return
@@ -266,7 +291,12 @@ export default function RestockPanel() {
           const busy = savingId === it.drug_id
           const out = !it.in_stock || (it.quantity ?? 0) === 0
           return (
-            <div key={it.drug_id} className={`restock-row${out ? ' restock-row--out' : ''}`}>
+            <div
+              key={it.drug_id}
+              className={`restock-row${out ? ' restock-row--out' : ''}${
+                highlightId === it.drug_id ? ' restock-row--focus' : ''
+              }`}
+            >
               <div className="restock-main">
                 <span className="restock-name">
                   {it.name}

@@ -3232,6 +3232,14 @@ html.dark .form-note {
     background: color-mix(in srgb, var(--color-brand-accent) 6%, transparent);
   }
 
+  /* Linha destacada por deep-link (?drug= do aviso de validade):
+     tint laranja de validade + contorno, desvanece ao fim de uns seg. */
+  .restock-row--focus {
+    background: color-mix(in srgb, #c47f17 12%, transparent);
+    outline: 2px solid color-mix(in srgb, #c47f17 55%, transparent);
+    outline-offset: -2px;
+  }
+
   .restock-main {
     @apply flex flex-col min-w-[220px] flex-1;
   }

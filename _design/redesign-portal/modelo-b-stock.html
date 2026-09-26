@@ -1,0 +1,494 @@
+<!DOCTYPE html>
+<!--
+  Modelo B — Stock (portal Conheça Farmácia)
+  Resolve:
+  - Lista comprida de 300 linhas → tabela densa paginada (20/pág.) + pesquisa + chips de filtro.
+  - Edição sem descrição → drawer com labels + hints por campo e acções explícitas Guardar/Desligar.
+  - "Adicionar medicamento" no fundo da lista → acção primária no cabeçalho.
+  Mesmo shell do Modelo A (top-bar creme com blur + sidebar verde; drawer no mobile).
+-->
+<html lang="pt">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Modelo B — Stock · Portal Conheça Farmácia</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Fraunces:opsz,wght@9..144,400..700&family=Inter:wght@400..700&display=swap" rel="stylesheet">
+<style>
+:root{
+  --primary:#00493a; --accent:#0a844f; --deep:#002a32; --bg:#fffdf9; --bg-alt:#f7f5f1;
+  --card:#ffffff; --line:#e3e0d8;
+  --red:#c0392b; --orange:#d9531e; --amber:#c47f17; --ok:#1f7a43;
+  --ink-60:rgba(0,42,50,.6); --ink-45:rgba(0,42,50,.45);
+  --serif:'Fraunces',Georgia,serif; --sans:'Inter',system-ui,-apple-system,sans-serif;
+}
+*{box-sizing:border-box;margin:0;padding:0}
+html{-webkit-text-size-adjust:100%}
+body{font-family:var(--sans);color:var(--deep);background:var(--bg-alt);font-size:14px;line-height:1.5}
+button{font-family:inherit}
+
+/* ── Shell partilhado ────────────────────────────────── */
+.topbar{position:sticky;top:0;z-index:60;height:60px;color:var(--deep);
+  display:flex;align-items:center;gap:12px;padding:0 18px;
+  border-bottom:1px solid var(--line);
+  background:color-mix(in srgb, var(--bg) 86%, transparent);
+  backdrop-filter:blur(14px) saturate(1.5);-webkit-backdrop-filter:blur(14px) saturate(1.5)}
+.brand{display:flex;align-items:center;gap:10px;text-decoration:none;color:var(--deep)}
+.brand-mark{width:34px;height:34px;border-radius:10px;background:var(--primary);color:#fff;
+  font-family:var(--serif);font-weight:700;font-size:15px;display:grid;place-items:center}
+.brand-name{font-weight:600;font-size:15px}
+.brand-sub{font-size:11px;color:var(--ink-45);border-left:1px solid var(--line);
+  padding-left:10px;margin-left:2px}
+.menu-btn{display:none;width:38px;height:38px;border-radius:10px;border:1px solid var(--line);
+  background:transparent;color:var(--deep);font-size:17px;cursor:pointer;flex-shrink:0}
+.topbar-right{margin-left:auto;display:flex;align-items:center;gap:14px}
+.topbar-link{color:var(--ink-60);font-size:12px;text-decoration:none}
+.topbar-link:hover{color:var(--deep)}
+.user-chip{display:flex;align-items:center;gap:10px}
+.avatar{width:34px;height:34px;border-radius:50%;background:rgba(0,73,58,.08);
+  border:1px solid var(--line);color:var(--primary);font-size:12px;font-weight:700;display:grid;place-items:center}
+.user-meta b{display:block;font-size:13px}
+.user-meta span{font-size:11px;color:var(--ink-60)}
+.logout{background:transparent;border:1px solid var(--line);color:var(--deep);
+  border-radius:999px;padding:6px 14px;font-size:12px;font-weight:600;cursor:pointer}
+.logout:hover{border-color:var(--deep)}
+
+.shell{display:flex;align-items:stretch;min-height:calc(100vh - 60px)}
+.sidebar{width:238px;flex-shrink:0;background:var(--primary);color:#fff;
+  padding:16px 12px;display:flex;flex-direction:column;gap:2px;
+  position:sticky;top:60px;height:calc(100vh - 60px);overflow:auto}
+.side-label{font-size:10px;font-weight:700;letter-spacing:.12em;text-transform:uppercase;
+  color:rgba(255,255,255,.5);padding:12px 12px 6px}
+.side-item{display:flex;align-items:center;gap:10px;padding:10px 12px;border-radius:10px;
+  color:rgba(255,255,255,.85);text-decoration:none;font-size:14px}
+.side-item svg{width:18px;height:18px;opacity:.85}
+.side-item:hover{background:rgba(255,255,255,.09);color:#fff}
+.side-item.active{background:#fff;color:var(--primary);font-weight:600}
+.side-item.active svg{opacity:1}
+.side-badge{margin-left:auto;min-width:20px;height:20px;border-radius:999px;font-size:11px;font-weight:700;
+  display:grid;place-items:center;padding:0 6px}
+.badge-red{background:var(--red);color:#fff}
+.badge-amber{background:#fff;color:#9a630f}
+.sidebar-foot{margin-top:auto;padding:14px 12px 6px;border-top:1px solid rgba(255,255,255,.16);
+  font-size:11px;color:rgba(255,255,255,.66)}
+.sidebar-foot b{display:block;color:#fff;font-size:12px;margin-bottom:2px}
+.overlay{display:none;position:fixed;inset:0;background:rgba(0,42,50,.45);z-index:55}
+
+.content{flex:1;padding:28px 32px 72px;min-width:0}
+.wrap{max-width:1080px;margin:0 auto}
+
+/* ── Cabeçalho da página ─────────────────────────────── */
+.page-head{display:flex;align-items:flex-end;justify-content:space-between;gap:16px;flex-wrap:wrap;margin-bottom:18px}
+.page-head h1{font-family:var(--serif);font-weight:600;font-size:28px}
+.page-head .sub{color:var(--ink-60);font-size:13px;margin-top:4px}
+.btn{display:inline-flex;align-items:center;justify-content:center;gap:8px;border-radius:999px;
+  font-weight:600;font-size:14px;padding:10px 18px;border:1px solid transparent;cursor:pointer;
+  text-decoration:none;transition:filter .2s,background .2s}
+.btn-primary{background:var(--primary);color:#fff}
+.btn-primary:hover{filter:brightness(1.12)}
+.btn-ghost{background:var(--card);border-color:var(--line);color:var(--deep)}
+.btn-sm{padding:7px 13px;font-size:12.5px}
+
+/* ── Barra de ferramentas: pesquisa + chips ──────────── */
+.toolbar{display:flex;gap:10px;flex-wrap:wrap;align-items:center;margin-bottom:12px}
+.search{flex:1;min-width:220px;display:flex;align-items:center;gap:9px;background:var(--card);
+  border:1px solid var(--line);border-radius:12px;padding:10px 14px}
+.search svg{width:17px;height:17px;opacity:.5;flex-shrink:0}
+.search input{border:0;outline:0;font:inherit;font-size:14px;width:100%;color:var(--deep);background:transparent}
+.chips{display:flex;gap:8px;flex-wrap:wrap;margin-bottom:16px}
+.chip{border:1px solid var(--line);background:var(--card);color:var(--deep);border-radius:999px;
+  padding:7px 14px;font-size:12.5px;font-weight:600;cursor:pointer}
+.chip.active{background:var(--primary);border-color:var(--primary);color:#fff}
+.chip .n{opacity:.6;font-weight:500;margin-left:4px}
+
+/* ── Tabela ──────────────────────────────────────────── */
+.table-card{background:var(--card);border:1px solid var(--line);border-radius:14px;overflow:hidden}
+table{width:100%;border-collapse:collapse}
+thead th{font-size:11px;font-weight:700;letter-spacing:.08em;text-transform:uppercase;color:var(--ink-45);
+  text-align:left;padding:12px 14px;border-bottom:1px solid var(--line);white-space:nowrap}
+tbody td{padding:11px 14px;border-bottom:1px solid var(--line);font-size:13.5px;vertical-align:middle}
+tbody tr{cursor:pointer;transition:background .15s}
+tbody tr:hover{background:rgba(10,132,79,.05)}
+tbody tr:last-child td{border-bottom:0}
+td.name b{display:block;font-weight:600}
+td.name span{font-size:12px;color:var(--ink-60)}
+td.num{font-variant-numeric:tabular-nums}
+td.price{font-variant-numeric:tabular-nums;font-weight:600}
+.tag{display:inline-block;border-radius:6px;padding:2px 7px;font-size:10.5px;font-weight:700;white-space:nowrap}
+.tag-ok{background:rgba(46,158,91,.12);color:var(--ok)}
+.tag-off{background:rgba(136,136,136,.14);color:#666}
+.tag-red{background:rgba(192,57,43,.12);color:var(--red)}
+.tag-orange{background:rgba(217,83,30,.13);color:var(--orange)}
+.tag-amber{background:rgba(196,127,23,.15);color:#9a630f}
+.row-hint{font-size:11.5px;color:var(--ink-45);margin-top:2px}
+
+/* ── Paginação ───────────────────────────────────────── */
+.pager{display:flex;align-items:center;justify-content:space-between;gap:12px;flex-wrap:wrap;
+  padding:14px 16px;border-top:1px solid var(--line)}
+.pager .info{font-size:12.5px;color:var(--ink-60)}
+.pager .pages{display:flex;gap:6px;align-items:center}
+.pg{min-width:34px;height:34px;padding:0 12px;border-radius:9px;border:1px solid var(--line);background:var(--card);
+  color:var(--deep);font-weight:600;font-size:13px;cursor:pointer}
+.pg.active{background:var(--primary);border-color:var(--primary);color:#fff}
+.pg:disabled{opacity:.4;cursor:default}
+
+/* ── Drawer de edição ────────────────────────────────── */
+.drawer{position:fixed;top:0;right:0;bottom:0;width:min(460px,100%);background:var(--card);z-index:70;
+  transform:translateX(105%);transition:transform .28s ease;display:flex;flex-direction:column;
+  box-shadow:-18px 0 48px rgba(0,42,50,.18)}
+.drawer.open{transform:none}
+.drawer-head{display:flex;align-items:flex-start;justify-content:space-between;gap:12px;
+  padding:20px 22px 14px;border-bottom:1px solid var(--line)}
+.drawer-head h2{font-family:var(--serif);font-weight:600;font-size:20px;line-height:1.2}
+.drawer-head .sub{font-size:12.5px;color:var(--ink-60);margin-top:3px}
+.x{width:34px;height:34px;border-radius:9px;border:1px solid var(--line);background:var(--card);
+  font-size:15px;cursor:pointer;color:var(--deep);flex-shrink:0}
+.x:hover{border-color:var(--deep)}
+.drawer-body{flex:1;overflow:auto;padding:18px 22px;display:flex;flex-direction:column;gap:16px}
+.field label{display:block;font-weight:600;font-size:13px;margin-bottom:5px}
+.field .hint{font-size:11.5px;color:var(--ink-60);margin-top:5px;line-height:1.45}
+.field input{width:100%;border:1px solid var(--line);border-radius:10px;padding:10px 12px;
+  font:inherit;font-size:14px;color:var(--deep);background:var(--bg);outline:0}
+.field input:focus{border-color:var(--accent)}
+.field-row{display:grid;grid-template-columns:1fr 1fr;gap:12px}
+.state-box{border:1px solid var(--line);border-radius:12px;padding:14px;background:var(--bg)}
+.state-box .opt{display:flex;align-items:flex-start;gap:10px;padding:9px 6px;border-radius:9px;cursor:pointer}
+.state-box .opt:hover{background:rgba(10,132,79,.05)}
+.state-box input{margin-top:3px;accent-color:var(--primary)}
+.state-box b{font-size:13.5px;display:block}
+.state-box span{font-size:12px;color:var(--ink-60);display:block;line-height:1.4}
+.drawer-foot{border-top:1px solid var(--line);padding:14px 22px;display:flex;gap:10px}
+.btn-danger-ghost{background:var(--card);border-color:rgba(192,57,43,.4);color:var(--red)}
+.btn-danger-ghost:hover{background:rgba(192,57,43,.06)}
+.btn-success{background:var(--accent);color:#fff}
+.btn-success:hover{filter:brightness(1.1)}
+.drawer-foot .btn{flex:1}
+
+/* ── Mobile ──────────────────────────────────────────── */
+@media (max-width:960px){
+  .menu-btn{display:grid;place-items:center}
+  .brand-sub,.topbar-link,.user-meta{display:none}
+  .sidebar{position:fixed;left:0;top:60px;bottom:0;z-index:56;transform:translateX(-105%);
+    transition:transform .25s ease;height:auto;box-shadow:14px 0 40px rgba(0,42,50,.15)}
+  .sidebar.open{transform:none}
+  .overlay.show{display:block}
+  .content{padding:20px 14px 64px}
+  .page-head h1{font-size:23px}
+  .table-card thead{display:none}
+  .table-card table,.table-card tbody,.table-card tr,.table-card td{display:block;width:100%}
+  .table-card tbody tr{padding:12px 14px;border-bottom:1px solid var(--line)}
+  .table-card tbody td{border:0;padding:2px 0}
+  .table-card td.keep{display:flex;justify-content:space-between;align-items:center}
+  .drawer{width:100%}
+  .field-row{grid-template-columns:1fr}
+}
+</style>
+</head>
+<body>
+
+<header class="topbar">
+  <button class="menu-btn" id="menuBtn" aria-label="Abrir menu">☰</button>
+  <a class="brand" href="modelo-a-visao-geral.html">
+    <span class="brand-mark">CF</span>
+    <span class="brand-name">Conheça Farmácia</span>
+    <span class="brand-sub">Portal da farmácia</span>
+  </a>
+  <div class="topbar-right">
+    <a class="topbar-link" href="#">Ver página pública ↗</a>
+    <div class="user-chip">
+      <div class="avatar">DM</div>
+      <div class="user-meta"><b>Domingos Manuel</b><span>Farmácia Sagrada Esperança</span></div>
+    </div>
+    <button class="logout">Sair</button>
+  </div>
+</header>
+
+<div class="overlay" id="overlay"></div>
+
+<div class="shell">
+  <aside class="sidebar" id="sidebar">
+    <div class="side-label">Menu</div>
+    <a class="side-item" href="modelo-a-visao-geral.html">
+      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M3 10.5 12 3l9 7.5"/><path d="M5 9.5V21h14V9.5"/></svg>
+      Visão geral
+    </a>
+    <a class="side-item" href="#">
+      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M12 3 2.5 20h19L12 3z"/><path d="M12 10v4"/><path d="M12 17.5h.01"/></svg>
+      Precisa de atenção
+      <span class="side-badge badge-red">4</span>
+    </a>
+    <a class="side-item active" href="modelo-b-stock.html">
+      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M4 8h16v12H4z"/><path d="M9 8V5h6v3"/><path d="M4 13h16"/></svg>
+      Stock
+    </a>
+    <a class="side-item" href="modelo-c-reservas.html">
+      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="5" width="18" height="16" rx="2"/><path d="M3 10h18"/><path d="M8 3v4M16 3v4"/></svg>
+      Reservas
+      <span class="side-badge badge-amber">3</span>
+    </a>
+    <a class="side-item" href="#">
+      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="8" r="4"/><path d="M4 21c1.5-4 4.5-6 8-6s6.5 2 8 6"/></svg>
+      Perfil da farmácia
+    </a>
+    <div class="sidebar-foot">
+      <b>Farmácia Sagrada Esperança</b>
+      ✓ Verificada · Talatona, Luanda
+    </div>
+  </aside>
+
+  <main class="content">
+    <div class="wrap">
+
+      <div class="page-head">
+        <div>
+          <h1>Stock</h1>
+          <p class="sub">128 de 300 medicamentos marcados «temos» · última confirmação há 2 h</p>
+        </div>
+        <button class="btn btn-primary" onclick="toast('Formulário «Novo medicamento» abriria aqui')">+ Adicionar medicamento</button>
+      </div>
+
+      <div class="toolbar">
+        <div class="search">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><circle cx="11" cy="11" r="8"/><line x1="21" y1="21" x2="16.65" y2="16.65"/></svg>
+          <input id="q" type="text" placeholder="Pesquisar por nome ou molécula…" aria-label="Pesquisar medicamento">
+        </div>
+      </div>
+
+      <div class="chips" id="chips">
+        <button class="chip active" data-f="all">Todos <span class="n">300</span></button>
+        <button class="chip" data-f="in">Temos <span class="n">128</span></button>
+        <button class="chip" data-f="out">Não temos <span class="n">172</span></button>
+        <button class="chip" data-f="noprice">Sem preço <span class="n">41</span></button>
+        <button class="chip" data-f="exp">Validade a vencer <span class="n">6</span></button>
+      </div>
+
+      <div class="table-card">
+        <table>
+          <thead>
+            <tr>
+              <th>Medicamento</th><th>Qtd.</th><th>Preço</th><th>Validade</th><th>Estado</th>
+            </tr>
+          </thead>
+          <tbody id="tbody"></tbody>
+        </table>
+        <div class="pager">
+          <span class="info" id="pageInfo"></span>
+          <div class="pages" id="pages"></div>
+        </div>
+      </div>
+
+    </div>
+  </main>
+</div>
+
+<!-- Drawer de edição -->
+<aside class="drawer" id="drawer" aria-hidden="true">
+  <div class="drawer-head">
+    <div>
+      <h2 id="dName">—</h2>
+      <p class="sub" id="dSub">—</p>
+    </div>
+    <button class="x" id="dClose" aria-label="Fechar">✕</button>
+  </div>
+  <div class="drawer-body">
+    <div class="state-box">
+      <label class="opt">
+        <input type="radio" name="st" value="in" checked>
+        <span><b>Temos</b><span>O produto aparece no Localizador quando o stock está confirmado há menos de 72 h.</span></span>
+      </label>
+      <label class="opt">
+        <input type="radio" name="st" value="out">
+        <span><b>Não temos</b><span>O produto sai do Localizador. Os clientes deixam de o ver nesta farmácia.</span></span>
+      </label>
+    </div>
+    <div class="field-row">
+      <div class="field">
+        <label for="fQty">Quantidade</label>
+        <input id="fQty" type="number" min="0" placeholder="Ex.: 12">
+        <p class="hint">Unidades inteiras em prateleira. Vazio = a farmácia não reporta quantidade (o produto continua visível, sem «restam X»).</p>
+      </div>
+      <div class="field">
+        <label for="fPrice">Preço (Kz)</label>
+        <input id="fPrice" type="number" min="0" step="0.01" placeholder="Ex.: 3500">
+        <p class="hint">Preço de venda ao público. Vazio = sem preço — o produto aparece sem valor, ordenado no fim.</p>
+      </div>
+    </div>
+    <div class="field-row">
+      <div class="field">
+        <label for="fAvail">Disponível a partir de</label>
+        <input id="fAvail" type="date">
+        <p class="hint">Só para stock que ainda vai chegar («chega dia X»). O produto aparece como «disponível a partir de» — não como confirmado.</p>
+      </div>
+      <div class="field">
+        <label for="fExp">Validade (opcional)</label>
+        <input id="fExp" type="date">
+        <p class="hint">Data do lote em prateleira. Pode ser data passada (registo de stock expirado) — o produto sai do Localizador até corrigir.</p>
+      </div>
+    </div>
+    <div class="field">
+      <label>Confirmação</label>
+      <p class="hint">Guardar renova a confirmação de stock: o item volta a contar como «confirmado agora» no Localizador durante 72 h.</p>
+    </div>
+  </div>
+  <div class="drawer-foot">
+    <button class="btn btn-danger-ghost" onclick="toast('Produto marcado «não temos» — saiu do Localizador.')">Desligar</button>
+    <button class="btn btn-success" onclick="saveFromDrawer()">Guardar</button>
+  </div>
+</aside>
+
+<div class="toastbar" id="toast" style="position:fixed;bottom:24px;left:50%;transform:translateX(-50%);background:#002a32;color:#fff;border-radius:999px;padding:10px 20px;font-size:13.5px;z-index:90;opacity:0;pointer-events:none;transition:opacity .25s;box-shadow:0 8px 24px rgba(0,42,50,.25)"></div>
+
+<script>
+// ── Shell: drawer mobile + toast ──────────────────────────
+const sidebar = document.getElementById('sidebar')
+const overlay = document.getElementById('overlay')
+document.getElementById('menuBtn').onclick = () => { sidebar.classList.add('open'); overlay.classList.add('show') }
+overlay.onclick = () => { sidebar.classList.remove('open'); overlay.classList.remove('show') }
+let toastTimer
+function toast(msg){
+  const el = document.getElementById('toast')
+  el.textContent = msg; el.style.opacity = 1
+  clearTimeout(toastTimer)
+  toastTimer = setTimeout(() => el.style.opacity = 0, 2800)
+}
+
+// ── Dados de demonstração (300 catálogo; 128 «temos») ─────
+const FORMS = ['comprimido','xarope','inalador','injectável','colírio','pomada','cápsula','supositório']
+const BASE = ['Paracetamol','Amoxicilina','Ibuprofeno','Metformina','Losartana','Omeprazol','Amlodipina','Salbutamol','Azitromicina','Ceftriaxona','Diazepam','Varfarina','Insulina glargina','Carbamazepina','Furosemido','Prednisolona','Cetirizina','Dexametasona','Enalapril','Glibenclamida','Hidroclorotiazida','Levotiroxina','Metronidazol','Naproxeno','Orfenadrina','Ranitidina','Sertralina','Tamoxifeno','Ursodiol','Vitamina C']
+function isoDelta(days){
+  const d = new Date(Date.now() + days*86400000)
+  return d.toISOString().slice(0,10)
+}
+const ITEMS = []
+let seed = 7
+const rnd = () => (seed = (seed*9301+49297)%233280) / 233280
+for (let i = 0; i < 300; i++){
+  const b = BASE[i % BASE.length]
+  const inStock = i < 128
+  const hasExp = inStock && rnd() > .45
+  let expDays = null
+  if (hasExp) expDays = [-3, 12, 25, 45, 75, 120, 300, 500][Math.floor(rnd()*8)]
+  ITEMS.push({
+    id: i,
+    name: b,
+    dosage: ['500 mg','250 mg','5 mg','1 g','10 mg'][Math.floor(rnd()*5)],
+    form: FORMS[i % FORMS.length],
+    inStock,
+    qty: inStock ? Math.floor(rnd()*40)+1 : null,
+    price: inStock && rnd() > .32 ? (Math.floor(rnd()*90)+3)*100 : null,
+    exp: hasExp ? isoDelta(expDays) : null,
+    expDays,
+  })
+}
+
+// ── Estado: filtro + pesquisa + página ────────────────────
+let filter = 'all', query = '', page = 1, perPage = 20, current = null
+
+function matches(it){
+  if (filter === 'in' && !it.inStock) return false
+  if (filter === 'out' && it.inStock) return false
+  if (filter === 'noprice' && it.price != null) return false
+  if (filter === 'exp' && !(it.expDays != null && it.expDays <= 90)) return false
+  if (query){
+    const q = query.toLowerCase()
+    if (!it.name.toLowerCase().includes(q) && !it.dosage.toLowerCase().includes(q)) return false
+  }
+  return true
+}
+const filtered = () => ITEMS.filter(matches)
+
+function expTag(it){
+  if (it.expDays == null) return '<span class="tag tag-off">—</span>'
+  if (it.expDays < 0) return '<span class="tag tag-red">Expirado</span>'
+  if (it.expDays <= 30) return `<span class="tag tag-red">${it.expDays} d · ${monthYear(it.exp)}</span>`
+  if (it.expDays <= 60) return `<span class="tag tag-orange">${it.expDays} d</span>`
+  if (it.expDays <= 90) return `<span class="tag tag-amber">${it.expDays} d</span>`
+  return `<span class="tag tag-ok">${monthYear(it.exp)}</span>`
+}
+function monthYear(iso){
+  const M = ['jan','fev','mar','abr','mai','jun','jul','ago','set','out','nov','dez']
+  const [y,m] = iso.split('-')
+  return `${M[+m-1]}/${y}`
+}
+
+function render(){
+  const list = filtered()
+  const pages = Math.max(1, Math.ceil(list.length / perPage))
+  page = Math.min(page, pages)
+  const slice = list.slice((page-1)*perPage, page*perPage)
+  document.getElementById('tbody').innerHTML = slice.map(it => `
+    <tr data-id="${it.id}" onclick="openDrawer(${it.id})">
+      <td class="name keep"><span><b>${it.name}</b><span>${[it.form,it.dosage].filter(Boolean).join(' · ')}</span></span>
+        <span class="tag ${it.inStock?'tag-ok':'tag-off'}">${it.inStock?'Temos':'Não temos'}</span></td>
+      <td class="num">${it.qty ?? '—'}</td>
+      <td class="price">${it.price != null ? it.price.toLocaleString('pt-AO')+' Kz' : '—'}</td>
+      <td>${expTag(it)}</td>
+      <td><span class="row-hint">há ${1+it.id%8} h</span></td>
+    </tr>`).join('')
+  document.getElementById('pageInfo').textContent =
+    `${(page-1)*perPage+1}–${Math.min(page*perPage, list.length)} de ${list.length} medicamentos`
+  const pg = document.getElementById('pages')
+  pg.innerHTML = ''
+  const mk = (label, p, dis, act) => {
+    const b = document.createElement('button')
+    b.className = 'pg' + (act ? ' active' : '')
+    b.textContent = label
+    b.disabled = dis
+    b.onclick = () => { page = p; render() }
+    pg.appendChild(b)
+  }
+  mk('Anterior', page-1, page === 1)
+  for (let p = 1; p <= pages; p++){
+    if (p > 2 && p < pages && Math.abs(p-page) > 1){
+      if (pg.lastChild.textContent !== '…'){ const e = document.createElement('span'); e.textContent='…'; e.style.padding='0 4px'; pg.appendChild(e) }
+      continue
+    }
+    mk(p, p, false, p === page)
+  }
+  mk('Seguinte', page+1, page === pages)
+}
+
+document.getElementById('q').addEventListener('input', e => { query = e.target.value.trim(); page = 1; render() })
+document.getElementById('chips').addEventListener('click', e => {
+  const b = e.target.closest('.chip'); if (!b) return
+  document.querySelectorAll('.chip').forEach(c => c.classList.remove('active'))
+  b.classList.add('active')
+  filter = b.dataset.f; page = 1; render()
+})
+
+// ── Drawer ────────────────────────────────────────────────
+const drawer = document.getElementById('drawer')
+function openDrawer(id){
+  const it = ITEMS.find(x => x.id === id)
+  if (!it) return
+  current = it
+  document.getElementById('dName').textContent = it.name
+  document.getElementById('dSub').textContent = [it.form, it.dosage].filter(Boolean).join(' · ')
+  document.querySelector(`input[name="st"][value="${it.inStock?'in':'out'}"]`).checked = true
+  document.getElementById('fQty').value = it.qty ?? ''
+  document.getElementById('fPrice').value = it.price ?? ''
+  document.getElementById('fExp').value = it.exp ?? ''
+  document.getElementById('fAvail').value = ''
+  drawer.classList.add('open')
+  drawer.setAttribute('aria-hidden','false')
+}
+function saveFromDrawer(){
+  if (!current) return
+  current.inStock = document.querySelector('input[name="st"]:checked').value === 'in'
+  const q = document.getElementById('fQty').value
+  const p = document.getElementById('fPrice').value
+  current.qty = q === '' ? null : Math.max(0, parseInt(q,10) || 0)
+  current.price = p === '' ? null : Math.max(0, parseFloat(p) || 0)
+  current.exp = document.getElementById('fExp').value || null
+  closeDrawer(); render()
+  toast('Guardado — visível no Localizador imediatamente.')
+}
+function closeDrawer(){ drawer.classList.remove('open'); drawer.setAttribute('aria-hidden','true'); current = null }
+document.getElementById('dClose').onclick = closeDrawer
+document.addEventListener('keydown', e => { if (e.key === 'Escape') closeDrawer() })
+
+render()
+</script>
+</body>
+</html>

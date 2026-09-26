@@ -1,0 +1,346 @@
+<!DOCTYPE html>
+<!--
+  Modelo C — Reservas (portal Conheça Farmácia)
+  Resolve:
+  - Navegação entre secções → mesmo shell híbrido (top-bar + sidebar) dos Modelos A/B.
+  - Fila sem hierarquia → chips de estado + ordenação pendentes primeiro.
+  - Acções por estado sempre visíveis e nomeadas (Confirmar → Pronta → Concluída).
+  - Após concluir: mensagem do efeito no stock (trigger 0006) e ligação ao aviso de reposição.
+  Mesmo shell do Modelo A (top-bar creme com blur + sidebar verde; drawer no mobile).
+-->
+<html lang="pt">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Modelo C — Reservas · Portal Conheça Farmácia</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Fraunces:opsz,wght@9..144,400..700&family=Inter:wght@400..700&display=swap" rel="stylesheet">
+<style>
+:root{
+  --primary:#00493a; --accent:#0a844f; --deep:#002a32; --bg:#fffdf9; --bg-alt:#f7f5f1;
+  --card:#ffffff; --line:#e3e0d8;
+  --red:#c0392b; --orange:#d9531e; --amber:#c47f17; --ok:#1f7a43;
+  --ink-60:rgba(0,42,50,.6); --ink-45:rgba(0,42,50,.45);
+  --serif:'Fraunces',Georgia,serif; --sans:'Inter',system-ui,-apple-system,sans-serif;
+}
+*{box-sizing:border-box;margin:0;padding:0}
+html{-webkit-text-size-adjust:100%}
+body{font-family:var(--sans);color:var(--deep);background:var(--bg-alt);font-size:14px;line-height:1.5}
+button{font-family:inherit}
+
+/* ── Shell partilhado ────────────────────────────────── */
+.topbar{position:sticky;top:0;z-index:60;height:60px;color:var(--deep);
+  display:flex;align-items:center;gap:12px;padding:0 18px;
+  border-bottom:1px solid var(--line);
+  background:color-mix(in srgb, var(--bg) 86%, transparent);
+  backdrop-filter:blur(14px) saturate(1.5);-webkit-backdrop-filter:blur(14px) saturate(1.5)}
+.brand{display:flex;align-items:center;gap:10px;text-decoration:none;color:var(--deep)}
+.brand-mark{width:34px;height:34px;border-radius:10px;background:var(--primary);color:#fff;
+  font-family:var(--serif);font-weight:700;font-size:15px;display:grid;place-items:center}
+.brand-name{font-weight:600;font-size:15px}
+.brand-sub{font-size:11px;color:var(--ink-45);border-left:1px solid var(--line);
+  padding-left:10px;margin-left:2px}
+.menu-btn{display:none;width:38px;height:38px;border-radius:10px;border:1px solid var(--line);
+  background:transparent;color:var(--deep);font-size:17px;cursor:pointer;flex-shrink:0}
+.topbar-right{margin-left:auto;display:flex;align-items:center;gap:14px}
+.topbar-link{color:var(--ink-60);font-size:12px;text-decoration:none}
+.topbar-link:hover{color:var(--deep)}
+.user-chip{display:flex;align-items:center;gap:10px}
+.avatar{width:34px;height:34px;border-radius:50%;background:rgba(0,73,58,.08);
+  border:1px solid var(--line);color:var(--primary);font-size:12px;font-weight:700;display:grid;place-items:center}
+.user-meta b{display:block;font-size:13px}
+.user-meta span{font-size:11px;color:var(--ink-60)}
+.logout{background:transparent;border:1px solid var(--line);color:var(--deep);
+  border-radius:999px;padding:6px 14px;font-size:12px;font-weight:600;cursor:pointer}
+.logout:hover{border-color:var(--deep)}
+
+.shell{display:flex;align-items:stretch;min-height:calc(100vh - 60px)}
+.sidebar{width:238px;flex-shrink:0;background:var(--primary);color:#fff;
+  padding:16px 12px;display:flex;flex-direction:column;gap:2px;
+  position:sticky;top:60px;height:calc(100vh - 60px);overflow:auto}
+.side-label{font-size:10px;font-weight:700;letter-spacing:.12em;text-transform:uppercase;
+  color:rgba(255,255,255,.5);padding:12px 12px 6px}
+.side-item{display:flex;align-items:center;gap:10px;padding:10px 12px;border-radius:10px;
+  color:rgba(255,255,255,.85);text-decoration:none;font-size:14px}
+.side-item svg{width:18px;height:18px;opacity:.85}
+.side-item:hover{background:rgba(255,255,255,.09);color:#fff}
+.side-item.active{background:#fff;color:var(--primary);font-weight:600}
+.side-item.active svg{opacity:1}
+.side-badge{margin-left:auto;min-width:20px;height:20px;border-radius:999px;font-size:11px;font-weight:700;
+  display:grid;place-items:center;padding:0 6px}
+.badge-red{background:var(--red);color:#fff}
+.badge-amber{background:#fff;color:#9a630f}
+.sidebar-foot{margin-top:auto;padding:14px 12px 6px;border-top:1px solid rgba(255,255,255,.16);
+  font-size:11px;color:rgba(255,255,255,.66)}
+.sidebar-foot b{display:block;color:#fff;font-size:12px;margin-bottom:2px}
+.overlay{display:none;position:fixed;inset:0;background:rgba(0,42,50,.45);z-index:55}
+
+.content{flex:1;padding:28px 32px 72px;min-width:0}
+.wrap{max-width:960px;margin:0 auto}
+
+/* ── Cabeçalho + filtros ─────────────────────────────── */
+.page-head{display:flex;align-items:flex-end;justify-content:space-between;gap:16px;flex-wrap:wrap;margin-bottom:18px}
+.page-head h1{font-family:var(--serif);font-weight:600;font-size:28px}
+.page-head .sub{color:var(--ink-60);font-size:13px;margin-top:4px}
+.sla{display:inline-flex;align-items:center;gap:7px;border-radius:999px;padding:7px 14px;
+  font-size:12.5px;font-weight:600;background:rgba(196,127,23,.12);color:#9a630f}
+.toolbar{display:flex;gap:10px;flex-wrap:wrap;align-items:center;margin-bottom:12px}
+.search{flex:1;min-width:220px;display:flex;align-items:center;gap:9px;background:var(--card);
+  border:1px solid var(--line);border-radius:12px;padding:10px 14px}
+.search svg{width:17px;height:17px;opacity:.5}
+.search input{border:0;outline:0;font:inherit;font-size:14px;width:100%;color:var(--deep);background:transparent}
+.chips{display:flex;gap:8px;flex-wrap:wrap;margin-bottom:16px}
+.chip{border:1px solid var(--line);background:var(--card);color:var(--deep);border-radius:999px;
+  padding:7px 14px;font-size:12.5px;font-weight:600;cursor:pointer}
+.chip.active{background:var(--primary);border-color:var(--primary);color:#fff}
+.chip .n{opacity:.6;font-weight:500;margin-left:4px}
+
+/* ── Fila ────────────────────────────────────────────── */
+.panel{background:var(--card);border:1px solid var(--line);border-radius:14px;overflow:hidden;margin-bottom:16px}
+.group-label{font-size:11px;font-weight:700;letter-spacing:.1em;text-transform:uppercase;
+  color:var(--ink-45);padding:14px 20px 8px}
+.res-row{display:flex;align-items:flex-start;justify-content:space-between;gap:14px;flex-wrap:wrap;
+  padding:14px 20px;border-bottom:1px solid var(--line)}
+.res-row:last-child{border-bottom:0}
+.res-main{min-width:230px;flex:1}
+.res-name{font-weight:600;font-size:14.5px;color:var(--deep);display:flex;align-items:center;gap:8px;flex-wrap:wrap}
+.res-meta{font-size:12.5px;color:var(--ink-60);margin-top:3px}
+.res-notes{font-size:12.5px;color:var(--deep);margin-top:5px;background:var(--bg);
+  border-left:2px solid var(--line);padding:4px 10px;border-radius:0 8px 8px 0}
+.res-side{display:flex;flex-direction:column;align-items:flex-end;gap:8px}
+.res-actions{display:flex;gap:8px;flex-wrap:wrap;justify-content:flex-end}
+.tag{display:inline-block;border-radius:6px;padding:2px 7px;font-size:10.5px;font-weight:700;white-space:nowrap}
+.tag-warn{background:rgba(196,127,23,.14);color:#9a630f}
+.tag-hot{background:rgba(192,57,43,.12);color:var(--red)}
+.tag-info{background:rgba(10,132,79,.12);color:var(--accent)}
+.tag-ok{background:rgba(46,158,91,.12);color:var(--ok)}
+.tag-off{background:rgba(136,136,136,.14);color:#666}
+.btn{display:inline-flex;align-items:center;justify-content:center;gap:8px;border-radius:999px;
+  font-weight:600;font-size:13px;padding:8px 15px;border:1px solid transparent;cursor:pointer;
+  text-decoration:none;transition:filter .2s,background .2s}
+.btn-primary{background:var(--primary);color:#fff}
+.btn-primary:hover{filter:brightness(1.12)}
+.btn-ghost{background:var(--card);border-color:var(--line);color:var(--deep)}
+.btn-ghost:hover{border-color:var(--deep)}
+.btn-wa{background:rgba(37,211,102,.12);color:#128c4b}
+.done-note{font-size:12px;color:var(--ink-60);text-align:right;max-width:260px}
+.done-note b{color:var(--deep)}
+.empty{padding:30px 20px;text-align:center;color:var(--ink-60);font-size:13px}
+.foot-note{margin-top:22px;font-size:12px;color:var(--ink-45);text-align:center}
+
+/* ── Mobile ──────────────────────────────────────────── */
+@media (max-width:960px){
+  .menu-btn{display:grid;place-items:center}
+  .brand-sub,.topbar-link,.user-meta{display:none}
+  .sidebar{position:fixed;left:0;top:60px;bottom:0;z-index:56;transform:translateX(-105%);
+    transition:transform .25s ease;height:auto;box-shadow:14px 0 40px rgba(0,42,50,.15)}
+  .sidebar.open{transform:none}
+  .overlay.show{display:block}
+  .content{padding:20px 14px 64px}
+  .page-head h1{font-size:23px}
+  .res-side{align-items:stretch;width:100%}
+  .res-actions .btn{flex:1}
+  .done-note{text-align:left;max-width:none}
+}
+</style>
+</head>
+<body>
+
+<header class="topbar">
+  <button class="menu-btn" id="menuBtn" aria-label="Abrir menu">☰</button>
+  <a class="brand" href="modelo-a-visao-geral.html">
+    <span class="brand-mark">CF</span>
+    <span class="brand-name">Conheça Farmácia</span>
+    <span class="brand-sub">Portal da farmácia</span>
+  </a>
+  <div class="topbar-right">
+    <a class="topbar-link" href="#">Ver página pública ↗</a>
+    <div class="user-chip">
+      <div class="avatar">DM</div>
+      <div class="user-meta"><b>Domingos Manuel</b><span>Farmácia Sagrada Esperança</span></div>
+    </div>
+    <button class="logout">Sair</button>
+  </div>
+</header>
+
+<div class="overlay" id="overlay"></div>
+
+<div class="shell">
+  <aside class="sidebar" id="sidebar">
+    <div class="side-label">Menu</div>
+    <a class="side-item" href="modelo-a-visao-geral.html">
+      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M3 10.5 12 3l9 7.5"/><path d="M5 9.5V21h14V9.5"/></svg>
+      Visão geral
+    </a>
+    <a class="side-item" href="#">
+      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M12 3 2.5 20h19L12 3z"/><path d="M12 10v4"/><path d="M12 17.5h.01"/></svg>
+      Precisa de atenção
+      <span class="side-badge badge-red">4</span>
+    </a>
+    <a class="side-item" href="modelo-b-stock.html">
+      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M4 8h16v12H4z"/><path d="M9 8V5h6v3"/><path d="M4 13h16"/></svg>
+      Stock
+    </a>
+    <a class="side-item active" href="modelo-c-reservas.html">
+      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="5" width="18" height="16" rx="2"/><path d="M3 10h18"/><path d="M8 3v4M16 3v4"/></svg>
+      Reservas
+      <span class="side-badge badge-amber" id="bellBadge">3</span>
+    </a>
+    <a class="side-item" href="#">
+      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="8" r="4"/><path d="M4 21c1.5-4 4.5-6 8-6s6.5 2 8 6"/></svg>
+      Perfil da farmácia
+    </a>
+    <div class="sidebar-foot">
+      <b>Farmácia Sagrada Esperança</b>
+      ✓ Verificada · Talatona, Luanda
+    </div>
+  </aside>
+
+  <main class="content">
+    <div class="wrap">
+
+      <div class="page-head">
+        <div>
+          <h1>Reservas</h1>
+          <p class="sub">Tempo médio de resposta: 1 h · 12 concluídas esta semana</p>
+        </div>
+        <span class="sla">⏱ Responder em menos de 24 h</span>
+      </div>
+
+      <div class="toolbar">
+        <div class="search">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><circle cx="11" cy="11" r="8"/><line x1="21" y1="21" x2="16.65" y2="16.65"/></svg>
+          <input id="q" type="text" placeholder="Pesquisar por medicamento ou telefone do cliente…" aria-label="Pesquisar reserva">
+        </div>
+      </div>
+
+      <div class="chips" id="chips">
+        <button class="chip active" data-f="todo">Por atender <span class="n">4</span></button>
+        <button class="chip" data-f="prontas">Prontas p/ recolha <span class="n">1</span></button>
+        <button class="chip" data-f="concluidas">Concluídas <span class="n">12</span></button>
+        <button class="chip" data-f="todas">Todas <span class="n">17</span></button>
+      </div>
+
+      <div class="panel">
+        <div class="group-label" id="groupLabel">Pendentes — as mais antigas primeiro</div>
+        <div id="queue"></div>
+        <div class="empty" id="empty" hidden>Nada neste filtro — as novas reservas aparecem aqui e no sino da sidebar.</div>
+      </div>
+
+      <p class="foot-note">Concluir uma reserva baixa o stock automaticamente. Quando um produto esgota por venda, o aviso de reposição aparece em «Precisa de atenção».</p>
+    </div>
+  </main>
+</div>
+
+<div id="toast" style="position:fixed;bottom:24px;left:50%;transform:translateX(-50%);background:#002a32;color:#fff;border-radius:999px;padding:10px 20px;font-size:13.5px;z-index:90;opacity:0;pointer-events:none;transition:opacity .25s;box-shadow:0 8px 24px rgba(0,42,50,.25)"></div>
+
+<script>
+// ── Shell ─────────────────────────────────────────────────
+const sidebar = document.getElementById('sidebar')
+const overlay = document.getElementById('overlay')
+document.getElementById('menuBtn').onclick = () => { sidebar.classList.add('open'); overlay.classList.add('show') }
+overlay.onclick = () => { sidebar.classList.remove('open'); overlay.classList.remove('show') }
+let toastTimer
+function toast(msg){
+  const el = document.getElementById('toast')
+  el.textContent = msg; el.style.opacity = 1
+  clearTimeout(toastTimer)
+  toastTimer = setTimeout(() => el.style.opacity = 0, 3200)
+}
+
+// ── Dados de demonstração ─────────────────────────────────
+const R = [
+  { id:1, drug:'Amoxicilina 500 mg', qty:'2 caixas', name:'Ana Cardoso', phone:'923 411 208', when:'há 2 h',  status:'pendente', notes:'para criança, se possível', stockLeft:5 },
+  { id:2, drug:'Insulina glargina caneta', qty:'1 embalagem', name:'Jorge Kiala', phone:'924 118 776', when:'há 4 h', status:'pendente', notes:'', stockLeft:2 },
+  { id:3, drug:'Salbutamol inalador', qty:'2 unidades', name:'Marta Domingos', phone:'921 903 445', when:'há 5 h', status:'pendente', notes:'', stockLeft:0 },
+  { id:4, drug:'Paracetamol 500 mg', qty:'1 caixa', name:'Pedro Cassoma', phone:'922 780 114', when:'há 6 h', status:'pronta', notes:'', stockLeft:12 },
+  { id:5, drug:'Metformina 850 mg', qty:'2 caixas', name:'Luísa Ferreira', phone:'923 002 556', when:'ontem', status:'concluida', notes:'', stockLeft:0 },
+  { id:6, drug:'Omeprazol 20 mg', qty:'1 caixa', name:'Adão Sebastião', phone:'924 551 903', when:'ontem', status:'concluida', notes:'', stockLeft:8 },
+  { id:7, drug:'Losartana 50 mg', qty:'1 caixa', name:'Teresa Nvula', phone:'921 337 220', when:'há 2 d', status:'recusada', notes:'sem stock no momento', stockLeft:null },
+]
+const NEXT = { pendente:['confirmada','recusada'], confirmada:['pronta','recusada'], pronta:['concluida','recusada'] }
+const BADGE = {
+  pendente:'<span class="tag tag-hot">Pendente</span>',
+  confirmada:'<span class="tag tag-info">Confirmada</span>',
+  pronta:'<span class="tag tag-info">Pronta p/ recolha</span>',
+  concluida:'<span class="tag tag-ok">Concluída</span>',
+  recusada:'<span class="tag tag-off">Recusada</span>',
+}
+const LABEL = { todo:'Pendentes — as mais antigas primeiro', prontas:'Prontas para recolha', concluidas:'Concluídas — mais recentes primeiro', todas:'Todas — mais recentes primeiro' }
+let filter = 'todo', query = ''
+
+function matches(r){
+  if (filter === 'todo' && !(r.status === 'pendente' || r.status === 'confirmada')) return false
+  if (filter === 'prontas' && r.status !== 'pronta') return false
+  if (filter === 'concluidas' && r.status !== 'concluida') return false
+  if (query){
+    const q = query.toLowerCase()
+    if (!r.drug.toLowerCase().includes(q) && !r.phone.includes(q) && !r.name.toLowerCase().includes(q)) return false
+  }
+  return true
+}
+
+function actionsHtml(r){
+  if (r.status === 'pendente') return `<button class="btn btn-primary" onclick="act(${r.id},'confirmada')">Confirmar</button>
+    <button class="btn btn-ghost" onclick="act(${r.id},'recusada')">Recusar</button>`
+  if (r.status === 'confirmada') return `<button class="btn btn-primary" onclick="act(${r.id},'pronta')">Pronta p/ recolha</button>
+    <button class="btn btn-ghost" onclick="act(${r.id},'recusada')">Recusar</button>`
+  if (r.status === 'pronta') return `<button class="btn btn-primary" onclick="act(${r.id},'concluida')">Concluída</button>`
+  if (r.status === 'concluida') return `<span class="done-note">Stock baixado automaticamente — <b>${r.stockLeft > 0 ? 'restam ' + r.stockLeft + ' em prateleira' : 'produto esgotado, aviso de reposição criado'}</b>.</span>`
+  return '<span class="done-note">Sem acções — a reserva foi recusada.</span>'
+}
+
+function render(){
+  const list = R.filter(matches)
+  const order = { pendente:0, confirmada:0, pronta:1, concluida:2, recusada:2 }
+  list.sort((a,b) => order[a.status] - order[b.status] || a.id - b.id)
+  document.getElementById('groupLabel').textContent = LABEL[filter] || LABEL.todas
+  document.getElementById('queue').innerHTML = list.map(r => `
+    <div class="res-row">
+      <div class="res-main">
+        <div class="res-name">${r.drug} ${BADGE[r.status]}</div>
+        <div class="res-meta">${r.name} · ${r.phone} · ${r.qty} · ${r.when}</div>
+        ${r.notes ? `<div class="res-notes">“${r.notes}”</div>` : ''}
+      </div>
+      <div class="res-side">
+        <div class="res-actions">${actionsHtml(r)}</div>
+        ${r.status === 'pendente' ? `<a class="btn btn-wa" href="#" onclick="event.preventDefault();toast('WhatsApp abriria com mensagem pré-escrita para ${r.phone}.')">WhatsApp</a>` : ''}
+      </div>
+    </div>`).join('')
+  document.getElementById('empty').hidden = list.length > 0
+  const pend = R.filter(r => r.status === 'pendente' || r.status === 'confirmada').length
+  const badge = document.getElementById('bellBadge')
+  if (pend > 0) badge.textContent = pend; else badge.remove()
+}
+
+document.getElementById('q').addEventListener('input', e => { query = e.target.value.trim(); render() })
+document.getElementById('chips').addEventListener('click', e => {
+  const b = e.target.closest('.chip'); if (!b) return
+  document.querySelectorAll('.chip').forEach(c => c.classList.remove('active'))
+  b.classList.add('active')
+  filter = b.dataset.f; render()
+})
+
+function act(id, status){
+  const r = R.find(x => x.id === id); if (!r) return
+  const legal = NEXT[r.status] || []
+  if (!legal.includes(status)){ toast('Movimento inválido nesta fila — recarregue a página.'); return }
+  r.status = status
+  if (status === 'concluida'){
+    toast(r.stockLeft > 0
+      ? `Reserva concluída — restam ${r.stockLeft} em stock.`
+      : 'Reserva concluída — sem unidades. O produto saiu do Localizador; veja «Precisa de atenção».')
+  } else if (status === 'confirmada'){
+    toast('Reserva confirmada — o cliente fica a saber que pode passar à recolha.')
+  } else if (status === 'pronta'){
+    toast('Marcada como pronta — avise o cliente pelo WhatsApp se quiser.')
+  } else {
+    toast('Reserva recusada.')
+  }
+  render()
+}
+render()
+</script>
+</body>
+</html>

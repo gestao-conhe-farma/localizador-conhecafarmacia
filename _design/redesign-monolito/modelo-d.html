@@ -1,0 +1,328 @@
+<!DOCTYPE html>
+<html lang="pt">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Modelo D — Editorial · Pesquisa + Farmácias + Detalhe</title>
+<!--
+  MODELO D — EDITORIAL (não monólito)
+  Assunções:
+  · Leveza e respiro: hairlines em vez de cartões e sombras.
+  · Estilo "índice/directório refinado": listas com linhas separadoras,
+    preços alinhados à direita, labels pequenos em maiúsculas.
+  · Fraunces protagonista; verde só em links activos, dots e numeração.
+  · Fundo único claro (sem zonas de cor alternadas).
+-->
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&family=Fraunces:opsz,wght@9..144,400;9..144,600;9..144,700&display=swap" rel="stylesheet">
+<style>
+:root{
+  --primary:#00493a; --accent:#0a844f; --deep:#002a32;
+  --bg:#fffdf9; --ink:rgba(0,42,50,.85); --mut:rgba(0,42,50,.5);
+  --line:rgba(0,42,50,.14);
+}
+*{margin:0;padding:0;box-sizing:border-box}
+body{font-family:'Inter',system-ui,sans-serif;background:var(--bg);color:var(--deep)}
+a{text-decoration:none;color:inherit}
+.container{max-width:60rem;margin:0 auto;padding:0 1.75rem}
+.page-label{position:sticky;top:0;z-index:60;background:var(--deep);color:#fff;font-size:.68rem;font-weight:700;letter-spacing:.18em;text-transform:uppercase;padding:8px 24px;display:flex;justify-content:center}
+
+.hdr{position:sticky;top:32px;z-index:50;background:rgba(255,253,249,.92);backdrop-filter:blur(12px);border-bottom:1px solid var(--line)}
+.hdr-in{max-width:60rem;margin:0 auto;padding:0 1.75rem;height:64px;display:flex;align-items:center;justify-content:space-between}
+.hdr-logo{display:flex;align-items:center;gap:10px}
+.hdr-logo img{height:32px}
+.hdr-logo b{font-size:.74rem;letter-spacing:.14em;text-transform:uppercase;color:var(--accent);font-weight:700}
+.hdr-nav{display:flex;gap:2rem}
+.hdr-nav a{font-size:.86rem;font-weight:500;color:var(--mut);padding:4px 0;border-bottom:2px solid transparent}
+.hdr-nav a.on{color:var(--primary);border-bottom-color:var(--accent);font-weight:600}
+@media(max-width:820px){.hdr-nav{gap:1.1rem}.hdr-nav a{font-size:.8rem}}
+@media(max-width:640px){.hdr-nav{display:none}}
+
+.kicker{font-size:.68rem;font-weight:700;letter-spacing:.22em;text-transform:uppercase;color:var(--accent);margin-bottom:1.1rem}
+.serif{font-family:'Fraunces',Georgia,serif}
+
+/* ===== P1 · PESQUISA ===== */
+.hero{padding:4.5rem 0 3.5rem;border-bottom:1px solid var(--line)}
+.hero h1{font-family:'Fraunces',serif;font-weight:600;font-size:clamp(2.1rem,5vw,3.3rem);letter-spacing:-.01em;line-height:1.1}
+.hero h1 em{font-style:italic;color:var(--accent)}
+.hero p{color:var(--mut);margin-top:.9rem;font-size:.95rem;max-width:32rem}
+.search-line{display:flex;align-items:center;gap:14px;border-bottom:2px solid var(--deep);padding:12px 2px;margin-top:2.2rem;max-width:38rem}
+.search-line svg{width:20px;height:20px;fill:none;stroke:var(--mut);stroke-width:1.8;flex-shrink:0}
+.search-line input{flex:1;border:none;outline:none;background:transparent;font-family:inherit;font-size:1.05rem;color:var(--deep)}
+.search-line input::placeholder{color:var(--mut)}
+.munis{display:flex;gap:1.6rem;flex-wrap:wrap;margin-top:1.6rem}
+.munis button{background:none;border:none;font-family:inherit;font-size:.82rem;font-weight:500;color:var(--mut);cursor:pointer;padding:2px 0;border-bottom:1px solid transparent}
+.munis button.on{color:var(--primary);font-weight:700;border-bottom-color:var(--accent)}
+.idx{padding:2.6rem 0 4.5rem}
+.idx-head{display:flex;justify-content:space-between;align-items:baseline;margin-bottom:.6rem}
+.idx-title{font-family:'Fraunces',serif;font-size:1.45rem;font-weight:600}
+.idx-count{font-size:.78rem;color:var(--mut);font-variant-numeric:tabular-nums}
+.entry{display:flex;flex-wrap:wrap;align-items:baseline;justify-content:space-between;gap:6px 18px;padding:20px 2px;border-bottom:1px solid var(--line)}
+.entry-no{font-family:'Fraunces',serif;font-style:italic;color:var(--accent);font-size:.9rem;width:2rem;flex-shrink:0}
+.entry-main{flex:1;min-width:220px}
+.entry-name{font-family:'Fraunces',serif;font-size:1.12rem;font-weight:600}
+.entry-meta{font-size:.76rem;color:var(--mut);margin-top:3px}
+.entry-rx{font-size:.6rem;font-weight:700;letter-spacing:.08em;text-transform:uppercase;color:#d9531e;border:1px solid rgba(217,83,30,.35);padding:2px 8px;border-radius:99px;margin-left:8px;vertical-align:2px}
+.entry-right{display:flex;align-items:baseline;gap:1.6rem}
+.entry-price{font-variant-numeric:tabular-nums;font-weight:600;font-size:.95rem}
+.entry-fresh{font-size:.72rem;color:var(--accent);font-weight:600;white-space:nowrap}
+.entry-link{font-size:.8rem;font-weight:600;color:var(--primary);white-space:nowrap}
+.entry-link::after{content:' →'}
+
+/* ===== P2 · FARMÁCIAS ===== */
+.p2{border-top:1px solid var(--line)}
+.sec-head{padding:3.2rem 0 1.8rem}
+.sec-head h1{font-family:'Fraunces',serif;font-weight:600;font-size:clamp(1.9rem,4vw,2.6rem);letter-spacing:-.01em}
+.sec-head p{color:var(--mut);margin-top:.7rem;font-size:.92rem}
+.ph-entry{display:flex;flex-wrap:wrap;align-items:center;gap:8px 24px;padding:24px 2px;border-bottom:1px solid var(--line)}
+.ph-no{font-family:'Fraunces',serif;font-style:italic;color:var(--accent);width:2rem;flex-shrink:0}
+.ph-main{flex:1;min-width:230px}
+.ph-name{font-family:'Fraunces',serif;font-size:1.2rem;font-weight:600}
+.ph-loc{font-size:.78rem;color:var(--mut);margin-top:3px}
+.ph-ver{font-size:.6rem;font-weight:700;letter-spacing:.1em;text-transform:uppercase;color:var(--accent)}
+.ph-count{font-size:.8rem;color:var(--deep);font-weight:600;white-space:nowrap}
+.ph-count b{color:var(--accent)}
+.ph-cta{display:flex;gap:1.2rem}
+.ph-cta a{font-size:.8rem;font-weight:600;color:var(--primary);border-bottom:1px solid rgba(0,73,58,.3);padding-bottom:1px}
+.ph-cta a:hover{border-bottom-color:var(--primary)}
+
+/* ===== P3 · DETALHE ===== */
+.d3{border-top:1px solid var(--line)}
+.d-head{padding:3rem 0 2rem;display:flex;flex-wrap:wrap;justify-content:space-between;gap:1.5rem;align-items:flex-end}
+.d-name{font-family:'Fraunces',serif;font-weight:600;font-size:clamp(1.9rem,4vw,2.7rem);letter-spacing:-.01em;line-height:1.08}
+.d-loc{color:var(--mut);margin-top:.7rem;font-size:.9rem}
+.d-status{font-size:.78rem;margin-top:.9rem;display:flex;gap:1.4rem;flex-wrap:wrap}
+.d-status span{display:inline-flex;align-items:center;gap:7px;color:var(--mut)}
+.dot{width:7px;height:7px;border-radius:99px}
+.dot-g{background:var(--accent)}
+.dot-r{background:#c0392b}
+.d-status .ok{color:#0b6e44;font-weight:600}
+.d-acts{display:flex;gap:1.6rem;padding-bottom:6px}
+.d-acts a{font-size:.84rem;font-weight:600;color:var(--primary);border-bottom:1px solid rgba(0,73,58,.3);padding-bottom:2px}
+.crit{margin:1.5rem 0 2.5rem;border-left:3px solid var(--accent);padding:1.2rem 0 1.2rem 1.8rem}
+.crit-k{font-size:.64rem;font-weight:700;letter-spacing:.2em;text-transform:uppercase;color:var(--accent);margin-bottom:1rem}
+.crit-item{display:flex;flex-wrap:wrap;align-items:baseline;justify-content:space-between;gap:6px 18px;padding:12px 0;border-bottom:1px solid var(--line)}
+.crit-item:last-child{border-bottom:none}
+.crit-name{font-family:'Fraunces',serif;font-size:1.08rem;font-weight:600}
+.crit-meta{font-size:.75rem;color:var(--mut);margin-top:2px}
+.crit-side{display:flex;align-items:baseline;gap:1.5rem}
+.d-sec-title{font-size:.68rem;font-weight:700;letter-spacing:.22em;text-transform:uppercase;color:var(--mut);margin:2.4rem 0 .4rem}
+.d3 .entry{padding:18px 2px}
+.d3 .entry:last-of-type{border-bottom:none}
+</style>
+</head>
+<body>
+
+<div class="page-label">Modelo D · Editorial — 3 páginas</div>
+
+<header class="hdr">
+  <div class="hdr-in">
+    <a class="hdr-logo" href="#">
+      <img src="../../public/logo/3.png" alt="Conheça Farmácia"><b>Localizador</b>
+    </a>
+    <nav class="hdr-nav">
+      <a class="on" href="#">Pesquisar</a><a href="#">Farmácias</a><a href="#">Sobre</a>
+    </nav>
+  </div>
+</header>
+
+<!-- ===== P1 · PESQUISA ===== -->
+<main>
+<section>
+  <div class="container">
+    <div class="hero">
+      <p class="kicker">Localizador de Medicamentos · Luanda</p>
+      <h1>Encontre o medicamento<br><em>confirmado</em> há menos de 72 horas.</h1>
+      <p>Pesquise por nome ou molécula. Cada resultado vem de uma farmácia parceira que confirmou o stock recentemente.</p>
+      <div class="search-line">
+        <svg viewBox="0 0 24 24"><circle cx="11" cy="11" r="8"/><line x1="21" y1="21" x2="16.65" y2="16.65"/></svg>
+        <input placeholder="Insulina, carbamazepina, salbutamol…">
+      </div>
+      <div class="munis">
+        <button class="on">Todos</button><button>Belas</button><button>Cacuaco</button><button>Cazenga</button><button>Luanda</button><button>Talatona</button><button>Viana</button>
+      </div>
+    </div>
+  </div>
+
+  <div class="container idx">
+    <div class="idx-head">
+      <h2 class="idx-title">Insulina NPH</h2>
+      <span class="idx-count">Injetável · 100 UI/ml — 3 farmácias</span>
+    </div>
+    <div class="entry">
+      <span class="entry-no">01</span>
+      <div class="entry-main">
+        <div class="entry-name">Farmácia Nossa Senhora da Muxima<span class="entry-rx">Receita</span></div>
+        <div class="entry-meta">Luanda · Ingombota</div>
+      </div>
+      <div class="entry-right">
+        <span class="entry-fresh">há 35 min</span>
+        <span class="entry-price">8.500 Kz</span>
+        <a class="entry-link" href="#">Ver farmácia</a>
+      </div>
+    </div>
+    <div class="entry">
+      <span class="entry-no">02</span>
+      <div class="entry-main">
+        <div class="entry-name">Farmácia do Hospital Central</div>
+        <div class="entry-meta">Luanda · Av. 4 de Fevereiro</div>
+      </div>
+      <div class="entry-right">
+        <span class="entry-fresh">há 1 h</span>
+        <span class="entry-price">8.200 Kz</span>
+        <a class="entry-link" href="#">Ver farmácia</a>
+      </div>
+    </div>
+    <div class="entry">
+      <span class="entry-no">03</span>
+      <div class="entry-main">
+        <div class="entry-name">Farmácia Mirim</div>
+        <div class="entry-meta">Belas · Luanda Sul</div>
+      </div>
+      <div class="entry-right">
+        <span class="entry-fresh">há 50 min</span>
+        <span class="entry-price">8.800 Kz</span>
+        <a class="entry-link" href="#">Ver farmácia</a>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- ===== P2 · FARMÁCIAS ===== -->
+<section class="p2">
+  <div class="page-label" style="position:static;background:var(--accent)">Página 2 · Farmácias</div>
+  <div class="container">
+    <div class="sec-head">
+      <p class="kicker">A rede</p>
+      <h1>Farmácias parceiras</h1>
+      <p>Seis farmácias em Luanda confirmam o stock no Localizador. O que expira, sai do ar.</p>
+    </div>
+
+    <div class="ph-entry">
+      <span class="ph-no">01</span>
+      <div class="ph-main">
+        <div class="ph-name">Farmácia Nossa Senhora da Muxima <span class="ph-ver">✓ Verificada</span></div>
+        <div class="ph-loc">Luanda · Rua Amílcar Cabral, nº 45, Ingombota · Seg–Sáb 07:30–19:00</div>
+      </div>
+      <span class="ph-count"><b>4</b> medicamentos agora</span>
+      <div class="ph-cta"><a href="#">Ligar</a><a href="#">WhatsApp</a><a href="#">Detalhes →</a></div>
+    </div>
+    <div class="ph-entry">
+      <span class="ph-no">02</span>
+      <div class="ph-main">
+        <div class="ph-name">Farmácia do Hospital Central <span class="ph-ver">✓ Verificada</span></div>
+        <div class="ph-loc">Luanda · Av. 4 de Fevereiro · 24 horas</div>
+      </div>
+      <span class="ph-count"><b>4</b> medicamentos agora</span>
+      <div class="ph-cta"><a href="#">Ligar</a><a href="#">WhatsApp</a><a href="#">Detalhes →</a></div>
+    </div>
+    <div class="ph-entry">
+      <span class="ph-no">03</span>
+      <div class="ph-main">
+        <div class="ph-name">Farmácia Vida Nova <span class="ph-ver">✓ Verificada</span></div>
+        <div class="ph-loc">Viana · Rua da Missão, nº 210 · Seg–Sáb 08:00–18:30</div>
+      </div>
+      <span class="ph-count"><b>4</b> medicamentos agora</span>
+      <div class="ph-cta"><a href="#">Ligar</a><a href="#">WhatsApp</a><a href="#">Detalhes →</a></div>
+    </div>
+    <div class="ph-entry">
+      <span class="ph-no">04</span>
+      <div class="ph-main">
+        <div class="ph-name">Farmácia Quirimbambas</div>
+        <div class="ph-loc">Talatona · Via S8 · Seg–Sáb 08:00–20:00</div>
+      </div>
+      <span class="ph-count"><b>3</b> medicamentos agora</span>
+      <div class="ph-cta"><a href="#">Ligar</a><a href="#">WhatsApp</a><a href="#">Detalhes →</a></div>
+    </div>
+    <div class="ph-entry">
+      <span class="ph-no">05</span>
+      <div class="ph-main">
+        <div class="ph-name">Farmácia Mirim <span class="ph-ver">✓ Verificada</span></div>
+        <div class="ph-loc">Belas · Rua da Samba, Luanda Sul · Todos os dias 08:00–21:00</div>
+      </div>
+      <span class="ph-count"><b>4</b> medicamentos agora</span>
+      <div class="ph-cta"><a href="#">Ligar</a><a href="#">WhatsApp</a><a href="#">Detalhes →</a></div>
+    </div>
+    <div style="height:4rem"></div>
+  </div>
+</section>
+
+<!-- ===== P3 · DETALHE ===== -->
+<section class="d3">
+  <div class="page-label" style="position:static;background:var(--primary)">Página 3 · Detalhe da farmácia</div>
+  <div class="container">
+    <div class="d-head">
+      <div>
+        <p class="kicker">Farmácia parceira · Luanda</p>
+        <h1 class="d-name">Farmácia Nossa<br>Senhora da Muxima</h1>
+        <p class="d-loc">Rua Amílcar Cabral, nº 45, Ingombota · Seg–Sáb 07:30–19:00</p>
+        <div class="d-status">
+          <span class="ok"><i class="dot dot-g"></i>Aberto agora · fecha às 19:00</span>
+          <span><i class="dot dot-g"></i>Stock confirmado há 35 min</span>
+          <span><i class="dot dot-g"></i>Verificada pela equipa</span>
+        </div>
+      </div>
+      <div class="d-acts">
+        <a href="#">Ligar +244 923 111 405</a>
+        <a href="#">Google Maps</a>
+        <a href="#">WhatsApp</a>
+      </div>
+    </div>
+
+    <div class="crit">
+      <p class="crit-k">Críticos em stock — prioridade máxima</p>
+      <div class="crit-item">
+        <div>
+          <div class="crit-name">Insulina NPH</div>
+          <div class="crit-meta">Injetável · 100 UI/ml · confirmado há 35 min</div>
+        </div>
+        <div class="crit-side">
+          <span class="entry-price">8.500 Kz</span>
+          <a class="entry-link" href="#">Perguntar</a>
+        </div>
+      </div>
+    </div>
+
+    <p class="d-sec-title">Comprimidos — 2</p>
+    <div class="entry">
+      <span class="entry-no">01</span>
+      <div class="entry-main">
+        <div class="entry-name">Paracetamol</div>
+        <div class="entry-meta">500 mg · confirmado há 2 h</div>
+      </div>
+      <div class="entry-right">
+        <span class="entry-price">500 Kz</span>
+        <a class="entry-link" href="#">Perguntar</a>
+      </div>
+    </div>
+    <div class="entry">
+      <span class="entry-no">02</span>
+      <div class="entry-main">
+        <div class="entry-name">Losartana<span class="entry-rx">Receita</span></div>
+        <div class="entry-meta">50 mg · confirmado há 26 h</div>
+      </div>
+      <div class="entry-right">
+        <span class="entry-price">3.500 Kz</span>
+        <a class="entry-link" href="#">Perguntar</a>
+      </div>
+    </div>
+
+    <p class="d-sec-title">Cápsulas — 1</p>
+    <div class="entry">
+      <span class="entry-no">03</span>
+      <div class="entry-main">
+        <div class="entry-name">Amoxicilina<span class="entry-rx">Receita</span></div>
+        <div class="entry-meta">500 mg · confirmado há 5 h</div>
+      </div>
+      <div class="entry-right">
+        <span class="entry-price">4.500 Kz</span>
+        <a class="entry-link" href="#">Perguntar</a>
+      </div>
+    </div>
+
+    <div style="height:4rem"></div>
+  </div>
+</section>
+</main>
+</body>
+</html>

@@ -1,0 +1,273 @@
+<!DOCTYPE html>
+<html lang="pt">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Modelo C — Exploração · Detalhes da Farmácia</title>
+<!--
+  MODELO C — EXPLORAÇÃO AVANÇADA
+  Assunções:
+  · Secção "Críticos em stock" no topo (usa o campo priority da tabela drugs —
+    insulina, anticonvulsivantes aparecem primeiro; é o diferenciador do produto).
+  · Filtros por forma em barra sticky (chips) que filtram a grelha de cartões.
+  · Cada cartão tem "barra de frescura": verde → amarelo conforme envelhece
+    para as 72h (visualiza a confiança do dado).
+  · Hero com horário por dia da semana (expansível).
+  · Pesquisa in-page filtra a grelha; quando filtra, esconde a secção críticos.
+-->
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&family=Fraunces:opsz,wght@9..144,600;9..144,700&display=swap" rel="stylesheet">
+<style>
+:root{
+  --primary:#00493a; --accent:#0a844f; --deep:#002a32;
+  --bg:#ffffff; --bg-alt:#f9f9f9; --card:#ffffff; --divider:#dddddd;
+  --shadow:0 4px 20px rgba(0,42,50,.05);
+}
+*{margin:0;padding:0;box-sizing:border-box}
+body{font-family:'Inter',system-ui,sans-serif;background:var(--bg-alt);color:var(--deep)}
+a{text-decoration:none;color:inherit}
+.container{max-width:64rem;margin:0 auto;padding:0 1.5rem}
+
+.app-header{position:sticky;top:0;z-index:50;background:rgba(255,255,255,.92);backdrop-filter:blur(10px);border-bottom:1px solid rgba(221,221,221,.6)}
+.app-header-inner{max-width:72rem;margin:0 auto;padding:0 1.5rem;height:64px;display:flex;align-items:center;gap:1.5rem}
+.logo{display:flex;align-items:center;gap:10px}
+.logo img{height:34px;width:auto}
+.logo span{font-size:.8rem;font-weight:700;text-transform:uppercase;letter-spacing:.05em;color:var(--accent);border-left:2px solid var(--divider);padding-left:10px}
+.header-nav{display:flex;gap:4px;flex:1;justify-content:center}
+.header-nav a{padding:8px 14px;border-radius:8px;font-size:.875rem;font-weight:500;color:rgba(0,42,50,.7)}
+.header-nav a.active{color:var(--primary);background:rgba(10,132,79,.1);font-weight:600}
+@media(max-width:767px){.header-nav{display:none}}
+
+.ph-hero{background:linear-gradient(180deg,#f2f6f4 0%,var(--bg-alt) 100%);border-bottom:1px solid rgba(221,221,221,.4);padding:2.25rem 0 1.75rem}
+.ph-hero-top{display:flex;flex-wrap:wrap;align-items:flex-start;justify-content:space-between;gap:1.25rem}
+.ph-name{font-family:'Fraunces',Georgia,serif;font-size:2rem;font-weight:700;line-height:1.15;margin-bottom:.4rem}
+.ph-loc{color:rgba(0,42,50,.6);font-size:.95rem;max-width:34rem}
+.ph-badges{display:flex;flex-wrap:wrap;gap:.5rem;justify-content:flex-end}
+.badge{display:inline-flex;align-items:center;gap:6px;font-size:.72rem;font-weight:700;text-transform:uppercase;letter-spacing:.04em;padding:6px 12px;border-radius:999px}
+.badge-verified{background:rgba(10,132,79,.12);color:var(--accent)}
+.badge-open{background:rgba(10,132,79,.14);color:#0b6e44}
+.badge-fresh{background:rgba(10,132,79,.1);color:var(--accent)}
+.dot{width:7px;height:7px;border-radius:999px;background:currentColor;box-shadow:0 0 0 3px rgba(10,132,79,.15)}
+.ph-actions{display:flex;flex-wrap:wrap;gap:.6rem;margin-top:1.25rem}
+.btn{display:inline-flex;align-items:center;gap:8px;padding:10px 18px;border-radius:12px;font-size:.9rem;font-weight:600;border:2px solid transparent;cursor:pointer;transition:all .2s}
+.btn-primary{background:var(--primary);color:#fff}
+.btn-outline{border-color:var(--primary);color:var(--primary)}
+.btn-outline:hover{background:rgba(0,73,58,.08)}
+.btn-wa{background:#25d366;color:#fff}
+.hours-toggle{margin-top:.9rem;font-size:.82rem;font-weight:600;color:var(--accent);background:none;border:none;cursor:pointer;font-family:inherit;padding:0}
+.hours{display:none;margin-top:.75rem;background:var(--card);border:1px solid rgba(221,221,221,.4);border-radius:14px;padding:14px 18px;max-width:22rem}
+.hours.open{display:block}
+.hours-row{display:flex;justify-content:space-between;font-size:.83rem;padding:4px 0;color:rgba(0,42,50,.75)}
+.hours-row.today{font-weight:700;color:var(--deep)}
+
+.sticky-filters{position:sticky;top:64px;z-index:40;background:var(--bg);border-bottom:1px solid rgba(221,221,221,.35);padding:.9rem 0}
+.filters-row{display:flex;gap:12px;align-items:center;flex-wrap:wrap}
+.search-inline{display:flex;align-items:center;background:var(--card);border:2px solid var(--divider);border-radius:12px;flex:1;min-width:220px;max-width:420px}
+.search-inline:focus-within{border-color:var(--accent)}
+.search-inline svg{width:18px;height:18px;fill:none;stroke:rgba(0,42,50,.4);stroke-width:2;margin-left:12px}
+.search-inline input{flex:1;border:none;outline:none;background:transparent;padding:9px 12px;font-size:.9rem;font-family:inherit}
+.chip{padding:8px 16px;border-radius:999px;font-size:.8rem;font-weight:600;border:2px solid var(--divider);background:transparent;color:var(--deep);cursor:pointer;transition:all .2s}
+.chip:hover{border-color:var(--accent);color:var(--accent)}
+.chip.active{background:var(--primary);border-color:var(--primary);color:#fff}
+
+.section{padding:2rem 0 0}
+.section-head{display:flex;align-items:baseline;gap:10px;margin-bottom:1rem}
+.section-title{font-family:'Fraunces',Georgia,serif;font-size:1.25rem;font-weight:700}
+.section-sub{font-size:.8rem;color:rgba(0,42,50,.55)}
+.crit-note{font-size:.68rem;font-weight:700;text-transform:uppercase;letter-spacing:.06em;color:#d9531e;background:rgba(255,108,35,.1);padding:3px 10px;border-radius:999px}
+
+.grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(290px,1fr));gap:16px}
+@media(max-width:640px){.grid{grid-template-columns:1fr}}
+.dcard{background:var(--card);border:1px solid rgba(221,221,221,.4);border-radius:18px;overflow:hidden;box-shadow:0 2px 12px rgba(0,42,50,.05);display:flex;flex-direction:column;transition:transform .2s,box-shadow .2s}
+.dcard:hover{transform:translateY(-2px);box-shadow:0 10px 30px rgba(0,42,50,.08)}
+.fresh-bar{height:4px;background:linear-gradient(90deg,#0a844f var(--fresh,85%),rgba(221,221,221,.5) var(--fresh,85%))}
+.dcard-body{padding:16px 18px;flex:1;display:flex;flex-direction:column;gap:8px}
+.dcard-top{display:flex;justify-content:space-between;align-items:flex-start;gap:8px}
+.dcard-name{font-weight:700;font-size:1rem;line-height:1.25}
+.rx-badge{font-size:.6rem;font-weight:700;text-transform:uppercase;letter-spacing:.05em;padding:2px 8px;border-radius:999px;background:rgba(255,108,35,.12);color:#d9531e;flex-shrink:0}
+.dcard-meta{font-size:.76rem;color:rgba(0,42,50,.55)}
+.dcard-foot{display:flex;align-items:center;justify-content:space-between;gap:8px;margin-top:auto;padding-top:10px;border-top:1px solid rgba(221,221,221,.25)}
+.price{font-weight:700;font-size:1rem}
+.confirmed{display:inline-flex;align-items:center;gap:5px;font-size:.7rem;font-weight:600;color:var(--accent)}
+.dot{width:6px;height:6px;border-radius:999px;background:var(--accent)}
+.btn-mini-wa{display:inline-flex;align-items:center;gap:6px;padding:7px 12px;border-radius:9px;font-size:.78rem;font-weight:600;background:#25d366;color:#fff;cursor:pointer}
+.btn-mini-wa:hover{background:#1da851}
+.btn-mini-wa svg{width:13px;height:13px;fill:none;stroke:currentColor;stroke-width:2;stroke-linecap:round}
+
+.cta{margin:3.5rem 0 4rem;text-align:center;padding:28px;border-radius:20px;border:1px solid rgba(221,221,221,.4);background:var(--card)}
+.cta h3{font-size:1.05rem;margin-bottom:6px}
+.cta p{font-size:.85rem;color:rgba(0,42,50,.6);margin-bottom:18px}
+
+.model-tag{position:fixed;bottom:16px;right:16px;background:var(--deep);color:#fff;font-size:.7rem;font-weight:600;letter-spacing:.1em;padding:8px 14px;border-radius:999px;opacity:.85;z-index:99}
+</style>
+</head>
+<body>
+
+<header class="app-header">
+  <div class="app-header-inner">
+    <a class="logo" href="#">
+      <img src="../../public/logo/3.png" alt="Conheça Farmácia">
+      <span>Localizador</span>
+    </a>
+    <nav class="header-nav">
+      <a href="#">Pesquisar</a><a class="active" href="#">Farmácias</a><a href="#">Sobre</a>
+    </nav>
+  </div>
+</header>
+
+<main>
+  <!-- HERO -->
+  <section class="ph-hero">
+    <div class="container">
+      <div class="ph-hero-top">
+        <div>
+          <h1 class="ph-name">Farmácia Nossa Senhora da Muxima</h1>
+          <p class="ph-loc">Luanda · Rua Amílcar Cabral, nº 45, Ingombota</p>
+        </div>
+        <div class="ph-badges">
+          <span class="badge badge-verified">✓ Verificada pela equipa</span>
+          <span class="badge badge-open"><span class="dot"></span>Aberto agora · fecha às 19:00</span>
+          <span class="badge badge-fresh"><span class="dot"></span>Última confirmação há 35 min</span>
+        </div>
+      </div>
+      <div class="ph-actions">
+        <a class="btn btn-primary" href="#">Ligar: +244 923 111 405</a>
+        <a class="btn btn-outline" href="#">Ver no Google Maps</a>
+        <a class="btn btn-wa" href="#">WhatsApp</a>
+      </div>
+      <button class="hours-toggle" onclick="document.getElementById('hours').classList.toggle('open')">Ver horário completo ▾</button>
+      <div class="hours" id="hours">
+        <div class="hours-row today"><span>Segunda–Sexta</span><span>07:30 – 19:00</span></div>
+        <div class="hours-row"><span>Sábado</span><span>07:30 – 19:00</span></div>
+        <div class="hours-row"><span>Domingo</span><span>Fechada</span></div>
+      </div>
+    </div>
+  </section>
+
+  <!-- FILTROS STICKY -->
+  <section class="sticky-filters">
+    <div class="container">
+      <div class="filters-row">
+        <div class="search-inline">
+          <svg viewBox="0 0 24 24"><circle cx="11" cy="11" r="8"/><line x1="21" y1="21" x2="16.65" y2="16.65"/></svg>
+          <input type="text" placeholder="Pesquisar nesta farmácia…">
+        </div>
+        <button class="chip active">Todos · 5</button>
+        <button class="chip">Comprimidos · 2</button>
+        <button class="chip">Injetáveis · 1</button>
+        <button class="chip">Cápsulas · 1</button>
+      </div>
+    </div>
+  </section>
+
+  <!-- CRÍTICOS EM STOCK -->
+  <section class="section">
+    <div class="container">
+      <div class="section-head">
+        <h2 class="section-title">Críticos em stock</h2>
+        <span class="crit-note">prioridade máxima</span>
+        <span class="section-sub">medicamentos que mais faltam em Luanda</span>
+      </div>
+      <div class="grid">
+        <article class="dcard">
+          <div class="fresh-bar" style="--fresh:98%"></div>
+          <div class="dcard-body">
+            <div class="dcard-top">
+              <h3 class="dcard-name">Insulina NPH</h3>
+              <span class="rx-badge">Receita médica</span>
+            </div>
+            <p class="dcard-meta">Injetável · 100 UI/ml</p>
+            <div class="dcard-foot">
+              <div>
+                <div class="price">8.500 Kz</div>
+                <span class="confirmed"><span class="dot"></span>há 35 min</span>
+              </div>
+              <a class="btn-mini-wa" href="#"><svg viewBox="0 0 24 24"><path d="M21 11.5a8.5 8.5 0 01-12.7 7.4L3 21l2.1-5.3A8.5 8.5 0 1121 11.5z"/></svg>WhatsApp</a>
+            </div>
+          </div>
+        </article>
+      </div>
+    </div>
+  </section>
+
+  <!-- TODOS OS MEDICAMENTOS -->
+  <section class="section">
+    <div class="container">
+      <div class="section-head">
+        <h2 class="section-title">Todos os medicamentos</h2>
+        <span class="section-sub">a barra verde indica a frescura da confirmação (72 h)</span>
+      </div>
+      <div class="grid">
+        <article class="dcard">
+          <div class="fresh-bar" style="--fresh:97%"></div>
+          <div class="dcard-body">
+            <div class="dcard-top">
+              <h3 class="dcard-name">Paracetamol</h3>
+            </div>
+            <p class="dcard-meta">Comprimido · 500 mg</p>
+            <div class="dcard-foot">
+              <div>
+                <div class="price">500 Kz</div>
+                <span class="confirmed"><span class="dot"></span>há 2 h</span>
+              </div>
+              <a class="btn-mini-wa" href="#"><svg viewBox="0 0 24 24"><path d="M21 11.5a8.5 8.5 0 01-12.7 7.4L3 21l2.1-5.3A8.5 8.5 0 1121 11.5z"/></svg>WhatsApp</a>
+            </div>
+          </div>
+        </article>
+        <article class="dcard">
+          <div class="fresh-bar" style="--fresh:93%"></div>
+          <div class="dcard-body">
+            <div class="dcard-top">
+              <h3 class="dcard-name">Amoxicilina</h3>
+              <span class="rx-badge">Receita médica</span>
+            </div>
+            <p class="dcard-meta">Cápsula · 500 mg</p>
+            <div class="dcard-foot">
+              <div>
+                <div class="price">4.500 Kz</div>
+                <span class="confirmed"><span class="dot"></span>há 5 h</span>
+              </div>
+              <a class="btn-mini-wa" href="#"><svg viewBox="0 0 24 24"><path d="M21 11.5a8.5 8.5 0 01-12.7 7.4L3 21l2.1-5.3A8.5 8.5 0 1121 11.5z"/></svg>WhatsApp</a>
+            </div>
+          </div>
+        </article>
+        <article class="dcard">
+          <div class="fresh-bar" style="--fresh:64%"></div>
+          <div class="dcard-body">
+            <div class="dcard-top">
+              <h3 class="dcard-name">Losartana</h3>
+              <span class="rx-badge">Receita médica</span>
+            </div>
+            <p class="dcard-meta">Comprimido · 50 mg</p>
+            <div class="dcard-foot">
+              <div>
+                <div class="price">3.500 Kz</div>
+                <span class="confirmed"><span class="dot"></span>há 26 h</span>
+              </div>
+              <a class="btn-mini-wa" href="#"><svg viewBox="0 0 24 24"><path d="M21 11.5a8.5 8.5 0 01-12.7 7.4L3 21l2.1-5.3A8.5 8.5 0 1121 11.5z"/></svg>WhatsApp</a>
+            </div>
+          </div>
+        </article>
+      </div>
+
+      <div class="cta">
+        <h3>É farmácia e quer aparecer aqui?</h3>
+        <p>Junte-se às parceiras do lançamento do Localizador — gratuitamente.</p>
+        <a class="btn btn-primary" href="#">Quero participar</a>
+      </div>
+    </div>
+  </section>
+</main>
+
+<script>
+document.querySelectorAll('.chip').forEach(chip => {
+  chip.addEventListener('click', () => {
+    document.querySelectorAll('.chip').forEach(c => c.classList.remove('active'))
+    chip.classList.add('active')
+  })
+})
+</script>
+
+<div class="model-tag">MODELO C · EXPLORAÇÃO</div>
+</body>
+</html>

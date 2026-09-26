@@ -1,22 +1,23 @@
-@import "tailwindcss";
+@import 'tailwindcss';
 
 @theme {
   /* Core Brand Colors — idênticos ao site principal (conhecafarmacia.com) */
   --color-brand-primary: #00493a;
   --color-brand-accent: #0a844f;
   --color-brand-deep: #002a32;
-  --color-brand-bg: #ffffff;
-  --color-brand-bg-alt: #f9f9f9;
+  --color-brand-bg: #fffdf9;
+  --color-brand-bg-alt: #f7f5f1;
   --color-brand-card: #ffffff;
-  --color-brand-divider: #dddddd;
+  --color-brand-divider: #dfe4e0;
+  --color-brand-line: #e3e0d8;
 
-  /* Typography */
-  --font-sans: "Inter", ui-sans-serif, system-ui, sans-serif;
-  --font-display: "Fraunces", Georgia, serif;
+  /* Typography — fontes variáveis self-hosted (fontsource, importadas no layout) */
+  --font-sans: 'Inter Variable', 'Inter', ui-sans-serif, system-ui, sans-serif;
+  --font-display: 'Fraunces Variable', 'Fraunces', Georgia, serif;
 
-  /* Elevation */
-  --shadow-soft: 0 4px 20px rgba(0, 42, 50, 0.05);
-  --shadow-md-soft: 0 10px 30px rgba(0, 42, 50, 0.08);
+  /* Elevação mínima — o Modelo F é flat: hairlines em vez de sombras */
+  --shadow-soft: 0 2px 10px rgba(0, 42, 50, 0.04);
+  --shadow-md-soft: 0 8px 24px rgba(0, 42, 50, 0.08);
 
   /* Superfícies inversas (tooltips/toasts) — SEMPRE escuras, mesmo em dark */
   --color-tooltip-bg: #002a32;
@@ -28,6 +29,7 @@ html.dark {
   --color-brand-bg-alt: #111816;
   --color-brand-card: #151c19;
   --color-brand-divider: #1f2927;
+  --color-brand-line: #1f2927;
   --color-brand-deep: #e5e7eb;
   --color-brand-primary: #005c4a;
   --color-brand-accent: #0d995f;
@@ -83,12 +85,13 @@ html.dark .form-note {
 /* Custom Components & Utilities */
 @layer components {
   .btn {
-    @apply inline-flex items-center justify-center px-6 py-3 rounded-lg font-semibold;
-    transition: background-color 0.3s ease-in-out,
-                color 0.3s ease-in-out,
-                transform 0.3s ease-in-out,
-                box-shadow 0.3s ease-in-out,
-                opacity 0.3s ease-in-out;
+    @apply inline-flex items-center justify-center px-6 py-3 rounded-full font-semibold;
+    transition:
+      background-color 0.3s ease-in-out,
+      color 0.3s ease-in-out,
+      transform 0.3s ease-in-out,
+      box-shadow 0.3s ease-in-out,
+      opacity 0.3s ease-in-out;
   }
 
   .btn-primary {
@@ -112,7 +115,7 @@ html.dark .form-note {
   }
 
   .btn-secondary {
-    @apply inline-flex items-center justify-center px-4 py-2 rounded-lg font-semibold transition-all duration-300 border-2 border-brand-primary text-brand-primary hover:bg-brand-primary/10 active:scale-[0.98];
+    @apply inline-flex items-center justify-center px-4 py-2 rounded-full font-semibold transition-all duration-300 border-2 border-brand-primary text-brand-primary hover:bg-brand-primary/10 active:scale-[0.98];
   }
 
   .nav-container {
@@ -303,20 +306,18 @@ html.dark .form-note {
 
   /* Cartões de funcionalidades */
   .loc-card {
-    @apply bg-brand-card rounded-[20px] p-7 border border-brand-divider/40 flex flex-col;
-    box-shadow: 0 2px 12px rgba(0, 42, 50, 0.05);
-    transition: transform 0.2s, box-shadow 0.2s;
+    @apply bg-brand-card rounded-lg p-7 border border-brand-line flex flex-col;
+    transition: border-color 0.2s ease;
   }
 
   .loc-card:hover {
-    transform: translateY(-5px);
-    box-shadow: 0 16px 36px rgba(0, 42, 50, 0.1);
+    border-color: rgba(0, 42, 50, 0.28);
   }
 
   .loc-card-icon {
     width: 3rem;
     height: 3rem;
-    border-radius: 14px;
+    border-radius: 10px;
     background: linear-gradient(135deg, #e8f7ef, #d5efe1);
     color: var(--color-brand-accent);
     display: flex;
@@ -359,17 +360,16 @@ html.dark .form-note {
   }
 
   .commit-item {
-    @apply bg-brand-card rounded-[20px] p-7 border border-brand-divider/40 h-full;
-    box-shadow: 0 2px 12px rgba(0, 42, 50, 0.05);
+    @apply bg-brand-card rounded-lg p-7 border border-brand-line h-full;
   }
 
   html.dark .commit-item {
     border-color: var(--color-brand-divider);
   }
 
-  /* FAQ */
+  /* FAQ — flat, alinhado com o Modelo F */
   .faq-item {
-    @apply bg-brand-card rounded-2xl border border-brand-divider/40 p-6;
+    @apply bg-transparent rounded-lg border border-brand-line p-6;
   }
 
   html.dark .faq-item {
@@ -401,7 +401,9 @@ html.dark .form-note {
   .form-select,
   .form-textarea {
     @apply w-full rounded-lg border border-brand-divider bg-white px-4 py-2.5 text-brand-deep outline-none;
-    transition: border-color 0.2s ease, box-shadow 0.2s ease;
+    transition:
+      border-color 0.2s ease,
+      box-shadow 0.2s ease;
   }
 
   .form-input:focus,
@@ -582,7 +584,10 @@ html.dark .form-note {
     background: transparent;
     border: none;
     cursor: pointer;
-    transition: background-color 0.2s, color 0.2s, transform 0.2s;
+    transition:
+      background-color 0.2s,
+      color 0.2s,
+      transform 0.2s;
   }
 
   .theme-toggle:hover {
@@ -597,33 +602,45 @@ html.dark .form-note {
 }
 
 /* ============================================
-   BUSCA DO LOCALIZADOR (/pesquisa, /farmacia)
+   LOCALIZADOR — MODELO F ("Editorial Prático")
+   Fundo quente #fffdf9, Fraunces protagonista,
+   flat: hairlines em vez de sombras, botões pill
    ============================================ */
 @layer components {
   .search-page {
     @apply min-h-[70vh] flex flex-col;
   }
 
-  /* Hero curto — só o título (padrão /artigos do site principal, mas baixo) */
+  /* Kicker editorial — label pequena em maiúsculas acima dos títulos */
+  .kicker {
+    @apply text-[11px] font-bold uppercase tracking-[0.22em] text-brand-accent mb-3;
+  }
+
+  /* Hero da pesquisa */
   .search-hero {
-    @apply bg-brand-bg pt-10 pb-6 md:pt-12 md:pb-8 text-center;
+    @apply bg-brand-bg pt-12 pb-8 md:pt-16 md:pb-10 text-center;
   }
 
   .search-hero-title {
-    @apply text-2xl md:text-3xl font-bold text-brand-deep mb-2;
+    @apply text-3xl md:text-[2.6rem] leading-tight font-display font-semibold text-brand-deep mb-3;
+    letter-spacing: -0.01em;
+  }
+
+  .search-hero-title em {
+    font-style: italic;
+    color: var(--color-brand-accent);
   }
 
   .search-hero-sub {
-    @apply text-brand-deep/60 text-sm md:text-base;
+    @apply text-brand-deep/55 text-sm md:text-base max-w-xl mx-auto;
   }
 
-  /* Zona de "header": busca + filtros sobre o fundo principal,
-     com borda inferior a separar da zona de conteúdo */
+  /* Zona de filtros — fundo principal, borda inferior separa do conteúdo */
   .search-filter-section {
-    @apply bg-brand-bg border-b border-brand-divider/30 pb-8 md:pb-10;
+    @apply bg-brand-bg border-b border-brand-line pb-8 md:pb-10;
   }
 
-  /* Zona de conteúdo: fundo alternativo, como a grelha de artigos */
+  /* Zona de conteúdo — fundo alternativo */
   .search-results-section {
     @apply flex-1 bg-brand-bg-alt py-10 md:py-12;
   }
@@ -632,31 +649,22 @@ html.dark .form-note {
     @apply max-w-4xl mx-auto px-6;
   }
 
-  .search-title {
-    @apply text-3xl md:text-4xl font-bold text-brand-deep text-center mb-3;
-  }
-
-  .search-sub {
-    @apply text-brand-deep/60 text-center mb-10;
-  }
-
-  /* Caixa de busca principal */
+  /* Caixa de busca — pill com hairline (sem sombra), botão integrado */
   .search-box {
-    @apply relative flex items-center bg-brand-card border-2 border-brand-divider rounded-2xl shadow-soft;
-    transition: border-color 0.2s ease, box-shadow 0.2s ease;
+    @apply relative flex items-center bg-brand-card border border-brand-line rounded-full pl-5 pr-2 py-2;
+    transition: border-color 0.2s ease;
   }
 
   .search-box:focus-within {
-    border-color: var(--color-brand-accent);
-    box-shadow: 0 0 0 4px rgba(10, 132, 79, 0.12);
+    border-color: var(--color-brand-primary);
   }
 
   .search-box-icon {
-    @apply pl-5 pr-3 text-brand-deep/40 flex-shrink-0;
+    @apply pr-3 text-brand-deep/40 flex-shrink-0;
   }
 
   .search-input {
-    @apply flex-1 bg-transparent border-none outline-none py-4 pr-4 text-lg text-brand-deep;
+    @apply flex-1 bg-transparent border-none outline-none py-2 text-base md:text-lg text-brand-deep;
   }
 
   .search-input::placeholder {
@@ -665,14 +673,26 @@ html.dark .form-note {
   }
 
   .search-clear {
-    @apply mr-4 w-8 h-8 rounded-full grid place-items-center text-brand-deep/40 hover:text-brand-deep hover:bg-brand-bg-alt cursor-pointer flex-shrink-0;
+    @apply mr-1 md:mr-2 w-8 h-8 rounded-full grid place-items-center text-brand-deep/40 hover:text-brand-deep hover:bg-brand-bg-alt cursor-pointer flex-shrink-0;
     background: none;
     border: none;
   }
 
+  /* Botão "Pesquisar" integrado na caixa — desktop apenas; no mobile o
+     Enter submete e a tecla de limpar faz o resto, mantendo a pill limpa */
+  .search-go {
+    @apply hidden md:inline-flex flex-shrink-0 bg-brand-primary text-white border-none rounded-full px-6 py-2.5 text-sm font-bold cursor-pointer;
+    transition: filter 0.2s ease;
+  }
+
+  .search-go:hover {
+    filter: brightness(1.15);
+  }
+
   /* Autocomplete */
   .suggest-list {
-    @apply absolute top-full left-0 right-0 mt-2 bg-brand-card border border-brand-divider rounded-xl shadow-md-soft overflow-hidden z-40;
+    @apply absolute top-full left-0 right-0 mt-2 bg-brand-card border border-brand-line rounded-xl overflow-hidden z-40;
+    box-shadow: 0 12px 32px rgba(0, 42, 50, 0.1);
   }
 
   .suggest-item {
@@ -699,63 +719,152 @@ html.dark .form-note {
   }
 
   .chip {
-    @apply px-4 py-1.5 rounded-full text-sm font-medium border-2 border-brand-divider text-brand-deep cursor-pointer bg-transparent;
+    @apply px-5 py-2 rounded-full text-sm font-semibold border-none bg-brand-bg-alt text-brand-deep/65 cursor-pointer;
     transition: all 0.2s ease;
   }
 
   .chip:hover {
-    border-color: var(--color-brand-accent);
-    color: var(--color-brand-accent);
+    color: var(--color-brand-primary);
   }
 
   .chip--active {
-    @apply bg-brand-primary border-brand-primary text-white;
+    @apply bg-brand-primary text-white;
   }
 
   .chip--active:hover {
     color: #ffffff;
   }
 
-  /* Cabeçalho de resultados */
+  /* Stats strip — números grandes em Fraunces separados por hairlines */
+  .stats-strip {
+    @apply flex flex-wrap border-t border-b border-brand-line mt-12;
+  }
+
+  .stat {
+    @apply flex-1 min-w-[150px] py-6 px-4 text-center;
+  }
+
+  .stat + .stat {
+    border-left: 1px solid var(--color-brand-line);
+  }
+
+  .stat b {
+    @apply block font-display text-3xl font-semibold text-brand-primary;
+  }
+
+  .stat span {
+    @apply text-xs md:text-sm text-brand-deep/55;
+  }
+
+  /* Cabeçalho de resultado editorial — título serif + meta à direita */
   .results-head {
-    @apply flex items-baseline justify-between gap-4 mt-12 mb-5;
+    @apply flex items-baseline justify-between gap-4 flex-wrap mt-10 mb-3;
+  }
+
+  .drug-title {
+    @apply font-display text-2xl font-semibold text-brand-deep;
+    letter-spacing: -0.01em;
   }
 
   .results-count {
-    @apply text-sm text-brand-deep/60;
+    @apply text-xs md:text-sm text-brand-deep/55;
   }
 
   .results-count strong {
     @apply text-brand-deep;
   }
 
-  /* Cartão de resultado: medicamento + farmácias com stock */
+  /* Bloco por medicamento: título editorial + cartões das farmácias */
+  .drug-block {
+    @apply mb-8;
+  }
+
+  /* Dentro do bloco, o cabeçalho não precisa da margem superior global */
+  .drug-block .results-head {
+    margin-top: 0;
+  }
+
+  /* Cartão de farmácia flat: hairline, raio 8px, hover só na borda */
+  .drug-card {
+    @apply bg-brand-card border border-brand-line rounded-lg px-6 py-4 flex flex-wrap items-center gap-3 md:gap-5 mb-3;
+    transition: border-color 0.2s ease;
+  }
+
+  .drug-card:hover {
+    border-color: rgba(0, 42, 50, 0.3);
+  }
+
+  html.dark .drug-card {
+    background: rgba(255, 255, 255, 0.03);
+    border-color: var(--color-brand-divider);
+  }
+
+  html.dark .drug-card:hover {
+    border-color: rgba(13, 153, 95, 0.5);
+  }
+
+  .drug-card-main {
+    @apply flex-1 min-w-[220px];
+  }
+
+  .drug-card-name {
+    @apply font-display text-lg font-semibold text-brand-deep;
+  }
+
+  .drug-card-name:hover {
+    @apply text-brand-accent;
+  }
+
+  .drug-card-meta {
+    @apply text-xs text-brand-deep/50 mt-0.5;
+  }
+
+  .drug-card-meta .fresh {
+    @apply font-semibold;
+    color: var(--color-brand-accent);
+  }
+
+  .drug-card-side {
+    @apply flex items-center gap-2.5 flex-wrap;
+  }
+
+  .price {
+    @apply font-bold text-brand-deep tabular-nums text-[0.95rem];
+  }
+
+  /* Selo "Melhor preço" — 1º cartão (mais barato) de cada medicamento */
+  .best-price {
+    @apply ml-2 text-[10px] font-bold uppercase tracking-[0.08em] px-2 py-0.5 rounded-full align-middle whitespace-nowrap;
+    background: rgba(10, 132, 79, 0.12);
+    color: var(--color-brand-accent);
+  }
+
+  /* Cartão de resultado composto (medicamento + farmácias), usado em vistas alternativas */
   .drug-result {
-    @apply bg-brand-card border border-brand-divider/40 rounded-[20px] overflow-hidden mb-5;
-    box-shadow: 0 2px 12px rgba(0, 42, 50, 0.05);
+    @apply bg-brand-card border border-brand-line rounded-lg overflow-hidden mb-4;
   }
 
   .drug-result-head {
-    @apply px-6 py-4 border-b border-brand-divider/40 flex flex-wrap items-center justify-between gap-3;
-    background: var(--color-brand-bg-alt);
+    @apply px-6 py-4 flex flex-wrap items-center justify-between gap-3 border-b border-brand-line;
   }
 
   .drug-name {
-    @apply font-bold text-brand-deep text-lg;
+    @apply font-display font-semibold text-brand-deep text-lg;
   }
 
   .drug-meta {
-    @apply text-xs text-brand-deep/50;
+    @apply text-xs text-brand-deep/50 mt-0.5;
   }
 
   .rx-badge {
-    @apply text-[11px] font-bold uppercase tracking-wide px-2 py-0.5 rounded-full;
+    @apply text-[11px] font-bold uppercase tracking-wide px-2.5 py-0.5 rounded-full;
     background: rgba(255, 108, 35, 0.12);
     color: #d9531e;
   }
 
+  /* Linha de farmácia dentro do resultado */
   .pharmacy-row {
-    @apply px-6 py-4 flex flex-wrap items-start gap-4 border-b border-brand-divider/20 last:border-b-0;
+    @apply px-6 py-4 flex flex-wrap items-center gap-3 md:gap-5 border-b border-brand-line/60 last:border-b-0;
   }
 
   .pharmacy-row-info {
@@ -779,16 +888,17 @@ html.dark .form-note {
   }
 
   .btn-mini {
-    @apply inline-flex items-center gap-1.5 px-3.5 py-2 rounded-lg text-sm font-semibold;
+    @apply inline-flex items-center gap-1.5 px-3.5 py-1.5 rounded-full text-sm font-bold;
     transition: all 0.2s ease;
   }
 
   .btn-mini--phone {
-    @apply border-2 border-brand-primary text-brand-primary;
+    background: var(--color-brand-deep);
+    color: #ffffff;
   }
 
   .btn-mini--phone:hover {
-    @apply bg-brand-primary/10;
+    filter: brightness(1.2);
   }
 
   .btn-mini--wa {
@@ -801,139 +911,38 @@ html.dark .form-note {
   }
 
   .btn-mini--soon {
-    @apply border-2 border-brand-divider text-brand-deep/40 cursor-default;
+    @apply border border-brand-divider text-brand-deep/40 cursor-default bg-transparent;
   }
 
   /* Selo de confirmação */
   .confirmed-badge {
-    @apply inline-flex items-center gap-1.5 text-xs font-semibold;
+    @apply inline-flex items-center gap-1.5 text-xs font-semibold text-nowrap;
     color: var(--color-brand-accent);
   }
 
   .confirmed-dot {
-    width: 8px;
-    height: 8px;
+    width: 7px;
+    height: 7px;
     border-radius: 999px;
     background: var(--color-brand-accent);
-    box-shadow: 0 0 0 3px rgba(10, 132, 79, 0.15);
     flex-shrink: 0;
   }
 
-  /* Perfil da farmácia */
-  .pharmacy-hero {
-    @apply bg-brand-bg-alt border-b border-brand-divider/40 py-12;
-  }
-
-  .pharmacy-hero-inner {
-    @apply max-w-4xl mx-auto px-6 flex flex-wrap items-center justify-between gap-6;
-  }
-
-  .pharmacy-name {
-    @apply text-3xl md:text-4xl font-bold text-brand-deep mb-1;
-  }
-
-  .pharmacy-loc {
-    @apply text-brand-deep/60;
-  }
-
-  .pharmacy-badges {
-    @apply flex gap-2 flex-wrap;
-  }
-
-  .badge {
-    @apply text-xs font-bold uppercase tracking-wide px-3 py-1 rounded-full;
-  }
-
-  .badge--verified {
-    background: rgba(10, 132, 79, 0.12);
-    color: var(--color-brand-accent);
-  }
-
-  .stock-section {
-    @apply max-w-4xl mx-auto px-6 py-12;
-  }
-
-  .stock-list {
-    @apply bg-brand-card border border-brand-divider/40 rounded-[20px] overflow-hidden;
-    box-shadow: 0 2px 12px rgba(0, 42, 50, 0.05);
-  }
-
-  .stock-row {
-    @apply px-6 py-4 flex flex-wrap items-center justify-between gap-3 border-b border-brand-divider/20 last:border-b-0;
-  }
-
-  .stock-row-name {
-    @apply font-semibold text-brand-deep;
-  }
-
-  .stock-row-meta {
-    @apply text-xs text-brand-deep/50;
-  }
-
-  .stock-confirmed-at {
-    @apply text-xs text-brand-deep/50 flex items-center gap-1.5;
-  }
-
-  /* Estado vazio */
-  .empty-state {
-    @apply text-center py-16 px-6;
-  }
-
-  .empty-title {
-    @apply text-xl font-bold text-brand-deep mb-2;
-  }
-
-  .empty-sub {
-    @apply text-brand-deep/60 text-sm mb-6;
-  }
-
-  /* Skeleton */
-  .skeleton-line {
-    @apply rounded-full;
-    background: var(--color-brand-divider);
-    animation: pulse 1.5s ease-in-out infinite;
-  }
-
-  .spinner {
-    width: 22px;
-    height: 22px;
-    border: 2.5px solid rgba(10, 132, 79, 0.2);
-    border-top-color: var(--color-brand-accent);
-    border-radius: 999px;
-    animation: spin 0.7s linear infinite;
-    margin: 0 auto;
-  }
-
-  @keyframes spin {
-    to {
-      transform: rotate(360deg);
-    }
-  }
-
-  .search-cta {
-    @apply text-center mt-14 p-7 rounded-[20px] border border-brand-divider/40;
-    background: var(--color-brand-card);
-  }
-
-  .search-cta-title {
-    @apply font-bold text-brand-deep text-lg mb-2;
-  }
-
-  .search-cta-sub {
-    @apply text-sm text-brand-deep/60 mb-5;
-  }
-
   /* ============================================
-     HEADER FUNCIONAL DAS PÁGINAS REAIS
-     (distinto do header de camuflagem da landing)
+     HEADER FUNCIONAL (AppHeader)
      ============================================ */
-  /* Dark mode: como os tokens --color-brand-* já são redefinidos em html.dark,
-     todas as cores derivam dos tokens e adaptam-se sozinhas — só há um
-     override de tema (contraste do link activo, mais abaixo). */
   .app-header {
-    @apply sticky top-0 z-50 border-b border-brand-divider/60 bg-brand-bg/90;
-    backdrop-filter: blur(10px);
-    -webkit-backdrop-filter: blur(10px);
+    @apply sticky top-0 z-50;
+    border-bottom: 1px solid var(--color-brand-line);
+    /* Fosco real: tinta semi-opaca + blur. (O @apply com /92 não compila
+       em Tailwind v4 e matava o fundo E o blur de uma vez.) */
+    background: color-mix(in srgb, var(--color-brand-bg) 86%, transparent);
+    backdrop-filter: blur(14px) saturate(1.5);
+    -webkit-backdrop-filter: blur(14px) saturate(1.5);
+  }
+
+  html.dark .app-header {
+    background: color-mix(in srgb, var(--color-brand-bg) 78%, transparent);
   }
 
   .app-header-inner {
@@ -945,34 +954,36 @@ html.dark .form-note {
   }
 
   .app-header-product {
-    @apply text-sm font-bold uppercase tracking-wide text-brand-accent;
-    border-left: 2px solid var(--color-brand-divider);
+    @apply text-xs font-bold uppercase tracking-[0.14em] text-brand-accent;
+    border-left: 1px solid var(--color-brand-line);
     padding-left: 10px;
   }
 
-  /* Nav centrada: flex-1 + justify-center centra os links entre o logo
-     e as acções da direita em qualquer largura de ecrã. */
+  /* Nav em pills (do Modelo A) */
   .app-header-nav {
     @apply hidden md:flex items-center justify-center flex-1 gap-1;
   }
 
+  .app-header-nav .pillset {
+    @apply flex items-center gap-1 p-1 rounded-full bg-brand-bg-alt;
+  }
+
   .app-header-link {
-    @apply px-3.5 py-2 rounded-lg text-sm font-medium text-brand-deep/70;
+    @apply px-5 py-1.5 rounded-full text-sm font-semibold text-brand-deep/55;
     transition: all 0.15s ease;
   }
 
   .app-header-link:hover {
-    @apply text-brand-deep bg-brand-bg-alt;
+    @apply text-brand-primary;
   }
 
   .app-header-link--active {
-    @apply text-brand-primary bg-brand-accent/10 font-semibold;
+    @apply text-brand-primary bg-brand-card;
   }
 
-  /* Único override de tema: no escuro o verde-primário não tem contraste
-     suficiente sobre o fundo — usa o acento mais claro. */
   html.dark .app-header-link--active {
-    color: var(--color-brand-accent);
+    @apply text-brand-deep;
+    background: rgba(255, 255, 255, 0.08);
   }
 
   .app-header-right {
@@ -1004,7 +1015,7 @@ html.dark .form-note {
      LISTA DE FARMÁCIAS (/farmacia)
      ============================================ */
   .ph-list-head {
-    @apply flex flex-wrap items-center justify-between gap-4 mb-8;
+    @apply flex flex-wrap items-center justify-between gap-4 mb-6;
   }
 
   .ph-count {
@@ -1016,7 +1027,7 @@ html.dark .form-note {
   }
 
   .ph-grid {
-    @apply grid gap-5;
+    @apply grid gap-4;
   }
 
   @media (min-width: 640px) {
@@ -1031,30 +1042,33 @@ html.dark .form-note {
     }
   }
 
+  /* Cartão flat: hairline, raio 8px, hover só na borda */
   .ph-card {
-    @apply bg-brand-card border border-brand-divider/40 rounded-[20px] p-6 flex flex-col gap-3;
-    transition: border-color 0.2s ease, transform 0.2s ease, box-shadow 0.2s ease;
-    box-shadow: 0 2px 12px rgba(0, 42, 50, 0.05);
+    @apply bg-brand-card border border-brand-line rounded-lg p-6 flex flex-col gap-3;
+    transition: border-color 0.2s ease;
   }
 
   .ph-card:hover {
-    @apply border-brand-accent/50;
-    transform: translateY(-2px);
-    box-shadow: 0 10px 30px rgba(0, 42, 50, 0.08);
+    border-color: rgba(0, 42, 50, 0.3);
   }
 
   html.dark .ph-card {
-    background: rgba(255, 255, 255, 0.04);
-    border-color: rgba(255, 255, 255, 0.1);
-    box-shadow: none;
+    background: rgba(255, 255, 255, 0.03);
+    border-color: var(--color-brand-divider);
   }
 
   html.dark .ph-card:hover {
-    border-color: rgba(10, 132, 79, 0.5);
+    border-color: rgba(13, 153, 95, 0.5);
   }
 
   .ph-card-name {
-    @apply text-lg font-bold text-brand-deep;
+    @apply font-display text-lg font-semibold text-brand-deep;
+  }
+
+  /* Selo de verificação — texto verde pequeno em maiúsculas, como no Modelo F */
+  .ph-ver {
+    @apply text-[10.5px] font-bold uppercase tracking-[0.1em] whitespace-nowrap pt-1;
+    color: var(--color-brand-accent);
   }
 
   .ph-card-name:hover {
@@ -1066,11 +1080,19 @@ html.dark .form-note {
   }
 
   .ph-card-foot {
-    @apply flex flex-wrap items-center justify-between gap-3 pt-3 border-t border-brand-divider/30;
+    @apply flex flex-wrap items-center justify-between gap-3 pt-3.5 border-t border-brand-line/70;
   }
 
   html.dark .ph-card-foot {
-    border-top-color: rgba(255, 255, 255, 0.1);
+    border-top-color: var(--color-brand-divider);
+  }
+
+  .ph-count-inline {
+    @apply text-sm font-semibold text-brand-deep;
+  }
+
+  .ph-count-inline b {
+    @apply text-brand-accent;
   }
 
   .ph-card-hint {
@@ -1081,18 +1103,16 @@ html.dark .form-note {
     @apply flex flex-wrap justify-center gap-2;
   }
 
-  /* Reaproveita .chip / .chip--active existentes para o filtro */
-  .ph-toolbar .chip {
-    @apply text-xs px-3 py-1;
+  /* ============================================
+     DETALHE DA FARMÁCIA — Críticos + Accordions editoriais
+     ============================================ */
+  .ph-hero {
+    @apply bg-brand-bg border-b border-brand-line pt-10 pb-8;
   }
 
-  /* ============================================
-     DETALHES DA FARMÁCIA — Críticos + Accordions por forma
-     ============================================ */
-
-  /* Hero da farmácia — mesmo fundo da zona de busca, como na /pesquisa */
-  .ph-hero {
-    @apply bg-brand-bg border-b border-brand-divider/40 py-10;
+  /* Barra de pesquisa integrada no hero (sem linha entre ambas) */
+  .ph-hero-search {
+    @apply max-w-4xl mx-auto px-6 mt-8;
   }
 
   .ph-hero-inner {
@@ -1100,7 +1120,9 @@ html.dark .form-note {
   }
 
   .ph-name {
-    @apply text-2xl md:text-3xl font-bold text-brand-deep mb-1 font-display;
+    @apply text-3xl md:text-4xl font-display font-semibold text-brand-deep mb-1;
+    letter-spacing: -0.01em;
+    line-height: 1.08;
   }
 
   .ph-loc {
@@ -1108,44 +1130,104 @@ html.dark .form-note {
   }
 
   .ph-badges {
-    @apply flex flex-wrap gap-2 mt-3;
+    @apply flex flex-wrap items-center gap-x-5 gap-y-2 mt-3 text-sm text-brand-deep/60;
   }
 
-  .badge--open {
-    background: rgba(10, 132, 79, 0.14);
+  .ph-badges .badge--open {
     color: #0b6e44;
+    font-weight: 600;
   }
 
-  .badge--closed {
-    background: rgba(220, 53, 69, 0.12);
+  html.dark .ph-badges .badge--open {
+    color: #7fd4ab;
+  }
+
+  .ph-badges .badge--closed {
     color: #c0392b;
+    font-weight: 600;
   }
 
+  .dot-g {
+    width: 7px;
+    height: 7px;
+    border-radius: 999px;
+    background: var(--color-brand-accent);
+    flex-shrink: 0;
+  }
+
+  .dot-r {
+    width: 7px;
+    height: 7px;
+    border-radius: 999px;
+    background: #c0392b;
+    flex-shrink: 0;
+  }
+
+  /* Ações do hero — botões pill sólidos (do A) */
   .ph-actions {
-    @apply flex flex-wrap gap-2 mt-4;
+    @apply flex flex-wrap gap-2.5;
   }
 
   .btn-wa {
-    @apply text-white border-none;
     background: #25d366;
+    color: #ffffff;
+    border: none;
   }
 
   .btn-wa:hover {
     background: #1da851;
   }
 
-  /* Críticos em stock */
+  .btn-maps {
+    @apply inline-flex items-center justify-center px-4 py-2 text-sm font-semibold rounded-full;
+    background: var(--color-brand-card);
+    border: 1px solid var(--color-brand-line);
+    color: var(--color-brand-deep);
+    transition: border-color 0.2s ease;
+  }
+
+  .btn-maps:hover {
+    border-color: rgba(0, 42, 50, 0.3);
+  }
+
+  /* Críticos — painel verde-água suave com borda esquerda (meio-termo A×D) */
   .crit-section {
     @apply mb-10;
   }
 
-  .crit-head,
-  .section-head {
-    @apply flex flex-wrap items-baseline gap-3 mb-4;
+  .crit-panel {
+    background: rgba(10, 132, 79, 0.06);
+    border-left: 3px solid var(--color-brand-accent);
+    border-radius: 0 12px 12px 0;
+    padding: 1.3rem 1.8rem 0.8rem;
   }
 
-  .section-title {
-    @apply text-xl font-bold text-brand-deep font-display;
+  html.dark .crit-panel {
+    background: rgba(13, 153, 95, 0.1);
+  }
+
+  .crit-k {
+    @apply text-[11px] font-bold uppercase tracking-[0.2em] text-brand-accent mb-2;
+  }
+
+  .crit-item {
+    @apply flex flex-wrap items-center justify-between gap-x-5 gap-y-2 py-3;
+  }
+
+  .crit-item + .crit-item {
+    border-top: 1px solid rgba(10, 132, 79, 0.16);
+  }
+
+  .crit-name {
+    @apply font-display text-base font-semibold text-brand-deep;
+  }
+
+  .crit-meta {
+    @apply text-xs text-brand-deep/55 mt-0.5;
+  }
+
+  .crit-side {
+    @apply flex items-center gap-3.5 flex-wrap;
   }
 
   .crit-note {
@@ -1154,32 +1236,107 @@ html.dark .form-note {
     color: #d9531e;
   }
 
+  /* Secções genéricas */
+  .section-head {
+    @apply flex flex-wrap items-baseline gap-3 mb-4;
+  }
+
+  .section-title {
+    @apply text-xl font-bold text-brand-deep font-display;
+  }
+
   .section-sub {
     @apply text-xs text-brand-deep/50;
   }
 
-  .crit-grid,
-  .dcard-grid {
-    @apply grid gap-4;
+  /* Accordions editoriais (v3) — secções planas separadas por hairlines,
+     sem caixa, sem ícone circular, sem pill de contagem.
+     Indicador: seta para baixo (fechado) que roda para cima ao abrir. */
+  .ph-accordions {
+    @apply border-t border-brand-line;
   }
 
-  @media (min-width: 640px) {
-    .crit-grid,
-    .dcard-grid {
-      grid-template-columns: repeat(2, minmax(0, 1fr));
-    }
+  .acc {
+    @apply border-b border-brand-line;
   }
 
-  @media (min-width: 1024px) {
-    .crit-grid,
-    .dcard-grid {
-      grid-template-columns: repeat(3, minmax(0, 1fr));
-    }
+  .acc-head {
+    @apply w-full flex items-center gap-3.5 px-0 py-4 text-left bg-transparent border-none cursor-pointer;
+    font-family: inherit;
   }
 
+  .acc-head:hover .acc-name {
+    color: var(--color-brand-accent);
+  }
+
+  .acc-name {
+    @apply flex-1 font-display text-lg font-semibold text-brand-deep;
+    transition: color 0.15s ease;
+  }
+
+  .acc-count {
+    @apply text-xs text-brand-deep/50 flex-shrink-0;
+    font-variant-numeric: tabular-nums;
+  }
+
+  .acc-chev {
+    @apply w-4 h-4 flex-shrink-0 text-brand-deep/70;
+    fill: none;
+    stroke: currentColor;
+    stroke-width: 2;
+    stroke-linecap: round;
+    stroke-linejoin: round;
+    transition: transform 0.25s ease;
+  }
+
+  .acc--open .acc-chev {
+    transform: rotate(180deg);
+  }
+
+  /* Corpo escondido quando fechado */
+  .acc:not(.acc--open) .acc-body {
+    display: none;
+  }
+
+  /* Corpo indentado como submenu: linha vertical-guia à esquerda */
+  .acc-body {
+    @apply pb-4 pl-1;
+    margin-left: 30px;
+    border-left: 1px solid var(--color-brand-line);
+  }
+
+  .acc-body .stock-row:first-child {
+    border-top: none;
+  }
+
+  /* Linhas de stock dentro do accordion */
+  .stock-row {
+    @apply flex flex-wrap items-center justify-between gap-3 py-3 border-t border-brand-line/70;
+  }
+
+  .stock-row-name {
+    @apply font-semibold text-brand-deep;
+  }
+
+  .stock-row-meta {
+    @apply text-xs text-brand-deep/50 mt-0.5;
+  }
+
+  .stock-confirmed-at {
+    @apply text-xs text-brand-deep/50 inline-flex items-center gap-1.5;
+  }
+
+  .rx-badge--inline {
+    @apply ml-2 align-middle;
+  }
+
+  .stock-side {
+    @apply flex items-center gap-2.5 flex-wrap;
+  }
+
+  /* Cartões de detalhe (dcard) — flat, usados nos críticos se necessário */
   .dcard {
-    @apply bg-brand-card border border-brand-divider/40 rounded-2xl p-5 flex flex-col gap-2;
-    box-shadow: 0 2px 12px rgba(0, 42, 50, 0.05);
+    @apply bg-brand-card border border-brand-line rounded-lg p-5 flex flex-col gap-2;
   }
 
   .dcard-top {
@@ -1195,91 +1352,85 @@ html.dark .form-note {
   }
 
   .dcard-foot {
-    @apply flex items-end justify-between gap-3 mt-2 pt-3 border-t border-brand-divider/30;
+    @apply flex items-end justify-between gap-3 mt-2 pt-3 border-t border-brand-line/70;
   }
 
   .dcard-price {
-    @apply font-bold text-brand-deep;
+    @apply font-bold text-brand-deep tabular-nums;
   }
 
-  /* Accordions por forma farmacêutica */
-  .ph-accordions {
-    @apply flex flex-col gap-3;
+  /* ============================================
+     PÁGINA INICIAL DO APP — hero + stats + CTA (Modelo F)
+     ============================================ */
+  .app-hero {
+    @apply bg-brand-bg text-center pt-14 pb-10 md:pt-20 md:pb-12 px-6;
   }
 
-  .acc {
-    @apply bg-brand-card border border-brand-divider/40 rounded-2xl overflow-hidden;
-    box-shadow: 0 2px 12px rgba(0, 42, 50, 0.05);
+  .app-hero-title {
+    @apply text-3xl md:text-5xl font-display font-semibold text-brand-deep leading-tight;
+    letter-spacing: -0.01em;
   }
 
-  .acc-head {
-    @apply w-full flex items-center gap-3.5 px-5 py-4 text-left bg-transparent border-none cursor-pointer;
-    font-family: inherit;
-  }
-
-  .acc-head:hover {
-    background: var(--color-brand-bg-alt);
-  }
-
-  .acc-icon {
-    @apply w-10 h-10 rounded-xl grid place-items-center flex-shrink-0;
-    background: rgba(10, 132, 79, 0.1);
-  }
-
-  .acc-icon svg {
-    @apply w-5 h-5;
-    fill: none;
-    stroke: var(--color-brand-accent);
-    stroke-width: 1.8;
-    stroke-linecap: round;
-    stroke-linejoin: round;
-  }
-
-  .acc-title {
-    @apply flex-1;
-  }
-
-  .acc-name {
-    @apply font-bold text-brand-deep;
-  }
-
-  .acc-count {
-    @apply text-xs font-bold px-3 py-1 rounded-full flex-shrink-0;
+  .app-hero-title em {
+    font-style: italic;
     color: var(--color-brand-accent);
-    background: rgba(10, 132, 79, 0.1);
   }
 
-  .acc-chevron {
-    @apply w-5 h-5 flex-shrink-0 text-brand-deep/40;
-    fill: none;
-    stroke: currentColor;
-    stroke-width: 2;
-    stroke-linecap: round;
-    transition: transform 0.3s ease;
+  .app-hero-sub {
+    @apply text-brand-deep/55 mt-4 max-w-xl mx-auto;
   }
 
-  .acc--open .acc-chevron {
-    transform: rotate(180deg);
+  .app-hero-cta {
+    @apply flex flex-wrap justify-center gap-3 mt-8;
   }
 
-  .acc-body {
-    @apply border-t border-brand-divider/30;
+  /* Estado vazio */
+  .empty-state {
+    @apply text-center py-16 px-6;
   }
 
-  /* Corpo do accordion escondido quando fechado (o botão alterna a classe
-     acc--open no cabeçalho) */
-  .acc:not(.acc--open) .acc-body {
-    display: none;
+  .empty-title {
+    @apply font-display text-xl font-semibold text-brand-deep mb-2;
   }
 
-  /* Badge de receita dentro do nome (inline) */
-  .rx-badge--inline {
-    @apply ml-2 align-middle;
+  .empty-sub {
+    @apply text-brand-deep/60 text-sm mb-6;
   }
 
-  /* Coluna da direita nas linhas de stock */
-  .stock-side {
-    @apply flex items-center gap-2.5 flex-wrap;
+  /* Skeleton */
+  .skeleton-line {
+    @apply rounded-full;
+    background: var(--color-brand-divider);
+    animation: pulse 1.5s ease-in-out infinite;
+  }
+
+  .spinner {
+    width: 22px;
+    height: 22px;
+    border: 2.5px solid rgba(10, 132, 79, 0.2);
+    border-top-color: var(--color-brand-accent);
+    border-radius: 999px;
+    animation: spin 0.7s linear infinite;
+    margin: 0 auto;
+  }
+
+  @keyframes spin {
+    to {
+      transform: rotate(360deg);
+    }
+  }
+
+  .search-cta {
+    @apply text-center mt-14 p-7 rounded-lg border border-brand-line;
+    background: var(--color-brand-card);
+  }
+
+  .search-cta-title {
+    @apply font-display font-semibold text-brand-deep text-lg mb-2;
+  }
+
+  .search-cta-sub {
+    @apply text-sm text-brand-deep/60 mb-5;
   }
 
   /* ============================================
@@ -1290,7 +1441,8 @@ html.dark .form-note {
   }
 
   .about-hero-title {
-    @apply text-4xl md:text-5xl font-bold text-brand-deep mb-4;
+    @apply text-4xl md:text-5xl font-display font-semibold text-brand-deep mb-4;
+    letter-spacing: -0.01em;
   }
 
   .about-hero-sub {
@@ -1298,15 +1450,15 @@ html.dark .form-note {
   }
 
   .about-section {
-    @apply py-10 border-t border-brand-divider/40;
+    @apply py-10 border-t border-brand-line;
   }
 
   .about-kicker {
-    @apply text-xs font-bold uppercase tracking-widest text-brand-accent mb-3;
+    @apply text-xs font-bold uppercase tracking-[0.22em] text-brand-accent mb-3;
   }
 
   .about-h2 {
-    @apply text-2xl md:text-3xl font-bold text-brand-deep font-display mb-4;
+    @apply text-2xl md:text-3xl font-display font-semibold text-brand-deep mb-4;
   }
 
   .about-p {
@@ -1330,8 +1482,65 @@ html.dark .form-note {
   }
 
   .about-cta {
-    @apply text-center mt-6 p-8 rounded-[20px] border border-brand-divider/40;
+    @apply text-center mt-6 p-8 rounded-lg border border-brand-line;
     background: var(--color-brand-bg-alt);
+  }
+
+  /* ============================================
+     FOOTER DAS PÁGINAS DO LOCALIZADOR (AppFooter)
+     Compacto, estilo Modelo F. O footer da homepage
+     usa .footer e não é afectado.
+     ============================================ */
+  .app-footer {
+    @apply border-t border-brand-line bg-brand-bg;
+  }
+
+  .app-footer-in {
+    @apply max-w-4xl mx-auto px-6 py-7;
+  }
+
+  .app-footer-top {
+    @apply flex flex-wrap items-center justify-between gap-x-6 gap-y-3;
+  }
+
+  .app-footer-logo {
+    @apply flex items-center gap-2.5 flex-shrink-0;
+  }
+
+  .app-footer-product {
+    @apply text-xs font-bold uppercase tracking-[0.14em] text-brand-accent;
+    border-left: 1px solid var(--color-brand-line);
+    padding-left: 10px;
+  }
+
+  .app-footer-nav {
+    @apply flex flex-wrap items-center gap-x-5 gap-y-2;
+  }
+
+  .app-footer-nav a {
+    @apply text-sm text-brand-deep/60;
+    transition: color 0.15s ease;
+  }
+
+  .app-footer-nav a:hover {
+    @apply text-brand-accent;
+  }
+
+  /* Linha legal em duas linhas: © + site, depois disclaimer */
+  .app-footer-bottom {
+    @apply mt-5 pt-4 border-t border-brand-line/60 flex flex-col gap-1;
+  }
+
+  .app-footer-legal {
+    @apply text-xs text-brand-deep/50;
+  }
+
+  .app-footer-legal a {
+    @apply text-brand-deep/70;
+  }
+
+  .app-footer-legal a:hover {
+    @apply text-brand-accent;
   }
 
   /* ============================================
@@ -1339,12 +1548,14 @@ html.dark .form-note {
      overlay + painel verde deslizante com efeito push.
      ============================================ */
 
-  /* Overlay: backdrop semi-transparente */
+  /* Overlay: backdrop semi-transparente — fica POR BAIXO do header (z-50)
+     para o header permanecer em destaque e clicável; só o conteúdo da
+     página é escurecido. O drawer (z-55) continua por cima de ambos. */
   .drawer-overlay {
     position: fixed;
     inset: 0;
     background: rgba(0, 0, 0, 0.5);
-    z-index: 52;
+    z-index: 45;
     opacity: 0;
     visibility: hidden;
     transition:
@@ -1357,7 +1568,8 @@ html.dark .form-note {
     visibility: visible;
   }
 
-  /* Painel: 64px = altura do app-header (no principal é a utility bar) */
+  /* Painel: 64px = altura do app-header. Identidade Modelo F:
+     superfície clara da marca, hairline à esquerda, sem gradiente verde. */
   .mobile-drawer {
     position: fixed;
     top: 64px;
@@ -1366,8 +1578,9 @@ html.dark .form-note {
     max-width: 380px;
     height: calc(100dvh - 64px);
     z-index: 55;
-    background: linear-gradient(180deg, #00493a 0%, #003529 100%);
-    box-shadow: -8px 0 30px rgba(0, 42, 50, 0.18);
+    background: var(--color-brand-bg);
+    border-left: 1px solid var(--color-brand-line);
+    box-shadow: -8px 0 30px rgba(0, 42, 50, 0.1);
     display: flex;
     flex-direction: column;
     padding: 1.25rem 1rem 1rem;
@@ -1382,7 +1595,8 @@ html.dark .form-note {
   }
 
   html.dark .mobile-drawer {
-    background: linear-gradient(180deg, #01332a 0%, #012019 100%);
+    background: var(--color-brand-card);
+    border-left-color: var(--color-brand-divider);
   }
 
   .drawer-close {
@@ -1394,17 +1608,24 @@ html.dark .form-note {
     display: flex;
     align-items: center;
     justify-content: center;
-    background: rgba(255, 255, 255, 0.1);
-    border: none;
-    color: #ffffff;
+    background: transparent;
+    border: 1px solid var(--color-brand-line);
+    color: var(--color-brand-deep);
     cursor: pointer;
     border-radius: 50%;
-    transition: background 0.2s ease;
+    transition:
+      background 0.2s ease,
+      border-color 0.2s ease;
     padding: 0;
   }
 
   .drawer-close:hover {
-    background: rgba(255, 255, 255, 0.2);
+    background: var(--color-brand-bg-alt);
+    border-color: rgba(0, 42, 50, 0.3);
+  }
+
+  html.dark .drawer-close:hover {
+    background: rgba(255, 255, 255, 0.06);
   }
 
   .drawer-close svg {
@@ -1424,6 +1645,19 @@ html.dark .form-note {
     width: auto;
   }
 
+  /* Alterna logo claro/branco conforme o tema (o branco só existe no escuro) */
+  .drawer-logo-dark {
+    display: none;
+  }
+
+  html.dark .drawer-logo-light {
+    display: none;
+  }
+
+  html.dark .drawer-logo-dark {
+    display: block;
+  }
+
   .drawer-links {
     list-style: none;
     padding: 0;
@@ -1439,29 +1673,35 @@ html.dark .form-note {
     padding: 0.7rem 0.875rem;
     font-size: 1rem;
     font-weight: 500;
-    color: rgba(255, 255, 255, 0.82);
+    color: var(--color-brand-deep);
     text-decoration: none;
-    border-radius: 12px;
+    border-radius: 10px;
     transition:
       background 0.2s ease,
       color 0.2s ease;
   }
 
   .drawer-links li a:hover {
-    background: rgba(255, 255, 255, 0.08);
-    color: #ffffff;
+    background: var(--color-brand-bg-alt);
+    color: var(--color-brand-primary);
   }
 
-  /* Página activa: barra mint à esquerda + fundo translúcido (como no principal) */
   .drawer-links li a.drawer-link-active {
-    background: rgba(255, 255, 255, 0.14);
-    color: #ffffff;
-    font-weight: 700;
-    border-left: 3px solid #7fd4ab;
-    padding-left: 0.7rem;
-    border-radius: 4px 12px 12px 4px;
+    background: rgba(10, 132, 79, 0.1);
+    color: var(--color-brand-primary);
+    font-weight: 600;
   }
 
+  html.dark .drawer-links li a:hover {
+    background: rgba(255, 255, 255, 0.05);
+  }
+
+  html.dark .drawer-links li a.drawer-link-active {
+    background: rgba(13, 153, 95, 0.16);
+    color: #7fd4ab;
+  }
+
+  /* Linha de rodapé do drawer: marca + toggle de tema */
   .drawer-footer {
     display: flex;
     flex-direction: column;
@@ -1469,8 +1709,12 @@ html.dark .form-note {
     gap: 1rem;
     padding-top: 1.25rem;
     padding-bottom: 0.75rem;
-    border-top: 1px solid rgba(255, 255, 255, 0.15);
+    border-top: 1px solid var(--color-brand-line);
     margin-top: auto;
+  }
+
+  html.dark .drawer-footer {
+    border-top-color: var(--color-brand-divider);
   }
 
   .drawer-footer-row {
@@ -1485,27 +1729,38 @@ html.dark .form-note {
     font-weight: 600;
     letter-spacing: 0.2em;
     text-transform: uppercase;
-    color: rgba(255, 255, 255, 0.4);
+    color: var(--color-brand-deep);
+    opacity: 0.45;
   }
 
-  /* ThemeToggle em versão branca dentro do drawer (vem depois de .theme-toggle
+  /* ThemeToggle em versão contida dentro do drawer (vem depois de .theme-toggle
      no ficheiro, por isso sobrepõe a base) */
   .drawer-theme-toggle {
     background: none;
-    border: 1px solid rgba(255, 255, 255, 0.25);
-    color: #ffffff;
+    border: 1px solid var(--color-brand-line);
+    color: var(--color-brand-deep);
     padding: 0;
     width: 38px;
     height: 38px;
     border-radius: 50%;
   }
 
+  html.dark .drawer-theme-toggle {
+    border-color: var(--color-brand-divider);
+  }
+
   /* Efeito push + bloqueio de scroll com o drawer aberto.
      A transição vive no estado BASE (dentro de mobile, onde o drawer
      existe) para animar também o fecho. Só o conteúdo (main) empurra —
-     o header permanece fixo no lugar. */
+     o header fica preso (como no site principal). */
   body.drawer-open {
     overflow: hidden;
+  }
+
+  /* Com o drawer aberto, o header fica ainda mais opaco — em pleno destaque
+     sobre o conteúdo escurecido pelo overlay */
+  body.drawer-open .app-header {
+    background: color-mix(in srgb, var(--color-brand-bg) 97%, transparent);
   }
 
   @media (max-width: 767px) {
@@ -1524,8 +1779,1822 @@ html.dark .form-note {
     }
   }
 
-  /* Hamburger com contraste no dark mode (brand-primary fica escuro demais) */
-  html.dark .hamburger span {
+  /* ============================================================
+     PORTAL DA FARMÁCIA (T8) — login, painel de stock, fila de
+     reservas. Reutiliza as variáveis do design system; nada de
+     cores novas — o portal é a mesma marca, contexto diferente.
+     ============================================================ */
+
+  /* ============================================================
+     PORTAL — SHELL (redesign, padrão da plataforma de gestão)
+     Sidebar verde de altura total à esquerda; a top-bar corre DENTRO
+     da coluna de conteúdo, ao lado dela. Fundo e conteúdo partilham a
+     mesma cor (bg-alt) — a barra separa-se só por hairline + blur.
+     Assinatura de navegação: filete de acento + branco translúcido no
+     item activo (nada de pill branca).
+     ============================================================ */
+
+  .portal-shell {
+    min-height: 100dvh;
+    display: flex;
+    align-items: stretch;
+    background: var(--color-brand-bg-alt);
+  }
+
+  .portal-main {
+    flex: 1;
+    min-width: 0;
+    display: flex;
+    flex-direction: column;
+    background: var(--color-brand-bg-alt);
+  }
+
+  .portal-topbar {
+    position: sticky;
+    top: 0;
+    z-index: 50;
+    height: 3.5rem;
+    flex-shrink: 0;
+    display: flex;
+    align-items: center;
+    gap: 0.75rem;
+    padding: 0 1.5rem;
+    border-bottom: 1px solid var(--color-brand-divider);
+    background: color-mix(in srgb, var(--color-brand-bg-alt) 80%, transparent);
+    backdrop-filter: blur(14px) saturate(1.5);
+    -webkit-backdrop-filter: blur(14px) saturate(1.5);
+  }
+
+  html.dark .portal-topbar {
+    background: color-mix(in srgb, var(--color-brand-bg-alt) 78%, transparent);
+  }
+
+  .portal-menu-btn {
+    display: none;
+    width: 2.375rem;
+    height: 2.375rem;
+    border-radius: 0.625rem;
+    border: 1px solid var(--color-brand-line);
+    background: transparent;
+    color: var(--color-brand-deep);
+    cursor: pointer;
+    place-items: center;
+    flex-shrink: 0;
+  }
+
+  /* Logo branco do site no topo da sidebar (como na plataforma de gestão) */
+  .portal-side-brand {
+    display: flex;
+    align-items: flex-start;
+    gap: 0.5rem;
+    padding: 1.375rem 0.75rem 1.125rem;
+  }
+
+  .portal-side-brand-main {
+    min-width: 0;
+    flex: 1;
+  }
+
+  .portal-side-logo-link {
+    display: block;
+    width: fit-content;
+  }
+
+  .portal-side-logo-link img {
+    display: block;
+    height: auto;
+  }
+
+  .portal-side-eyebrow {
+    margin-top: 0.625rem;
+    font-size: 0.625rem;
+    font-weight: 700;
+    text-transform: uppercase;
+    letter-spacing: 0.22em;
+    color: rgb(255 255 255 / 0.45);
+  }
+
+  /* Fechar o drawer — só existe no mobile (o ☰ da top-bar fica coberto). */
+  .portal-side-close {
+    display: none;
+    margin-left: auto;
+    width: 2rem;
+    height: 2rem;
+    border-radius: 0.5rem;
+    border: 0;
+    background: transparent;
+    color: rgb(255 255 255 / 0.6);
+    cursor: pointer;
+    place-items: center;
+    flex-shrink: 0;
+  }
+
+  .portal-side-close:hover {
+    color: #fff;
+    background: rgb(255 255 255 / 0.08);
+  }
+
+  /* Nome da farmácia na top-bar, no lugar do utilizador. */
+  .portal-topbar-name {
+    font-size: 0.8125rem;
+    font-weight: 600;
+    color: var(--color-brand-deep);
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    max-width: 22rem;
+  }
+
+  .portal-topbar-right {
+    margin-left: auto;
+    display: flex;
+    align-items: center;
+    gap: 0.875rem;
+  }
+
+  .portal-ext {
+    display: inline-flex;
+    align-items: center;
+    gap: 0.375rem;
+    color: var(--color-brand-deep-60, rgb(0 73 58 / 0.6));
+    font-size: 0.75rem;
+    text-decoration: none;
+  }
+
+  .portal-ext:hover {
+    color: var(--color-brand-deep);
+  }
+
+  /* (Estilos do chip de utilizador na top-bar removidos — o utilizador
+     vive no fundo da sidebar.) */
+
+  .portal-sidebar {
+    width: 15.5rem;
+    flex-shrink: 0;
+    /* Assinatura do gestão: sidebar sempre escura, nos dois temas. */
+    background: #003528;
+    color: #fff;
+    padding: 0 0.75rem 1rem;
+    display: flex;
+    flex-direction: column;
+    position: sticky;
+    top: 0;
+    height: 100dvh;
+    overflow: auto;
+  }
+
+  html.dark .portal-sidebar {
+    background: #0a0f0d;
+  }
+
+  .portal-nav {
+    display: flex;
+    flex-direction: column;
+    gap: 0.25rem;
+  }
+
+  /* Grupos «Gestão» / «Farmácia» — o mesmo side-label do mockup
+     padrao-unico.html: micro-rótulo entre os blocos de itens. */
+  .portal-nav-group {
+    display: flex;
+    flex-direction: column;
+  }
+
+  .portal-nav-label {
+    font-size: 0.625rem;
+    font-weight: 700;
+    letter-spacing: 0.12em;
+    text-transform: uppercase;
+    color: rgb(255 255 255 / 0.5);
+    padding: 0.75rem 0.75rem 0.375rem;
+  }
+
+  /* Item de navegação — filete de acento à esquerda quando activo,
+     como o NavLateral da plataforma de gestão. */
+  .portal-nav-item {
+    display: flex;
+    align-items: center;
+    gap: 0.625rem;
+    padding: 0.625rem 0.75rem;
+    border-left: 2px solid transparent;
+    border-radius: 0 0.625rem 0.625rem 0;
+    color: rgb(255 255 255 / 0.6);
+    text-decoration: none;
+    font-size: 0.8438rem;
+  }
+
+  .portal-nav-item svg {
+    width: 1.125rem;
+    height: 1.125rem;
+    opacity: 0.85;
+    flex-shrink: 0;
+  }
+
+  .portal-nav-item:hover {
+    background: rgb(255 255 255 / 0.04);
+    color: #fff;
+  }
+
+  .portal-nav-item--active {
+    background: rgb(255 255 255 / 0.07);
+    border-left-color: var(--color-brand-accent);
+    color: #fff;
+    font-weight: 600;
+  }
+
+  .portal-nav-item--active svg {
+    opacity: 1;
+  }
+
+  .portal-nav-badge {
+    margin-left: auto;
+    min-width: 1.25rem;
+    height: 1.25rem;
+    border-radius: 999px;
+    font-size: 0.6875rem;
+    font-weight: 700;
+    display: grid;
+    place-items: center;
+    padding: 0 0.375rem;
+  }
+
+  .portal-nav-badge--red {
+    background: #c0392b;
+    color: #fff;
+  }
+
+  /* Badge de reservas: verde-acento, como os badges do NavLateral. */
+  .portal-nav-badge--amber {
+    background: var(--color-brand-accent);
+    color: #fff;
+  }
+
+  .portal-nav-badge--pulse {
+    animation: bell-pulse 0.5s ease-in-out 2;
+  }
+
+  /* Véu do drawer mobile — por BAIXO da top-bar, para o botão de menu
+     continuar clicável (abre/fecha) com o drawer aberto. */
+  .portal-scrim {
+    display: none;
+  }
+
+  /* Utilizador + sair no fundo da sidebar (padrão do gestão) */
+  .portal-sidebar-foot {
+    margin-top: auto;
+    padding: 0.875rem 0.5rem 0.25rem;
+    border-top: 1px solid rgb(255 255 255 / 0.12);
+    display: flex;
+    align-items: center;
+    gap: 0.625rem;
+  }
+
+  .portal-foot-avatar {
+    width: 2.25rem;
+    height: 2.25rem;
+    border-radius: 50%;
+    background: rgb(255 255 255 / 0.1);
+    color: #fff;
+    font-size: 0.6875rem;
+    font-weight: 700;
+    display: grid;
+    place-items: center;
+    flex-shrink: 0;
+  }
+
+  .portal-foot-meta {
+    min-width: 0;
+    flex: 1;
+    font-size: 0.75rem;
+    font-weight: 600;
+    color: #fff;
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+  }
+
+  /* Sair sobre a sidebar escura — contorno translúcido, texto branco. */
+  .portal-sidebar .portal-logout {
+    border: 1px solid rgb(255 255 255 / 0.3);
+    color: rgb(255 255 255 / 0.85);
+    font-size: 0.75rem;
+    padding: 0.375rem 0.75rem;
+    flex-shrink: 0;
+  }
+
+  .portal-sidebar .portal-logout:hover {
+    background: rgb(255 255 255 / 0.1);
+    color: #fff;
+  }
+
+  /* Página dentro do shell — centrada como o container-app do gestão */
+  .portal-page {
+    flex: 1;
+    min-width: 0;
+    padding: 2rem 2.25rem 4.5rem;
+    max-width: 68rem;
+    margin-inline: auto;
+    width: 100%;
+  }
+
+  .portal-page-head {
+    display: flex;
+    align-items: flex-end;
+    justify-content: space-between;
+    gap: 1rem;
+    flex-wrap: wrap;
+    margin-bottom: 1.5rem;
+    /* Única régua forte da página, por baixo do cabeçalho (direção A) */
+    padding-bottom: 1.25rem;
+    border-bottom: 2px solid var(--color-brand-deep);
+  }
+
+  html.dark .portal-page-head {
+    border-bottom-color: var(--color-brand-divider);
+  }
+
+  .portal-page-title {
+    /* Padrão único do portal (mockup padrao-unico.html): título serif
+       médio — a página de gestão começa a trabalhar logo, sem hero. */
+    @apply font-display text-[1.65rem] md:text-[1.85rem] font-semibold leading-tight tracking-tight;
+    color: var(--color-brand-deep);
+  }
+
+  .portal-page-sub b {
+    color: var(--color-brand-primary);
+    font-weight: 700;
+  }
+
+  .btn {
+    @apply inline-flex items-center justify-center gap-2 rounded-full font-semibold text-sm px-4 py-2;
+    border: 1px solid transparent;
+    cursor: pointer;
+    text-decoration: none;
+    transition:
+      filter 0.2s ease,
+      background 0.2s ease,
+      border-color 0.2s ease;
+  }
+
+  .btn-primary {
+    background: var(--color-brand-primary);
+    color: #fff;
+  }
+
+  .btn-primary:hover {
+    filter: brightness(1.15);
+  }
+
+  .portal-page-sub {
+    @apply text-[13px] mt-1;
+    color: var(--color-brand-deep-60, rgb(0 73 58 / 0.6));
+  }
+
+  .portal-logout {
+    @apply cursor-pointer;
+  }
+
+  /* Hero da página de login (fora do shell — route group (auth)) */
+  .portal-hero {
+    @apply pt-10 pb-6;
+  }
+
+  @media (max-width: 60rem) {
+    .portal-menu-btn {
+      display: grid;
+    }
+
+    .portal-ext {
+      display: none;
+    }
+
+    .portal-logout {
+      padding: 0.375rem 0.625rem;
+    }
+
+    .portal-sidebar {
+      position: fixed;
+      left: 0;
+      top: 0;
+      bottom: 0;
+      z-index: 60;
+      height: 100dvh;
+      transform: translateX(-105%);
+      transition: transform 0.25s ease;
+      box-shadow: 0.875rem 0 2.5rem rgb(0 42 50 / 0.18);
+    }
+
+    .portal-side-close {
+      display: grid;
+    }
+
+    .portal-sidebar--open {
+      transform: none;
+    }
+
+    .portal-scrim {
+      display: block;
+      position: fixed;
+      inset: 0;
+      z-index: 45;
+      background: rgb(0 42 50 / 0.45);
+    }
+
+    .portal-page {
+      padding: 1.375rem 1rem 4rem;
+    }
+
+    .portal-page-title {
+      font-size: 1.375rem;
+    }
+  }
+
+  .portal-card {
+    @apply max-w-md mx-auto p-8 rounded-lg border border-brand-line;
+    background: var(--color-brand-card);
+  }
+
+  .portal-form {
+    @apply flex flex-col gap-4;
+  }
+
+  .portal-label {
+    @apply flex flex-col gap-1.5 text-sm font-medium text-brand-deep;
+  }
+
+  .portal-input {
+    @apply w-full px-3.5 py-2.5 rounded-lg border border-brand-line text-sm text-brand-deep outline-none;
+    background: var(--color-brand-bg);
+    transition: border-color 0.2s ease;
+  }
+
+  .portal-input:focus {
+    border-color: var(--color-brand-accent);
+  }
+
+  .portal-error {
+    @apply text-sm text-red-600 dark:text-red-400;
+  }
+
+  .portal-hint {
+    @apply text-xs text-brand-deep/60 leading-relaxed;
+  }
+
+  .portal-link {
+    @apply underline;
+  }
+
+  .portal-section {
+    @apply mb-12;
+  }
+
+  .portal-section-head {
+    @apply flex items-baseline justify-between gap-3 flex-wrap mb-4;
+  }
+
+  .portal-h2 {
+    /* Sans bold, coerente com os hero-titles do principal. */
+    @apply text-xl font-bold tracking-tight text-brand-deep;
+  }
+
+  .portal-count {
+    @apply text-sm text-brand-deep/60;
+  }
+
+  .portal-banner {
+    @apply mb-4 px-4 py-3 rounded-lg text-sm font-medium;
+    background: color-mix(in srgb, var(--color-brand-accent) 12%, var(--color-brand-bg-alt));
+    border: 1px solid color-mix(in srgb, var(--color-brand-accent) 35%, transparent);
+    color: var(--color-brand-deep);
+  }
+
+  .portal-search {
+    @apply mb-4;
+  }
+
+  .portal-stock-list {
+    @apply flex flex-col rounded-lg border overflow-hidden;
+    background: var(--color-brand-bg-alt);
+    border-color: var(--color-brand-divider);
+  }
+
+  .portal-stock-row {
+    @apply flex items-center justify-between gap-4 px-4 py-3 flex-wrap;
+    border-bottom: 1px solid var(--color-brand-divider);
+  }
+
+  .portal-stock-row:last-child {
+    border-bottom: none;
+  }
+
+  .portal-stock-row--in {
+    background: color-mix(in srgb, var(--color-brand-accent) 6%, transparent);
+  }
+
+  .portal-stock-main {
+    @apply flex flex-col min-w-[220px] flex-1;
+  }
+
+  .portal-stock-name {
+    @apply font-semibold text-brand-deep text-sm;
+  }
+
+  .portal-stock-meta {
+    @apply text-xs text-brand-deep/55 mt-0.5;
+  }
+
+  .portal-stock-controls {
+    @apply flex items-center gap-2;
+  }
+
+  .portal-input--qty {
+    @apply w-20 px-2 py-1.5 text-xs;
+  }
+
+  .portal-input--price {
+    @apply w-24 px-2 py-1.5 text-xs;
+  }
+
+  .portal-toggle {
+    @apply px-4 py-2 rounded-full text-xs font-bold cursor-pointer select-none;
+    border: 2px solid var(--color-brand-line);
+    color: var(--color-brand-deep);
+    background: transparent;
+    transition: all 0.2s ease;
+  }
+
+  .portal-toggle--on {
+    border-color: var(--color-brand-accent);
+    background: var(--color-brand-accent);
+    color: #fff;
+  }
+
+  .portal-toggle:disabled {
+    @apply opacity-50 cursor-wait;
+  }
+
+  .portal-res-list {
+    @apply flex flex-col gap-3;
+  }
+
+  .portal-res-row {
+    @apply flex items-center justify-between gap-4 px-4 py-3 rounded-lg border flex-wrap;
+    background: var(--color-brand-bg-alt);
+    border-color: var(--color-brand-divider);
+  }
+
+  .portal-res-main {
+    @apply flex flex-col min-w-[240px] flex-1;
+  }
+
+  .portal-res-name {
+    @apply font-semibold text-brand-deep text-sm flex items-center gap-2 flex-wrap;
+  }
+
+  .portal-res-meta {
+    @apply text-xs text-brand-deep/55 mt-0.5;
+  }
+
+  .portal-res-actions {
+    @apply flex items-center gap-2;
+  }
+
+  /* ── Cards de reservas — espelham os .stock-card do painel de stock:
+     mesmo grid, mesmo cartão flat, com tint vermelho suave nas pendentes
+     (a pista de urgência, o papel que o verde faz no stock). ── */
+  .res-card {
+    @apply bg-brand-card border border-brand-line rounded-lg p-5 flex flex-col gap-2.5;
+    transition: border-color 0.2s ease;
+  }
+
+  .res-card:hover {
+    border-color: rgba(0, 42, 50, 0.3);
+  }
+
+  html.dark .res-card {
+    background: rgba(255, 255, 255, 0.03);
+    border-color: var(--color-brand-divider);
+  }
+
+  html.dark .res-card:hover {
+    border-color: rgba(13, 153, 95, 0.5);
+  }
+
+  /* Pendente: tint vermelho suave — “precisa de acção hoje”. */
+  .res-card--urgent {
+    background: color-mix(in srgb, #c0392b 5%, var(--color-brand-card));
+  }
+
+  html.dark .res-card--urgent {
+    background: color-mix(in srgb, #c0392b 8%, transparent);
+  }
+
+  .res-card-note {
+    @apply text-xs italic leading-relaxed;
+    color: color-mix(in srgb, var(--color-brand-deep) 65%, transparent);
+  }
+
+  .res-tag-phone {
+    cursor: pointer;
+    text-decoration: underline;
+    text-decoration-style: dotted;
+    text-underline-offset: 2px;
+  }
+
+  .res-tag-phone:hover {
+    background: color-mix(in srgb, var(--color-brand-accent) 15%, transparent);
+    color: var(--color-brand-accent);
+  }
+
+  /* Valor estimado da reserva — tag verde-accent para o atendente ver
+     o montante antes de confirmar (estimativa; o final é o do balcão). */
+  .res-tag-price {
+    background: color-mix(in srgb, var(--color-brand-accent) 12%, transparent);
+    color: var(--color-brand-accent);
+  }
+
+  /* Painéis inline do card de reserva: recusa com motivo e confirmação
+     com ajuste de quantidade — abrem no próprio card, sem modal. */
+  .res-reject-panel,
+  .res-confirm-panel {
+    @apply flex flex-wrap items-center gap-1.5;
+  }
+
+  .res-confirm-label {
+    @apply flex items-center gap-1.5 text-[11px] font-semibold;
+    color: var(--color-brand-deep);
+  }
+
+  /* Caixa de texto da recusa "outro motivo" — o atendente detalha o
+     porquê e o texto chega ao cliente (acompanhamento + WhatsApp). */
+  .res-other-box {
+    @apply flex flex-col gap-1.5 w-full;
+    padding: 0.65rem 0.75rem;
+    border: 1px solid var(--color-brand-line);
+    border-radius: 0.75rem;
+    background: color-mix(in srgb, var(--color-brand-line) 25%, transparent);
+  }
+
+  .res-other-box .res-confirm-label {
+    @apply flex-col items-stretch gap-1;
+  }
+
+  .res-other-input {
+    @apply w-full resize-y;
+    font-size: 0.85rem;
+    min-height: 3.2rem;
+  }
+
+  .res-other-actions {
+    @apply flex items-center gap-2 flex-wrap justify-end;
+  }
+
+  .res-other-count {
+    margin-right: auto;
+    font-size: 0.75rem;
+    color: var(--color-brand-deep-60, rgb(0 73 58 / 0.6));
+  }
+
+  /* O botão "Outro motivo" fica em evidência enquanto a caixa está aberta. */
+  .res-other-btn--open {
+    outline: 2px solid currentColor;
+    outline-offset: 1px;
+  }
+
+  /* ===== Mini-relatório de vendas (/portal/vendas) ===== */
+  .sales-kpis {
+    @apply grid gap-3 mb-6;
+    grid-template-columns: repeat(3, minmax(0, 1fr));
+  }
+
+  .sales-kpi {
+    @apply flex flex-col gap-1 p-4 rounded-xl border;
+    background: var(--color-brand-card);
+    border-color: var(--color-brand-line);
+  }
+
+  .sales-kpi-value {
+    font-size: 1.3rem;
+    font-weight: 800;
+    color: var(--color-brand-deep);
+    line-height: 1.2;
+    overflow-wrap: anywhere;
+  }
+
+  .sales-kpi-label {
+    font-size: 0.8rem;
+    color: var(--color-brand-deep-60, rgb(0 73 58 / 0.6));
+  }
+
+  /* Gráfico de barras CSS: colunas flexíveis de largura igual, barra
+     cresce de baixo (flex-end) em % do dia mais alto. Dias a zero ficam
+     com um traço base em vez de desaparecerem. */
+  .sales-chart {
+    @apply flex items-stretch gap-1 p-4 mb-3 rounded-xl border;
+    background: var(--color-brand-card);
+    border-color: var(--color-brand-line);
+    min-height: 14rem;
+  }
+
+  .sales-col {
+    @apply flex flex-col flex-1 min-w-0 gap-1;
+  }
+
+  .sales-bar-wrap {
+    @apply flex-1 flex items-end;
+  }
+
+  .sales-bar {
+    @apply w-full rounded-t-md;
+    background: color-mix(in srgb, var(--color-brand-accent) 78%, var(--color-brand-deep));
+    min-height: 3px;
+    transition: height 0.25s ease;
+  }
+
+  .sales-bar:hover {
+    background: var(--color-brand-accent);
+  }
+
+  .sales-bar--zero {
+    background: var(--color-brand-line);
+  }
+
+  .sales-col-label {
+    font-size: 0.6rem;
+    color: var(--color-brand-deep-60, rgb(0 73 58 / 0.6));
+    text-align: center;
+    white-space: nowrap;
+  }
+
+  .sales-chart--empty .sales-col-label {
+    opacity: 0.6;
+  }
+
+  .sales-note {
+    font-size: 0.8rem;
+    color: var(--color-brand-deep-60, rgb(0 73 58 / 0.6));
+  }
+
+  /* Mobile: KPIs empilham, rótulos dos dias mostram só alguns. */
+  @media (max-width: 640px) {
+    .sales-kpis {
+      grid-template-columns: 1fr;
+    }
+
+    .sales-chart {
+      min-height: 11rem;
+      padding: 0.75rem;
+    }
+
+    .sales-col-label {
+      font-size: 0;
+    }
+
+    .sales-col:nth-child(7n + 1) .sales-col-label {
+      font-size: 0.55rem;
+    }
+  }
+
+  /* Botão WhatsApp do card — verde WhatsApp, discreto nos estados
+     resolvidos. O portal não envia: abre o wa.me da farmácia com a
+     mensagem pronta. */
+  .res-wa-btn {
+    @apply cursor-pointer;
+    background: #25d366;
+    color: #06331a;
+    font-weight: 700;
+  }
+
+  .res-wa-btn:hover {
+    filter: brightness(1.05);
+  }
+
+  .res-hint-ok {
+    color: #1f7a43;
+    font-weight: 600;
+  }
+
+  /* ── Acompanhamento público (/reserva/[id]) — cartão único centrado,
+     mobile-first: o cliente chegou aqui por um link no WhatsApp. ── */
+  .res-track-page {
+    @apply min-h-screen flex items-start justify-center px-4 py-10;
+    background: var(--color-brand-bg-alt);
+  }
+
+  .res-track-card {
+    @apply w-full max-w-lg flex flex-col gap-4 p-6 sm:p-8 rounded-xl border;
+    background: var(--color-brand-card);
+    border-color: var(--color-brand-line);
+  }
+
+  .res-track-eyebrow {
+    @apply text-xs font-bold uppercase tracking-wide;
+    color: var(--color-brand-accent);
+  }
+
+  .res-track-title {
+    @apply text-2xl font-semibold;
+    color: var(--color-brand-deep);
+  }
+
+  .res-track-meta {
+    @apply text-sm;
+    color: color-mix(in srgb, var(--color-brand-deep) 60%, transparent);
+  }
+
+  .res-track-note {
+    @apply text-sm italic;
+    color: color-mix(in srgb, var(--color-brand-deep) 70%, transparent);
+  }
+
+  .res-track-steps {
+    @apply flex flex-col gap-0 m-0 p-0 list-none;
+  }
+
+  .res-track-step {
+    @apply flex items-start gap-3 relative pb-5;
+  }
+
+  .res-track-step:last-child {
+    @apply pb-0;
+  }
+
+  /* Linha vertical entre os pontos da timeline. */
+  .res-track-step:not(:last-child)::before {
+    content: '';
+    position: absolute;
+    left: 7px;
+    top: 18px;
+    bottom: 0;
+    width: 2px;
+    background: var(--color-brand-divider);
+  }
+
+  .res-track-step.done:not(:last-child)::before {
+    background: var(--color-brand-accent);
+  }
+
+  .res-track-dot {
+    @apply mt-1 w-4 h-4 rounded-full border-2 shrink-0;
+    border-color: var(--color-brand-divider);
+    background: transparent;
+  }
+
+  .res-track-step.done .res-track-dot {
+    border-color: var(--color-brand-accent);
+    background: var(--color-brand-accent);
+  }
+
+  .res-track-step.current .res-track-dot {
+    border-color: var(--color-brand-accent);
+    box-shadow: 0 0 0 4px color-mix(in srgb, var(--color-brand-accent) 18%, transparent);
+  }
+
+  .res-track-step b {
+    @apply text-sm;
+    color: var(--color-brand-deep);
+  }
+
+  .res-track-step.current b {
+    color: var(--color-brand-accent);
+  }
+
+  .res-track-step p {
+    @apply text-xs mt-0.5;
+    color: color-mix(in srgb, var(--color-brand-deep) 55%, transparent);
+  }
+
+  .res-track-estado {
+    @apply flex flex-col gap-2 p-4 rounded-lg;
+  }
+
+  .res-track-estado--ruim {
+    background: color-mix(in srgb, #c47f17 8%, transparent);
+  }
+
+  .res-track-estado--ruim b {
+    color: #9a630f;
+  }
+
+  .res-track-estado--erro {
+    background: color-mix(in srgb, #c0392b 8%, transparent);
+    color: #8f2318;
+  }
+
+  .res-track-wa {
+    @apply self-start;
+  }
+
+  /* Valor estimado da reserva — destaque suave, com a ressalva de que
+     o preço final é o do balcão. */
+  .res-track-price {
+    @apply text-sm flex items-baseline gap-1.5 p-3 rounded-lg;
+    background: color-mix(in srgb, var(--color-brand-accent) 7%, transparent);
+    color: var(--color-brand-deep);
+  }
+
+  .res-track-price b {
+    @apply text-base;
+    color: var(--color-brand-accent);
+  }
+
+  .res-track-price-note {
+    @apply text-xs;
+    color: color-mix(in srgb, var(--color-brand-deep) 55%, transparent);
+  }
+
+  /* Sucesso da reserva + erro do formulário (modal no /pesquisa). */
+  .res-success {
+    @apply flex flex-col gap-3;
+  }
+
+  .res-success-title {
+    @apply text-sm font-semibold;
+    color: var(--color-brand-deep);
+  }
+
+  .res-success-sub {
+    @apply text-sm;
+    color: color-mix(in srgb, var(--color-brand-deep) 60%, transparent);
+  }
+
+  .res-success-link-row {
+    @apply flex gap-2;
+  }
+
+  .res-success-link-row .portal-input {
+    @apply flex-1 text-xs;
+  }
+
+  .res-form-error {
+    @apply text-sm font-medium;
+    color: #8f2318;
+  }
+
+  /* Linha de preço do modal de reserva — valor justo à vista antes
+     de reservar, com a ressalva do balcão. */
+  .res-price-line {
+    @apply text-sm flex flex-wrap items-baseline gap-x-1.5 p-3 rounded-lg;
+    background: color-mix(in srgb, var(--color-brand-accent) 7%, transparent);
+    color: var(--color-brand-deep);
+  }
+
+  .res-price-line b {
+    color: var(--color-brand-accent);
+  }
+
+  .res-price-detail {
+    @apply text-xs;
+    color: color-mix(in srgb, var(--color-brand-deep) 55%, transparent);
+  }
+
+  /* ── Opções de venda no modal do stock (0012) ── */
+  .sale-opts {
+    @apply flex flex-col gap-2 p-3 rounded-lg border;
+    border-color: var(--color-brand-divider);
+    background: color-mix(in srgb, var(--color-brand-accent) 4%, transparent);
+  }
+
+  .sale-opts-head {
+    @apply flex flex-col gap-0.5 text-xs;
+    color: var(--color-brand-deep);
+  }
+
+  .sale-opts-hint {
+    color: color-mix(in srgb, var(--color-brand-deep) 55%, transparent);
+  }
+
+  .sale-opts-row {
+    @apply flex flex-wrap items-center gap-1.5;
+  }
+
+  .sale-opts-unit {
+    @apply w-32;
+  }
+
+  .sale-opts-pack {
+    @apply flex items-center gap-1 text-[11px];
+    color: color-mix(in srgb, var(--color-brand-deep) 65%, transparent);
+  }
+
+  .sale-opts-default,
+  .sale-opts-active {
+    @apply flex items-center gap-1 text-[11px] whitespace-nowrap cursor-pointer;
+    color: var(--color-brand-deep);
+  }
+
+  .sale-opts-rm {
+    @apply w-6 h-6 rounded-full text-sm cursor-pointer;
+    border: 1px solid var(--color-brand-line);
+    color: var(--color-brand-deep);
+    background: transparent;
+  }
+
+  .sale-opts-rm:hover {
+    color: #8f2318;
+    border-color: #8f2318;
+  }
+
+  .sale-opts-add {
+    @apply self-start text-xs mb-0;
+  }
+
+  /* Etiquetas de opções de venda no público (0012). */
+  .sale-tags {
+    @apply flex flex-col items-end gap-1;
+  }
+
+  .sale-tag {
+    @apply text-xs px-2 py-0.5 rounded-full whitespace-nowrap;
+    background: color-mix(in srgb, var(--color-brand-accent) 8%, transparent);
+    color: var(--color-brand-deep);
+  }
+
+  .sale-tag b {
+    color: var(--color-brand-accent);
+  }
+
+  /* Preço por unidade-base (≈ Kz/comprimido) — secundário, itálico. */
+  .sale-tag i {
+    @apply not-italic;
+    opacity: 0.65;
+    font-style: italic;
+    font-size: 10px;
+  }
+
+  .portal-act-ok {
+    @apply cursor-pointer;
+    background: var(--color-brand-accent);
+    color: #fff;
+  }
+
+  .portal-act-no {
+    @apply cursor-pointer;
+    border: 1.5px solid var(--color-brand-line);
+    color: var(--color-brand-deep);
+  }
+
+  .portal-badge {
+    @apply px-2 py-0.5 rounded-full text-[10px] font-bold uppercase tracking-wide;
+  }
+
+  .portal-badge--warn {
+    background: color-mix(in srgb, #c47f17 15%, transparent);
+    color: #9a630f;
+  }
+
+  .portal-badge--info {
+    background: color-mix(in srgb, var(--color-brand-accent) 15%, transparent);
+    color: var(--color-brand-accent);
+  }
+
+  .portal-badge--ok {
+    background: color-mix(in srgb, #2e9e5b 15%, transparent);
+    color: #1f7a43;
+  }
+
+  .portal-badge--off {
+    background: color-mix(in srgb, #888 15%, transparent);
+    color: #666;
+  }
+
+  .portal-toast {
+    @apply mt-3 text-sm font-medium;
+    color: var(--color-brand-accent);
+  }
+
+  /* Chips de filtro do stock — mesmo padrão dos .filter-btn de
+     /cientificos do principal: fundo TRANSPARENTE (o da tela), borda
+     dupla, e no hover tint verde suave + pequeno brilho (glow). */
+  .portal-chips {
+    @apply flex gap-2.5 flex-wrap mb-4;
+  }
+
+  .portal-chip {
+    @apply px-4 py-1.5 rounded-full text-[13px] font-medium cursor-pointer;
+    border: 2px solid var(--color-brand-divider);
+    background: transparent;
+    color: var(--color-brand-deep);
+    transition: all 0.3s ease;
+  }
+
+  .portal-chip:hover {
+    border-color: var(--color-brand-accent);
+    color: var(--color-brand-accent);
+    background: color-mix(in srgb, var(--color-brand-accent) 8%, transparent);
+  }
+
+  .portal-chip--active {
+    background: var(--color-brand-primary);
+    border-color: var(--color-brand-primary);
+    color: #fff;
+  }
+
+  .portal-chip-n {
+    opacity: 0.6;
+    font-weight: 500;
+    margin-left: 0.25rem;
+  }
+
+  @keyframes bell-pulse {
+    0%,
+    100% {
+      transform: scale(1);
+    }
+    50% {
+      transform: scale(1.25);
+    }
+  }
+
+  /* Cartões da visão geral (ponto 4) */
+  .portal-cards-row {
+    @apply grid gap-4 mb-8;
+    grid-template-columns: repeat(auto-fit, minmax(220px, 1fr));
+  }
+
+  .portal-card-link {
+    @apply flex flex-col gap-1 p-5 rounded-lg border no-underline;
+    background: var(--color-brand-bg-alt);
+    border-color: var(--color-brand-divider);
+    transition: all 0.2s ease;
+  }
+
+  .portal-card-link:hover {
+    border-color: var(--color-brand-accent);
+    transform: translateY(-2px);
+  }
+
+  .portal-card-k {
+    @apply text-[11px] font-bold uppercase tracking-wide;
+    color: var(--color-brand-accent);
+  }
+
+  .portal-card-title {
+    @apply text-lg font-bold;
+    color: var(--color-brand-deep);
+  }
+
+  .portal-card-sub {
+    @apply text-xs leading-relaxed;
+    color: var(--color-brand-deep-60, rgb(0 73 58 / 0.6));
+  }
+
+  .portal-page-hint {
+    @apply text-xs mb-8;
+    color: var(--color-brand-deep-60, rgb(0 73 58 / 0.6));
+  }
+
+  .portal-page-hint a {
+    @apply underline;
+  }
+
+  /* Formulários multi-coluna */
+  .portal-form-grid {
+    @apply grid gap-4;
+    grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+  }
+
+  .portal-form-grid--three {
+    grid-template-columns: repeat(auto-fit, minmax(160px, 1fr));
+  }
+
+  .portal-label--check {
+    @apply flex-row items-center gap-2 self-end pb-2 text-sm;
+  }
+
+  .portal-card--wide {
+    @apply max-w-2xl;
+  }
+
+  .portal-profile {
+    @apply gap-5;
+  }
+
+  .portal-input--date {
+    @apply px-2 py-1.5 text-xs;
+    width: 9.5rem;
+  }
+
+  .portal-eta {
+    @apply font-semibold;
+    color: #c47f17;
+  }
+
+  .portal-stock-row--coming {
+    background: color-mix(in srgb, #c47f17 6%, transparent);
+  }
+
+  /* Banner de validade — variante de alerta do .portal-banner */
+  .portal-banner--danger {
+    background: color-mix(in srgb, #c0392b 10%, var(--color-brand-card));
+    border-color: color-mix(in srgb, #c0392b 35%, transparent);
+  }
+
+  /* Cartões dentro do shell partilham a cor do fundo (pedido: fundo e
+     conteúdo na mesma cor da top-bar) — o cartão branco fica só para
+     a página de login, fora do shell. */
+  .portal-page .portal-card {
+    background: var(--color-brand-bg-alt);
+    border-color: var(--color-brand-divider);
+  }
+
+  /* Validade (migração 0007) — usada no portal E na página pública */
+  .expiry-tag {
+    @apply font-semibold;
+    color: var(--color-brand-deep);
+  }
+
+  .expiry-tag--expired,
+  .expiry-tag--30 {
+    color: #c0392b;
+  }
+
+  .expiry-tag--60 {
+    color: #d9531e;
+  }
+
+  .expiry-tag--90 {
+    color: #c47f17;
+  }
+
+  .expiry-tag--ok {
+    color: color-mix(in srgb, var(--color-brand-deep) 55%, transparent);
+  }
+
+  /* Secções numeradas (organização da página de definições do gestão):
+     número à esquerda, título + descrição + corpo à direita, réguas finas. */
+  .portal-secao {
+    display: grid;
+    grid-template-columns: 44px minmax(0, 1fr);
+    column-gap: 1.25rem;
+    row-gap: 1rem;
+    padding: 2.25rem 0;
+    border-top: 1px solid var(--color-brand-divider);
+  }
+
+  .portal-secao-sec-num {
+    font-size: 0.6875rem;
+    font-weight: 700;
+    letter-spacing: 0.12em;
+    color: color-mix(in srgb, var(--color-brand-deep) 35%, transparent);
+    padding-top: 0.375rem;
+    font-variant-numeric: tabular-nums;
+  }
+
+  .portal-secao-h2 {
+    font-size: 1.0625rem;
+    font-weight: 700;
+    color: var(--color-brand-deep);
+  }
+
+  .portal-secao-desc {
+    font-size: 0.8438rem;
+    color: var(--color-brand-deep-60, rgb(0 73 58 / 0.6));
+    margin-top: 0.25rem;
+    line-height: 1.55;
+  }
+
+  .portal-secao-corpo {
+    margin-top: 1.5rem;
+  }
+
+  /* Campos empilhados (uma opção por linha, pedido do perfil) */
+  .portal-form-stack {
+    display: flex;
+    flex-direction: column;
+    gap: 1rem;
+  }
+
+  /* O botão de guardar não estica com o formulário (flex-col estica
+     o cross-axis): fica com a largura natural do texto, à esquerda. */
+  .portal-profile button[type='submit'] {
+    align-self: flex-start;
+  }
+
+  /* Página "Precisa de Atenção" — grupos e linhas accionáveis */
+  .portal-attention-group-head {
+    @apply mt-6 mb-2;
+  }
+
+  .portal-attention-h3 {
+    @apply text-base font-bold;
+    color: var(--color-brand-deep);
+  }
+
+  .portal-attention-sub {
+    @apply text-xs leading-relaxed mt-0.5;
+    color: var(--color-brand-deep-60, rgb(0 73 58 / 0.6));
+  }
+
+  .portal-attention-row {
+    @apply flex items-start justify-between gap-4 px-4 py-3 rounded-lg border flex-wrap mb-2;
+    background: var(--color-brand-bg-alt);
+    border-color: var(--color-brand-divider);
+  }
+
+  .portal-attention-row--restock {
+    background: color-mix(in srgb, #c47f17 7%, var(--color-brand-bg-alt));
+    border-color: color-mix(in srgb, #c47f17 35%, transparent);
+  }
+
+  .portal-attention-row--expiry {
+    background: color-mix(in srgb, #c0392b 6%, var(--color-brand-bg-alt));
+    border-color: color-mix(in srgb, #c0392b 30%, transparent);
+  }
+
+  .portal-attention-main {
+    @apply flex flex-col min-w-[240px] flex-1 gap-1;
+  }
+
+  .portal-attention-name {
+    @apply font-semibold text-brand-deep text-sm flex items-center gap-2 flex-wrap;
+  }
+
+  .portal-attention-meta {
+    @apply text-xs;
+    color: var(--color-brand-deep-60, rgb(0 73 58 / 0.6));
+  }
+
+  .portal-attention-form {
+    @apply flex items-center gap-2 mt-1 flex-wrap;
+  }
+
+  .portal-attention-hint {
+    @apply text-[11px] mt-1;
+    color: var(--color-brand-deep-60, rgb(0 73 58 / 0.6));
+  }
+
+  /* ── Toolbar única (padrão único do portal): pesquisa + chips +
+     ordenação numa só linha. `--left` para páginas sem pesquisa. ── */
+  .portal-toolbar {
+    @apply flex flex-wrap items-center gap-3 mb-5;
+  }
+
+  .portal-toolbar--left {
+    @apply mb-5;
+  }
+
+  .portal-toolbar .portal-chips {
+    @apply mb-0;
+  }
+
+  .portal-toolbar .stock-sort {
+    margin-left: auto;
+  }
+
+  .portal-toolbar .stock-search-wrap {
+    @apply relative flex-1 min-w-[200px] max-w-[340px];
+  }
+
+  .portal-toolbar .stock-search-wrap .portal-search {
+    @apply mb-0 w-full rounded-xl pl-10 pr-3.5 py-2.5 text-sm;
+    background: var(--color-brand-card);
+    border-color: var(--color-brand-divider);
+    box-shadow: none;
+    transition: all 0.2s ease;
+  }
+
+  .portal-toolbar .stock-search-wrap .portal-search:focus {
+    border-color: var(--color-brand-accent);
+    box-shadow: 0 0 0 2px color-mix(in srgb, var(--color-brand-accent) 20%, transparent);
+    outline: none;
+  }
+
+  .portal-toolbar .stock-search-icon svg {
+    @apply w-4 h-4;
+  }
+
+  /* ── Toolbar do stock: pesquisa + filtros + botão novo fármaco, num só
+     bloco centrado (pedido: botão abaixo dos filtros, tudo centrado). ── */
+  .stock-toolbar {
+    /* Respiro entre os filtros e a barra dos cards: 36px — ponto médio
+       entre o padrão antigo (24px) e o /cientificos (48px, py-12). */
+    @apply flex flex-col items-center gap-3 mb-9;
+  }
+
+  .stock-toolbar .portal-chips {
+    @apply mb-0 justify-center;
+  }
+
+  /* ── Cards de stock — o mesmo padrão do ph-grid/ph-card de /farmacia:
+     grid responsivo 1/2/3 colunas, cartão flat com hairline, raio 8px
+     e hover só na borda. ── */
+  .stock-grid {
+    @apply grid gap-4;
+  }
+
+  @media (min-width: 640px) {
+    .stock-grid {
+      grid-template-columns: repeat(2, minmax(0, 1fr));
+    }
+  }
+
+  @media (min-width: 1280px) {
+    .stock-grid {
+      grid-template-columns: repeat(3, minmax(0, 1fr));
+    }
+  }
+
+  .stock-card {
+    @apply bg-brand-card border border-brand-line rounded-lg p-5 flex flex-col gap-2.5;
+    transition: border-color 0.2s ease;
+  }
+
+  .stock-card:hover {
+    border-color: rgba(0, 42, 50, 0.3);
+  }
+
+  html.dark .stock-card {
+    background: rgba(255, 255, 255, 0.03);
+    border-color: var(--color-brand-divider);
+  }
+
+  html.dark .stock-card:hover {
+    border-color: rgba(13, 153, 95, 0.5);
+  }
+
+  /* Disponível: tint verde suave — a pista visual do estado no grid. */
+  .stock-card--in {
+    background: color-mix(in srgb, var(--color-brand-accent) 5%, var(--color-brand-card));
+  }
+
+  html.dark .stock-card--in {
+    background: color-mix(in srgb, var(--color-brand-accent) 7%, transparent);
+  }
+
+  /* A chegar: tint âmbar (o mesmo papel do portal-stock-row--coming). */
+  .stock-card--coming {
+    background: color-mix(in srgb, #c47f17 6%, transparent);
+  }
+
+  .stock-card-top {
+    @apply flex items-start justify-between gap-2;
+  }
+
+  .stock-card-name-btn {
+    @apply text-left text-base font-semibold text-brand-deep cursor-pointer;
+    background: none;
+    border: none;
+    padding: 0;
+    font: inherit;
+    font-weight: 600;
+    color: var(--color-brand-deep);
+  }
+
+  .stock-card-name-btn:hover {
+    color: var(--color-brand-accent);
+  }
+
+  .stock-card-meta {
+    @apply text-xs text-brand-deep/60;
+  }
+
+  .stock-card-tags {
+    @apply flex flex-wrap items-center gap-1.5;
+    min-height: 1.5rem;
+  }
+
+  .stock-tag {
+    @apply text-[11px] font-semibold px-2 py-0.5 rounded-full;
+    background: color-mix(in srgb, var(--color-brand-deep) 7%, transparent);
+    color: var(--color-brand-deep);
+  }
+
+  .stock-tag--eta {
+    @apply px-2 py-0.5 rounded-full text-[11px] font-semibold;
+    background: color-mix(in srgb, #c47f17 12%, transparent);
+  }
+
+  .stock-tag--expiry {
+    @apply px-2 py-0.5 rounded-full text-[11px] font-semibold;
+    background: color-mix(in srgb, currentColor 10%, transparent);
+  }
+
+  .stock-card-foot {
+    @apply flex flex-wrap items-center justify-between gap-2 pt-2.5 mt-auto;
+    border-top: 1px solid var(--color-brand-line);
+  }
+
+  html.dark .stock-card-foot {
+    border-top-color: var(--color-brand-divider);
+  }
+
+  .stock-card-hint {
+    @apply text-xs text-brand-deep/50 italic;
+  }
+
+  /* Scroll infinito: contador por cima do grid + sentinela (com spinner)
+     que dispara o carregamento da página seguinte ao aproximar-se. */
+  .stock-grid-count {
+    @apply text-xs text-center mb-3;
+    color: color-mix(in srgb, var(--color-brand-deep) 55%, transparent);
+  }
+
+  .stock-grid-sentinel {
+    @apply flex justify-center py-6;
+  }
+
+  /* Barra acima dos cards — a mesma estrutura de /cientificos (link de
+     autores à esquerda, ordenação à direita): justify-between, wrap. */
+  .stock-grid-bar {
+    @apply flex flex-wrap items-center justify-between gap-3 mb-5;
+  }
+
+  /* O botão de adicionar partilha o estilo dos chips de filtro (fundo
+     transparente, borda 2px, hover verde) — só o peso tipográfico sobe. */
+  .stock-add-btn {
+    @apply font-bold;
+    color: var(--color-brand-accent);
+    border-color: color-mix(in srgb, var(--color-brand-accent) 45%, transparent);
+  }
+
+  .stock-add-btn:hover {
+    background: color-mix(in srgb, var(--color-brand-accent) 12%, transparent);
+  }
+
+  /* Ordenação — cópia dos .sci-sort-btn de /cientificos do principal:
+     grupo pill com borda partilhada, botões transparentes, activo sólido
+     verde. */
+  .stock-sort {
+    border-color: var(--color-brand-divider);
+  }
+
+  .stock-sort-btn {
+    @apply inline-flex items-center px-4 py-1.5 text-[13px] font-semibold;
+    background: transparent;
+    color: var(--color-brand-deep);
+    opacity: 0.65;
+    cursor: pointer;
+    transition: all 0.15s;
+    white-space: nowrap;
+  }
+
+  .stock-sort-btn:hover {
+    opacity: 1;
+    background: var(--color-brand-bg-alt);
+  }
+
+  .stock-sort-btn.active {
+    background: var(--color-brand-primary);
+    color: #fff;
+    opacity: 1;
+  }
+
+  /* ── Hero do stock — espelho do hero de /artigos e /cientificos do
+     site principal: título gigante centrado com a palavra em destaque
+     (cor da marca), subtítulo por baixo, e a toolbar (pesquisa larga +
+     filtros) a seguir, também centrada. A fonte é a SANS (Inter) — no
+     principal os hero-titles não usam a display (Fraunces). ── */
+  .stock-hero {
+    @apply text-center pt-10 md:pt-14 pb-8 md:pb-10;
+  }
+
+  .stock-hero-title {
+    @apply text-4xl md:text-6xl font-bold tracking-tight mb-4;
+    color: var(--color-brand-deep);
+  }
+
+  /* Palavra em destaque — o mesmo papel do `.highlight` do hero do
+     principal (verde da marca sobre o título). */
+  .stock-hero-highlight {
+    color: var(--color-brand-primary);
+  }
+
+  /* Subtítulo — proporção do `.hero-subtitle` do principal, centrado. */
+  .stock-hero-sub {
+    @apply text-base md:text-lg leading-relaxed;
+    color: color-mix(in srgb, var(--color-brand-deep) 70%, transparent);
+  }
+
+  .stock-hero-sub b {
+    color: var(--color-brand-primary);
+    font-weight: 700;
+  }
+
+  /* Pesquisa — cópia exacta da search bar de /cientificos do principal:
+     max-w-3xl, rounded-2xl, py-3.5, pl-11 (lupa size 18), borda
+     divider, shadow-soft e focus ring-2 ring-brand-accent/20 + borda
+     accent (o mesmo par #search-input:focus / input do hero de lá). */
+  .stock-search-wrap {
+    @apply relative w-full max-w-3xl mx-auto;
+  }
+
+  .stock-search-wrap .portal-search {
+    @apply mb-0 w-full rounded-2xl pl-11 pr-4 py-3.5 text-base;
+    background: var(--color-brand-bg);
+    border-color: var(--color-brand-divider);
+    box-shadow: var(--shadow-soft);
+    transition: all 0.2s ease;
+  }
+
+  .stock-search-wrap .portal-search:focus {
+    border-color: var(--color-brand-accent);
+    box-shadow:
+      0 0 0 2px color-mix(in srgb, var(--color-brand-accent) 20%, transparent),
+      var(--shadow-soft);
+    outline: none;
+  }
+
+  .stock-search-icon {
+    position: absolute;
+    top: 50%;
+    left: 1rem;
+    transform: translateY(-50%);
+    display: flex;
+    align-items: center;
+    pointer-events: none;
+    color: color-mix(in srgb, var(--color-brand-deep) 40%, transparent);
+  }
+
+  .stock-search-icon svg {
+    @apply w-[18px] h-[18px];
+  }
+
+  /* Linha do stock como botão: herda a tipografia, herda o alinhamento. */
+  .portal-stock-main--btn {
+    @apply text-left cursor-pointer;
+    background: none;
+    border: none;
+    padding: 0;
+    font: inherit;
+    color: inherit;
+  }
+
+  .portal-stock-main--btn:hover .portal-stock-name {
+    text-decoration: underline;
+    text-decoration-color: color-mix(in srgb, var(--color-brand-accent) 55%, transparent);
+  }
+
+  /* ── Modal de edição de stock — card centrado sobre um scrim que
+     ofusca a página (backdrop-filter + cor escura). Acima de tudo,
+     incl. sidebar (z-60) e header (z-50). ── */
+  .stock-modal {
+    position: fixed;
+    inset: 0;
+    z-index: 80;
+    display: grid;
+    place-items: center;
+    padding: 1.25rem;
+  }
+
+  .stock-modal-scrim {
+    position: absolute;
+    inset: 0;
+    background: rgb(0 30 24 / 0.62);
+    backdrop-filter: blur(4px);
+    -webkit-backdrop-filter: blur(4px);
+  }
+
+  .stock-modal-card {
+    @apply relative w-full max-w-lg p-6 rounded-xl border overflow-y-auto;
+    background: var(--color-brand-card);
+    border-color: var(--color-brand-line);
+    box-shadow: 0 1.5rem 4rem rgb(0 30 24 / 0.35);
+    max-height: min(85dvh, 42rem);
+  }
+
+  .stock-modal-state {
+    @apply text-sm mt-1 mb-4;
+    color: var(--color-brand-deep-60, rgb(0 73 58 / 0.6));
+  }
+
+  .stock-modal-state b {
+    color: var(--color-brand-deep);
+  }
+
+  .stock-modal-actions {
+    @apply flex items-center gap-3 flex-wrap;
+  }
+
+  /* ===== Pop-up de detalhe da reserva (portal/reservas) ===== */
+  .res-detail-card {
+    @apply max-w-xl;
+  }
+
+  .res-detail-badges {
+    @apply flex items-center gap-2 flex-wrap mb-4;
+  }
+
+  .res-detail-calc {
+    @apply not-italic opacity-70;
+    font-size: 0.8em;
+  }
+
+  /* Ficha rótulo → valor: a grelha alinha as duas colunas e a etiqueta
+     fica discreta, para o olhar varrer rapidamente a informação. */
+  .res-detail-grid {
+    @apply m-0 mb-5 flex flex-col gap-2;
+  }
+
+  .res-detail-row {
+    @apply grid gap-x-3;
+    grid-template-columns: 9.5rem 1fr;
+  }
+
+  .res-detail-row dt {
+    color: var(--color-brand-deep-60, rgb(0 73 58 / 0.6));
+    font-size: 0.85rem;
+    padding-top: 0.1rem;
+  }
+
+  .res-detail-row dd {
+    @apply m-0;
+    font-size: 0.95rem;
+    color: var(--color-brand-deep);
+  }
+
+  .res-detail-row dd a {
+    @apply underline underline-offset-2;
+  }
+
+  .res-detail-section {
+    @apply flex flex-col gap-2 mb-5;
+  }
+
+  .res-detail-section > b {
+    color: var(--color-brand-deep);
+    font-size: 0.95rem;
+  }
+
+  /* Cronologia: linha vertical à esquerda, cada passo com data/hora
+     completas — é aqui que o "há 2 h" do card se abre em dia e hora. */
+  .res-detail-timeline {
+    @apply m-0 p-0 flex flex-col gap-2;
+    list-style: none;
+    border-left: 2px solid var(--color-brand-line);
+    padding-left: 1rem;
+    margin-left: 0.25rem;
+  }
+
+  .res-detail-timeline li {
+    @apply flex items-baseline justify-between gap-3 flex-wrap;
+    position: relative;
+  }
+
+  .res-detail-timeline li::before {
+    content: '';
+    position: absolute;
+    left: -1.28rem;
+    top: 0.45em;
+    width: 0.55rem;
+    height: 0.55rem;
+    border-radius: 9999px;
     background: var(--color-brand-deep);
+  }
+
+  .res-detail-timeline li.res-detail-step--pending::before {
+    background: transparent;
+    border: 2px solid var(--color-brand-deep-60, rgb(0 73 58 / 0.6));
+  }
+
+  .res-detail-step-label {
+    font-size: 0.9rem;
+    color: var(--color-brand-deep);
+  }
+
+  .res-detail-step--pending .res-detail-step-label {
+    color: var(--color-brand-deep-60, rgb(0 73 58 / 0.6));
+  }
+
+  .res-detail-step-at {
+    font-size: 0.85rem;
+    color: var(--color-brand-deep-60, rgb(0 73 58 / 0.6));
+    white-space: nowrap;
+  }
+
+  /* Link de acompanhamento: código truncado + botão copiar. */
+  .res-detail-link {
+    @apply flex items-center gap-2 flex-wrap;
+  }
+
+  .res-detail-link code {
+    @apply flex-1 min-w-0 truncate rounded-lg px-3 py-2;
+    font-size: 0.8rem;
+    background: color-mix(in srgb, var(--color-brand-line) 45%, transparent);
+    border: 1px solid var(--color-brand-line);
+    color: var(--color-brand-deep);
+  }
+
+  .res-details-btn {
+    @apply shrink-0;
+    font-size: 0.8rem;
+    padding: 0.3rem 0.65rem;
+    border-radius: 9999px;
+    border: 1px solid var(--color-brand-line);
+    background: var(--color-brand-card);
+    color: var(--color-brand-deep);
+    cursor: pointer;
+  }
+
+  .res-details-btn:hover {
+    border-color: var(--color-brand-deep);
+  }
+
+  /* Mobile: a grelha rótulo→valor empilha em vez de esmagar as duas colunas. */
+  @media (max-width: 480px) {
+    .res-detail-row {
+      grid-template-columns: 1fr;
+      gap: 0.1rem;
+    }
   }
 }

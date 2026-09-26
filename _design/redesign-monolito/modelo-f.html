@@ -1,0 +1,481 @@
+<!DOCTYPE html>
+<html lang="pt">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Modelo F — Editorial Prático (A × D) · Pesquisa + Farmácias + Detalhe</title>
+<!--
+  MODELO F · v2 — HÍBRIDO A × D ("Editorial Prático")
+  Base: A (monólito claro, prático, com botões) × D (editorial, leve, moderno).
+
+  Mudanças v3 (feedback do utilizador):
+  · SOMBRAS ELIMINADAS — eram elas que "apagavam" os cantos arredondados.
+    Cartões agora são planos, delimitados por hairline, com hover na borda.
+  · Raios reduzidos 16px → 8px: menos arredondados, mais nítidos.
+  · Acordeões da P3 deixaram de ser cartões: secções editoriais planas
+    separadas por hairlines (estilo índice do D), com "+" que roda para "×"
+    ao abrir. O comportamento abrir/fechar mantém-se na íntegra.
+  · v3.1: conteúdo dos expansíveis indentado como submenu — deslocado para
+    a direita do cabeçalho, com linha vertical-guia a marcar a hierarquia.
+
+  Mudanças v2 (feedback do utilizador):
+  · P1 (Pesquisa): resultados deixam de ser linhas de índice e passam a
+    cartões brancos suaves (sombra larga, raio 16px) — herdam a praticidade
+    do A, mantendo a tipografia editorial do D.
+  · P2 (Farmácias): lista em hairline substituída por grelha de cartões
+    (estilo ph-card do A), com localização, contagem e botões.
+  · P3 (Detalhe): acordeões simplificados — raio reduzido para 12px,
+    SEM círculo de ícone e SEM pill de contagem (eram eles que tornavam
+    o conjunto "too round"); cabeçalho = nome serif + contagem discreta
+    + seta, borda hairline em vez de sombra.
+
+  Mantém da v1:
+  · Fundo quente #fffdf9, Fraunces protagonista, kickers em maiúsculas.
+  · Botões sólidos em pill (Ligar, WhatsApp, Pesquisar, Google Maps).
+  · Mega pesquisa com botão + chips de município + acordeões funcionais.
+  · Bloco de críticos = painel verde-água suave com borda esquerda.
+  · Logo real (public/logo/3.png), verde oficial WhatsApp #25d366.
+  · Numeração 01/02/03 removida nos cartões (fazia sentido só em lista).
+-->
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&family=Fraunces:ital,opsz,wght@0,9..144,400;0,9..144,600;0,9..144,700;1,9..144,400;1,9..144,600&display=swap" rel="stylesheet">
+<style>
+:root{
+  --primary:#00493a; --accent:#0a844f; --deep:#002a32;
+  --bg:#fffdf9; --bg-alt:#f3f6f3;
+  --ink:rgba(0,42,50,.85); --mut:rgba(0,42,50,.5);
+  --line:rgba(0,42,50,.13);
+  --wa:#25d366;
+  --line-strong:rgba(0,42,50,.28);
+}
+*{margin:0;padding:0;box-sizing:border-box}
+body{font-family:'Inter',system-ui,sans-serif;background:var(--bg);color:var(--deep)}
+a{text-decoration:none;color:inherit}
+button{font-family:inherit}
+:focus-visible{outline:2px solid var(--accent);outline-offset:2px;border-radius:4px}
+.container{max-width:64rem;margin:0 auto;padding:0 1.6rem}
+.serif{font-family:'Fraunces',Georgia,serif}
+.page-label{position:sticky;top:0;z-index:60;background:var(--deep);color:#fff;font-size:.68rem;font-weight:700;letter-spacing:.18em;text-transform:uppercase;padding:8px 24px;display:flex;justify-content:center}
+
+/* ===== Botões (do A) ===== */
+.btn{display:inline-flex;align-items:center;gap:7px;border-radius:999px;font-weight:700;cursor:pointer;border:none;white-space:nowrap}
+.btn-dark{background:var(--deep);color:#fff}
+.btn-wa{background:var(--wa);color:#fff}
+.btn-quiet{background:var(--bg-alt);color:var(--ink)}
+.btn-sm{padding:8px 15px;font-size:.78rem}
+.btn-md{padding:12px 22px;font-size:.9rem}
+
+/* ===== Header: nav em pills (A) sobre fundo quente com hairline (D) ===== */
+.hdr{position:sticky;top:32px;z-index:50;background:rgba(255,253,249,.92);backdrop-filter:blur(12px);border-bottom:1px solid var(--line)}
+.hdr-in{max-width:64rem;margin:0 auto;padding:0 1.6rem;height:66px;display:flex;align-items:center;justify-content:space-between}
+.hdr-logo{display:flex;align-items:center;gap:10px}
+.hdr-logo img{height:34px}
+.hdr-logo b{font-size:.72rem;letter-spacing:.14em;text-transform:uppercase;color:var(--accent);font-weight:700;border-left:1px solid var(--line);padding-left:10px}
+.hdr-nav{display:flex;gap:5px;background:var(--bg-alt);padding:5px;border-radius:999px}
+.hdr-nav a{padding:8px 20px;border-radius:999px;font-size:.86rem;font-weight:600;color:var(--mut)}
+.hdr-nav a.on{background:#fff;color:var(--primary)}
+@media(max-width:640px){.hdr-nav{display:none}}
+
+.kicker{font-size:.68rem;font-weight:700;letter-spacing:.22em;text-transform:uppercase;color:var(--accent);margin-bottom:1.1rem}
+
+/* ===== P1 · PESQUISA ===== */
+.hero{padding:4.2rem 0 3.2rem;text-align:center}
+.hero h1{font-family:'Fraunces',serif;font-weight:600;font-size:clamp(2.2rem,5.4vw,3.6rem);letter-spacing:-.01em;line-height:1.08}
+.hero h1 em{font-style:italic;color:var(--accent)}
+.hero .lead{color:var(--mut);margin-top:1rem;font-size:.98rem}
+.mega-search{max-width:720px;margin:2.4rem auto 0;background:#fff;border:1px solid var(--line);border-radius:999px;display:flex;align-items:center;padding:7px 7px 7px 24px;gap:12px}
+.mega-search svg{width:20px;height:20px;fill:none;stroke:var(--mut);stroke-width:1.8;flex-shrink:0}
+.mega-search input{flex:1;border:none;outline:none;background:transparent;font-family:inherit;font-size:1.02rem;color:var(--deep);min-width:0}
+.mega-search input::placeholder{color:var(--mut)}
+.mega-search button{background:var(--primary);color:#fff;border:none;border-radius:999px;padding:13px 26px;font-size:.9rem;font-weight:700;cursor:pointer;flex-shrink:0}
+.chips{display:flex;gap:9px;justify-content:center;flex-wrap:wrap;margin-top:1.7rem}
+.chip{padding:9px 20px;border-radius:999px;font-size:.84rem;font-weight:600;border:none;background:var(--bg-alt);color:var(--mut);cursor:pointer}
+.chip.on{background:var(--primary);color:#fff}
+
+/* Stats: informação do A, execução editorial do D */
+.stats{display:flex;flex-wrap:wrap;border-top:1px solid var(--line);border-bottom:1px solid var(--line);margin-top:3.2rem}
+.stat{flex:1;min-width:150px;padding:1.5rem 1.4rem;text-align:center}
+.stat + .stat{border-left:1px solid var(--line)}
+.stat b{display:block;font-family:'Fraunces',serif;font-size:2rem;font-weight:600;color:var(--primary)}
+.stat span{font-size:.78rem;color:var(--mut)}
+
+.idx{padding:2.8rem 0 4.5rem}
+.idx-head{display:flex;justify-content:space-between;align-items:baseline;flex-wrap:wrap;gap:6px 18px;margin-bottom:1.1rem}
+.idx-title{font-family:'Fraunces',serif;font-size:1.55rem;font-weight:600}
+.idx-count{font-size:.78rem;color:var(--mut);font-variant-numeric:tabular-nums}
+
+/* Resultados: cartões suaves (v2 — antes eram linhas de índice) */
+.drug-card{background:#fff;border:1px solid var(--line);border-radius:8px;padding:18px 22px;display:flex;flex-wrap:wrap;align-items:center;gap:12px 20px;margin-bottom:12px;transition:border-color .2s}
+.drug-card:hover{border-color:var(--line-strong)}
+.drug-card-main{flex:1;min-width:210px}
+.drug-card-name{font-family:'Fraunces',serif;font-size:1.12rem;font-weight:600}
+.drug-card-name a{border-bottom:1px solid transparent}
+.drug-card-name a:hover{border-bottom-color:var(--accent)}
+.drug-card-meta{font-size:.76rem;color:var(--mut);margin-top:3px}
+.drug-card-meta .fresh{color:var(--accent);font-weight:600}
+.drug-card-side{display:flex;align-items:center;gap:12px;flex-wrap:wrap}
+.price{font-variant-numeric:tabular-nums;font-weight:700;font-size:.98rem}
+.rx{font-size:.58rem;font-weight:800;letter-spacing:.06em;text-transform:uppercase;background:rgba(255,108,35,.12);color:#d9531e;padding:3px 9px;border-radius:99px;margin-left:8px;vertical-align:2px}
+
+/* ===== P2 · FARMÁCIAS — grelha de cartões (v2) ===== */
+.p2{border-top:1px solid var(--line)}
+.sec-head{padding:3.2rem 0 1.8rem}
+.sec-head h1{font-family:'Fraunces',serif;font-weight:600;font-size:clamp(1.9rem,4vw,2.6rem);letter-spacing:-.01em}
+.sec-head p{color:var(--mut);margin-top:.7rem;font-size:.92rem;max-width:34rem}
+.sec-head .chips{justify-content:flex-start;margin-top:1.5rem}
+.ph-grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(300px,1fr));gap:16px;padding-bottom:4.5rem}
+.ph-card{background:#fff;border:1px solid var(--line);border-radius:8px;padding:20px 22px;display:flex;flex-direction:column;gap:10px;transition:border-color .2s}
+.ph-card:hover{border-color:var(--line-strong)}
+.ph-card-top{display:flex;justify-content:space-between;align-items:flex-start;gap:10px}
+.ph-card-name{font-family:'Fraunces',serif;font-size:1.15rem;font-weight:600;line-height:1.25}
+.ph-ver{font-size:.6rem;font-weight:700;letter-spacing:.1em;text-transform:uppercase;color:var(--accent);white-space:nowrap;padding-top:4px}
+.ph-card-loc{font-size:.8rem;color:var(--mut);line-height:1.5}
+.ph-card-foot{display:flex;justify-content:space-between;align-items:center;gap:10px;flex-wrap:wrap;border-top:1px solid var(--line);padding-top:13px;margin-top:auto}
+.ph-count{font-size:.78rem;color:var(--deep);font-weight:600;white-space:nowrap}
+.ph-count b{color:var(--accent)}
+.ph-card-btns{display:flex;gap:8px;align-items:center;flex-wrap:wrap}
+.ph-card-btns .detalhes{font-size:.78rem;font-weight:600;color:var(--primary);border-bottom:1px solid rgba(0,73,58,.3);padding-bottom:1px;margin-left:4px}
+.ph-card-btns .detalhes:hover{border-bottom-color:var(--primary)}
+
+/* ===== P3 · DETALHE ===== */
+.d3{border-top:1px solid var(--line)}
+.d-head{padding:3rem 0 2rem;display:flex;flex-wrap:wrap;justify-content:space-between;gap:1.5rem;align-items:flex-end}
+.d-name{font-family:'Fraunces',serif;font-weight:600;font-size:clamp(1.9rem,4vw,2.7rem);letter-spacing:-.01em;line-height:1.08}
+.d-loc{color:var(--mut);margin-top:.7rem;font-size:.9rem}
+.d-status{font-size:.78rem;margin-top:.9rem;display:flex;gap:1.4rem;flex-wrap:wrap}
+.d-status span{display:inline-flex;align-items:center;gap:7px;color:var(--mut)}
+.dot{width:7px;height:7px;border-radius:99px;background:var(--accent)}
+.d-status .ok{color:#0b6e44;font-weight:600}
+.d-acts{display:flex;gap:10px;flex-wrap:wrap;padding-bottom:6px}
+.d-acts .btn-light{background:#fff;border:1px solid var(--line);color:var(--ink)}
+
+/* Críticos: painel verde-água suave (meio-termo A×D) */
+.crit{margin:1.4rem 0 2.6rem;background:rgba(10,132,79,.06);border-left:3px solid var(--accent);border-radius:0 12px 12px 0;padding:1.4rem 1.8rem 1.2rem}
+.crit-k{font-size:.64rem;font-weight:700;letter-spacing:.2em;text-transform:uppercase;color:var(--accent);margin-bottom:.7rem}
+.crit-item{display:flex;flex-wrap:wrap;align-items:center;justify-content:space-between;gap:10px 18px;padding:12px 0;border-bottom:1px solid rgba(10,132,79,.16)}
+.crit-item:last-child{border-bottom:none}
+.crit-name{font-family:'Fraunces',serif;font-size:1.06rem;font-weight:600}
+.crit-meta{font-size:.75rem;color:var(--mut);margin-top:2px}
+.crit-side{display:flex;align-items:center;gap:14px}
+
+.d-tools{display:flex;gap:12px;align-items:center;margin:2rem 0 1.5rem;flex-wrap:wrap}
+.d-search{flex:1;min-width:230px;display:flex;align-items:center;gap:10px;background:#fff;border:1px solid var(--line);border-radius:999px;padding:12px 20px}
+.d-search svg{width:18px;height:18px;fill:none;stroke:var(--mut);stroke-width:1.8}
+.d-search input{flex:1;border:none;outline:none;font-family:inherit;font-size:.95rem;background:transparent;color:var(--deep)}
+.d-search input::placeholder{color:var(--mut)}
+
+/* Acordeões v3: deixaram de ser cartões — secções editoriais planas no estilo
+   índice do D: sem caixa, sem raio, sem sombra, apenas hairlines entre categorias.
+   Indicador = "+" que roda 45° para "×" ao abrir. O abrir/fechar mantém-se. */
+.accs{border-top:1px solid var(--line);margin:1.6rem 0 2.5rem}
+.acc{border-bottom:1px solid var(--line)}
+.acc-head{width:100%;display:flex;align-items:center;gap:14px;padding:18px 2px;background:none;border:none;cursor:pointer;text-align:left}
+.acc-name{flex:1;font-family:'Fraunces',serif;font-weight:600;font-size:1.12rem;transition:color .15s}
+.acc-head:hover .acc-name{color:var(--accent)}
+.acc-count{font-size:.76rem;color:var(--mut);font-variant-numeric:tabular-nums;white-space:nowrap}
+.acc-x{width:15px;height:15px;fill:none;stroke:var(--deep);stroke-width:2;stroke-linecap:round;flex-shrink:0;transition:transform .25s}
+.acc.open .acc-x{transform:rotate(45deg)}
+.acc-body{display:none;margin:0 2px 16px 30px;padding:2px 0 0 24px;border-left:1px solid var(--line)}
+.acc.open .acc-body{display:block}
+.acc-body .row-line:first-child{border-top:none}
+.row-line{display:flex;flex-wrap:wrap;align-items:center;justify-content:space-between;gap:8px 14px;padding:12px 0;border-top:1px solid var(--line)}
+.row-line-name{font-weight:600;font-size:.94rem}
+.row-line-meta{font-size:.74rem;color:var(--mut);margin-top:2px}
+.row-line-side{display:flex;align-items:center;gap:12px}
+</style>
+</head>
+<body>
+
+<div class="page-label">Modelo F · Editorial Prático (A × D) — 3 páginas</div>
+
+<!-- ============ HEADER ============ -->
+<header class="hdr">
+  <div class="hdr-in">
+    <a class="hdr-logo" href="#">
+      <img src="../../public/logo/3.png" alt="Conheça Farmácia"><b>Localizador</b>
+    </a>
+    <nav class="hdr-nav">
+      <a class="on" href="#">Pesquisar</a><a href="#">Farmácias</a><a href="#">Sobre</a>
+    </nav>
+  </div>
+</header>
+
+<!-- ============ PÁGINA 1 · PESQUISA ============ -->
+<main>
+<section>
+  <div class="container">
+    <div class="hero">
+      <p class="kicker">Localizador de Medicamentos · Luanda</p>
+      <h1>Encontre o medicamento<br><em>confirmado</em> há menos de 72 horas.</h1>
+      <p class="lead">Pesquise por nome ou molécula. Cada resultado vem de uma farmácia parceira que confirmou o stock recentemente.</p>
+      <div class="mega-search">
+        <svg viewBox="0 0 24 24"><circle cx="11" cy="11" r="8"/><line x1="21" y1="21" x2="16.65" y2="16.65"/></svg>
+        <input placeholder="Insulina, carbamazepina, salbutamol…">
+        <button>Pesquisar</button>
+      </div>
+      <div class="chips">
+        <button class="chip on">Todos</button><button class="chip">Belas</button><button class="chip">Cacuaco</button><button class="chip">Cazenga</button><button class="chip">Luanda</button><button class="chip">Talatona</button><button class="chip">Viana</button>
+      </div>
+    </div>
+
+    <div class="stats">
+      <div class="stat"><b>6</b><span>farmácias parceiras</span></div>
+      <div class="stat"><b>22</b><span>medicamentos confirmados agora</span></div>
+      <div class="stat"><b>72 h</b><span>idade máxima do stock</span></div>
+      <div class="stat"><b>9</b><span>municípios cobertos</span></div>
+    </div>
+
+    <div class="idx">
+      <div class="idx-head">
+        <h2 class="idx-title">Insulina NPH</h2>
+        <span class="idx-count">Injetável · 100 UI/ml — 3 farmácias</span>
+      </div>
+
+      <div class="drug-card">
+        <div class="drug-card-main">
+          <div class="drug-card-name"><a href="#">Farmácia Nossa Senhora da Muxima<span class="rx">Receita</span></a></div>
+          <div class="drug-card-meta">Luanda · Ingombota · <span class="fresh">há 35 min</span></div>
+        </div>
+        <div class="drug-card-side">
+          <span class="price">8.500 Kz</span>
+          <a class="btn btn-dark btn-sm" href="#">Ligar</a>
+          <a class="btn btn-wa btn-sm" href="#">WhatsApp</a>
+        </div>
+      </div>
+
+      <div class="drug-card">
+        <div class="drug-card-main">
+          <div class="drug-card-name"><a href="#">Farmácia do Hospital Central</a></div>
+          <div class="drug-card-meta">Luanda · Av. 4 de Fevereiro · <span class="fresh">há 1 h</span></div>
+        </div>
+        <div class="drug-card-side">
+          <span class="price">8.200 Kz</span>
+          <a class="btn btn-dark btn-sm" href="#">Ligar</a>
+          <a class="btn btn-wa btn-sm" href="#">WhatsApp</a>
+        </div>
+      </div>
+
+      <div class="drug-card">
+        <div class="drug-card-main">
+          <div class="drug-card-name"><a href="#">Farmácia Mirim</a></div>
+          <div class="drug-card-meta">Belas · Luanda Sul · <span class="fresh">há 50 min</span></div>
+        </div>
+        <div class="drug-card-side">
+          <span class="price">8.800 Kz</span>
+          <a class="btn btn-dark btn-sm" href="#">Ligar</a>
+          <a class="btn btn-wa btn-sm" href="#">WhatsApp</a>
+        </div>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- ============ PÁGINA 2 · FARMÁCIAS ============ -->
+<section class="p2">
+  <div class="page-label" style="position:static;background:var(--accent)">Página 2 · Farmácias</div>
+  <div class="container">
+    <div class="sec-head">
+      <p class="kicker">A rede</p>
+      <h1>Farmácias parceiras</h1>
+      <p>Seis farmácias em Luanda confirmam o stock no Localizador. O que expira, sai do ar.</p>
+      <div class="chips">
+        <button class="chip on">Todos</button><button class="chip">Luanda</button><button class="chip">Viana</button><button class="chip">Talatona</button><button class="chip">Belas</button>
+      </div>
+    </div>
+
+    <div class="ph-grid">
+      <article class="ph-card">
+        <div class="ph-card-top">
+          <h3 class="ph-card-name">Farmácia Nossa Senhora da Muxima</h3>
+          <span class="ph-ver">✓ Verificada</span>
+        </div>
+        <p class="ph-card-loc">Luanda · Rua Amílcar Cabral, nº 45, Ingombota · Seg–Sáb 07:30–19:00</p>
+        <div class="ph-card-foot">
+          <span class="ph-count"><b>4</b> medicamentos agora</span>
+          <div class="ph-card-btns">
+            <a class="btn btn-quiet btn-sm" href="#">Ligar</a>
+            <a class="btn btn-wa btn-sm" href="#">WhatsApp</a>
+            <a class="detalhes" href="#">Detalhes →</a>
+          </div>
+        </div>
+      </article>
+
+      <article class="ph-card">
+        <div class="ph-card-top">
+          <h3 class="ph-card-name">Farmácia do Hospital Central</h3>
+          <span class="ph-ver">✓ Verificada</span>
+        </div>
+        <p class="ph-card-loc">Luanda · Av. 4 de Fevereiro · 24 horas</p>
+        <div class="ph-card-foot">
+          <span class="ph-count"><b>4</b> medicamentos agora</span>
+          <div class="ph-card-btns">
+            <a class="btn btn-quiet btn-sm" href="#">Ligar</a>
+            <a class="btn btn-wa btn-sm" href="#">WhatsApp</a>
+            <a class="detalhes" href="#">Detalhes →</a>
+          </div>
+        </div>
+      </article>
+
+      <article class="ph-card">
+        <div class="ph-card-top">
+          <h3 class="ph-card-name">Farmácia Vida Nova</h3>
+          <span class="ph-ver">✓ Verificada</span>
+        </div>
+        <p class="ph-card-loc">Viana · Rua da Missão, nº 210 · Seg–Sáb 08:00–18:30</p>
+        <div class="ph-card-foot">
+          <span class="ph-count"><b>4</b> medicamentos agora</span>
+          <div class="ph-card-btns">
+            <a class="btn btn-quiet btn-sm" href="#">Ligar</a>
+            <a class="btn btn-wa btn-sm" href="#">WhatsApp</a>
+            <a class="detalhes" href="#">Detalhes →</a>
+          </div>
+        </div>
+      </article>
+
+      <article class="ph-card">
+        <div class="ph-card-top">
+          <h3 class="ph-card-name">Farmácia Quirimbambas</h3>
+        </div>
+        <p class="ph-card-loc">Talatona · Via S8 · Seg–Sáb 08:00–20:00</p>
+        <div class="ph-card-foot">
+          <span class="ph-count"><b>3</b> medicamentos agora</span>
+          <div class="ph-card-btns">
+            <a class="btn btn-quiet btn-sm" href="#">Ligar</a>
+            <a class="btn btn-wa btn-sm" href="#">WhatsApp</a>
+            <a class="detalhes" href="#">Detalhes →</a>
+          </div>
+        </div>
+      </article>
+
+      <article class="ph-card">
+        <div class="ph-card-top">
+          <h3 class="ph-card-name">Farmácia Mirim</h3>
+          <span class="ph-ver">✓ Verificada</span>
+        </div>
+        <p class="ph-card-loc">Belas · Rua da Samba, Luanda Sul · Todos os dias 08:00–21:00</p>
+        <div class="ph-card-foot">
+          <span class="ph-count"><b>4</b> medicamentos agora</span>
+          <div class="ph-card-btns">
+            <a class="btn btn-quiet btn-sm" href="#">Ligar</a>
+            <a class="btn btn-wa btn-sm" href="#">WhatsApp</a>
+            <a class="detalhes" href="#">Detalhes →</a>
+          </div>
+        </div>
+      </article>
+    </div>
+  </div>
+</section>
+
+<!-- ============ PÁGINA 3 · DETALHE ============ -->
+<section class="d3">
+  <div class="page-label" style="position:static;background:var(--primary)">Página 3 · Detalhe da farmácia</div>
+  <div class="container">
+    <div class="d-head">
+      <div>
+        <p class="kicker">Farmácia parceira · Luanda</p>
+        <h1 class="d-name">Farmácia Nossa<br>Senhora da Muxima</h1>
+        <p class="d-loc">Rua Amílcar Cabral, nº 45, Ingombota · Seg–Sáb 07:30–19:00</p>
+        <div class="d-status">
+          <span class="ok"><i class="dot"></i>Aberto agora · fecha às 19:00</span>
+          <span><i class="dot"></i>Stock confirmado há 35 min</span>
+          <span><i class="dot"></i>Verificada pela equipa</span>
+        </div>
+      </div>
+      <div class="d-acts">
+        <a class="btn btn-dark btn-md" href="#">Ligar: +244 923 111 405</a>
+        <a class="btn btn-light btn-md" href="#">Google Maps</a>
+        <a class="btn btn-wa btn-md" href="#">WhatsApp</a>
+      </div>
+    </div>
+
+    <div class="crit">
+      <p class="crit-k">Críticos em stock — prioridade máxima</p>
+      <div class="crit-item">
+        <div>
+          <div class="crit-name">Insulina NPH<span class="rx">Receita</span></div>
+          <div class="crit-meta">Injetável · 100 UI/ml · confirmado há 35 min</div>
+        </div>
+        <div class="crit-side">
+          <span class="price">8.500 Kz</span>
+          <a class="btn btn-wa btn-sm" href="#">WhatsApp</a>
+        </div>
+      </div>
+    </div>
+
+    <div class="d-tools">
+      <div class="d-search">
+        <svg viewBox="0 0 24 24"><circle cx="11" cy="11" r="8"/><line x1="21" y1="21" x2="16.65" y2="16.65"/></svg>
+        <input placeholder="Pesquisar dentro desta farmácia…">
+      </div>
+    </div>
+
+    <div class="accs">
+    <div class="acc open">
+      <button class="acc-head">
+        <span class="acc-name">Comprimidos</span>
+        <span class="acc-count">2 medicamentos</span>
+        <svg class="acc-x" viewBox="0 0 24 24"><path d="M12 5v14M5 12h14"/></svg>
+      </button>
+      <div class="acc-body">
+        <div class="row-line">
+          <div><div class="row-line-name">Paracetamol</div><div class="row-line-meta">500 mg · confirmado há 2 h</div></div>
+          <div class="row-line-side"><b>500 Kz</b><a class="btn btn-wa btn-sm" href="#">WhatsApp</a></div>
+        </div>
+        <div class="row-line">
+          <div><div class="row-line-name">Losartana<span class="rx">Receita</span></div><div class="row-line-meta">50 mg · confirmado há 26 h</div></div>
+          <div class="row-line-side"><b>3.500 Kz</b><a class="btn btn-wa btn-sm" href="#">WhatsApp</a></div>
+        </div>
+      </div>
+    </div>
+
+    <div class="acc">
+      <button class="acc-head">
+        <span class="acc-name">Injetáveis</span>
+        <span class="acc-count">1 medicamento</span>
+        <svg class="acc-x" viewBox="0 0 24 24"><path d="M12 5v14M5 12h14"/></svg>
+      </button>
+      <div class="acc-body">
+        <div class="row-line">
+          <div><div class="row-line-name">Insulina NPH<span class="rx">Receita</span></div><div class="row-line-meta">100 UI/ml · há 35 min</div></div>
+          <div class="row-line-side"><b>8.500 Kz</b><a class="btn btn-wa btn-sm" href="#">WhatsApp</a></div>
+        </div>
+      </div>
+    </div>
+
+    <div class="acc">
+      <button class="acc-head">
+        <span class="acc-name">Cápsulas</span>
+        <span class="acc-count">1 medicamento</span>
+        <svg class="acc-x" viewBox="0 0 24 24"><path d="M12 5v14M5 12h14"/></svg>
+      </button>
+      <div class="acc-body">
+        <div class="row-line">
+          <div><div class="row-line-name">Amoxicilina<span class="rx">Receita</span></div><div class="row-line-meta">500 mg · confirmado há 5 h</div></div>
+          <div class="row-line-side"><b>4.500 Kz</b><a class="btn btn-wa btn-sm" href="#">WhatsApp</a></div>
+        </div>
+      </div>
+    </div>
+    </div>
+
+    <div style="height:4rem"></div>
+  </div>
+</section>
+</main>
+
+<script>
+// Acordeões: abrir/fechar ao clicar no cabeçalho
+document.querySelectorAll('.acc-head').forEach(function(b){
+  b.addEventListener('click', function(){ b.closest('.acc').classList.toggle('open') })
+})
+// Chips de município: apenas um activo por grupo (demo de interacção)
+document.querySelectorAll('.chips').forEach(function(g){
+  g.querySelectorAll('.chip').forEach(function(c){
+    c.addEventListener('click', function(){
+      g.querySelectorAll('.chip').forEach(function(x){ x.classList.remove('on') })
+      c.classList.add('on')
+    })
+  })
+})
+</script>
+</body>
+</html>

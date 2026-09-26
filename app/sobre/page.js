@@ -1,5 +1,5 @@
 import AppHeader from '@/components/layout/AppHeader'
-import Footer from '@/components/layout/Footer'
+import AppFooter from '@/components/layout/AppFooter'
 import Link from 'next/link'
 
 // Página "por baixo dos panos": fora do índice do Google até ao lançamento.
@@ -113,7 +113,7 @@ export default function SobrePage() {
           </Link>
         </section>
       </main>
-      <Footer />
+      <AppFooter />
     </>
   )
 }

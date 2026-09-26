@@ -1,24 +1,24 @@
 import { Suspense } from 'react'
 import { headers } from 'next/headers'
-import { Inter, Fraunces } from 'next/font/google'
+// Fontes self-hosted (fontsource): o next/font/google baixava as fontes em
+// cada build e ficava preso sem rede — agora o build é 100% offline.
+import '@fontsource-variable/inter'
+import '@fontsource-variable/fraunces'
+import '@fontsource-variable/fraunces/full-italic.css'
 import { Analytics } from '@vercel/analytics/next'
 import { SpeedInsights } from '@vercel/speed-insights/next'
 import ThemeProvider from '@/components/providers/ThemeProvider'
 import '@/styles/globals.css'
 
-const inter = Inter({
-  subsets: ['latin'],
-  display: 'swap',
-  adjustFontFallback: true,
+const inter = {
   variable: '--font-inter',
-})
+  style: { fontFamily: 'Inter Variable, ui-sans-serif, system-ui, sans-serif' },
+}
 
-const fraunces = Fraunces({
-  subsets: ['latin'],
-  display: 'swap',
-  adjustFontFallback: true,
+const fraunces = {
   variable: '--font-fraunces',
-})
+  style: { fontFamily: 'Fraunces Variable, Georgia, serif' },
+}
 
 export const metadata = {
   metadataBase: new URL('https://localizador.conhecafarmacia.com'),
@@ -71,7 +71,7 @@ export default async function RootLayout({ children }) {
           }}
         />
       </head>
-      <body className={inter.className}>
+      <body>
         <ThemeProvider>
           <Suspense fallback={null}>{children}</Suspense>
           <Analytics />

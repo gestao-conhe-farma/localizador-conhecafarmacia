@@ -1,0 +1,347 @@
+<!DOCTYPE html>
+<html lang="pt">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Modelo B — Monólito Verde · Pesquisa + Farmácias + Detalhe</title>
+<!--
+  MODELO B — MONÓLITO VERDE
+  Assunções:
+  · A MARCA É O FUNDO: o verde profundo #00493a domina (header, hero,
+    blocos críticos, footer), o conteúdo flutua em cartões brancos sólidos.
+  · Mais "loja": header tipo loja, estatísticas em barra escura, cartões
+    grandes arredondados, tudo sem bordas — separação por contraste.
+  · O verde traz identidade imediata (mesma paleta do principal).
+-->
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&family=Fraunces:opsz,wght@9..144,600;9..144,700&display=swap" rel="stylesheet">
+<style>
+:root{
+  --primary:#00493a; --primary-2:#003529; --accent:#0a844f; --deep:#002a32;
+  --bg:#f4f6f5; --card:#ffffff; --divider:#e7ebe9;
+}
+*{margin:0;padding:0;box-sizing:border-box}
+body{font-family:'Inter',system-ui,sans-serif;background:var(--bg);color:var(--deep)}
+a{text-decoration:none;color:inherit}
+.container{max-width:68rem;margin:0 auto;padding:0 1.5rem}
+.page-label{position:sticky;top:0;z-index:60;background:var(--deep);color:#fff;font-size:.68rem;font-weight:700;letter-spacing:.18em;text-transform:uppercase;padding:8px 24px;display:flex;justify-content:center}
+
+/* Header verde monólito */
+.hdr{position:sticky;top:32px;z-index:50;background:var(--primary);color:#fff}
+.hdr-in{max-width:68rem;margin:0 auto;padding:0 1.5rem;height:68px;display:flex;align-items:center;justify-content:space-between;gap:1rem}
+.hdr-logo{display:flex;align-items:center;gap:10px}
+.hdr-logo img{height:36px}
+.hdr-logo b{font-size:.82rem;letter-spacing:.06em;text-transform:uppercase;color:#7fd4ab;border-left:1px solid rgba(255,255,255,.25);padding-left:10px}
+.hdr-nav{display:flex;gap:4px;background:rgba(255,255,255,.08);padding:5px;border-radius:999px}
+.hdr-nav a{padding:8px 20px;border-radius:999px;font-size:.88rem;font-weight:600;color:rgba(255,255,255,.75)}
+.hdr-nav a.on{background:#fff;color:var(--primary)}
+@media(max-width:820px){.hdr-nav{display:none}}
+.pill-btn{width:42px;height:42px;border-radius:999px;border:none;background:rgba(255,255,255,.12);display:grid;place-items:center;cursor:pointer;color:#fff}
+.pill-btn svg{width:18px;height:18px;fill:none;stroke:currentColor;stroke-width:2;stroke-linecap:round}
+
+/* ===== P1 · PESQUISA ===== */
+.hero{background:linear-gradient(180deg,var(--primary) 0%,var(--primary-2) 100%);color:#fff;padding:4.5rem 0 7rem;text-align:center;position:relative}
+.hero::after{content:'';position:absolute;left:0;right:0;bottom:-44px;height:44px;background:var(--bg);border-radius:44px 44px 0 0}
+.hero h1{font-family:'Fraunces',serif;font-size:clamp(2.4rem,6vw,4rem);font-weight:700;letter-spacing:-.02em;line-height:1.04}
+.hero h1 em{font-style:normal;color:#7fd4ab}
+.hero p{color:rgba(255,255,255,.7);margin-top:1rem;font-size:1.02rem}
+.mega{max-width:760px;margin:2.4rem auto 0;background:#fff;border-radius:999px;display:flex;align-items:center;padding:8px 8px 8px 26px;gap:12px;box-shadow:0 18px 50px rgba(0,0,0,.25)}
+.mega svg{width:22px;height:22px;fill:none;stroke:rgba(0,42,50,.35);stroke-width:2;flex-shrink:0}
+.mega input{flex:1;border:none;outline:none;font-size:1.05rem;font-family:inherit;background:transparent;color:var(--deep)}
+.mega button{background:var(--accent);color:#fff;border:none;border-radius:999px;padding:14px 30px;font-size:.95rem;font-weight:700;font-family:inherit;cursor:pointer}
+.chips{display:flex;gap:10px;justify-content:center;flex-wrap:wrap;margin-top:1.8rem;position:relative;z-index:1}
+.chip{padding:10px 22px;border-radius:999px;font-size:.85rem;font-weight:600;border:none;background:rgba(255,255,255,.12);color:rgba(255,255,255,.85);cursor:pointer}
+.chip.on{background:#fff;color:var(--primary)}
+.stats{margin-top:1.5rem;display:flex;justify-content:center;gap:2.5rem;flex-wrap:wrap;color:rgba(255,255,255,.85);font-size:.85rem}
+.stats b{color:#7fd4ab;font-size:1.15rem;margin-right:5px}
+
+/* Resultados */
+.results{padding:3rem 0 5rem}
+.r-head{font-size:.8rem;font-weight:700;letter-spacing:.1em;text-transform:uppercase;color:rgba(0,42,50,.45);margin-bottom:1.4rem}
+.drug-block{margin-bottom:2.5rem}
+.drug-title{font-family:'Fraunces',serif;font-size:1.65rem;font-weight:700}
+.drug-sub{color:rgba(0,42,50,.5);font-size:.85rem;margin:.2rem 0 1rem}
+.ph-tile{background:var(--card);border-radius:22px;padding:20px 24px;display:flex;flex-wrap:wrap;align-items:center;gap:14px;margin-bottom:12px;box-shadow:0 4px 24px rgba(0,42,50,.06)}
+.fresh{display:inline-flex;align-items:center;gap:6px;font-size:.72rem;font-weight:700;color:var(--accent)}
+.fresh i{width:7px;height:7px;border-radius:99px;background:var(--accent)}
+.price{font-size:1.05rem;font-weight:800}
+.btn{display:inline-flex;align-items:center;gap:7px;padding:11px 20px;border-radius:999px;font-size:.86rem;font-weight:700;cursor:pointer;border:none}
+.btn-dark{background:var(--deep);color:#fff}
+.btn-wa{background:#25d366;color:#fff}
+.ph-tile-name{font-weight:700}
+.ph-tile-addr{font-size:.82rem;color:rgba(0,42,50,.5);margin-top:2px}
+
+/* ===== P2 · FARMÁCIAS ===== */
+.p2{padding-top:4rem}
+.ph-grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(300px,1fr));gap:18px;padding:2.5rem 0 5rem}
+.ph-card{background:var(--card);border-radius:24px;padding:26px;display:flex;flex-direction:column;gap:14px;box-shadow:0 4px 24px rgba(0,42,50,.06)}
+.ph-card:hover{transform:translateY(-3px);box-shadow:0 14px 40px rgba(0,42,50,.1)}
+.ph-card-top{display:flex;justify-content:space-between;align-items:flex-start;gap:10px}
+.ph-card-name{font-family:'Fraunces',serif;font-size:1.15rem;font-weight:700;line-height:1.2}
+.tag{font-size:.62rem;font-weight:800;letter-spacing:.08em;text-transform:uppercase;padding:5px 11px;border-radius:99px;background:rgba(10,132,79,.1);color:var(--accent)}
+.ph-card-loc{font-size:.86rem;color:rgba(0,42,50,.55);flex:1}
+.ph-card-foot{display:flex;justify-content:space-between;align-items:center;padding-top:12px;border-top:1px solid var(--divider)}
+.count{font-size:.8rem;font-weight:700;color:var(--primary)}
+.mini{display:flex;gap:8px}
+.mini a{width:36px;height:36px;border-radius:99px;display:grid;place-items:center}
+.mini svg{width:15px;height:15px;fill:none;stroke:currentColor;stroke-width:2;stroke-linecap:round}
+.mini-call{background:var(--bg);color:var(--primary)}
+.mini-wa{background:#25d366;color:#fff}
+
+/* ===== P3 · DETALHE ===== */
+.d-hero{background:var(--primary);color:#fff;padding:3.5rem 0 6.5rem;position:relative}
+.d-hero::after{content:'';position:absolute;left:0;right:0;bottom:-40px;height:40px;background:var(--bg);border-radius:40px 40px 0 0}
+.d-crumb{font-size:.8rem;color:rgba(255,255,255,.55);margin-bottom:1.3rem}
+.d-crumb b{color:#fff}
+.d-name{font-family:'Fraunces',serif;font-size:clamp(1.9rem,4vw,2.7rem);font-weight:700;line-height:1.08}
+.d-loc{color:rgba(255,255,255,.7);margin-top:.7rem;font-size:.95rem}
+.d-badges{display:flex;gap:8px;flex-wrap:wrap;margin-top:1.1rem}
+.d-badge{font-size:.7rem;font-weight:800;text-transform:uppercase;letter-spacing:.05em;padding:7px 14px;border-radius:999px}
+.d-b-open{background:rgba(127,212,171,.18);color:#7fd4ab}
+.d-b-ver{background:#fff;color:var(--primary)}
+.d-b-fresh{background:rgba(255,255,255,.12);color:rgba(255,255,255,.9)}
+.d-actions{display:flex;gap:10px;flex-wrap:wrap;margin-top:1.6rem}
+.d-actions .btn{padding:13px 24px;font-size:.92rem}
+.btn-white{background:#fff;color:var(--primary)}
+/* Cartões críticos flutuando sobre o verde */
+.crit-float{display:grid;grid-template-columns:repeat(auto-fill,minmax(300px,1fr));gap:16px;margin-top:-4.5rem;position:relative;z-index:2;margin-bottom:2.5rem}
+.crit-card{background:var(--card);border-radius:22px;padding:22px 24px;box-shadow:0 16px 44px rgba(0,42,50,.14)}
+.crit-tag{display:inline-block;font-size:.6rem;font-weight:800;letter-spacing:.12em;text-transform:uppercase;background:rgba(255,108,35,.12);color:#d9531e;padding:4px 11px;border-radius:99px;margin-bottom:10px}
+.crit-card h3{font-weight:800;font-size:1.15rem}
+.crit-meta{font-size:.8rem;color:rgba(0,42,50,.55);margin:4px 0 14px}
+.crit-foot{display:flex;align-items:center;justify-content:space-between;padding-top:12px;border-top:1px solid var(--divider)}
+.crit-price{font-weight:800;font-size:1.05rem}
+.crit-fresh{font-size:.72rem;font-weight:700;color:var(--accent);display:block;margin-top:2px}
+.d-tools{display:flex;gap:12px;align-items:center;margin:0 0 1.6rem;flex-wrap:wrap}
+.d-search{flex:1;min-width:230px;display:flex;align-items:center;gap:10px;background:var(--card);border-radius:999px;box-shadow:0 4px 24px rgba(0,42,50,.08);padding:13px 22px}
+.d-search svg{width:18px;height:18px;fill:none;stroke:rgba(0,42,50,.4);stroke-width:2}
+.d-search input{flex:1;border:none;outline:none;font-family:inherit;font-size:.95rem;background:transparent}
+.acc-mono{background:var(--card);border-radius:22px;box-shadow:0 4px 24px rgba(0,42,50,.06);margin-bottom:14px;overflow:hidden}
+.acc-mono-head{width:100%;display:flex;align-items:center;gap:14px;padding:20px 24px;background:none;border:none;cursor:pointer;font-family:inherit;text-align:left}
+.acc-mono-ico{width:46px;height:46px;border-radius:99px;background:rgba(10,132,79,.1);display:grid;place-items:center;flex-shrink:0}
+.acc-mono-ico svg{width:21px;height:21px;fill:none;stroke:var(--accent);stroke-width:1.8;stroke-linecap:round;stroke-linejoin:round}
+.acc-mono-name{flex:1;font-weight:700;font-size:1.02rem}
+.acc-mono-count{font-size:.78rem;font-weight:800;color:var(--accent);background:rgba(10,132,79,.09);padding:5px 14px;border-radius:99px}
+.acc-mono-body{padding:0 24px 18px;display:none}
+.acc-mono.open .acc-mono-body{display:block}
+.row-line{display:flex;flex-wrap:wrap;align-items:center;justify-content:space-between;gap:10px;padding:13px 0;border-top:1px solid var(--divider)}
+.row-line-name{font-weight:600;font-size:.95rem}
+.rx{font-size:.58rem;font-weight:800;letter-spacing:.06em;text-transform:uppercase;background:rgba(255,108,35,.12);color:#d9531e;padding:3px 9px;border-radius:99px;margin-left:8px}
+.row-line-meta{font-size:.74rem;color:rgba(0,42,50,.5);margin-top:2px}
+.row-line-side{display:flex;align-items:center;gap:12px}
+</style>
+</head>
+<body>
+
+<div class="page-label">Modelo B · Monólito Verde — 3 páginas</div>
+
+<header class="hdr">
+  <div class="hdr-in">
+    <a class="hdr-logo" href="#">
+      <img src="../../public/logo/3.png" alt="Conheça Farmácia"><b>Localizador</b>
+    </a>
+    <nav class="hdr-nav">
+      <a class="on" href="#">Pesquisar</a><a href="#">Farmácias</a><a href="#">Sobre</a>
+    </nav>
+    <button class="pill-btn"><svg viewBox="0 0 24 24"><path d="M21 12.8A9 9 0 1 1 11.2 3 7 7 0 0 0 21 12.8z"/></svg></button>
+  </div>
+</header>
+
+<!-- ===== P1 · PESQUISA ===== -->
+<main>
+<section>
+  <div class="hero">
+    <div class="container">
+      <h1>Que medicamento<br>procura <em>hoje</em>?</h1>
+      <p>Stock confirmado por farmácias de Luanda nas últimas 72 horas.</p>
+      <div class="mega">
+        <svg viewBox="0 0 24 24"><circle cx="11" cy="11" r="8"/><line x1="21" y1="21" x2="16.65" y2="16.65"/></svg>
+        <input placeholder="Insulina, carbamazepina, salbutamol…">
+        <button>Pesquisar</button>
+      </div>
+      <div class="chips">
+        <button class="chip on">Todos</button><button class="chip">Belas</button><button class="chip">Cazenga</button><button class="chip">Luanda</button><button class="chip">Talatona</button><button class="chip">Viana</button>
+      </div>
+      <div class="stats">
+        <span><b>6</b>farmácias</span>
+        <span><b>22</b>medicamentos confirmados</span>
+        <span><b>72 h</b>garantia de frescura</span>
+      </div>
+    </div>
+  </div>
+
+  <div class="container results">
+    <p class="r-head">Resultados · 2 medicamentos · 5 farmácias</p>
+    <div class="drug-block">
+      <h2 class="drug-title">Insulina NPH</h2>
+      <p class="drug-sub">Injetável · 100 UI/ml · receita médica</p>
+      <div class="ph-tile">
+        <div style="flex:1;min-width:200px">
+          <div class="ph-tile-name">Farmácia Nossa Senhora da Muxima</div>
+          <div class="ph-tile-addr">Luanda · Ingombota · <span class="fresh"><i></i>há 35 min</span></div>
+        </div>
+        <span class="price">8.500 Kz</span>
+        <a class="btn btn-dark">Ligar</a>
+        <a class="btn btn-wa">WhatsApp</a>
+      </div>
+      <div class="ph-tile">
+        <div style="flex:1;min-width:200px">
+          <div class="ph-tile-name">Farmácia do Hospital Central</div>
+          <div class="ph-tile-addr">Luanda · Av. 4 de Fevereiro · <span class="fresh"><i></i>há 1 h</span></div>
+        </div>
+        <span class="price">8.200 Kz</span>
+        <a class="btn btn-dark">Ligar</a>
+        <a class="btn btn-wa">WhatsApp</a>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- ===== P2 · FARMÁCIAS ===== -->
+<section class="p2">
+  <div class="page-label" style="position:static;background:var(--accent)">Página 2 · Farmácias</div>
+  <div class="container">
+    <div style="text-align:center;padding:3rem 0 0">
+      <h1 style="font-family:'Fraunces',serif;font-size:clamp(2rem,5vw,3rem);letter-spacing:-.02em">Farmácias parceiras</h1>
+      <p style="color:rgba(0,42,50,.55);margin-top:.8rem">Todas confirmam o stock — o que expira, sai do ar.</p>
+      <div class="chips" style="margin-top:1.5rem">
+        <button class="chip on" style="background:var(--primary);color:#fff">Todos</button>
+        <button class="chip" style="background:#fff;color:var(--deep)">Luanda</button>
+        <button class="chip" style="background:#fff;color:var(--deep)">Viana</button>
+        <button class="chip" style="background:#fff;color:var(--deep)">Talatona</button>
+      </div>
+    </div>
+  </div>
+  <div class="container">
+    <div class="ph-grid">
+      <article class="ph-card">
+        <div class="ph-card-top">
+          <h3 class="ph-card-name">Farmácia Nossa Senhora da Muxima</h3>
+          <span class="tag">Verificada</span>
+        </div>
+        <p class="ph-card-loc">Luanda · Rua Amílcar Cabral, nº 45</p>
+        <div class="ph-card-foot">
+          <span class="count">4 medicamentos agora</span>
+          <span class="mini">
+            <a class="mini-call"><svg viewBox="0 0 24 24"><path d="M22 16.9v3a2 2 0 01-2.2 2 19.8 19.8 0 01-8.6-3 19.5 19.5 0 01-6-6 19.8 19.8 0 01-3-8.7A2 2 0 014.1 2h3a2 2 0 012 1.7c.1 1 .4 2 .7 2.9a2 2 0 01-.5 2.1L8.1 10a16 16 0 006 6l1.3-1.2a2 2 0 012.1-.5c.9.3 1.9.6 2.9.7a2 2 0 011.6 1.9z"/></svg></a>
+            <a class="mini-wa"><svg viewBox="0 0 24 24"><path d="M21 11.5a8.5 8.5 0 01-12.7 7.4L3 21l2.1-5.3A8.5 8.5 0 1121 11.5z"/></svg></a>
+          </span>
+        </div>
+      </article>
+      <article class="ph-card">
+        <div class="ph-card-top">
+          <h3 class="ph-card-name">Farmácia Vida Nova</h3>
+          <span class="tag">Verificada</span>
+        </div>
+        <p class="ph-card-loc">Viana · Rua da Missão, nº 210</p>
+        <div class="ph-card-foot">
+          <span class="count">4 medicamentos agora</span>
+          <span class="mini">
+            <a class="mini-call"><svg viewBox="0 0 24 24"><path d="M22 16.9v3a2 2 0 01-2.2 2 19.8 19.8 0 01-8.6-3 19.5 19.5 0 01-6-6 19.8 19.8 0 01-3-8.7A2 2 0 014.1 2h3a2 2 0 012 1.7c.1 1 .4 2 .7 2.9a2 2 0 01-.5 2.1L8.1 10a16 16 0 006 6l1.3-1.2a2 2 0 012.1-.5c.9.3 1.9.6 2.9.7a2 2 0 011.6 1.9z"/></svg></a>
+            <a class="mini-wa"><svg viewBox="0 0 24 24"><path d="M21 11.5a8.5 8.5 0 01-12.7 7.4L3 21l2.1-5.3A8.5 8.5 0 1121 11.5z"/></svg></a>
+          </span>
+        </div>
+      </article>
+      <article class="ph-card">
+        <div class="ph-card-top">
+          <h3 class="ph-card-name">Farmácia Quirimbambas</h3>
+        </div>
+        <p class="ph-card-loc">Talatona · Via S8</p>
+        <div class="ph-card-foot">
+          <span class="count">3 medicamentos agora</span>
+          <span class="mini">
+            <a class="mini-call"><svg viewBox="0 0 24 24"><path d="M22 16.9v3a2 2 0 01-2.2 2 19.8 19.8 0 01-8.6-3 19.5 19.5 0 01-6-6 19.8 19.8 0 01-3-8.7A2 2 0 014.1 2h3a2 2 0 012 1.7c.1 1 .4 2 .7 2.9a2 2 0 01-.5 2.1L8.1 10a16 16 0 006 6l1.3-1.2a2 2 0 012.1-.5c.9.3 1.9.6 2.9.7a2 2 0 011.6 1.9z"/></svg></a>
+            <a class="mini-wa"><svg viewBox="0 0 24 24"><path d="M21 11.5a8.5 8.5 0 01-12.7 7.4L3 21l2.1-5.3A8.5 8.5 0 1121 11.5z"/></svg></a>
+          </span>
+        </div>
+      </article>
+    </div>
+  </div>
+</section>
+
+<!-- ===== P3 · DETALHE ===== -->
+<section>
+  <div class="page-label" style="position:static;background:var(--primary)">Página 3 · Detalhe da farmácia</div>
+  <div class="d-hero">
+    <div class="container">
+      <p class="d-crumb"><b>Pesquisa</b> › Insulina NPH › <b>Farmácia</b></p>
+      <h1 class="d-name">Farmácia Nossa Senhora da Muxima</h1>
+      <p class="d-loc">Luanda · Rua Amílcar Cabral, nº 45, Ingombota · Seg–Sáb 07:30–19:00</p>
+      <div class="d-badges">
+        <span class="d-badge d-b-ver">✓ Verificada</span>
+        <span class="d-badge d-b-open">Aberto agora · fecha às 19:00</span>
+        <span class="d-badge d-b-fresh">Última confirmação há 35 min</span>
+      </div>
+      <div class="d-actions">
+        <a class="btn btn-white">Ligar: +244 923 111 405</a>
+        <a class="btn" style="background:rgba(255,255,255,.14);color:#fff">Google Maps</a>
+        <a class="btn btn-wa">WhatsApp</a>
+      </div>
+    </div>
+  </div>
+
+  <div class="container">
+    <!-- Críticos flutuando sobre o verde -->
+    <div class="crit-float">
+      <div class="crit-card">
+        <span class="crit-tag">Crítico · prioridade máxima</span>
+        <h3>Insulina NPH</h3>
+        <p class="crit-meta">Injetável · 100 UI/ml · receita médica</p>
+        <div class="crit-foot">
+          <div><span class="crit-price">8.500 Kz</span><span class="crit-fresh">confirmado há 35 min</span></div>
+          <a class="btn btn-wa">WhatsApp</a>
+        </div>
+      </div>
+    </div>
+
+    <div class="d-tools">
+      <div class="d-search">
+        <svg viewBox="0 0 24 24"><circle cx="11" cy="11" r="8"/><line x1="21" y1="21" x2="16.65" y2="16.65"/></svg>
+        <input placeholder="Pesquisar dentro desta farmácia…">
+      </div>
+    </div>
+
+    <div class="acc-mono open">
+      <button class="acc-mono-head">
+        <span class="acc-mono-ico"><svg viewBox="0 0 24 24"><rect x="4" y="8" width="16" height="8" rx="4"/><line x1="12" y1="8" x2="12" y2="16" opacity=".4"/></svg></span>
+        <span class="acc-mono-name">Comprimidos</span>
+        <span class="acc-mono-count">2</span>
+      </button>
+      <div class="acc-mono-body">
+        <div class="row-line">
+          <div><div class="row-line-name">Paracetamol</div><div class="row-line-meta">500 mg · confirmado há 2 h</div></div>
+          <div class="row-line-side"><b>500 Kz</b><a class="btn btn-wa" style="padding:9px 16px;font-size:.8rem">WhatsApp</a></div>
+        </div>
+        <div class="row-line">
+          <div><div class="row-line-name">Losartana<span class="rx">Receita</span></div><div class="row-line-meta">50 mg · confirmado há 26 h</div></div>
+          <div class="row-line-side"><b>3.500 Kz</b><a class="btn btn-wa" style="padding:9px 16px;font-size:.8rem">WhatsApp</a></div>
+        </div>
+      </div>
+    </div>
+
+    <div class="acc-mono">
+      <button class="acc-mono-head" onclick="this.parentElement.classList.toggle('open')">
+        <span class="acc-mono-ico"><svg viewBox="0 0 24 24"><path d="M9 3h6v4l2 3v10a1 1 0 01-1 1H8a1 1 0 01-1-1V10l2-3z"/></svg></span>
+        <span class="acc-mono-name">Injetáveis</span>
+        <span class="acc-mono-count">1</span>
+      </button>
+      <div class="acc-mono-body">
+        <div class="row-line">
+          <div><div class="row-line-name">Insulina NPH<span class="rx">Receita</span></div><div class="row-line-meta">100 UI/ml · há 35 min</div></div>
+          <div class="row-line-side"><b>8.500 Kz</b><a class="btn btn-wa" style="padding:9px 16px;font-size:.8rem">WhatsApp</a></div>
+        </div>
+      </div>
+    </div>
+
+    <div style="height:4rem"></div>
+  </div>
+</section>
+</main>
+
+<script>
+document.querySelectorAll('.acc-mono-head').forEach(b => {
+  if (!b.hasAttribute('onclick')) b.addEventListener('click', () => b.parentElement.classList.toggle('open'))
+})
+</script>
+</body>
+</html>

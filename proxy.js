@@ -11,6 +11,13 @@ import { NextResponse } from 'next/server'
  * (conheca-farmacia-NEXT/proxy.js).
  */
 export async function proxy(request) {
+  // Server Actions (POST — login, guardamentos do portal): responder SEM
+  // reconstruir o request nem anexar headers. O NextResponse.next({ request })
+  // abaixo podia deixar cair o Set-Cookie da action — e é nele que vivem as
+  // cookies de sessão do Supabase. A CSP/nonce só importa em documentos
+  // renderizados (GET).
+  if (request.method !== 'GET') return NextResponse.next()
+
   // Nonce por pedido: o layout injecta-o no script inline anti-FOUC e a CSP
   // só confia em scripts que o transportem. Sem 'unsafe-inline' nem
   // 'unsafe-eval' em script-src.
@@ -48,7 +55,5 @@ export async function proxy(request) {
 }
 
 export const config = {
-  matcher: [
-    '/((?!_next/static|_next/image|favicon.ico|.*\\.(?:svg|png|jpg|jpeg|gif|webp)$).*)',
-  ],
+  matcher: ['/((?!_next/static|_next/image|favicon.ico|.*\\.(?:svg|png|jpg|jpeg|gif|webp)$).*)'],
 }

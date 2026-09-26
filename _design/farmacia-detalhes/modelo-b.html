@@ -1,0 +1,252 @@
+<!DOCTYPE html>
+<html lang="pt">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Modelo B — Accordions · Detalhes da Farmácia</title>
+<!--
+  MODELO B — ACCORDIONS POR FORMA
+  Assunções:
+  · Mesmo hero do A, mas os medicamentos agrupam-se em secções expansíveis
+    por forma farmacêutica (Comprimidos · Injetáveis · Cápsulas · Inaladores).
+  · Cada secção mostra contagem + pesquisa filtra dentro das secções abertas.
+  · Primeira secção aberta por defeito; abrir/fechar animado.
+-->
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&family=Fraunces:opsz,wght@9..144,600;9..144,700&display=swap" rel="stylesheet">
+<style>
+:root{
+  --primary:#00493a; --accent:#0a844f; --deep:#002a32;
+  --bg:#ffffff; --bg-alt:#f9f9f9; --card:#ffffff; --divider:#dddddd;
+  --shadow:0 4px 20px rgba(0,42,50,.05);
+}
+*{margin:0;padding:0;box-sizing:border-box}
+body{font-family:'Inter',system-ui,sans-serif;background:var(--bg);color:var(--deep)}
+a{text-decoration:none;color:inherit}
+.container{max-width:56rem;margin:0 auto;padding:0 1.5rem}
+
+.app-header{position:sticky;top:0;z-index:50;background:rgba(255,255,255,.9);backdrop-filter:blur(10px);border-bottom:1px solid rgba(221,221,221,.6)}
+.app-header-inner{max-width:64rem;margin:0 auto;padding:0 1.5rem;height:64px;display:flex;align-items:center;gap:1.5rem}
+.logo{display:flex;align-items:center;gap:10px}
+.logo img{height:34px;width:auto}
+.logo span{font-size:.8rem;font-weight:700;text-transform:uppercase;letter-spacing:.05em;color:var(--accent);border-left:2px solid var(--divider);padding-left:10px}
+.header-nav{display:flex;gap:4px;flex:1;justify-content:center}
+.header-nav a{padding:8px 14px;border-radius:8px;font-size:.875rem;font-weight:500;color:rgba(0,42,50,.7)}
+.header-nav a.active{color:var(--primary);background:rgba(10,132,79,.1);font-weight:600}
+@media(max-width:767px){.header-nav{display:none}}
+
+.ph-hero{background:var(--bg-alt);border-bottom:1px solid rgba(221,221,221,.4);padding:2rem 0}
+.ph-hero-top{display:flex;flex-wrap:wrap;align-items:flex-start;justify-content:space-between;gap:1.25rem}
+.ph-name{font-family:'Fraunces',Georgia,serif;font-size:1.9rem;font-weight:700;line-height:1.15;margin-bottom:.4rem}
+.ph-loc{color:rgba(0,42,50,.6);font-size:.95rem}
+.ph-badges{display:flex;flex-wrap:wrap;gap:.5rem;align-items:center}
+.badge{display:inline-flex;align-items:center;gap:6px;font-size:.72rem;font-weight:700;text-transform:uppercase;letter-spacing:.04em;padding:6px 12px;border-radius:999px}
+.badge-verified{background:rgba(10,132,79,.12);color:var(--accent)}
+.badge-open{background:rgba(10,132,79,.14);color:#0b6e44}
+.badge-fresh{background:rgba(10,132,79,.1);color:var(--accent)}
+.dot{width:7px;height:7px;border-radius:999px;background:currentColor;box-shadow:0 0 0 3px rgba(10,132,79,.15)}
+.ph-actions{display:flex;flex-wrap:wrap;gap:.6rem;margin-top:1.25rem}
+.btn{display:inline-flex;align-items:center;gap:8px;padding:10px 18px;border-radius:12px;font-size:.9rem;font-weight:600;border:2px solid transparent;cursor:pointer;transition:all .2s}
+.btn-primary{background:var(--primary);color:#fff}
+.btn-outline{border-color:var(--primary);color:var(--primary)}
+.btn-outline:hover{background:rgba(0,73,58,.08)}
+.btn-wa{background:#25d366;color:#fff}
+
+.list-tools{background:var(--bg);border-bottom:1px solid rgba(221,221,221,.3);padding:1.25rem 0}
+.search-box{position:relative;display:flex;align-items:center;background:var(--card);border:2px solid var(--divider);border-radius:16px;box-shadow:var(--shadow)}
+.search-box:focus-within{border-color:var(--accent);box-shadow:0 0 0 4px rgba(10,132,79,.12)}
+.search-box svg{width:20px;height:20px;fill:none;stroke:rgba(0,42,50,.4);stroke-width:2;stroke-linecap:round;margin-left:1.25rem}
+.search-box input{flex:1;border:none;outline:none;background:transparent;padding:14px 16px;font-size:1rem;font-family:inherit;color:var(--deep)}
+.search-count{margin-top:.75rem;font-size:.85rem;color:rgba(0,42,50,.6)}
+
+/* ACCORDIONS */
+.accordions{padding:2.5rem 0 0}
+.acc{background:var(--card);border:1px solid rgba(221,221,221,.4);border-radius:20px;margin-bottom:1rem;overflow:hidden;box-shadow:0 2px 12px rgba(0,42,50,.05)}
+.acc-head{width:100%;display:flex;align-items:center;gap:14px;padding:18px 24px;background:none;border:none;cursor:pointer;font-family:inherit;text-align:left}
+.acc-head:hover{background:var(--bg-alt)}
+.acc-icon{width:44px;height:44px;border-radius:12px;background:rgba(10,132,79,.1);display:grid;place-items:center;flex-shrink:0}
+.acc-icon svg{width:22px;height:22px;fill:none;stroke:var(--accent);stroke-width:1.8;stroke-linecap:round;stroke-linejoin:round}
+.acc-title{flex:1}
+.acc-name{font-weight:700;font-size:1.05rem}
+.acc-sub{font-size:.78rem;color:rgba(0,42,50,.5);margin-top:2px}
+.acc-count{font-size:.8rem;font-weight:700;color:var(--accent);background:rgba(10,132,79,.1);padding:4px 12px;border-radius:999px}
+.acc-chevron{width:20px;height:20px;fill:none;stroke:rgba(0,42,50,.4);stroke-width:2;stroke-linecap:round;transition:transform .3s}
+.acc.open .acc-chevron{transform:rotate(180deg)}
+.acc-body{display:none;border-top:1px solid rgba(221,221,221,.2)}
+.acc.open .acc-body{display:block}
+
+.stock-row{display:flex;flex-wrap:wrap;align-items:center;justify-content:space-between;gap:.75rem;padding:15px 24px;border-bottom:1px solid rgba(221,221,221,.15)}
+.stock-row:last-child{border-bottom:none}
+.stock-row:hover{background:var(--bg-alt)}
+.stock-name{font-weight:600;font-size:.98rem}
+.rx-badge{font-size:.62rem;font-weight:700;text-transform:uppercase;letter-spacing:.05em;padding:2px 8px;border-radius:999px;background:rgba(255,108,35,.12);color:#d9531e;vertical-align:middle;margin-left:6px}
+.stock-meta{font-size:.75rem;color:rgba(0,42,50,.5);margin-top:2px;display:flex;align-items:center;gap:8px;flex-wrap:wrap}
+.confirmed{display:inline-flex;align-items:center;gap:6px;font-size:.72rem;font-weight:600;color:var(--accent)}
+.dot{width:7px;height:7px;border-radius:999px;background:var(--accent)}
+.stock-side{display:flex;align-items:center;gap:10px;flex-wrap:wrap}
+.price{font-weight:700;font-size:.95rem}
+.btn-mini{display:inline-flex;align-items:center;gap:6px;padding:8px 14px;border-radius:10px;font-size:.82rem;font-weight:600;border:2px solid transparent;cursor:pointer}
+.btn-mini-wa{background:#25d366;color:#fff}
+.btn-mini svg{width:14px;height:14px;fill:none;stroke:currentColor;stroke-width:2;stroke-linecap:round}
+
+.cta{margin:3.5rem 0 4rem;text-align:center;padding:28px;border-radius:20px;border:1px solid rgba(221,221,221,.4);background:var(--card)}
+.cta h3{font-size:1.05rem;margin-bottom:6px}
+.cta p{font-size:.85rem;color:rgba(0,42,50,.6);margin-bottom:18px}
+
+.model-tag{position:fixed;bottom:16px;right:16px;background:var(--deep);color:#fff;font-size:.7rem;font-weight:600;letter-spacing:.1em;padding:8px 14px;border-radius:999px;opacity:.85;z-index:99}
+</style>
+</head>
+<body>
+
+<header class="app-header">
+  <div class="app-header-inner">
+    <a class="logo" href="#">
+      <img src="../../public/logo/3.png" alt="Conheça Farmácia">
+      <span>Localizador</span>
+    </a>
+    <nav class="header-nav">
+      <a href="#">Pesquisar</a><a class="active" href="#">Farmácias</a><a href="#">Sobre</a>
+    </nav>
+  </div>
+</header>
+
+<main>
+  <!-- HERO (igual ao A) -->
+  <section class="ph-hero">
+    <div class="container">
+      <div class="ph-hero-top">
+        <div>
+          <h1 class="ph-name">Farmácia Nossa Senhora da Muxima</h1>
+          <p class="ph-loc">Luanda · Rua Amílcar Cabral, nº 45, Ingombota · Seg–Sáb · 07:30–19:00</p>
+        </div>
+        <div class="ph-badges">
+          <span class="badge badge-verified">✓ Verificada pela equipa</span>
+          <span class="badge badge-open"><span class="dot"></span>Aberto agora · fecha às 19:00</span>
+          <span class="badge badge-fresh"><span class="dot"></span>Stock confirmado há 35 min</span>
+        </div>
+      </div>
+      <div class="ph-actions">
+        <a class="btn btn-primary" href="#">Ligar: +244 923 111 405</a>
+        <a class="btn btn-outline" href="#">Ver no Google Maps</a>
+        <a class="btn btn-wa" href="#">WhatsApp</a>
+      </div>
+    </div>
+  </section>
+
+  <!-- PESQUISA IN-PAGE (filtra dentro das secções) -->
+  <section class="list-tools">
+    <div class="container">
+      <div class="search-box">
+        <svg viewBox="0 0 24 24"><circle cx="11" cy="11" r="8"/><line x1="21" y1="21" x2="16.65" y2="16.65"/></svg>
+        <input type="text" placeholder="Pesquisar dentro desta farmácia… (ex.: losartana)">
+      </div>
+      <p class="search-count">5 medicamentos em 3 formas farmacêuticas · stock confirmado nas últimas 72 h</p>
+    </div>
+  </section>
+
+  <!-- ACCORDIONS POR FORMA -->
+  <section class="accordions">
+    <div class="container">
+
+      <div class="acc open">
+        <button class="acc-head">
+          <span class="acc-icon"><svg viewBox="0 0 24 24"><rect x="4" y="8" width="16" height="8" rx="4"/><line x1="12" y1="8" x2="12" y2="16" opacity=".4"/></svg></span>
+          <span class="acc-title">
+            <span class="acc-name">Comprimidos</span>
+            <div class="acc-sub">Para tomar por via oral</div>
+          </span>
+          <span class="acc-count">2 disponíveis</span>
+          <svg class="acc-chevron" viewBox="0 0 24 24"><path d="M6 9l6 6 6-6"/></svg>
+        </button>
+        <div class="acc-body">
+          <div class="stock-row">
+            <div>
+              <div class="stock-name">Paracetamol</div>
+              <div class="stock-meta">500 mg · <span class="confirmed"><span class="dot"></span>há 2 h</span></div>
+            </div>
+            <div class="stock-side">
+              <span class="price">500 Kz</span>
+              <a class="btn-mini btn-mini-wa" href="#">WhatsApp</a>
+            </div>
+          </div>
+          <div class="stock-row">
+            <div>
+              <div class="stock-name">Losartana <span class="rx-badge">Receita médica</span></div>
+              <div class="stock-meta">50 mg · <span class="confirmed"><span class="dot"></span>há 26 h</span></div>
+            </div>
+            <div class="stock-side">
+              <span class="price">3.500 Kz</span>
+              <a class="btn-mini btn-mini-wa" href="#">WhatsApp</a>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <div class="acc">
+        <button class="acc-head" onclick="this.parentElement.classList.toggle('open')">
+          <span class="acc-icon"><svg viewBox="0 0 24 24"><path d="M9 3h6v4l2 3v10a1 1 0 01-1 1H8a1 1 0 01-1-1V10l2-3z"/><line x1="7" y1="14" x2="17" y2="14" opacity=".4"/></svg></span>
+          <span class="acc-title">
+            <span class="acc-name">Injetáveis</span>
+            <div class="acc-sub">Aplicação na farmácia ou em casa</div>
+          </span>
+          <span class="acc-count">1 disponível</span>
+          <svg class="acc-chevron" viewBox="0 0 24 24"><path d="M6 9l6 6 6-6"/></svg>
+        </button>
+        <div class="acc-body">
+          <div class="stock-row">
+            <div>
+              <div class="stock-name">Insulina NPH <span class="rx-badge">Receita médica</span></div>
+              <div class="stock-meta">100 UI/ml · <span class="confirmed"><span class="dot"></span>há 35 min</span></div>
+            </div>
+            <div class="stock-side">
+              <span class="price">8.500 Kz</span>
+              <a class="btn-mini btn-mini-wa" href="#">WhatsApp</a>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <div class="acc">
+        <button class="acc-head" onclick="this.parentElement.classList.toggle('open')">
+          <span class="acc-icon"><svg viewBox="0 0 24 24"><ellipse cx="12" cy="6" rx="6" ry="2.5"/><path d="M6 6v12c0 1.4 2.7 2.5 6 2.5s6-1.1 6-2.5V6"/></svg></span>
+          <span class="acc-title">
+            <span class="acc-name">Cápsulas</span>
+            <div class="acc-sub">Gelatina com pó ou líquido</div>
+          </span>
+          <span class="acc-count">1 disponível</span>
+          <svg class="acc-chevron" viewBox="0 0 24 24"><path d="M6 9l6 6 6-6"/></svg>
+        </button>
+        <div class="acc-body">
+          <div class="stock-row">
+            <div>
+              <div class="stock-name">Amoxicilina <span class="rx-badge">Receita médica</span></div>
+              <div class="stock-meta">500 mg · <span class="confirmed"><span class="dot"></span>há 5 h</span></div>
+            </div>
+            <div class="stock-side">
+              <span class="price">4.500 Kz</span>
+              <a class="btn-mini btn-mini-wa" href="#">WhatsApp</a>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <div class="cta">
+        <h3>É farmácia e quer aparecer aqui?</h3>
+        <p>Junte-se às parceiras do lançamento do Localizador — gratuitamente.</p>
+        <a class="btn btn-primary" href="#">Quero participar</a>
+      </div>
+    </div>
+  </section>
+</main>
+
+<script>
+document.querySelectorAll('.acc-head').forEach(btn => {
+  if (!btn.hasAttribute('onclick')) {
+    btn.addEventListener('click', () => btn.parentElement.classList.toggle('open'))
+  }
+})
+</script>
+
+<div class="model-tag">MODELO B · ACCORDIONS</div>
+</body>
+</html>

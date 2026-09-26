@@ -54,11 +54,20 @@ export default function MobileDrawer({ open, onClose }) {
         </button>
 
         <div className="drawer-logo">
+          {/* Logo claro no tema claro, branco no escuro (como o toggle sol/lua) */}
+          <Image
+            src="/logo/3.png"
+            alt="Conheça Farmácia"
+            width={120}
+            height={40}
+            className="drawer-logo-light"
+          />
           <Image
             src="/logo/logo-principal-branco.png"
             alt="Conheça Farmácia"
             width={120}
             height={40}
+            className="drawer-logo-dark"
           />
         </div>
 

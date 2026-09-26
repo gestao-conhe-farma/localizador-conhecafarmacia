@@ -1,5 +1,5 @@
 import AppHeader from '@/components/layout/AppHeader'
-import Footer from '@/components/layout/Footer'
+import AppFooter from '@/components/layout/AppFooter'
 import PharmacyList from '@/components/search/PharmacyList'
 
 // Página "por baixo dos panos": fora do índice do Google até ao lançamento.
@@ -20,7 +20,7 @@ export default function FarmaciasPage() {
       <main className="search-page">
         <PharmacyList />
       </main>
-      <Footer />
+      <AppFooter />
     </>
   )
 }

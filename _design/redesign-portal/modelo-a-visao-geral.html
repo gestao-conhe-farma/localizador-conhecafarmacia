@@ -1,0 +1,336 @@
+<!DOCTYPE html>
+<!--
+  Modelo A — Visão geral (portal Conheça Farmácia)
+  Assumptions:
+  - Híbrido: top-bar creme fosca com blur (a mesma barra do site público) + sidebar verde de secções.
+  - Dashboard SEM a lista de stock: só 4 cartões-resumo + acções rápidas + reservas pendentes.
+  - "Adicionar medicamento" é acção primária aqui e no stock — nunca no fundo de uma lista.
+  - Marca integral: verde #00493a, accent #0a844f, Fraunces + Inter, flat com hairlines.
+  - Responsive: ≥921px sidebar fixa; ≤920px sidebar vira drawer (botão ☰ na top-bar).
+-->
+<html lang="pt">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Modelo A — Visão geral · Portal Conheça Farmácia</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Fraunces:opsz,wght@9..144,400..700&family=Inter:wght@400..700&display=swap" rel="stylesheet">
+<style>
+:root{
+  --primary:#00493a; --accent:#0a844f; --deep:#002a32; --bg:#fffdf9; --bg-alt:#f7f5f1;
+  --card:#ffffff; --line:#e3e0d8; --divider:#dfe4e0;
+  --red:#c0392b; --orange:#d9531e; --amber:#c47f17; --ok:#1f7a43;
+  --ink-60:rgba(0,42,50,.6); --ink-45:rgba(0,42,50,.45);
+  --serif:'Fraunces',Georgia,serif; --sans:'Inter',system-ui,-apple-system,sans-serif;
+}
+*{box-sizing:border-box;margin:0;padding:0}
+html{-webkit-text-size-adjust:100%}
+body{font-family:var(--sans);color:var(--deep);background:var(--bg-alt);font-size:14px;line-height:1.5}
+button{font-family:inherit}
+
+/* ── Top-bar ─────────────────────────────────────────── */
+.topbar{position:sticky;top:0;z-index:60;height:60px;color:var(--deep);
+  display:flex;align-items:center;gap:12px;padding:0 18px;
+  border-bottom:1px solid var(--line);
+  background:color-mix(in srgb, var(--bg) 86%, transparent);
+  backdrop-filter:blur(14px) saturate(1.5);-webkit-backdrop-filter:blur(14px) saturate(1.5)}
+.brand{display:flex;align-items:center;gap:10px;text-decoration:none;color:var(--deep)}
+.brand-mark{width:34px;height:34px;border-radius:10px;background:var(--primary);color:#fff;
+  font-family:var(--serif);font-weight:700;font-size:15px;display:grid;place-items:center}
+.brand-name{font-weight:600;font-size:15px;letter-spacing:.01em}
+.brand-sub{font-size:11px;color:var(--ink-45);border-left:1px solid var(--line);
+  padding-left:10px;margin-left:2px}
+.menu-btn{display:none;width:38px;height:38px;border-radius:10px;border:1px solid var(--line);
+  background:transparent;color:var(--deep);font-size:17px;cursor:pointer;flex-shrink:0}
+.topbar-right{margin-left:auto;display:flex;align-items:center;gap:14px}
+.topbar-link{color:var(--ink-60);font-size:12px;text-decoration:none}
+.topbar-link:hover{color:var(--deep)}
+.user-chip{display:flex;align-items:center;gap:10px}
+.avatar{width:34px;height:34px;border-radius:50%;background:rgba(0,73,58,.08);
+  border:1px solid var(--line);color:var(--primary);font-size:12px;font-weight:700;
+  display:grid;place-items:center;flex-shrink:0}
+.user-meta{line-height:1.2}
+.user-meta b{display:block;font-size:13px;font-weight:600}
+.user-meta span{font-size:11px;color:var(--ink-60)}
+.logout{background:transparent;border:1px solid var(--line);color:var(--deep);
+  border-radius:999px;padding:6px 14px;font-size:12px;font-weight:600;cursor:pointer}
+.logout:hover{border-color:var(--deep)}
+
+/* ── Shell + sidebar ─────────────────────────────────── */
+.shell{display:flex;align-items:stretch;min-height:calc(100vh - 60px)}
+.sidebar{width:238px;flex-shrink:0;background:var(--primary);color:#fff;
+  padding:16px 12px;display:flex;flex-direction:column;gap:2px;
+  position:sticky;top:60px;height:calc(100vh - 60px);overflow:auto}
+.side-label{font-size:10px;font-weight:700;letter-spacing:.12em;text-transform:uppercase;
+  color:rgba(255,255,255,.5);padding:12px 12px 6px}
+.side-item{display:flex;align-items:center;gap:10px;padding:10px 12px;border-radius:10px;
+  color:rgba(255,255,255,.85);text-decoration:none;font-size:14px}
+.side-item svg{width:18px;height:18px;opacity:.85;flex-shrink:0}
+.side-item:hover{background:rgba(255,255,255,.09);color:#fff}
+.side-item.active{background:#fff;color:var(--primary);font-weight:600}
+.side-item.active svg{opacity:1}
+.side-badge{margin-left:auto;min-width:20px;height:20px;border-radius:999px;font-size:11px;font-weight:700;
+  display:grid;place-items:center;padding:0 6px}
+.badge-red{background:var(--red);color:#fff}
+.badge-amber{background:#fff;color:#9a630f}
+.sidebar-foot{margin-top:auto;padding:14px 12px 6px;border-top:1px solid rgba(255,255,255,.16);
+  font-size:11px;color:rgba(255,255,255,.66)}
+.sidebar-foot b{display:block;color:#fff;font-size:12px;margin-bottom:2px}
+.overlay{display:none;position:fixed;inset:0;background:rgba(0,42,50,.45);z-index:55}
+
+/* ── Conteúdo ────────────────────────────────────────── */
+.content{flex:1;padding:32px 36px 72px;min-width:0}
+.wrap{max-width:1020px;margin:0 auto}
+.hello{display:flex;align-items:flex-end;justify-content:space-between;gap:16px;flex-wrap:wrap;margin-bottom:24px}
+.hello h1{font-family:var(--serif);font-weight:600;font-size:30px;line-height:1.15;color:var(--deep)}
+.hello .date{color:var(--ink-60);font-size:13px;margin-top:4px}
+.status-pill{display:inline-flex;align-items:center;gap:7px;border-radius:999px;padding:7px 14px;
+  font-size:12.5px;font-weight:600;background:rgba(46,158,91,.12);color:var(--ok)}
+.status-pill i{width:7px;height:7px;border-radius:50%;background:var(--ok);display:inline-block}
+
+.stat-grid{display:grid;grid-template-columns:repeat(auto-fit,minmax(215px,1fr));gap:14px;margin-bottom:22px}
+.stat{background:var(--card);border:1px solid var(--line);border-radius:14px;padding:18px 18px 16px;
+  display:flex;flex-direction:column;gap:5px;text-decoration:none;color:inherit;min-width:0;
+  transition:border-color .2s,transform .2s}
+.stat:hover{border-color:var(--accent);transform:translateY(-1px)}
+.stat-k{font-size:11px;font-weight:700;letter-spacing:.1em;text-transform:uppercase;color:var(--ink-60)}
+.stat-n{font-family:var(--serif);font-size:34px;font-weight:600;line-height:1.05;color:var(--deep)}
+.stat-n.red{color:var(--red)}
+.stat-n.amber{color:var(--amber)}
+.stat-s{font-size:12px;color:var(--ink-60)}
+.bar{height:6px;border-radius:999px;background:rgba(0,73,58,.1);margin-top:6px;overflow:hidden}
+.bar i{display:block;height:100%;border-radius:999px;background:var(--accent)}
+.stat-link{font-size:12px;font-weight:600;color:var(--accent);margin-top:4px}
+.stat:hover .stat-link{text-decoration:underline}
+
+.quick{display:flex;gap:10px;flex-wrap:wrap;margin-bottom:28px}
+.btn{display:inline-flex;align-items:center;justify-content:center;gap:8px;border-radius:999px;
+  font-weight:600;font-size:14px;padding:10px 18px;border:1px solid transparent;cursor:pointer;
+  text-decoration:none;transition:filter .2s,background .2s}
+.btn-primary{background:var(--primary);color:#fff}
+.btn-primary:hover{filter:brightness(1.12)}
+.btn-ghost{background:var(--card);border-color:var(--line);color:var(--deep)}
+.btn-ghost:hover{border-color:var(--deep)}
+.btn-sm{padding:7px 13px;font-size:12.5px}
+
+.panel{background:var(--card);border:1px solid var(--line);border-radius:14px;margin-bottom:20px;overflow:hidden}
+.panel-head{display:flex;align-items:center;justify-content:space-between;gap:12px;
+  padding:16px 20px;border-bottom:1px solid var(--line)}
+.panel-h{font-family:var(--serif);font-weight:600;font-size:18px;color:var(--deep)}
+.panel-hint{font-size:12px;color:var(--ink-60)}
+.res-row{display:flex;align-items:center;justify-content:space-between;gap:14px;flex-wrap:wrap;
+  padding:14px 20px;border-bottom:1px solid var(--line)}
+.res-row:last-child{border-bottom:0}
+.res-name{font-weight:600;font-size:14px;color:var(--deep);display:flex;align-items:center;gap:8px;flex-wrap:wrap}
+.res-meta{font-size:12.5px;color:var(--ink-60);margin-top:3px}
+.res-actions{display:flex;gap:8px;flex-shrink:0}
+.tag{display:inline-block;border-radius:6px;padding:2px 7px;font-size:10.5px;font-weight:700}
+.tag-warn{background:rgba(196,127,23,.14);color:#9a630f}
+.tag-hot{background:rgba(192,57,43,.12);color:var(--red)}
+.tag-ok{background:rgba(46,158,91,.12);color:var(--ok)}
+.empty{padding:26px 20px;text-align:center;color:var(--ink-60);font-size:13px}
+.foot-note{margin-top:26px;font-size:12px;color:var(--ink-45);text-align:center}
+.foot-note a{color:var(--accent)}
+
+.toast{position:fixed;bottom:24px;left:50%;transform:translateX(-50%);background:#002a32;color:#fff;
+  border-radius:999px;padding:10px 20px;font-size:13.5px;z-index:90;opacity:0;pointer-events:none;
+  transition:opacity .25s;box-shadow:0 8px 24px rgba(0,42,50,.25)}
+.toast.show{opacity:1}
+
+/* ── Mobile ──────────────────────────────────────────── */
+@media (max-width:960px){
+  .menu-btn{display:grid;place-items:center}
+  .brand-sub{display:none}
+  .topbar-link{display:none}
+  .user-meta{display:none}
+  .logout{padding:6px 10px}
+  .sidebar{position:fixed;left:0;top:60px;bottom:0;z-index:56;transform:translateX(-105%);
+    transition:transform .25s ease;height:auto;box-shadow:14px 0 40px rgba(0,42,50,.15)}
+  .sidebar.open{transform:none}
+  .overlay.show{display:block}
+  .content{padding:22px 16px 64px}
+  .hello h1{font-size:24px}
+  .stat-n{font-size:28px}
+  .res-actions .btn{flex:1}
+  .res-row{align-items:stretch}
+}
+</style>
+</head>
+<body>
+
+<header class="topbar">
+  <button class="menu-btn" id="menuBtn" aria-label="Abrir menu">☰</button>
+  <a class="brand" href="#">
+    <span class="brand-mark">CF</span>
+    <span class="brand-name">Conheça Farmácia</span>
+    <span class="brand-sub">Portal da farmácia</span>
+  </a>
+  <div class="topbar-right">
+    <a class="topbar-link" href="#">Ver página pública ↗</a>
+    <div class="user-chip">
+      <div class="avatar">DM</div>
+      <div class="user-meta"><b>Domingos Manuel</b><span>Farmácia Sagrada Esperança · Talatona</span></div>
+    </div>
+    <button class="logout">Sair</button>
+  </div>
+</header>
+
+<div class="overlay" id="overlay"></div>
+
+<div class="shell">
+  <aside class="sidebar" id="sidebar">
+    <div class="side-label">Menu</div>
+    <a class="side-item active" href="#">
+      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M3 10.5 12 3l9 7.5"/><path d="M5 9.5V21h14V9.5"/></svg>
+      Visão geral
+    </a>
+    <a class="side-item" href="#">
+      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M12 3 2.5 20h19L12 3z"/><path d="M12 10v4"/><path d="M12 17.5h.01"/></svg>
+      Precisa de atenção
+      <span class="side-badge badge-red">4</span>
+    </a>
+    <a class="side-item" href="#">
+      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M4 8h16v12H4z"/><path d="M9 8V5h6v3"/><path d="M4 13h16"/></svg>
+      Stock
+    </a>
+    <a class="side-item" href="#">
+      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="5" width="18" height="16" rx="2"/><path d="M3 10h18"/><path d="M8 3v4M16 3v4"/></svg>
+      Reservas
+      <span class="side-badge badge-amber">3</span>
+    </a>
+    <a class="side-item" href="#">
+      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="8" r="4"/><path d="M4 21c1.5-4 4.5-6 8-6s6.5 2 8 6"/></svg>
+      Perfil da farmácia
+    </a>
+    <div class="sidebar-foot">
+      <b>Farmácia Sagrada Esperança</b>
+      ✓ Verificada · Talatona, Luanda
+    </div>
+  </aside>
+
+  <main class="content">
+    <div class="wrap">
+
+      <div class="hello">
+        <div>
+          <h1>Bom dia, Domingos</h1>
+          <p class="date">Quarta-feira, 23 de Setembro de 2026</p>
+        </div>
+        <span class="status-pill"><i></i>Aberta agora · fecha às 18h00</span>
+      </div>
+
+      <!-- 4 resumos — nada de listas compridas aqui -->
+      <div class="stat-grid">
+        <a class="stat" href="#">
+          <span class="stat-k">Precisa de atenção</span>
+          <span class="stat-n red">4</span>
+          <span class="stat-s">3 reposições após vendas · 1 validade a vencer</span>
+          <span class="stat-link">Rever agora</span>
+        </a>
+        <a class="stat" href="#">
+          <span class="stat-k">Reservas por atender</span>
+          <span class="stat-n amber">3</span>
+          <span class="stat-s">1 espera há 2h — responda em menos de 24h</span>
+          <span class="stat-link">Abrir fila</span>
+        </a>
+        <a class="stat" href="#">
+          <span class="stat-k">Stock confirmado</span>
+          <span class="stat-n">128</span>
+          <span class="stat-s">de 300 medicamentos do catálogo marcados «temos»</span>
+          <span class="bar"><i style="width:43%"></i></span>
+          <span class="stat-link">Gerir stock</span>
+        </a>
+        <a class="stat" href="#">
+          <span class="stat-k">Validades a vigiar</span>
+          <span class="stat-n amber">6</span>
+          <span class="stat-s">2 expiram em menos de 30 dias</span>
+          <span class="stat-link">Ver validades</span>
+        </a>
+      </div>
+
+      <!-- Acções rápidas — adicionar fármaco é primário, não escondido -->
+      <div class="quick">
+        <button class="btn btn-primary" onclick="toast('Formulário «Novo medicamento» abriria aqui')">+ Adicionar medicamento</button>
+        <button class="btn btn-ghost" onclick="toast('Confirmação rápida de stock abriria aqui')">Confirmar stock de hoje</button>
+        <a class="btn btn-ghost" href="#">Ver página pública ↗</a>
+      </div>
+
+      <!-- Fila curta de reservas pendentes -->
+      <section class="panel">
+        <div class="panel-head">
+          <h2 class="panel-h">Reservas por atender</h2>
+          <a class="panel-hint" href="#" style="text-decoration:none;color:var(--accent);font-weight:600">Ver todas</a>
+        </div>
+        <div id="resQueue">
+          <div class="res-row" data-id="1">
+            <div>
+              <div class="res-name">Amoxicilina 500 mg <span class="tag tag-hot">há 2h</span></div>
+              <div class="res-meta">Ana Cardoso · 923 411 208 · 2 caixas · «para criança, se possível»</div>
+            </div>
+            <div class="res-actions">
+              <button class="btn btn-primary btn-sm" onclick="act(1,'Confirmada')">Confirmar</button>
+              <button class="btn btn-ghost btn-sm" onclick="act(1,'Recusada')">Recusar</button>
+            </div>
+          </div>
+          <div class="res-row" data-id="2">
+            <div>
+              <div class="res-name">Insulina glargina caneta <span class="tag tag-warn">há 4h</span></div>
+              <div class="res-meta">Jorge Kiala · 924 118 776 · 1 embalagem</div>
+            </div>
+            <div class="res-actions">
+              <button class="btn btn-primary btn-sm" onclick="act(2,'Confirmada')">Confirmar</button>
+              <button class="btn btn-ghost btn-sm" onclick="act(2,'Recusada')">Recusar</button>
+            </div>
+          </div>
+          <div class="res-row" data-id="3">
+            <div>
+              <div class="res-name">Salbutamol inalador <span class="tag tag-warn">há 5h</span></div>
+              <div class="res-meta">Marta Domingos · 921 903 445 · 2 unidades</div>
+            </div>
+            <div class="res-actions">
+              <button class="btn btn-primary btn-sm" onclick="act(3,'Confirmada')">Confirmar</button>
+              <button class="btn btn-ghost btn-sm" onclick="act(3,'Recusada')">Recusar</button>
+            </div>
+          </div>
+          <div class="empty" id="resEmpty" hidden>Nada por atender — as novas reservas aparecem aqui e no sino.</div>
+        </div>
+      </section>
+
+      <p class="foot-note">Precisas de ajuda? <a href="#">suporte@conhecafarmacia.com</a> · O teu stock fica visível no Localizador durante 72 h após cada confirmação.</p>
+    </div>
+  </main>
+</div>
+
+<div class="toast" id="toast"></div>
+
+<script>
+// Drawer mobile
+const sidebar = document.getElementById('sidebar')
+const overlay = document.getElementById('overlay')
+document.getElementById('menuBtn').onclick = () => { sidebar.classList.add('open'); overlay.classList.add('show') }
+overlay.onclick = () => { sidebar.classList.remove('open'); overlay.classList.remove('show') }
+
+// Toast
+let toastTimer
+function toast(msg){
+  const el = document.getElementById('toast')
+  el.textContent = msg
+  el.classList.add('show')
+  clearTimeout(toastTimer)
+  toastTimer = setTimeout(() => el.classList.remove('show'), 2800)
+}
+
+// Fila de reservas: confirmação remove a linha e actualiza contadores
+function act(id, status){
+  const row = document.querySelector(`.res-row[data-id="${id}"]`)
+  if (row) row.remove()
+  const left = document.querySelectorAll('#resQueue .res-row').length
+  document.getElementById('resEmpty').hidden = left > 0
+  const bell = document.querySelectorAll('.side-badge')[1]
+  if (left > 0) bell.textContent = left; else bell.remove()
+  toast(status === 'Confirmada' ? 'Reserva confirmada — o cliente recebe a notificação.' : 'Reserva recusada.')
+}
+</script>
+</body>
+</html>

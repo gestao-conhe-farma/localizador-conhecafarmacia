@@ -29,9 +29,20 @@ export default function AppHeader() {
   // ao header, e um ancestral com transform faz os filhos position:fixed
   // ancorarem a ele — o drawer sairia voando junto com o header. Como irmão,
   // fica ancorado à viewport (como no site principal).
+  // O blur vai em estilo inline: o Lightning CSS do Turbopack estava a
+  // descartar o "backdrop-filter" padrão (emitia só o -webkit-, que Chrome/
+  // Firefox ignoram). Estilos inline bypassam o processador — funciona sempre.
+  const glass = 'blur(14px) saturate(1.5)'
+
   return (
     <>
-      <header className="app-header">
+      <header
+        className="app-header"
+        style={{
+          backdropFilter: glass,
+          WebkitBackdropFilter: glass,
+        }}
+      >
       <div className="app-header-inner">
         <Link href="/pesquisa" className="app-header-logo" aria-label="Localizador — início">
           <Image src="/logo/3.png" alt="Conheça Farmácia" width={104} height={35} priority />
@@ -39,15 +50,17 @@ export default function AppHeader() {
         </Link>
 
         <nav className="app-header-nav" aria-label="Navegação principal">
-          {NAV.map((item) => (
-            <Link
-              key={item.href}
-              href={item.href}
-              className={`app-header-link${isActive(item.href) ? ' app-header-link--active' : ''}`}
-            >
-              {item.label}
-            </Link>
-          ))}
+          <div className="pillset">
+            {NAV.map((item) => (
+              <Link
+                key={item.href}
+                href={item.href}
+                className={`app-header-link${isActive(item.href) ? ' app-header-link--active' : ''}`}
+              >
+                {item.label}
+              </Link>
+            ))}
+          </div>
         </nav>
 
         <div className="app-header-right">

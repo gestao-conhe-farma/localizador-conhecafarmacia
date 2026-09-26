@@ -127,6 +127,7 @@ export default function PortalSidebar({ pharmacyId, userName, navOpen, onClose }
   const [pending, setPending] = useState(0)
   const [pulse, setPulse] = useState(false)
   const [attention, setAttention] = useState(null)
+  const [expiry, setExpiry] = useState(0)
 
   const refreshCount = useCallback(async () => {
     const res = await getPendingReservationsCount()
@@ -148,6 +149,7 @@ export default function PortalSidebar({ pharmacyId, userName, navOpen, onClose }
       (r) => pharmacyId && getRestockAck(pharmacyId, r.drug_id),
     ).length
     setAttention(res.count - dismissed)
+    setExpiry(res.expiryCount || 0)
   }, [pharmacyId])
 
   // Contagens iniciais + em cada navegação (fallback sem realtime)
@@ -259,6 +261,14 @@ export default function PortalSidebar({ pharmacyId, userName, navOpen, onClose }
                         title={`${attention} assunto(s) para hoje`}
                       >
                         {attention}
+                      </span>
+                    )}
+                    {t.attention && expiry > 0 && (
+                      <span
+                        className="portal-nav-badge portal-nav-badge--orange"
+                        title={`${expiry} produto(s) com validade a vencer ou expirados`}
+                      >
+                        {expiry}
                       </span>
                     )}
                     {t.bell && pending > 0 && (

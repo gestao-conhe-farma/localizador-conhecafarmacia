@@ -126,6 +126,10 @@ function StockEditModal({ item, saving, onClose, onSave, onSaveOptions }) {
   const [brand, setBrand] = useState(item.brand || '')
   const [imagePath, setImagePath] = useState(item.image_path || '')
   const [uploading, setUploading] = useState(false)
+  // Mensagem de feedback do upload — LOCAL ao modal: o setToast do pai
+  // não existe aqui (o erro «setToast is not defined» era isto) e o
+  // toast do pai ficava debaixo do scrim, invisível.
+  const [fileMsg, setFileMsg] = useState('')
   // Opções de venda (0012). Sem opções registadas: começa vazio — o
   // botão "sugerir formas de venda" preenche com defaults pela forma.
   const [opts, setOpts] = useState(
@@ -287,25 +291,21 @@ function StockEditModal({ item, saving, onClose, onSave, onSaveOptions }) {
                   setUploading(false)
                   if (up.ok) {
                     setImagePath(up.path)
-                    setToast('Foto carregada — guarda para publicar.')
-                    setTimeout(() => setToast(''), 2500)
+                    setFileMsg('Foto carregada ✓ — guarda para publicar.')
                   } else {
-                    setToast(
+                    setFileMsg(
                       up.error === 'FICHEIRO_GRANDE'
-                        ? 'Imagem acima de 2 MB — comprime ou tira de novo.'
+                        ? 'Imagem acima de 2 MB — comprime ou fotografa de novo.'
                         : up.error === 'TIPO_INVALIDO'
                           ? 'Só JPEG, PNG ou WebP.'
                           : 'Não foi possível carregar a foto.',
                     )
-                    setTimeout(() => setToast(''), 3500)
                     e.target.value = ''
                   }
                 }}
               />
               {uploading && <span className="portal-hint">A carregar…</span>}
-              {!uploading && imagePath && (
-                <span className="portal-hint">Foto carregada ✓ (guarda para publicar)</span>
-              )}
+              {!uploading && fileMsg && <span className="portal-hint">{fileMsg}</span>}
             </label>
           </div>
 

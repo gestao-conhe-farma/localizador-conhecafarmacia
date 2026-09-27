@@ -888,6 +888,29 @@ html.dark .form-note {
     cursor: wait;
   }
 
+  /* Foto + tags no modal de reserva — lado a lado, a caixa que o cliente
+     vai encontrar no balcão. */
+  .res-visual {
+    @apply flex items-center gap-3;
+  }
+
+  .res-visual-img {
+    @apply rounded-lg border object-cover flex-shrink-0;
+    width: 72px;
+    height: 72px;
+    border-color: var(--color-brand-line);
+    background: #f0eee9;
+  }
+
+  .res-visual-tags {
+    @apply flex flex-col items-start gap-1.5;
+  }
+
+  .res-visual-hint {
+    @apply text-[11px] italic;
+    color: color-mix(in srgb, var(--color-brand-deep) 45%, transparent);
+  }
+
   .drug-card-meta .fresh {
     @apply font-semibold;
     color: var(--color-brand-accent);

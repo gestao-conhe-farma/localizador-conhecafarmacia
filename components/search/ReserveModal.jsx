@@ -34,6 +34,16 @@ const ORIGIN_FLAGS = {
 }
 const originFlag = (o) => ORIGIN_FLAGS[o] || '🌍'
 
+/** Placeholder SVG (data-URI) para itens sem foto — o mesmo do Localizador. */
+const drugPlaceholder = (name) => {
+  const letter = (name || '?').trim().charAt(0).toUpperCase()
+  const svg = `<svg xmlns='http://www.w3.org/2000/svg' width='72' height='72'><rect width='72' height='72' rx='12' fill='%23f0eee9'/><text x='36' y='47' font-family='Georgia,serif' font-size='32' fill='%2300493a' text-anchor='middle'>${letter}</text></svg>`
+  return `data:image/svg+xml,${svg}`
+}
+
+/** URL do bucket público — o mesmo que a view stock_confirmed expõe. */
+const supabaseUrl = process.env.NEXT_PUBLIC_SUPABASE_URL || ''
+
 /**
  * Modal de reserva do lado do cliente — o fecho do ciclo (fase 5 do
  * plano). Sucesso devolve o link de acompanhamento /reserva/[id]: é
@@ -149,16 +159,38 @@ export default function ReserveModal({ item, onClose, onCreated }) {
               em até 72 horas.
             </p>
 
-            {/* Origem/marca (0013) — o cliente confirma que é a apresentação
-                certa antes de reservar ("é o Ben-u-ron português?"). */}
-            {(item.brand || item.origin) && (
-              <div className="drug-card-origin">
-                {item.brand && <span className="origin-tag origin-tag--brand">{item.brand}</span>}
-                {item.origin && (
-                  <span className="origin-tag">
-                    {originFlag(item.origin)} {item.origin}
-                  </span>
-                )}
+            {/* Foto + origem/marca (0013) — o cliente reconhece a caixa e
+                confirma a apresentação antes de reservar. Sem foto, um
+                placeholder com a inicial (o mesmo do card do Localizador).
+                Layout lado a lado quando há qualquer ficha visual. */}
+            {(item.image_path || item.brand || item.origin) && (
+              <div className="res-visual">
+                <img
+                  src={
+                    item.image_path
+                      ? `${supabaseUrl}/storage/v1/object/public/drug-images/${item.image_path}`
+                      : drugPlaceholder(item.drug_name)
+                  }
+                  alt={
+                    item.image_path
+                      ? `Embalagem de ${item.drug_name} — ${item.pharmacy_name}`
+                      : `${item.drug_name} — sem foto da embalagem`
+                  }
+                  className="res-visual-img"
+                />
+                <div className="res-visual-tags">
+                  {item.brand && <span className="origin-tag origin-tag--brand">{item.brand}</span>}
+                  {item.origin && (
+                    <span className="origin-tag">
+                      {originFlag(item.origin)} {item.origin}
+                    </span>
+                  )}
+                  {!item.image_path && (
+                    <span className="res-visual-hint">
+                      A farmácia ainda não fotografou a caixa.
+                    </span>
+                  )}
+                </div>
               </div>
             )}
 

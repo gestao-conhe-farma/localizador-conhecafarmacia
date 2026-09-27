@@ -92,6 +92,8 @@ export default function ReservationDetailModal({
   onWhatsApp,
 }) {
   const [copied, setCopied] = useState(false)
+  // Feedback do «Copiar mensagem de contacto».
+  const [copiedMsg, setCopiedMsg] = useState(false)
   const badge = BADGES[r.status] || { label: r.status, cls: '' }
   const d = r.drugs || {}
   const opt = r.stock_sale_options
@@ -114,6 +116,28 @@ export default function ReservationDetailModal({
       setTimeout(() => setCopied(false), 2000)
     } catch (_) {
       /* clipboard indisponível — o link fica visível para copiar à mão */
+    }
+  }
+
+  /** Mensagem de contacto completa (a mesma do acompanhamento público):
+   *  reserva descrita por inteiro + link — para colar em qualquer canal. */
+  const contactMessage = [
+    `Olá! Temos a sua reserva de ${d.name || 'medicamento'} — ${r.confirmed_quantity ?? r.quantity} ${opt ? opt.unit : 'unidade'}${(r.confirmed_quantity ?? r.quantity) !== 1 ? 's' : ''}.`,
+    opt?.price != null
+      ? `Valor estimado: ${fmtKz((r.confirmed_quantity ?? r.quantity) * Number(opt.price))} (a confirmar no balcão).`
+      : '',
+    `Link da reserva: ${trackingUrl(r.id)}`,
+  ]
+    .filter(Boolean)
+    .join(' ')
+
+  const copyContact = async () => {
+    try {
+      await navigator.clipboard.writeText(contactMessage)
+      setCopiedMsg(true)
+      setTimeout(() => setCopiedMsg(false), 2500)
+    } catch (_) {
+      /* clipboard indisponível — sem feedback, o botão volta ao normal */
     }
   }
 
@@ -236,14 +260,34 @@ export default function ReservationDetailModal({
         </div>
 
         <div className="stock-modal-actions">
-          {['confirmada', 'pronta', 'recusada', 'expirada'].includes(r.status) && (
-            <button
-              type="button"
-              className="btn-mini res-wa-btn"
-              disabled={busy}
-              onClick={onWhatsApp}
-            >
-              Avisar cliente no WhatsApp
+          {/* «Avisar cliente» — mensagem por estado (confirmação/pronta),
+              nas reservas activas e também nas encerradas com telefone
+              (o atendente pode precisar de retomar o contacto). */}
+          {['pendente', 'confirmada', 'pronta', 'recusada', 'expirada'].includes(r.status) &&
+            r.requester_phone && (
+              <button
+                type="button"
+                className="btn-mini res-wa-btn"
+                disabled={busy}
+                onClick={onWhatsApp}
+              >
+                Abrir WhatsApp do cliente
+              </button>
+            )}
+          {/* Mensagem de contacto COMPLETA (a do acompanhamento): reserva
+              descrita por inteiro com link — para o atendente que prefere
+              preparar a conversa sem sair do modal. Copia para colar.
+              Só para pendentes/confirmadas: nas concluídas/recusadas não
+              faz sentido «contactar com a reserva». */}
+          {['pendente', 'confirmada', 'pronta'].includes(r.status) && r.requester_phone && (
+            <button type="button" className="btn-mini res-details-btn" onClick={copyContact}>
+              {copiedMsg ? (
+                <>
+                  <CheckIcon /> Copiada
+                </>
+              ) : (
+                'Copiar mensagem de contacto'
+              )}
             </button>
           )}
         </div>

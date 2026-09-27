@@ -9,32 +9,17 @@ import { createClient } from '@/lib/supabase/client'
 import { getRestockAck } from '@/lib/restock'
 import { logWarn } from '@/lib/log'
 import PortalLogout from '@/components/portal/PortalLogout'
-import { ChevronIcon } from '@/components/ui/Icon'
+import { ChevronIcon, CloseIcon, NavIcon } from '@/components/ui/Icon'
 
 const NAV = [
   {
     group: 'Gestão',
     items: [
-      {
-        href: '/portal',
-        label: 'Visão geral',
-        icon: (
-          <>
-            <path d="M3 10.5 12 3l9 7.5" />
-            <path d="M5 9.5V21h14V9.5" />
-          </>
-        ),
-      },
+      { href: '/portal', label: 'Visão geral', icon: 'inicio' },
       {
         href: '/portal/atencao',
         label: 'Atenção',
-        icon: (
-          <>
-            <path d="M12 3 2.5 20h19L12 3z" />
-            <path d="M12 10v4" />
-            <path d="M12 17.5h.01" />
-          </>
-        ),
+        icon: 'atencao',
         attention: true,
       },
       {
@@ -42,65 +27,23 @@ const NAV = [
         // navega para /portal/stock; a seta abre a «Entrada de stock».
         href: '/portal/stock',
         label: 'Stock',
-        icon: (
-          <>
-            <path d="M4 8h16v12H4z" />
-            <path d="M9 8V5h6v3" />
-            <path d="M4 13h16" />
-          </>
-        ),
+        icon: 'stock',
         filhos: [{ href: '/portal/entrada', label: 'Entrada de stock' }],
       },
       {
         href: '/portal/reservas',
         label: 'Reservas',
-        icon: (
-          <>
-            <rect x="3" y="5" width="18" height="16" rx="2" />
-            <path d="M3 10h18" />
-            <path d="M8 3v4M16 3v4" />
-          </>
-        ),
+        icon: 'reservas',
         bell: true,
       },
-      {
-        href: '/portal/vendas',
-        label: 'Vendas',
-        icon: (
-          <>
-            <path d="M4 20V10" />
-            <path d="M10 20V4" />
-            <path d="M16 20v-8" />
-            <path d="M22 20H2" />
-          </>
-        ),
-      },
+      { href: '/portal/vendas', label: 'Vendas', icon: 'vendas' },
     ],
   },
   {
     group: 'Farmácia',
     items: [
-      {
-        href: '/portal/perfil',
-        label: 'Perfil',
-        icon: (
-          <>
-            <circle cx="12" cy="8" r="4" />
-            <path d="M4 21c1.5-4 4.5-6 8-6s6.5 2 8 6" />
-          </>
-        ),
-      },
-      {
-        href: '/portal/ajuda',
-        label: 'Ajuda',
-        icon: (
-          <>
-            <circle cx="12" cy="12" r="9" />
-            <path d="M9.5 9a2.5 2.5 0 1 1 3.5 2.3c-.8.35-1 .95-1 1.7" />
-            <path d="M12 16.5h.01" />
-          </>
-        ),
-      },
+      { href: '/portal/perfil', label: 'Perfil', icon: 'perfil' },
+      { href: '/portal/ajuda', label: 'Ajuda', icon: 'ajuda' },
     ],
   },
 ]
@@ -122,6 +65,9 @@ function iniciais(nome) {
  * de gestão: numeração estrutural (01, 02…) à esquerda de cada item,
  * submenu com seta (chevron) que roda ao abrir, filhos indentados.
  * O grupo abre sozinho quando uma rota filha está activa.
+ *
+ * Os SVGs de navegação vivem em components/ui/Icon.jsx (NAV_ICONS) —
+ * a NAV aqui só referencia a chave.
  *
  * Contagens: realtime de `reservations` + refetch ao navegar;
  * atenção desconta as reposições dispensadas neste browser.
@@ -220,18 +166,7 @@ export default function PortalSidebar({ pharmacyId, userName, navOpen, onClose }
             aria-label="Fechar menu"
             onClick={onClose}
           >
-            <svg
-              width="16"
-              height="16"
-              viewBox="0 0 24 24"
-              fill="none"
-              stroke="currentColor"
-              strokeWidth="2"
-              strokeLinecap="round"
-              aria-hidden="true"
-            >
-              <path d="M6 6l12 12M18 6L6 18" />
-            </svg>
+            <CloseIcon size={16} />
           </button>
         </div>
 
@@ -297,17 +232,7 @@ function NavSimples({ item, num, pending, pulse, attention, expiry, onClose }) {
       onClick={onClose}
     >
       <span className="portal-nav-num">{num}</span>
-      <svg
-        viewBox="0 0 24 24"
-        fill="none"
-        stroke="currentColor"
-        strokeWidth="1.8"
-        strokeLinecap="round"
-        strokeLinejoin="round"
-        aria-hidden="true"
-      >
-        {item.icon}
-      </svg>
+      <NavIcon name={item.icon} />
       <span className="portal-nav-text">{item.label}</span>
       {item.attention && attention > 0 && (
         <span
@@ -365,17 +290,7 @@ function NavGrupo({ item, num, pathname, onClose }) {
     <div>
       <div className={`portal-nav-item${active || grupoAtivo ? ' portal-nav-item--active' : ''}`}>
         <span className="portal-nav-num">{num}</span>
-        <svg
-          viewBox="0 0 24 24"
-          fill="none"
-          stroke="currentColor"
-          strokeWidth="1.8"
-          strokeLinecap="round"
-          strokeLinejoin="round"
-          aria-hidden="true"
-        >
-          {item.icon}
-        </svg>
+        <NavIcon name={item.icon} />
         <Link href={item.href} className="portal-nav-text" onClick={onClose}>
           {item.label}
         </Link>
@@ -388,7 +303,8 @@ function NavGrupo({ item, num, pathname, onClose }) {
         >
           <ChevronIcon size={14} dir={aberto ? 'down' : 'right'} />
         </button>
-      </div>{' '}
+      </div>
+
       {/* Sempre montado — a animação de altura faz o abrir/fechar via
           max-height (grid-template-rows em CSS grid seria alternativa).
           aria-hidden esconde dos leitores de ecrã quando fechado. */}

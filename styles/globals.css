@@ -3122,7 +3122,7 @@ html.dark .form-note {
     color: color-mix(in srgb, var(--color-brand-deep) 70%, transparent);
   }
 
-  /* Bloco de contacto: WhatsApp + copiar mensagem lado a lado. */
+  /* Bloco de contacto: WhatsApp + ligar + copiar mensagem lado a lado. */
   .res-track-contact {
     @apply flex flex-wrap gap-2;
   }

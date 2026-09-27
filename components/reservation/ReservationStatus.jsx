@@ -288,7 +288,17 @@ export default function ReservationStatus({ reservationId }) {
               Falar com a {r.pharmacies?.name} no WhatsApp
             </a>
           )}
-          {/* Copiar para outro canal (SMS, chamada, email) — o texto é
+          {/* Ligar directamente — para quem prefere a chamada ao chat.
+              Usa o whatsapp se existir, senão o telefone fixo. */}
+          {waNumber && (
+            <a
+              href={`tel:${String(waNumber).replace(/[^\d+]/g, '')}`}
+              className="btn btn-secondary res-track-call"
+            >
+              Ligar
+            </a>
+          )}
+          {/* Copiar para outro canal (SMS, email) — o texto é
               o mesmo do link wa.me. Cai para textarea em browsers sem
               navigator.clipboard (HTTP puro, por ex.). */}
           <button

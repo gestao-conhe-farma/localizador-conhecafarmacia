@@ -97,6 +97,17 @@ const NAV = [
           </>
         ),
       },
+      {
+        href: '/portal/ajuda',
+        label: 'Ajuda',
+        icon: (
+          <>
+            <circle cx="12" cy="12" r="9" />
+            <path d="M9.5 9a2.5 2.5 0 1 1 3.5 2.3c-.8.35-1 .95-1 1.7" />
+            <path d="M12 16.5h.01" />
+          </>
+        ),
+      },
     ],
   },
 ]

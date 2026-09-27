@@ -9,6 +9,7 @@ import { createClient } from '@/lib/supabase/client'
 import { getRestockAck } from '@/lib/restock'
 import { logWarn } from '@/lib/log'
 import PortalLogout from '@/components/portal/PortalLogout'
+import { ChevronIcon } from '@/components/ui/Icon'
 
 const NAV = [
   {
@@ -26,7 +27,7 @@ const NAV = [
       },
       {
         href: '/portal/atencao',
-        label: 'Precisa de atenção',
+        label: 'Atenção',
         icon: (
           <>
             <path d="M12 3 2.5 20h19L12 3z" />
@@ -37,6 +38,8 @@ const NAV = [
         attention: true,
       },
       {
+        // Grupo com submenu (padrão NavLateral do gestão): o cabeçalho
+        // navega para /portal/stock; a seta abre a «Entrada de stock».
         href: '/portal/stock',
         label: 'Stock',
         icon: (
@@ -46,17 +49,7 @@ const NAV = [
             <path d="M4 13h16" />
           </>
         ),
-      },
-      {
-        href: '/portal/entrada',
-        label: 'Entrada de stock',
-        icon: (
-          <>
-            <path d="M12 21V9" />
-            <path d="m7 14 5-5 5 5" />
-            <path d="M5 3h14" />
-          </>
-        ),
+        filhos: [{ href: '/portal/entrada', label: 'Entrada de stock' }],
       },
       {
         href: '/portal/reservas',
@@ -125,13 +118,13 @@ function iniciais(nome) {
 }
 
 /**
- * Sidebar verde do portal — o mesmo logo branco do site público no topo
- * (como na plataforma de gestão) e, no fundo, o utilizador com o botão
- * de sair. A farmácia vive na top-bar; as secções ficam no meio.
+ * Sidebar verde do portal — mesmo padrão do NavLateral da plataforma
+ * de gestão: numeração estrutural (01, 02…) à esquerda de cada item,
+ * submenu com seta (chevron) que roda ao abrir, filhos indentados.
+ * O grupo abre sozinho quando uma rota filha está activa.
  *
- * Contagens: mesmas fontes das antigas tabs — realtime de `reservations`
- * (migração 0005 adicionou a tabela à publication) + refetch ao navegar
- * como fallback; atenção desconta as reposições dispensadas neste browser.
+ * Contagens: realtime de `reservations` + refetch ao navegar;
+ * atenção desconta as reposições dispensadas neste browser.
  */
 export default function PortalSidebar({ pharmacyId, userName, navOpen, onClose }) {
   const pathname = usePathname()
@@ -196,13 +189,16 @@ export default function PortalSidebar({ pharmacyId, userName, navOpen, onClose }
     }
   }, [refreshCount, refreshAttention])
 
+  // Numeração estrutural (01, 02, …) — a mesma do NavLateral do gestão.
+  const flat = NAV.flatMap((g) => g.items)
+
   return (
     <>
       {/* Véu por baixo do drawer mobile */}
       {navOpen && <div className="portal-scrim" onClick={onClose} aria-hidden="true" />}
 
       <aside className={`portal-sidebar${navOpen ? ' portal-sidebar--open' : ''}`}>
-        {/* Logo branco do site público + eyebrow, como na plataforma de gestão. */}
+        {/* Logo branco do site público + eyebrow, como no gestão. */}
         <div className="portal-side-brand">
           <div className="portal-side-brand-main">
             <Link href="/portal" className="portal-side-logo-link" aria-label="Portal — início">
@@ -244,54 +240,30 @@ export default function PortalSidebar({ pharmacyId, userName, navOpen, onClose }
             <div key={group.group} className="portal-nav-group">
               <span className="portal-nav-label">{group.group}</span>
               {group.items.map((t) => {
-                const active =
-                  pathname === t.href || (t.href !== '/portal' && pathname.startsWith(t.href + '/'))
+                // num global contínuo entre grupos (01, 02, 03…)
+                const num = String(flat.indexOf(t) + 1).padStart(2, '0')
+                if (t.filhos?.length) {
+                  return (
+                    <NavGrupo
+                      key={t.href}
+                      item={t}
+                      num={num}
+                      pathname={pathname}
+                      onClose={onClose}
+                    />
+                  )
+                }
                 return (
-                  <Link
+                  <NavSimples
                     key={t.href}
-                    href={t.href}
-                    className={`portal-nav-item${active ? ' portal-nav-item--active' : ''}`}
-                    aria-current={active ? 'page' : undefined}
-                    onClick={onClose}
-                  >
-                    <svg
-                      viewBox="0 0 24 24"
-                      fill="none"
-                      stroke="currentColor"
-                      strokeWidth="1.8"
-                      strokeLinecap="round"
-                      strokeLinejoin="round"
-                      aria-hidden="true"
-                    >
-                      {t.icon}
-                    </svg>
-                    <span className="portal-nav-text">{t.label}</span>
-                    {t.attention && attention > 0 && (
-                      <span
-                        className="portal-nav-badge portal-nav-badge--red"
-                        title={`${attention} assunto(s) para hoje`}
-                      >
-                        {attention}
-                      </span>
-                    )}
-                    {t.attention && expiry > 0 && (
-                      <span
-                        className="portal-nav-badge portal-nav-badge--orange"
-                        title={`${expiry} produto(s) com validade a vencer ou expirados`}
-                      >
-                        {expiry}
-                      </span>
-                    )}
-                    {t.bell && pending > 0 && (
-                      <span
-                        data-tour="bell"
-                        className={`portal-nav-badge portal-nav-badge--amber${pulse ? ' portal-nav-badge--pulse' : ''}`}
-                        title={`${pending} reserva(s) por atender`}
-                      >
-                        {pending}
-                      </span>
-                    )}
-                  </Link>
+                    item={t}
+                    num={num}
+                    pending={pending}
+                    pulse={pulse}
+                    attention={attention}
+                    expiry={expiry}
+                    onClose={onClose}
+                  />
                 )
               })}
             </div>
@@ -308,5 +280,126 @@ export default function PortalSidebar({ pharmacyId, userName, navOpen, onClose }
         </div>
       </aside>
     </>
+  )
+}
+
+/** Item simples — link directo com número, ícone, badges. */
+function NavSimples({ item, num, pending, pulse, attention, expiry, onClose }) {
+  const pathname = usePathname()
+  const active =
+    pathname === item.href || (item.href !== '/portal' && pathname.startsWith(item.href + '/'))
+
+  return (
+    <Link
+      href={item.href}
+      className={`portal-nav-item${active ? ' portal-nav-item--active' : ''}`}
+      aria-current={active ? 'page' : undefined}
+      onClick={onClose}
+    >
+      <span className="portal-nav-num">{num}</span>
+      <svg
+        viewBox="0 0 24 24"
+        fill="none"
+        stroke="currentColor"
+        strokeWidth="1.8"
+        strokeLinecap="round"
+        strokeLinejoin="round"
+        aria-hidden="true"
+      >
+        {item.icon}
+      </svg>
+      <span className="portal-nav-text">{item.label}</span>
+      {item.attention && attention > 0 && (
+        <span
+          className="portal-nav-badge portal-nav-badge--red"
+          title={`${attention} assunto(s) para hoje`}
+        >
+          {attention}
+        </span>
+      )}
+      {item.attention && expiry > 0 && (
+        <span
+          className="portal-nav-badge portal-nav-badge--orange"
+          title={`${expiry} produto(s) com validade a vencer ou expirados`}
+        >
+          {expiry}
+        </span>
+      )}
+      {item.bell && pending > 0 && (
+        <span
+          className={`portal-nav-badge portal-nav-badge--amber${pulse ? ' portal-nav-badge--pulse' : ''}`}
+          title={`${pending} reserva(s) por atender`}
+        >
+          {pending}
+        </span>
+      )}
+    </Link>
+  )
+}
+
+/**
+ * Item de grupo com submenu — padrão NavLateral do gestão: o cabeçalho
+ * navega para o destino principal (Stock); a seta ao lado abre/fecha
+ * os filhos (Entrada de stock). Abre sozinho quando uma rota filha
+ * está activa e nunca fecha sozinho ao navegar dentro dele.
+ */
+function NavGrupo({ item, num, pathname, onClose }) {
+  const grupoAtivo = item.filhos.some((f) => pathname.startsWith(f.href))
+  const [aberto, setAberto] = useState(grupoAtivo)
+
+  useEffect(() => {
+    if (grupoAtivo) setAberto(true)
+  }, [grupoAtivo])
+
+  const active = pathname === item.href || pathname.startsWith(item.href + '/')
+
+  return (
+    <div>
+      <div className={`portal-nav-item${active || grupoAtivo ? ' portal-nav-item--active' : ''}`}>
+        <span className="portal-nav-num">{num}</span>
+        <svg
+          viewBox="0 0 24 24"
+          fill="none"
+          stroke="currentColor"
+          strokeWidth="1.8"
+          strokeLinecap="round"
+          strokeLinejoin="round"
+          aria-hidden="true"
+        >
+          {item.icon}
+        </svg>
+        <Link href={item.href} className="portal-nav-text" onClick={onClose}>
+          {item.label}
+        </Link>
+        <button
+          type="button"
+          className="portal-nav-toggle"
+          onClick={() => setAberto((a) => !a)}
+          aria-expanded={aberto}
+          aria-label={aberto ? `Fechar submenu de ${item.label}` : `Abrir submenu de ${item.label}`}
+        >
+          <ChevronIcon size={14} dir={aberto ? 'down' : 'right'} />
+        </button>
+      </div>
+
+      {aberto && (
+        <div className="portal-nav-sub">
+          {item.filhos.map((f) => {
+            const subAtivo = pathname === f.href || pathname.startsWith(f.href + '/')
+            return (
+              <Link
+                key={f.href}
+                href={f.href}
+                className={`portal-nav-subitem${subAtivo ? ' portal-nav-subitem--active' : ''}`}
+                aria-current={subAtivo ? 'page' : undefined}
+                onClick={onClose}
+              >
+                {f.label}
+              </Link>
+            )
+          })}
+        </div>
+      )}
+    </div>
   )
 }

@@ -274,6 +274,16 @@ export default function ReservationDetailModal({
                 Abrir WhatsApp do cliente
               </button>
             )}
+          {/* Chamada directa — para quem prefere falar a escrever. O
+              <a> tel: abre o marcador (telemóvel) ou app de chamadas. */}
+          {r.requester_phone && (
+            <a
+              href={`tel:${String(r.requester_phone).replace(/[^\d+]/g, '')}`}
+              className="btn-mini res-details-btn"
+            >
+              Ligar ao cliente
+            </a>
+          )}
           {/* Mensagem de contacto COMPLETA (a do acompanhamento): reserva
               descrita por inteiro com link — para o atendente que prefere
               preparar a conversa sem sair do modal. Copia para colar.

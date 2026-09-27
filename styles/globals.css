@@ -839,16 +839,11 @@ html.dark .form-note {
   /* Foto da embalagem no card do Localizador — pequena, à esquerda
      do bloco de preços; some em ecrãs muito estreitos. */
   .drug-card-img {
-    @apply rounded-lg border object-cover;
+    @apply rounded-lg border object-cover flex-shrink-0;
     width: 52px;
     height: 52px;
     border-color: var(--color-brand-line);
-  }
-
-  @media (max-width: 40rem) {
-    .drug-card-img {
-      display: none;
-    }
+    background: #f0eee9;
   }
 
   .drug-card-meta .fresh {

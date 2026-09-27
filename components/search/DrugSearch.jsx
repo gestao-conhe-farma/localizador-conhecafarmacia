@@ -45,6 +45,13 @@ const ORIGIN_FLAGS = {
 }
 const originFlag = (o) => ORIGIN_FLAGS[o] || '🌍'
 
+/** Placeholder SVG (data-URI) para itens sem foto — inicial do fármaco. */
+const drugPlaceholder = (name) => {
+  const letter = (name || '?').trim().charAt(0).toUpperCase()
+  const svg = `<svg xmlns='http://www.w3.org/2000/svg' width='52' height='52'><rect width='52' height='52' rx='10' fill='%23f0eee9'/><text x='26' y='34' font-family='Georgia,serif' font-size='24' fill='%2300493a' text-anchor='middle'>${letter}</text></svg>`
+  return `data:image/svg+xml,${svg}`
+}
+
 function timeAgo(iso) {
   const s = Math.max(0, (Date.now() - new Date(iso).getTime()) / 1000)
   if (s < 3600) return `há ${Math.max(1, Math.round(s / 60))} min`
@@ -98,7 +105,9 @@ export default function DrugSearch() {
     }
   }, [])
 
-  // Autocomplete: nomes de medicamentos enquanto se escreve (mín. 2 chars)
+  // Autocomplete: nomes de medicamentos E marcas enquanto se escreve
+  // (mín. 2 chars). Marcas vêm dos stock_items (0013) — "Ben-u-ron"
+  // leva ao Paracetamol. O cliente pesquisa pelo que tem na cabeça.
   useEffect(() => {
     const q = query.trim()
     if (q.length < 2) {
@@ -109,13 +118,27 @@ export default function DrugSearch() {
     debounceRef.current = setTimeout(async () => {
       try {
         const supabase = createClient()
-        const { data } = await supabase
-          .from('drugs')
-          .select('id, name, form, dosage')
-          .eq('active', true)
-          .ilike('name', `%${q}%`)
-          .limit(8)
-        setSuggestions(data || [])
+        const [{ data: drugs }, { data: brands }] = await Promise.all([
+          supabase
+            .from('drugs')
+            .select('id, name, form, dosage')
+            .eq('active', true)
+            .ilike('name', `%${q}%`)
+            .limit(8),
+          // Marcas distintas com stock confirmado. Falha suave (0013
+          // por aplicar): sem sugestões de marca, a de nomes segue.
+          supabase
+            .from('stock_confirmed')
+            .select('brand')
+            .ilike('brand', `%${q}%`)
+            .neq('brand', null)
+            .limit(30),
+        ])
+        const brandList = [...new Set((brands || []).map((b) => b.brand))]
+          .filter(Boolean)
+          .slice(0, 4)
+          .map((b) => ({ kind: 'brand', name: b }))
+        setSuggestions([...brandList, ...(drugs || []).map((d) => ({ kind: 'drug', ...d }))])
         setActiveIdx(-1)
       } catch (err) {
         logWarn('drug-search', 'Autocomplete falhou', { message: err?.message })
@@ -143,8 +166,9 @@ export default function DrugSearch() {
     setError('')
     try {
       const supabase = createClient()
-      // Busca por nome OU molécula (ilike em ambas)
-      const orFilter = `drug_name.ilike.%${q}%,drug_molecule.ilike.%${q}%`
+      // Busca por nome, molécula OU marca (ilike em ambas) — pesquisar
+      // "Ben-u-ron" tem de encontrar o Paracetamol com essa marca.
+      const orFilter = `drug_name.ilike.%${q}%,drug_molecule.ilike.%${q}%,brand.ilike.%${q}%`
       let req = supabase
         .from('stock_confirmed')
         .select('*')
@@ -319,7 +343,7 @@ export default function DrugSearch() {
               <div className="suggest-list" role="listbox">
                 {suggestions.map((s, i) => (
                   <button
-                    key={s.id}
+                    key={s.kind === 'brand' ? `brand-${s.name}` : s.id}
                     type="button"
                     role="option"
                     aria-selected={i === activeIdx}
@@ -330,9 +354,14 @@ export default function DrugSearch() {
                       runSearch(s.name)
                     }}
                   >
-                    <span className="suggest-name">{s.name}</span>
+                    <span className="suggest-name">
+                      {s.kind === 'brand' ? '🏷️ ' : ''}
+                      {s.name}
+                    </span>
                     <span className="suggest-meta">
-                      {[s.form, s.dosage].filter(Boolean).join(' · ')}
+                      {s.kind === 'brand'
+                        ? 'marca — ver farmácias com esta marca'
+                        : [s.form, s.dosage].filter(Boolean).join(' · ')}
                     </span>
                   </button>
                 ))}
@@ -504,16 +533,23 @@ export default function DrugSearch() {
                           </div>
 
                           {/* Foto da embalagem (0013) — a caixa real que
-                              está na prateleira. Sem imagem, o card fica
-                              como sempre (legado). */}
-                          {p.image_path && (
-                            <img
-                              src={`${process.env.NEXT_PUBLIC_SUPABASE_URL}/storage/v1/object/public/drug-images/${p.image_path}`}
-                              alt={`Embalagem de ${r.drug_name} — ${p.pharmacy_name}`}
-                              loading="lazy"
-                              className="drug-card-img"
-                            />
-                          )}
+                              está na prateleira. Sem foto: um placeholder
+                              com a inicial, em vez de sumir (o cliente
+                              vê que a farmácia ainda não fotografou). */}
+                          <img
+                            src={
+                              p.image_path
+                                ? `${process.env.NEXT_PUBLIC_SUPABASE_URL}/storage/v1/object/public/drug-images/${p.image_path}`
+                                : drugPlaceholder(r.drug_name)
+                            }
+                            alt={
+                              p.image_path
+                                ? `Embalagem de ${r.drug_name} — ${p.pharmacy_name}`
+                                : `${r.drug_name} — sem foto da embalagem`
+                            }
+                            loading="lazy"
+                            className="drug-card-img"
+                          />
 
                           <div className="drug-card-side">
                             {opts.length > 0 ? (

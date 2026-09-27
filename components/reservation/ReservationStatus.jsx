@@ -66,6 +66,22 @@ function quantityLine(r) {
 
 const fmtKz = (n) => new Intl.NumberFormat('pt-AO', { maximumFractionDigits: 2 }).format(n) + ' Kz'
 
+/** Bandeira da origem (0013) — a mesma tabela dos outros ecrãs. */
+const ORIGIN_FLAGS = {
+  Portugal: '🇵🇹',
+  Índia: '🇮🇳',
+  China: '🇨🇳',
+  Alemanha: '🇩🇪',
+  França: '🇫🇷',
+  Brasil: '🇧🇷',
+  EUA: '🇺🇸',
+  'Reino Unido': '🇬🇧',
+  Egipto: '🇪🇬',
+  'África do Sul': '🇿🇦',
+  Japão: '🇯🇵',
+  Turquia: '🇹🇷',
+}
+
 /**
  * Preço total ESTIMADO da reserva (0012): quantidade da opção × preço
  * da opção. É uma estimativa — o preço final é o do balcão; a farmácia
@@ -103,7 +119,7 @@ export default function ReservationStatus({ reservationId }) {
       const { data, error: e } = await supabase
         .from('reservations')
         .select(
-          'id, status, quantity, confirmed_quantity, reason, notes, created_at, resolved_at, requester_name, sale_option_id, drugs(name, form, dosage), pharmacies(name, phone, whatsapp, address, municipio), stock_sale_options(unit, pack_size, price)',
+          'id, status, quantity, confirmed_quantity, reason, notes, created_at, resolved_at, requester_name, sale_option_id, drugs(name, form, dosage), pharmacies(name, phone, whatsapp, address, municipio), stock_sale_options(unit, pack_size, price), stock_items(origin, brand)',
         )
         .eq('id', reservationId)
         .maybeSingle()
@@ -177,6 +193,21 @@ export default function ReservationStatus({ reservationId }) {
         {[r.drugs?.form, r.drugs?.dosage, r.pharmacies?.municipio].filter(Boolean).join(' · ')}
         {r.pharmacies?.address ? ` · ${r.pharmacies.address}` : ''}
       </p>
+
+      {/* Origem/marca (0013) — o cliente confirma a apresentação que
+          reservou, do mesmo modo que no modal e no WhatsApp. */}
+      {(r.stock_items?.brand || r.stock_items?.origin) && (
+        <div className="drug-card-origin">
+          {r.stock_items?.brand && (
+            <span className="origin-tag origin-tag--brand">{r.stock_items.brand}</span>
+          )}
+          {r.stock_items?.origin && (
+            <span className="origin-tag">
+              {ORIGIN_FLAGS[r.stock_items.origin] || '🌍'} {r.stock_items.origin}
+            </span>
+          )}
+        </div>
+      )}
 
       {recusada || expirada ? (
         <div className="res-track-estado res-track-estado--ruim">

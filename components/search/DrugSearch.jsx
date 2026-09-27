@@ -28,25 +28,11 @@ const MUNICIPIOS = [
 
 const fmtKz = (n) => new Intl.NumberFormat('pt-AO', { maximumFractionDigits: 0 }).format(n) + ' Kz'
 
-/** Bandeira da origem (0013) — emoji por país; fallback globe. */
-const ORIGIN_FLAGS = {
-  Portugal: '🇵🇹',
-  Índia: '🇮🇳',
-  China: '🇨🇳',
-  Alemanha: '🇩🇪',
-  França: '🇫🇷',
-  Brasil: '🇧🇷',
-  EUA: '🇺🇸',
-  'Reino Unido': '🇬🇧',
-  Egipto: '🇪🇬',
-  'África do Sul': '🇿🇦',
-  Japão: '🇯🇵',
-  Turquia: '🇹🇷',
-}
-const originFlag = (o) => ORIGIN_FLAGS[o] || '🌍'
+/** Código do país da origem (0013) — «PT», «IN»… em selo de texto. */
+import { ORIGIN_CODES, originCode } from '@/lib/origin-flags'
 
 // Ordem fixa dos chips de origem — a mesma da lista oficial do portal.
-const ORIGIN_ORDER = Object.keys(ORIGIN_FLAGS)
+const ORIGIN_ORDER = Object.keys(ORIGIN_CODES)
 
 /** Placeholder SVG (data-URI) para itens sem foto — inicial do fármaco. */
 const drugPlaceholder = (name) => {
@@ -374,7 +360,7 @@ export default function DrugSearch() {
                     }}
                   >
                     <span className="suggest-name">
-                      {s.kind === 'brand' ? '🏷️ ' : ''}
+                      {s.kind === 'brand' && <span className="origin-code">M</span>}
                       {s.name}
                     </span>
                     <span className="suggest-meta">
@@ -437,7 +423,7 @@ export default function DrugSearch() {
                   aria-pressed={originFilter === o}
                   onClick={() => setOriginFilter(originFilter === o ? '' : o)}
                 >
-                  {ORIGIN_FLAGS[o] || '🌍'} {o}
+                  {originCode(o) && <span className="origin-code">{originCode(o)}</span>} {o}
                 </button>
               ))}
             </div>
@@ -564,7 +550,10 @@ export default function DrugSearch() {
                                 )}
                                 {p.origin && (
                                   <span className="origin-tag">
-                                    {originFlag(p.origin)} {p.origin}
+                                    {originCode(p.origin) && (
+                                      <span className="origin-code">{originCode(p.origin)}</span>
+                                    )}{' '}
+                                    {p.origin}
                                   </span>
                                 )}
                               </div>

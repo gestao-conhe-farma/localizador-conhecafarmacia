@@ -66,21 +66,8 @@ function quantityLine(r) {
 
 const fmtKz = (n) => new Intl.NumberFormat('pt-AO', { maximumFractionDigits: 2 }).format(n) + ' Kz'
 
-/** Bandeira da origem (0013) — a mesma tabela dos outros ecrãs. */
-const ORIGIN_FLAGS = {
-  Portugal: '🇵🇹',
-  Índia: '🇮🇳',
-  China: '🇨🇳',
-  Alemanha: '🇩🇪',
-  França: '🇫🇷',
-  Brasil: '🇧🇷',
-  EUA: '🇺🇸',
-  'Reino Unido': '🇬🇧',
-  Egipto: '🇪🇬',
-  'África do Sul': '🇿🇦',
-  Japão: '🇯🇵',
-  Turquia: '🇹🇷',
-}
+/** Código do país da origem (0013) — «PT» em selo, igual aos outros ecrãs. */
+import { originCode } from '@/lib/origin-flags'
 
 /**
  * Preço total ESTIMADO da reserva (0012): quantidade da opção × preço
@@ -253,7 +240,10 @@ export default function ReservationStatus({ reservationId }) {
               )}
               {r.stock_items?.origin && (
                 <span className="origin-tag">
-                  {ORIGIN_FLAGS[r.stock_items.origin] || '🌍'} {r.stock_items.origin}
+                  {originCode(r.stock_items.origin) && (
+                    <span className="origin-code">{originCode(r.stock_items.origin)}</span>
+                  )}{' '}
+                  {r.stock_items.origin}
                 </span>
               )}
             </div>

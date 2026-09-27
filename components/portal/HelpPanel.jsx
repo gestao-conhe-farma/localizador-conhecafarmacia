@@ -12,10 +12,72 @@ import { useMemo, useState } from 'react'
  * o guia, actualizar aqui também.
  */
 
+/** Ícones SVG dos tópicos — substituem os antigos emojis. */
+function TopicIcon({ name }) {
+  const common = {
+    viewBox: '0 0 24 24',
+    fill: 'none',
+    stroke: 'currentColor',
+    strokeWidth: 1.8,
+    strokeLinecap: 'round',
+    strokeLinejoin: 'round',
+    width: 16,
+    height: 16,
+    'aria-hidden': true,
+  }
+  const paths = {
+    entrar: (
+      <>
+        <circle cx="8" cy="15" r="4" />
+        <path d="m11 12 9-9" />
+        <path d="m16 7 3 3" />
+      </>
+    ),
+    reservas: (
+      <>
+        <rect x="3" y="5" width="18" height="16" rx="2" />
+        <path d="M3 10h18M8 3v4M16 3v4" />
+      </>
+    ),
+    repor: (
+      <>
+        <path d="M12 21V9" />
+        <path d="m7 14 5-5 5 5" />
+        <path d="M5 3h14" />
+      </>
+    ),
+    entradas: (
+      <>
+        <path d="M4 8h16v12H4z" />
+        <path d="M9 8V5h6v3M4 13h16" />
+      </>
+    ),
+    detalhes: (
+      <>
+        <path d="M12 2 3 7l9 5 9-5-9-5z" />
+        <path d="M3 12l9 5 9-5" />
+        <path d="M3 17l9 5 9-5" />
+      </>
+    ),
+    avisos: (
+      <>
+        <path d="M18 8a6 6 0 1 0-12 0c0 7-3 9-3 9h18s-3-2-3-9" />
+        <path d="M10.3 21a2 2 0 0 0 3.4 0" />
+      </>
+    ),
+    vendas: (
+      <>
+        <path d="M4 20V10M10 20V4M16 20v-8M22 20H2" />
+      </>
+    ),
+  }
+  return <svg {...common}>{paths[name] || paths.detalhes}</svg>
+}
+
 const TOPICS = [
   {
     id: 'entrar',
-    icon: '🔑',
+    icon: 'entrar',
     title: 'Entrar no Portal',
     body: (
       <>
@@ -31,23 +93,23 @@ const TOPICS = [
           </li>
         </ol>
         <p className="help-tip">
-          💡 O menu à esquerda tem dois grupos — <b>Gestão</b> (o dia-a-dia: atenção, stock,
-          entrada, reservas, vendas) e <b>Farmácia</b> (o perfil que o cliente vê). Os números nos
-          badges mostram o que está à espera de ti.
+          O menu à esquerda tem dois grupos — <b>Gestão</b> (o dia-a-dia: atenção, stock, entrada,
+          reservas, vendas) e <b>Farmácia</b> (o perfil que o cliente vê). Os números nos badges
+          mostram o que está à espera de ti.
         </p>
       </>
     ),
   },
   {
     id: 'reservas',
-    icon: '📋',
+    icon: 'reservas',
     title: 'Atender reservas',
     badge: 'O mais urgente do dia',
     body: (
       <>
         <div className="help-rule">
-          ⚠️ <b>Regra de ouro:</b> responde em menos de <b>72 horas</b> — passado esse prazo, a
-          reserva expira sozinha e o cliente é avisado.
+          <b>Regra de ouro:</b> responde em menos de <b>72 horas</b> — passado esse prazo, a reserva
+          expira sozinha e o cliente é avisado.
         </div>
         <h4 className="help-h4">Confirmar uma reserva (temos o medicamento)</h4>
         <ol className="help-ol">
@@ -82,7 +144,7 @@ const TOPICS = [
           <li>A mensagem de recusa também já vai pronta para o WhatsApp.</li>
         </ol>
         <p className="help-tip">
-          💡 Tocar no <b>nome do medicamento</b> ou em <b>Detalhes</b> abre a ficha completa:
+          Tocar no <b>nome do medicamento</b> ou em <b>Detalhes</b> abre a ficha completa:
           histórico, prazo, nota do cliente e o link de acompanhamento para copiar.
         </p>
       </>
@@ -90,7 +152,7 @@ const TOPICS = [
   },
   {
     id: 'reposicao',
-    icon: '🔁',
+    icon: 'repor',
     title: 'Repor stock (produto esgotou)',
     body: (
       <>
@@ -112,7 +174,7 @@ const TOPICS = [
           <li>Pronto: o produto volta ao Localizador na hora e o aviso desaparece.</li>
         </ol>
         <p className="help-tip">
-          💡 Só queres religar o produto sem indicar quantidade (sobraram unidades na gaveta)? Usa{' '}
+          Só queres religar o produto sem indicar quantidade (sobraram unidades na gaveta)? Usa{' '}
           <b>Repor sem qtd.</b> mesmo no aviso.
         </p>
       </>
@@ -120,7 +182,7 @@ const TOPICS = [
   },
   {
     id: 'entradas',
-    icon: '📦',
+    icon: 'entradas',
     title: 'Registar entradas de stock (chegou fornecedor)',
     body: (
       <>
@@ -142,15 +204,15 @@ const TOPICS = [
           <li>O saldo actualiza na hora e o produto volta a aparecer no Localizador.</li>
         </ol>
         <p className="help-tip">
-          💡 No fundo da página fica a lista das <b>entradas desta sessão</b> — confere com a nota
-          do fornecedor antes de fechar.
+          No fundo da página fica a lista das <b>entradas desta sessão</b> — confere com a nota do
+          fornecedor antes de fechar.
         </p>
       </>
     ),
   },
   {
     id: 'detalhes',
-    icon: '🏷️',
+    icon: 'detalhes',
     title: 'Corrigir detalhes: preço, validade, origem, foto',
     body: (
       <>
@@ -172,7 +234,7 @@ const TOPICS = [
             <b>Preço</b> — usado quando não há formas de venda.
           </li>
           <li>
-            <b>Origem e Marca</b> — o cliente valoriza: 🇵🇹 Portugal, 🇮🇳 Índia… e a marca (ex.:
+            <b>Origem e Marca</b> — o cliente valoriza: Portugal (PT), Índia (IN)… e a marca (ex.:
             Ben-u-ron). Preenche sempre que souberes — aparecem na reserva e no WhatsApp, e ajudam a
             vender!
           </li>
@@ -193,7 +255,7 @@ const TOPICS = [
   },
   {
     id: 'avisos',
-    icon: '🔔',
+    icon: 'avisos',
     title: 'Outros avisos (Precisa de atenção)',
     body: (
       <>
@@ -208,7 +270,7 @@ const TOPICS = [
           </li>
         </ul>
         <p className="help-tip">
-          💡 Os badges do menu mostram as duas urgências separadas: <b>vermelho</b> = reposições e
+          Os badges do menu mostram as duas urgências separadas: <b>vermelho</b> = reposições e
           assuntos do dia · <b>laranja</b> = validades a vencer ou expiradas.
         </p>
       </>
@@ -216,7 +278,7 @@ const TOPICS = [
   },
   {
     id: 'vendas',
-    icon: '📈',
+    icon: 'vendas',
     title: 'Vendas (para o gestor)',
     body: (
       <>
@@ -317,7 +379,7 @@ export default function HelpPanel() {
                 onClick={() => toggle(t.id)}
               >
                 <span className="help-item-icon" aria-hidden="true">
-                  {t.icon}
+                  <TopicIcon name={t.icon} />
                 </span>
                 <span className="help-item-title">{t.title}</span>
                 {t.badge && <span className="help-item-badge">{t.badge}</span>}

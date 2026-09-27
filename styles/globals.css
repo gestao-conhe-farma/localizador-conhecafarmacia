@@ -831,6 +831,16 @@ html.dark .form-note {
     color: var(--color-brand-deep);
   }
 
+  /* Selo do código do país (PT, IN…) — substituiu as bandeiras emoji:
+     tipográfico, legível em qualquer browser/telemóvel. */
+  .origin-code {
+    @apply inline-block text-[10px] font-bold leading-none rounded;
+    padding: 2px 4px;
+    background: color-mix(in srgb, var(--color-brand-primary) 14%, transparent);
+    color: var(--color-brand-primary);
+    letter-spacing: 0.04em;
+  }
+
   .origin-tag--brand {
     background: color-mix(in srgb, var(--color-brand-accent) 12%, transparent);
     color: var(--color-brand-primary);

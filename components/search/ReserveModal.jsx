@@ -17,22 +17,8 @@ const ERRORES = { ...ERRORES_BASE, PAYLOAD_INVALIDO: ERRORES_BASE.FALHA_CRIAR }
 
 const fmt = (n) => new Intl.NumberFormat('pt-AO', { maximumFractionDigits: 2 }).format(Number(n))
 
-/** Bandeira da origem (0013) — a mesma tabela de DrugSearch/PharmacyStock. */
-const ORIGIN_FLAGS = {
-  Portugal: '🇵🇹',
-  Índia: '🇮🇳',
-  China: '🇨🇳',
-  Alemanha: '🇩🇪',
-  França: '🇫🇷',
-  Brasil: '🇧🇷',
-  EUA: '🇺🇸',
-  'Reino Unido': '🇬🇧',
-  Egipto: '🇪🇬',
-  'África do Sul': '🇿🇦',
-  Japão: '🇯🇵',
-  Turquia: '🇹🇷',
-}
-const originFlag = (o) => ORIGIN_FLAGS[o] || '🌍'
+/** Código do país da origem (0013) — o mesmo de DrugSearch/PharmacyStock. */
+import { originCode } from '@/lib/origin-flags'
 
 /** Placeholder SVG (data-URI) para itens sem foto — o mesmo do Localizador. */
 const drugPlaceholder = (name) => {
@@ -182,7 +168,10 @@ export default function ReserveModal({ item, onClose, onCreated }) {
                   {item.brand && <span className="origin-tag origin-tag--brand">{item.brand}</span>}
                   {item.origin && (
                     <span className="origin-tag">
-                      {originFlag(item.origin)} {item.origin}
+                      {originCode(item.origin) && (
+                        <span className="origin-code">{originCode(item.origin)}</span>
+                      )}{' '}
+                      {item.origin}
                     </span>
                   )}
                   {!item.image_path && (

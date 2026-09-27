@@ -12,22 +12,7 @@ import { formatOptionLabel, formatPerBase, unitLabel } from '@/lib/sale-options'
 
 const fmtKz = (n) => new Intl.NumberFormat('pt-AO', { maximumFractionDigits: 0 }).format(n) + ' Kz'
 
-/** Bandeira da origem (0013) — emoji por país; fallback globe. */
-const ORIGIN_FLAGS = {
-  Portugal: '🇵🇹',
-  Índia: '🇮🇳',
-  China: '🇨🇳',
-  Alemanha: '🇩🇪',
-  França: '🇫🇷',
-  Brasil: '🇧🇷',
-  EUA: '🇺🇸',
-  'Reino Unido': '🇬🇧',
-  Egipto: '🇪🇬',
-  'África do Sul': '🇿🇦',
-  Japão: '🇯🇵',
-  Turquia: '🇹🇷',
-}
-const originFlag = (o) => ORIGIN_FLAGS[o] || '🌍'
+import { originCode } from '@/lib/origin-flags'
 
 /** Etiquetas de origem/marca (0013) — reutilizadas nas duas vistas. */
 function OriginBrandTags({ item }) {
@@ -37,7 +22,10 @@ function OriginBrandTags({ item }) {
       {item.brand && <span className="origin-tag origin-tag--brand">{item.brand}</span>}
       {item.origin && (
         <span className="origin-tag">
-          {originFlag(item.origin)} {item.origin}
+          {originCode(item.origin) && (
+            <span className="origin-code">{originCode(item.origin)}</span>
+          )}{' '}
+          {item.origin}
         </span>
       )}
     </div>

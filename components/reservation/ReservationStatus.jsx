@@ -197,9 +197,16 @@ export default function ReservationStatus({ reservationId }) {
   const photoUrl = r.stock_items?.image_path
     ? `${supabaseUrl}/storage/v1/object/public/drug-images/${r.stock_items.image_path}`
     : null
+  // Mensagem de contacto pré-preenchida — leva a origem/marca (0013)
+  // para o atendente saber de imediato qual a apresentação reservada:
+  // "Paracetamol 500 mg (de Ben-u-ron, origem Portugal)".
+  const originBits = [r.stock_items?.brand, r.stock_items?.origin].filter(Boolean)
+  const drugDesc = originBits.length
+    ? `${r.drugs?.name || 'medicamento'} (de ${originBits.join(', origem ')})`
+    : r.drugs?.name || 'medicamento'
   const waLinkHref = waNumber
     ? `https://wa.me/${String(waNumber).replace(/\D/g, '')}?text=${encodeURIComponent(
-        `Olá! Tenho uma reserva de ${r.drugs?.name} (levantamento em nome de ${r.requester_name}).`,
+        `Olá! Tenho uma reserva de ${drugDesc} (levantamento em nome de ${r.requester_name}).`,
       )}`
     : null
 

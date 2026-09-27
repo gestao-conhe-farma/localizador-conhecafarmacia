@@ -537,25 +537,71 @@ function StockEditModal({ item, saving, onClose, onSave, onSaveOptions, onRetire
               {saving ? 'A guardar…' : 'Guardar'}
             </button>
             {/* Retirar (0014): Remove o medicamento do catálogo da farmácia
-                — vai para a Lixeira (restaurável). Separdo por linha. */}
+                — vai para a Lixeira (restaurável). Abre a confirmação
+                estilizada (ConfirmRetire). */}
             <button
               type="button"
               className="stock-retire-btn"
               disabled={saving}
-              onClick={() => {
-                if (
-                  window.confirm(
-                    `Retirar "${item.name}" do seu catálogo?\n\nO medicamento desaparece do Localizador e fica na Lixeira, onde pode ser restaurado.`,
-                  )
-                ) {
-                  onRetire(item)
-                }
-              }}
+              onClick={() => onRetire(item)}
             >
               Retirar do catálogo
             </button>
           </div>
         </form>
+      </div>
+    </div>
+  )
+}
+
+/**
+ * Confirmação de retirada (0014) — modal estilizado no lugar do
+ * window.confirm nativo: título claro, nome do medicamento em destaque,
+ * explicação do que acontece (desaparece do Localizador, fica na
+ * Lixeira restaurável) e os dois caminhos: Cancelar / Retirar.
+ */
+function ConfirmRetire({ item, busy, onCancel, onConfirm }) {
+  useEffect(() => {
+    const onKey = (e) => {
+      if (e.key === 'Escape') onCancel()
+    }
+    window.addEventListener('keydown', onKey)
+    return () => window.removeEventListener('keydown', onKey)
+  }, [onCancel])
+
+  return (
+    <div
+      className="stock-modal"
+      role="dialog"
+      aria-modal="true"
+      aria-labelledby="confirm-retire-title"
+    >
+      <div className="stock-modal-scrim" onClick={onCancel} aria-hidden="true" />
+      <div className="stock-modal-card confirm-retire-card">
+        <div className="confirm-retire-icon" aria-hidden="true">
+          <CloseIcon size={18} />
+        </div>
+        <h3 id="confirm-retire-title" className="confirm-retire-title">
+          Retirar do catálogo?
+        </h3>
+        <p className="confirm-retire-name">{item.name}</p>
+        <p className="confirm-retire-body">
+          O medicamento desaparece do <b>Localizador</b> e das suas listas de stock. Fica guardado
+          na <b>Lixeira</b>, onde pode ser restaurado quando quiser.
+        </p>
+        <div className="confirm-retire-actions">
+          <button type="button" className="btn btn-secondary" onClick={onCancel} disabled={busy}>
+            Cancelar
+          </button>
+          <button
+            type="button"
+            className="btn confirm-retire-confirm"
+            onClick={onConfirm}
+            disabled={busy}
+          >
+            {busy ? 'A retirar…' : 'Retirar do catálogo'}
+          </button>
+        </div>
       </div>
     </div>
   )
@@ -580,6 +626,8 @@ export default function StockPanel({ compact = false }) {
   const [toast, setToast] = useState('')
   // Item em edição no modal (null = fechado).
   const [editing, setEditing] = useState(null)
+  // Item pendente de confirmação de retirada (ConfirmRetire).
+  const [confirming, setConfirming] = useState(null)
   // "Agora" vive em estado — Date.now() no render é impuro (react-hooks/
   // purity) e o relógio vem de graça: os "Confirmado há X min" refrescam
   // sozinhos a cada minuto. (setState só no interval, nunca síncrono no
@@ -839,15 +887,11 @@ export default function StockPanel({ compact = false }) {
     return false
   }
 
-  /** RETIRAR (lixeira, 0014): confirma, marca retired_at, remove da lista. */
+  /**
+   * RETIRAR (lixeira, 0014) — a confirmação é o modal ConfirmRetire
+   * (estilizado), que chama isto. Sem window.confirm duplo.
+   */
   const retire = async (it) => {
-    if (
-      !window.confirm(
-        `Retirar "${it.name}" do seu catálogo?\n\nO medicamento desaparece do Localizador e desta lista — fica na Lixeira, onde pode ser restaurado.`,
-      )
-    ) {
-      return
-    }
     setSavingId(it.drug_id)
     setToast('')
     const res = await retireStockItem({ drugId: it.drug_id })
@@ -1218,6 +1262,19 @@ export default function StockPanel({ compact = false }) {
           onSave={(patch) => saveFromModal(editing, patch)}
           onRetire={(it) => {
             setEditing(null)
+            setConfirming(it)
+          }}
+        />
+      )}
+
+      {confirming && (
+        <ConfirmRetire
+          item={confirming}
+          busy={savingId === confirming.drug_id}
+          onCancel={() => setConfirming(null)}
+          onConfirm={() => {
+            const it = confirming
+            setConfirming(null)
             retire(it)
           }}
         />

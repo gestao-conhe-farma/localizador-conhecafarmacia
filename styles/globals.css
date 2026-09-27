@@ -939,6 +939,50 @@ html.dark .form-note {
     background: color-mix(in srgb, #c0392b 8%, transparent);
   }
 
+  /* Modal de confirmação de retirada — compacto, centrado, vermelho
+     de atenção no ícone e no botão principal. */
+  .confirm-retire-card {
+    @apply w-full max-w-sm flex flex-col items-center text-center gap-3 p-6;
+  }
+  .confirm-retire-icon {
+    @apply grid place-items-center rounded-full;
+    width: 3rem;
+    height: 3rem;
+    background: color-mix(in srgb, #c0392b 12%, transparent);
+    color: #c0392b;
+  }
+  .confirm-retire-title {
+    @apply text-lg font-semibold m-0;
+    color: var(--color-brand-deep);
+  }
+  .confirm-retire-name {
+    @apply m-0 text-base font-semibold;
+    color: #c0392b;
+  }
+  .confirm-retire-body {
+    @apply m-0 text-sm leading-relaxed;
+    color: color-mix(in srgb, var(--color-brand-deep) 70%, transparent);
+  }
+  .confirm-retire-actions {
+    @apply flex gap-2 w-full mt-2;
+  }
+  .confirm-retire-actions .btn {
+    @apply flex-1;
+  }
+  .confirm-retire-confirm {
+    @apply cursor-pointer rounded-lg px-4 py-2 text-sm font-semibold;
+    border: 0;
+    background: #c0392b;
+    color: #fff;
+  }
+  .confirm-retire-confirm:hover {
+    background: color-mix(in srgb, #c0392b 85%, black);
+  }
+  .confirm-retire-confirm:disabled {
+    opacity: 0.6;
+    cursor: wait;
+  }
+
   /* Card na lixeira — esbatido, sem acções de stock. */
   .stock-card--retired {
     opacity: 0.72;

@@ -2,6 +2,17 @@
 
 import { useCallback, useEffect, useMemo, useState } from 'react'
 import Link from 'next/link'
+
+/**
+ * Lê o chip activo do URL (?tipo=restock|expiry|stale) — o filtro
+ * persiste ao partilhar o link ou recarregar a página. Valor inválido
+ * ou ausente cai em «Todos».
+ */
+function filterFromUrl() {
+  if (typeof window === 'undefined') return 'all'
+  const v = new URLSearchParams(window.location.search).get('tipo')
+  return ['restock', 'expiry', 'stale'].includes(v) ? v : 'all'
+}
 import { getMyAttentionFeed, updateStockItem } from '@/lib/actions/pharmacy-portal'
 import { getRestockAck, setRestockAck } from '@/lib/restock'
 import { expiryStatus, monthYear } from '@/lib/expiry'
@@ -95,8 +106,9 @@ export default function AttentionPanel({ pharmacyId }) {
   const total = restock.length + expiry.length + stale.length
 
   // Chips de filtro — «Reposição» desconta as dispensadas neste browser
-  // (os acks), tal como a lista que mostra.
-  const [typeFilter, setTypeFilter] = useState('all')
+  // (os acks), tal como a lista que mostra. O chip activo vive no URL
+  // (?tipo=) para partilhar/recarregar sem perder o filtro.
+  const [typeFilter, setTypeFilter] = useState(filterFromUrl)
   const chips = [
     { id: 'all', label: 'Todos', n: total },
     { id: 'restock', label: 'Reposição', n: restock.length },
@@ -175,7 +187,15 @@ export default function AttentionPanel({ pharmacyId }) {
               key={c.id}
               type="button"
               className={`portal-chip${typeFilter === c.id ? ' portal-chip--active' : ''}`}
-              onClick={() => setTypeFilter(c.id)}
+              onClick={() => {
+                setTypeFilter(c.id)
+                // Sincroniza o URL sem navegar: history direto (sem
+                // router.push) para não refetch nem re-render da página.
+                const url = new URL(window.location.href)
+                if (c.id === 'all') url.searchParams.delete('tipo')
+                else url.searchParams.set('tipo', c.id)
+                window.history.replaceState(null, '', url)
+              }}
             >
               {c.label} <span className="portal-chip-n">{c.n}</span>
             </button>

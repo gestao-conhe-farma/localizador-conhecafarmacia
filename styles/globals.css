@@ -2718,6 +2718,43 @@ html.dark .form-note {
     color: var(--color-brand-deep-60, rgb(0 73 58 / 0.6));
   }
 
+  /* Tendência vs. período anterior — faixa fina com seta colorida:
+     verde a subir, vermelho a descer, neutro sem base de comparação. */
+  .sales-trend {
+    @apply flex items-center gap-2 rounded-lg border px-3 py-2 text-sm;
+    border-color: var(--color-brand-line);
+    background: var(--color-brand-card);
+  }
+  .sales-trend-arrow {
+    @apply font-bold;
+    font-size: 1rem;
+  }
+  .sales-trend--up {
+    border-color: color-mix(in srgb, var(--color-brand-primary) 35%, transparent);
+    background: color-mix(in srgb, var(--color-brand-primary) 8%, var(--color-brand-card));
+  }
+  .sales-trend--up .sales-trend-arrow,
+  .sales-trend--up b {
+    color: var(--color-brand-primary);
+  }
+  .sales-trend--down {
+    border-color: color-mix(in srgb, #c0392b 35%, transparent);
+    background: color-mix(in srgb, #c0392b 6%, var(--color-brand-card));
+  }
+  .sales-trend--down .sales-trend-arrow,
+  .sales-trend--down b {
+    color: #c0392b;
+  }
+  .sales-trend-counts {
+    @apply ml-auto text-xs whitespace-nowrap;
+    color: color-mix(in srgb, var(--color-brand-deep) 55%, transparent);
+  }
+  @media (max-width: 640px) {
+    .sales-trend-counts {
+      display: none;
+    }
+  }
+
   /* Mobile: KPIs empilham, rótulos dos dias mostram só alguns. */
   @media (max-width: 640px) {
     .sales-kpis {

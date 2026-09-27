@@ -85,6 +85,20 @@ export default function SalesReport() {
   const maxValue = Math.max(...series.map((s) => s.value), 0)
   const bestDay = series.reduce((acc, s) => (s.value > (acc?.value ?? -1) ? s : acc), null)
 
+  /**
+   * Tendência vs. período anterior (mesmo tamanho da janela):
+   * delta % do valor estimado — null quando não há base de comparação
+   * (período anterior sem vendas não permite %: mostra só o absoluto).
+   */
+  const trend = useMemo(() => {
+    if (!report?.ok || !report.prev) return null
+    const cur = report.totalValue
+    const prev = report.prev.totalValue
+    if (prev <= 0) return { cur, prev, pct: null }
+    const pct = Math.round(((cur - prev) / prev) * 100)
+    return { cur, prev, pct }
+  }, [report])
+
   return (
     <section className="portal-section">
       {/* Padrão único do portal: cabeçalho compacto, sem hero. */}
@@ -148,6 +162,36 @@ export default function SalesReport() {
               </span>
             </div>
           </div>
+
+          {/* Tendência — esta janela vs. a anterior, sem exportar nada. */}
+          {trend && (
+            <div
+              className={`sales-trend${trend.pct == null ? ' sales-trend--neutral' : trend.pct >= 0 ? ' sales-trend--up' : ' sales-trend--down'}`}
+            >
+              <span className="sales-trend-arrow" aria-hidden="true">
+                {trend.pct == null ? '→' : trend.pct >= 0 ? '↑' : '↓'}
+              </span>
+              <span className="sales-trend-text">
+                {trend.pct == null ? (
+                  <>
+                    Sem vendas nos {report.window} dias anteriores — sem base para tendência
+                    {trend.prev === 0 && trend.cur > 0 ? ' (agora há!)' : ''}.
+                  </>
+                ) : (
+                  <>
+                    <b>
+                      {trend.pct > 0 ? '+' : ''}
+                      {trend.pct}%
+                    </b>{' '}
+                    vs. os {report.window} dias anteriores ({fmtKz(trend.prev)})
+                  </>
+                )}
+              </span>
+              <span className="sales-trend-counts">
+                {report.totalCount} vs. {report.prev.totalCount} reservas
+              </span>
+            </div>
+          )}
 
           {/* Gráfico de barras CSS — altura em % do dia mais alto. */}
           {series.length > 0 && (

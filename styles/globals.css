@@ -2216,11 +2216,32 @@ html.dark .form-note {
     background: rgb(255 255 255 / 0.1);
   }
 
-  /* Subitens do submenu — indentados ao nível do texto do pai. */
+  /* Subitens do submenu — indentados ao nível do texto do pai.
+     Sempre montado: a altura anima via max-height (0 fechado, aberto
+     com folga para os filhos) + opacity, num só easing suave. */
   .portal-nav-sub {
-    margin: 0.125rem 0 0.25rem;
+    margin: 0 0 0;
     display: flex;
     flex-direction: column;
+    overflow: hidden;
+    max-height: 0;
+    opacity: 0;
+    transition:
+      max-height 0.25s ease,
+      opacity 0.2s ease,
+      margin 0.25s ease;
+  }
+
+  .portal-nav-sub--open {
+    max-height: 6rem; /* folga para 2-3 filhos; overflow hidden corta o resto */
+    opacity: 1;
+    margin: 0.125rem 0 0.25rem;
+  }
+
+  @media (prefers-reduced-motion: reduce) {
+    .portal-nav-sub {
+      transition: none;
+    }
   }
 
   .portal-nav-subitem {

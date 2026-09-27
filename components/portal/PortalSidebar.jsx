@@ -382,24 +382,29 @@ function NavGrupo({ item, num, pathname, onClose }) {
         </button>
       </div>
 
-      {aberto && (
-        <div className="portal-nav-sub">
-          {item.filhos.map((f) => {
-            const subAtivo = pathname === f.href || pathname.startsWith(f.href + '/')
-            return (
-              <Link
-                key={f.href}
-                href={f.href}
-                className={`portal-nav-subitem${subAtivo ? ' portal-nav-subitem--active' : ''}`}
-                aria-current={subAtivo ? 'page' : undefined}
-                onClick={onClose}
-              >
-                {f.label}
-              </Link>
-            )
-          })}
-        </div>
-      )}
+      {/* Sempre montado — a animação de altura faz o abrir/fechar via
+          max-height (grid-template-rows em CSS grid seria alternativa).
+          aria-hidden esconde dos leitores de ecrã quando fechado. */}
+      <div
+        className={`portal-nav-sub${aberto ? ' portal-nav-sub--open' : ''}`}
+        aria-hidden={!aberto}
+      >
+        {item.filhos.map((f) => {
+          const subAtivo = pathname === f.href || pathname.startsWith(f.href + '/')
+          return (
+            <Link
+              key={f.href}
+              href={f.href}
+              className={`portal-nav-subitem${subAtivo ? ' portal-nav-subitem--active' : ''}`}
+              aria-current={subAtivo ? 'page' : undefined}
+              tabIndex={aberto ? 0 : -1}
+              onClick={onClose}
+            >
+              {f.label}
+            </Link>
+          )
+        })}
+      </div>
     </div>
   )
 }

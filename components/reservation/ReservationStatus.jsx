@@ -2,6 +2,7 @@
 
 import { useEffect, useState } from 'react'
 import { createClient } from '@/lib/supabase/client'
+import { CloseIcon } from '@/components/ui/Icon'
 
 const STEPS = [
   { id: 'pendente', label: 'Recebida', hint: 'A farmácia vai responder em até 72 horas.' },
@@ -340,7 +341,7 @@ export default function ReservationStatus({ reservationId }) {
       )}
 
       {/* Lightbox da embalagem — simples: scrim, imagem centrada e
-          fechar por toque fora, no ✕ ou na tecla Esc. */}
+          fechar por toque fora, no botão ou na tecla Esc. */}
       {zoom && photoUrl && (
         <div
           className="res-track-lightbox"
@@ -355,7 +356,7 @@ export default function ReservationStatus({ reservationId }) {
             aria-label="Fechar"
             onClick={() => setZoom(false)}
           >
-            ✕
+            <CloseIcon size={16} />
           </button>
           <img
             src={photoUrl}

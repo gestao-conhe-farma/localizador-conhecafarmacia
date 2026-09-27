@@ -2,6 +2,7 @@
 
 import { useEffect, useState } from 'react'
 import { trackingUrl } from '@/lib/reservation-messages'
+import { CheckIcon } from '@/components/ui/Icon'
 
 /**
  * Pop-up de detalhe da reserva — o mesmo padrão visual do modal de stock
@@ -232,7 +233,13 @@ export default function ReservationDetailModal({
           <div className="res-detail-link">
             <code>{trackingUrl(r.id)}</code>
             <button type="button" className="btn-mini res-details-btn" onClick={copyLink}>
-              {copied ? 'Copiado ✓' : 'Copiar'}
+              {copied ? (
+                <>
+                  <CheckIcon /> Copiado
+                </>
+              ) : (
+                'Copiar'
+              )}
             </button>
           </div>
         </div>

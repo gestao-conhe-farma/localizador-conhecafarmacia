@@ -5,6 +5,7 @@ import Link from 'next/link'
 import { createClient } from '@/lib/supabase/client'
 import { isOpenNow } from '@/lib/opening-hours'
 import { logError, logWarn } from '@/lib/log'
+import { CheckIcon } from '@/components/ui/Icon'
 
 const MUNICIPIOS = [
   'Belas',
@@ -71,14 +72,11 @@ export default function PharmacyList() {
   const visible = useMemo(() => {
     if (!pharmacies) return []
     const list = pharmacies.filter(
-      (p) =>
-        (!municipio || p.municipio === municipio) &&
-        (!onlyOpen || isOpenNow(p.opening_hours))
+      (p) => (!municipio || p.municipio === municipio) && (!onlyOpen || isOpenNow(p.opening_hours)),
     )
     // Com stock primeiro, depois ordem alfabética
     return [...list].sort(
-      (a, b) => (counts[b.slug] || 0) - (counts[a.slug] || 0) ||
-        a.name.localeCompare(b.name, 'pt')
+      (a, b) => (counts[b.slug] || 0) - (counts[a.slug] || 0) || a.name.localeCompare(b.name, 'pt'),
     )
   }, [pharmacies, counts, municipio, onlyOpen])
 
@@ -92,8 +90,7 @@ export default function PharmacyList() {
           <p className="kicker">A rede</p>
           <h1 className="search-hero-title">Farmácias parceiras</h1>
           <p className="search-hero-sub">
-            Farmácias de Luanda que confirmam o stock no Localizador — o que expira, sai
-            do ar.
+            Farmácias de Luanda que confirmam o stock no Localizador — o que expira, sai do ar.
           </p>
         </div>
       </section>
@@ -158,8 +155,8 @@ export default function PharmacyList() {
                 <div className="ph-list-head">
                   <span className="ph-count">
                     <strong>{visible.length}</strong> farmácia{visible.length !== 1 && 's'}
-                    {municipio ? ` em ${municipio}` : ' em Luanda'} ·{' '}
-                    <strong>{withStock}</strong> com stock confirmado agora
+                    {municipio ? ` em ${municipio}` : ' em Luanda'} · <strong>{withStock}</strong>{' '}
+                    com stock confirmado agora
                     {onlyOpen && ' · abertas agora'}
                   </span>
                 </div>
@@ -184,14 +181,13 @@ export default function PharmacyList() {
                       return (
                         <article key={p.slug} className="ph-card">
                           <div className="flex items-start justify-between gap-3">
-                            <Link
-                              href={`/farmacia/${p.slug}`}
-                              className="ph-card-name"
-                            >
+                            <Link href={`/farmacia/${p.slug}`} className="ph-card-name">
                               {p.name}
                             </Link>
                             {p.verified && (
-                              <span className="ph-ver flex-shrink-0">✓ Verificada</span>
+                              <span className="ph-ver flex-shrink-0">
+                                <CheckIcon size={11} /> Verificada
+                              </span>
                             )}
                           </div>
                           <p className="ph-card-loc">
@@ -204,9 +200,7 @@ export default function PharmacyList() {
                                 <b>{n}</b> medicamento{n !== 1 && 's'} agora
                               </span>
                             ) : (
-                              <span className="ph-card-hint">
-                                Sem stock confirmado no momento
-                              </span>
+                              <span className="ph-card-hint">Sem stock confirmado no momento</span>
                             )}
                             <div className="flex items-center gap-2">
                               {p.phone && (
@@ -220,7 +214,7 @@ export default function PharmacyList() {
                               {p.whatsapp && (
                                 <a
                                   href={`https://wa.me/${p.whatsapp.replace(/\D/g, '')}?text=${encodeURIComponent(
-                                    'Olá! Encontrei a farmácia no Localizador da Conheça Farmácia.'
+                                    'Olá! Encontrei a farmácia no Localizador da Conheça Farmácia.',
                                   )}`}
                                   target="_blank"
                                   rel="noopener noreferrer"

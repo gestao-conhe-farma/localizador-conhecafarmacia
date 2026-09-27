@@ -10,6 +10,7 @@ import {
 import { buildReservationMessage, waLink, trackingUrl } from '@/lib/reservation-messages'
 import { logWarn } from '@/lib/log'
 import ReservationDetailModal from '@/components/portal/ReservationDetailModal'
+import { CheckIcon } from '@/components/ui/Icon'
 
 const ERRORES = {
   SESSAO_EXPIRADA: 'Sessão expirada — recarregue a página.',
@@ -431,7 +432,13 @@ export default function ReservationsQueue() {
                     </span>
                   ) : (
                     <span className={`stock-card-hint${contactado ? ' res-hint-ok' : ''}`}>
-                      {contactado ? '✓ cliente avisado' : 'A aguardar a sua resposta'}
+                      {contactado ? (
+                        <>
+                          <CheckIcon /> cliente avisado
+                        </>
+                      ) : (
+                        'A aguardar a sua resposta'
+                      )}
                     </span>
                   )}
                   <div className="portal-res-actions">

@@ -12,6 +12,8 @@ import { useMemo, useState } from 'react'
  * o guia, actualizar aqui também.
  */
 
+import { ChevronIcon, CloseIcon } from '@/components/ui/Icon'
+
 /** Ícones SVG dos tópicos — substituem os antigos emojis. */
 function TopicIcon({ name }) {
   const common = {
@@ -240,7 +242,7 @@ const TOPICS = [
           </li>
           <li>
             <b>Foto da embalagem</b> — fotografa a caixa real (até 2 MB). O preview aparece no
-            modal; o ✕ remove.
+            modal; o botão vermelho remove.
           </li>
           <li>
             <b>Como vende este medicamento?</b> — se vendes lâmina e caixa, registra as duas formas
@@ -384,7 +386,7 @@ export default function HelpPanel() {
                 <span className="help-item-title">{t.title}</span>
                 {t.badge && <span className="help-item-badge">{t.badge}</span>}
                 <span className="help-item-chevron" aria-hidden="true">
-                  {open ? '▾' : '▸'}
+                  <ChevronIcon dir={open ? 'down' : 'right'} />
                 </span>
               </button>
               {open && <div className="help-item-body">{t.body}</div>}

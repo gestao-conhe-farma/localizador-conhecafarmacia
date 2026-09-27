@@ -895,8 +895,8 @@ html.dark .form-note {
     border: 1px solid rgba(255, 255, 255, 0.4);
     background: rgba(255, 255, 255, 0.12);
     color: #fff;
-    font-size: 1.125rem;
-    line-height: 1;
+    display: grid;
+    place-items: center;
   }
   .res-track-lightbox-close:hover {
     background: rgba(255, 255, 255, 0.22);

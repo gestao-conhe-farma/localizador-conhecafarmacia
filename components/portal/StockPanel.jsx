@@ -7,6 +7,7 @@ import { compressDrugImage } from '@/lib/image-compress'
 import { countExpiryBuckets, expiryStatus, expirySummary } from '@/lib/expiry'
 import DrugCreateForm from '@/components/portal/DrugCreateForm'
 import { setSaleOptions } from '@/lib/actions/pharmacy-portal'
+import { CloseIcon } from '@/components/ui/Icon'
 
 /**
  * Opções de venda (0012 — fracionamento). Defaults inteligentes pela
@@ -153,8 +154,8 @@ function StockEditModal({ item, saving, onClose, onSave, onSaveOptions }) {
       setImagePath(up.path)
       setFileMsg(
         compressed !== f
-          ? `Foto carregada ✓ (${Math.round(compressed.size / 1024)} KB, comprimida) — guarda para publicar.`
-          : 'Foto carregada ✓ — guarda para publicar.',
+          ? `Foto carregada (${Math.round(compressed.size / 1024)} KB, comprimida) — guarda para publicar.`
+          : 'Foto carregada — guarda para publicar.',
       )
     } else {
       setFileMsg(
@@ -343,7 +344,7 @@ function StockEditModal({ item, saving, onClose, onSave, onSaveOptions }) {
                       }
                     }}
                   >
-                    {removing ? '…' : '✕'}
+                    {removing ? '…' : <CloseIcon />}
                   </button>
                 </span>
               )}
@@ -941,11 +942,7 @@ export default function StockPanel({ compact = false }) {
                     onClick={() => setEditing(it)}
                     aria-pressed={it.in_stock}
                   >
-                    {savingId === it.drug_id
-                      ? '…'
-                      : it.in_stock
-                        ? 'Disponível ✓'
-                        : 'Não disponível'}
+                    {savingId === it.drug_id ? '…' : it.in_stock ? 'Disponível' : 'Não disponível'}
                   </button>
                 </div>
               </article>

@@ -113,6 +113,34 @@ const NAV_PATHS = {
       <path d="M12 16.5h.01" />
     </>
   ),
+  // Chaves usadas pela página de Ajuda (HelpPanel) — ícones de tópicos.
+  entrar: (
+    <>
+      <circle cx="8" cy="15" r="4" />
+      <path d="m11 12 9-9" />
+      <path d="m16 7 3 3" />
+    </>
+  ),
+  repor: (
+    <>
+      <path d="M12 21V9" />
+      <path d="m7 14 5-5 5 5" />
+      <path d="M5 3h14" />
+    </>
+  ),
+  detalhes: (
+    <>
+      <path d="M12 2 3 7l9 5 9-5-9-5z" />
+      <path d="M3 12l9 5 9-5" />
+      <path d="M3 17l9 5 9-5" />
+    </>
+  ),
+  avisos: (
+    <>
+      <path d="M18 8a6 6 0 1 0-12 0c0 7-3 9-3 9h18s-3-2-3-9" />
+      <path d="M10.3 21a2 2 0 0 0 3.4 0" />
+    </>
+  ),
 }
 
 const NAV_BASE = {
@@ -125,7 +153,11 @@ const NAV_BASE = {
   'aria-hidden': true,
 }
 
-/** Ícone de navegação por chave — fallback neutro (quadrado) se inválida. */
-export function NavIcon({ name }) {
-  return <svg {...NAV_BASE}>{NAV_PATHS[name] || NAV_PATHS.inicio}</svg>
+/** Ícone de navegação/tópico por chave — fallback neutro (início) se inválida. */
+export function NavIcon({ name, size }) {
+  return (
+    <svg {...NAV_BASE} {...(size ? { width: size, height: size } : {})}>
+      {NAV_PATHS[name] || NAV_PATHS.inicio}
+    </svg>
+  )
 }

@@ -12,69 +12,7 @@ import { useMemo, useState } from 'react'
  * o guia, actualizar aqui também.
  */
 
-import { ChevronIcon, CloseIcon } from '@/components/ui/Icon'
-
-/** Ícones SVG dos tópicos — substituem os antigos emojis. */
-function TopicIcon({ name }) {
-  const common = {
-    viewBox: '0 0 24 24',
-    fill: 'none',
-    stroke: 'currentColor',
-    strokeWidth: 1.8,
-    strokeLinecap: 'round',
-    strokeLinejoin: 'round',
-    width: 16,
-    height: 16,
-    'aria-hidden': true,
-  }
-  const paths = {
-    entrar: (
-      <>
-        <circle cx="8" cy="15" r="4" />
-        <path d="m11 12 9-9" />
-        <path d="m16 7 3 3" />
-      </>
-    ),
-    reservas: (
-      <>
-        <rect x="3" y="5" width="18" height="16" rx="2" />
-        <path d="M3 10h18M8 3v4M16 3v4" />
-      </>
-    ),
-    repor: (
-      <>
-        <path d="M12 21V9" />
-        <path d="m7 14 5-5 5 5" />
-        <path d="M5 3h14" />
-      </>
-    ),
-    entradas: (
-      <>
-        <path d="M4 8h16v12H4z" />
-        <path d="M9 8V5h6v3M4 13h16" />
-      </>
-    ),
-    detalhes: (
-      <>
-        <path d="M12 2 3 7l9 5 9-5-9-5z" />
-        <path d="M3 12l9 5 9-5" />
-        <path d="M3 17l9 5 9-5" />
-      </>
-    ),
-    avisos: (
-      <>
-        <path d="M18 8a6 6 0 1 0-12 0c0 7-3 9-3 9h18s-3-2-3-9" />
-        <path d="M10.3 21a2 2 0 0 0 3.4 0" />
-      </>
-    ),
-    vendas: (
-      <>
-        <path d="M4 20V10M10 20V4M16 20v-8M22 20H2" />
-      </>
-    ),
-  }
-  return <svg {...common}>{paths[name] || paths.detalhes}</svg>
-}
+import { ChevronIcon, NavIcon } from '@/components/ui/Icon'
 
 const TOPICS = [
   {
@@ -185,7 +123,7 @@ const TOPICS = [
   },
   {
     id: 'entradas',
-    icon: 'entradas',
+    icon: 'stock',
     title: 'Registar entradas de stock (chegou fornecedor)',
     body: (
       <>
@@ -391,7 +329,7 @@ export default function HelpPanel() {
                 onClick={() => toggle(t.id)}
               >
                 <span className="help-item-icon" aria-hidden="true">
-                  <TopicIcon name={t.icon} />
+                  <NavIcon name={t.icon} size={16} />
                 </span>
                 <span className="help-item-title">{t.title}</span>
                 {t.badge && <span className="help-item-badge">{t.badge}</span>}

@@ -12,10 +12,16 @@
 -- histórico (updated_by, reservas antigas que referenciam o item)
 -- e é reversível (restaurar da lixeira = limpar retired_at).
 --
--- A view stock_confirmed é recriada FIEL à da 0012 (inclui
--- stock_item_id e sale_options agregadas) com um filtro novo:
--- retirados nunca aparecem no Localizador, mesmo que alguém
+-- A view stock_confirmed é recriada FIEL à da 0013 (mesmas colunas,
+-- mesma ordem — including opening_hours/verified) com um filtro
+-- novo: retirados nunca aparecem no Localizador, mesmo que alguém
 -- marque in_stock=true num item retirado por engano.
+--
+-- NOTA TÉCNICA: CREATE OR REPLACE VIEW não permite alterar o
+-- conjunto de colunas (erro 42P16 «cannot drop columns from view»
+-- — a definição nova acrescentava s.in_stock que a 0013 não
+-- expunha com esse nome). Por isso: DROP VIEW + CREATE VIEW.
+-- Seguro: views não têm dados; grants reaplicadas a seguir.
 -- ============================================================
 
 alter table public.stock_items
@@ -24,7 +30,9 @@ alter table public.stock_items
 comment on column public.stock_items.retired_at is
   'Preenchido = item retirado do catálogo da farmácia (lixeira). Null = activo.';
 
-create or replace view public.stock_confirmed
+drop view if exists public.stock_confirmed;
+
+create view public.stock_confirmed
 with (security_invoker = true) as
 select
   s.id            as stock_item_id,
@@ -45,15 +53,16 @@ select
   p.maps_url      as pharmacy_maps_url,
   p.phone         as pharmacy_phone,
   p.whatsapp      as pharmacy_whatsapp,
-  s.in_stock,
+  p.opening_hours as pharmacy_opening_hours,
+  p.verified      as pharmacy_verified,
   s.quantity,
   s.price,
   s.available_from,
   s.expires_at,
+  s.confirmed_at,
   s.origin,
   s.brand,
   s.image_path,
-  s.confirmed_at,
   coalesce(
     (select jsonb_agg(
               jsonb_build_object(
@@ -84,3 +93,11 @@ grant select on public.stock_confirmed to anon, authenticated;
 create index if not exists stock_items_retired_idx
   on public.stock_items (pharmacy_id, retired_at)
   where retired_at is not null;
+
+-- ------------------------------------------------------------
+-- Verificação:
+--   select count(*) from stock_confirmed;               -- Localizador intacto
+--   select retired_at from stock_items limit 1;         -- coluna existe
+--   select indexname from pg_indexes
+--     where tablename='stock_items' and indexname like '%retired%';
+-- ------------------------------------------------------------

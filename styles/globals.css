@@ -853,6 +853,45 @@ html.dark .form-note {
     height: 64px;
   }
 
+  /* Botão invisível em volta da miniatura — só existe para dar o
+     toque/zoom (cursor + foco acessível). */
+  .res-track-photo-btn {
+    @apply p-0 border-0 bg-transparent cursor-pointer rounded-lg;
+    line-height: 0;
+    margin-top: 0.25rem;
+  }
+  .res-track-photo-btn:focus-visible {
+    outline: 2px solid var(--color-brand-primary);
+    outline-offset: 2px;
+  }
+
+  /* Lightbox da embalagem — scrim escuro, imagem centrada no máximo
+     do ecrã, fechar por clique fora / ✕ / Esc. */
+  .res-track-lightbox {
+    @apply fixed inset-0 z-50 flex items-center justify-center p-6;
+    background: rgba(10, 20, 16, 0.85);
+  }
+
+  .res-track-lightbox-img {
+    @apply rounded-xl border object-contain;
+    max-width: min(92vw, 640px);
+    max-height: 86vh;
+    border-color: rgba(255, 255, 255, 0.25);
+    background: #fff;
+  }
+
+  .res-track-lightbox-close {
+    @apply absolute top-4 right-4 w-10 h-10 rounded-full cursor-pointer;
+    border: 1px solid rgba(255, 255, 255, 0.4);
+    background: rgba(255, 255, 255, 0.12);
+    color: #fff;
+    font-size: 1.125rem;
+    line-height: 1;
+  }
+  .res-track-lightbox-close:hover {
+    background: rgba(255, 255, 255, 0.22);
+  }
+
   /* Placeholder com a inicial do fármaco (sem foto registada). */
   .drug-card-img--ph {
     @apply inline-flex items-center justify-center font-semibold;

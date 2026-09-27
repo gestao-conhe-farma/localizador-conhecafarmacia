@@ -106,6 +106,8 @@ function estimateTotal(r) {
 export default function ReservationStatus({ reservationId }) {
   const [r, setR] = useState(null)
   const [error, setError] = useState('')
+  // Lightbox da foto da embalagem — tocar na miniatura abre em grande.
+  const [zoom, setZoom] = useState(false)
 
   useEffect(() => {
     if (!/^[0-9a-f-]{36}$/i.test(reservationId || '')) {
@@ -156,6 +158,16 @@ export default function ReservationStatus({ reservationId }) {
     }
   }, [reservationId])
 
+  // Esc fecha o lightbox.
+  useEffect(() => {
+    if (!zoom) return
+    const onKey = (e) => {
+      if (e.key === 'Escape') setZoom(false)
+    }
+    window.addEventListener('keydown', onKey)
+    return () => window.removeEventListener('keydown', onKey)
+  }, [zoom])
+
   if (error) {
     return (
       <div className="res-track-card">
@@ -198,12 +210,20 @@ export default function ReservationStatus({ reservationId }) {
             que reservou, como no modal. Placeholder com a inicial quando
             a farmácia ainda não fotografou. */}
         {photoUrl ? (
-          <img
-            src={photoUrl}
-            alt={`Embalagem de ${r.drugs?.name || 'medicamento'}`}
-            className="drug-card-img drug-card-img--track"
-            loading="lazy"
-          />
+          <button
+            type="button"
+            className="res-track-photo-btn"
+            onClick={() => setZoom(true)}
+            title="Ver a embalagem em tamanho grande"
+            aria-label="Ver a embalagem em tamanho grande"
+          >
+            <img
+              src={photoUrl}
+              alt={`Embalagem de ${r.drugs?.name || 'medicamento'}`}
+              className="drug-card-img drug-card-img--track"
+              loading="lazy"
+            />
+          </button>
         ) : (
           <span className="drug-card-img drug-card-img--track drug-card-img--ph" aria-hidden="true">
             {(r.drugs?.name || '?').charAt(0).toUpperCase()}
@@ -294,6 +314,33 @@ export default function ReservationStatus({ reservationId }) {
         >
           Falar com a {r.pharmacies?.name} no WhatsApp
         </a>
+      )}
+
+      {/* Lightbox da embalagem — simples: scrim, imagem centrada e
+          fechar por toque fora, no ✕ ou na tecla Esc. */}
+      {zoom && photoUrl && (
+        <div
+          className="res-track-lightbox"
+          role="dialog"
+          aria-modal="true"
+          aria-label={`Embalagem de ${r.drugs?.name || 'medicamento'}`}
+          onClick={() => setZoom(false)}
+        >
+          <button
+            type="button"
+            className="res-track-lightbox-close"
+            aria-label="Fechar"
+            onClick={() => setZoom(false)}
+          >
+            ✕
+          </button>
+          <img
+            src={photoUrl}
+            alt={`Embalagem de ${r.drugs?.name || 'medicamento'}`}
+            className="res-track-lightbox-img"
+            onClick={(e) => e.stopPropagation()}
+          />
+        </div>
       )}
     </div>
   )

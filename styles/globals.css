@@ -860,6 +860,22 @@ html.dark .form-note {
     font-size: 1.375rem;
   }
 
+  /* Botão «Tirar foto» (input capture=environment com aparência de
+     botão secundário — o input cru de galeria fica acima). */
+  .portal-input--camera {
+    @apply cursor-pointer text-sm font-semibold text-center rounded-lg border px-3 py-2;
+    color: var(--color-brand-primary);
+    border-color: var(--color-brand-line);
+    background: var(--color-brand-card);
+    max-width: 220px;
+  }
+  .portal-input--camera::file-selector-button {
+    display: none;
+  }
+  .portal-input--camera:hover {
+    border-color: var(--color-brand-primary);
+  }
+
   /* Cabeçalho do acompanhamento: foto à esquerda, texto à direita. */
   .res-track-head {
     @apply flex items-start gap-4;

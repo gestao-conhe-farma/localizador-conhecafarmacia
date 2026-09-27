@@ -3,6 +3,7 @@
 import { useEffect, useMemo, useRef, useState } from 'react'
 import { getMyStockSnapshot, updateStockItem, uploadDrugImage } from '@/lib/actions/pharmacy-portal'
 import { createClient } from '@/lib/supabase/client'
+import { compressDrugImage } from '@/lib/image-compress'
 import { countExpiryBuckets, expiryStatus, expirySummary } from '@/lib/expiry'
 import DrugCreateForm from '@/components/portal/DrugCreateForm'
 import { setSaleOptions } from '@/lib/actions/pharmacy-portal'
@@ -138,6 +139,33 @@ function StockEditModal({ item, saving, onClose, onSave, onSaveOptions }) {
   // não existe aqui (o erro «setToast is not defined» era isto) e o
   // toast do pai ficava debaixo do scrim, invisível.
   const [fileMsg, setFileMsg] = useState('')
+
+  /** Upload com compressão client-side (máx. 800px JPEG) — partilhado
+   *  pelo input de galeria e pelo da câmara. */
+  const handleImageFile = async (f) => {
+    if (!f) return
+    setUploading(true)
+    setFileMsg('')
+    const compressed = await compressDrugImage(f)
+    const up = await uploadDrugImage({ drugId: item.drug_id, file: compressed })
+    setUploading(false)
+    if (up.ok) {
+      setImagePath(up.path)
+      setFileMsg(
+        compressed !== f
+          ? `Foto carregada ✓ (${Math.round(compressed.size / 1024)} KB, comprimida) — guarda para publicar.`
+          : 'Foto carregada ✓ — guarda para publicar.',
+      )
+    } else {
+      setFileMsg(
+        up.error === 'FICHEIRO_GRANDE'
+          ? 'Imagem acima de 2 MB mesmo após compressão — tenta outra foto.'
+          : up.error === 'TIPO_INVALIDO'
+            ? 'Só JPEG, PNG ou WebP.'
+            : 'Não foi possível carregar a foto.',
+      )
+    }
+  }
   // Opções de venda (0012). Sem opções registadas: começa vazio — o
   // botão "sugerir formas de venda" preenche com defaults pela forma.
   const [opts, setOpts] = useState(
@@ -324,25 +352,24 @@ function StockEditModal({ item, saving, onClose, onSave, onSaveOptions }) {
                 accept="image/jpeg,image/png,image/webp"
                 className="portal-input"
                 disabled={uploading}
-                onChange={async (e) => {
+                onChange={(e) => {
                   const f = e.target.files?.[0]
-                  if (!f) return
-                  setUploading(true)
-                  const up = await uploadDrugImage({ drugId: item.drug_id, file: f })
-                  setUploading(false)
-                  if (up.ok) {
-                    setImagePath(up.path)
-                    setFileMsg('Foto carregada ✓ — guarda para publicar.')
-                  } else {
-                    setFileMsg(
-                      up.error === 'FICHEIRO_GRANDE'
-                        ? 'Imagem acima de 2 MB — comprime ou fotografa de novo.'
-                        : up.error === 'TIPO_INVALIDO'
-                          ? 'Só JPEG, PNG ou WebP.'
-                          : 'Não foi possível carregar a foto.',
-                    )
-                    e.target.value = ''
-                  }
+                  e.target.value = '' // permite reescolher o mesmo ficheiro
+                  handleImageFile(f)
+                }}
+              />
+              {/* Câmara directa no telemóvel — abre a app da câmara
+                  (câmara traseira) sem passar pela galeria. */}
+              <input
+                type="file"
+                accept="image/jpeg,image/png,image/webp"
+                capture="environment"
+                className="portal-input portal-input--camera"
+                disabled={uploading}
+                onChange={(e) => {
+                  const f = e.target.files?.[0]
+                  e.target.value = ''
+                  handleImageFile(f)
                 }}
               />
               {uploading && <span className="portal-hint">A carregar…</span>}

@@ -704,17 +704,93 @@ export default function StockPanel({ compact = false }) {
   }, [items])
 
   const stockCount = (items || []).filter((it) => it.in_stock).length
-  const stale = (items || []).some(
+  // Itens desactualizados — a CONTAGEM, para o banner voltar quando a
+  // situação piora (o fecho (X) guarda a baseline, não dispensa para sempre).
+  const staleCount = (items || []).filter(
     (it) =>
       it.in_stock &&
       it.confirmed_at &&
       now - new Date(it.confirmed_at).getTime() > 5 * 24 * 3600 * 1000,
-  )
+  ).length
+  const stale = staleCount > 0
 
   // Aviso de validade a 90 / 60 / 30 dias (e já expirados). Só conta o que
   // está marcado como "temos" — validade de produto que já não há não interessa.
   const expiryBuckets = useMemo(() => countExpiryBuckets(items), [items])
   const expiryMessage = expirySummary(expiryBuckets)
+
+  // ── Acks dos banners (localStorage, estado de UI pessoal) ──
+  // Fechar (X) grava a "baseline" da situação naquele momento; o banner
+  // SÓ volta se a situação piorar (mais desactualizados, mais expirados).
+  // Se a situação melhorar, a baseline recalcula — o próximo agravamento
+  // volta a avisar. Nada disto impõe a decisão aos colegas: é por browser.
+  const [bannerAcks, setBannerAcks] = useState({})
+  useEffect(() => {
+    try {
+      setBannerAcks(JSON.parse(window.localStorage.getItem('cf-stock-banner-acks') || '{}'))
+    } catch {
+      /* sem storage: banners sempre visíveis — inofensivo */
+    }
+  }, [])
+  const dismissBanner = (kind, data) => {
+    const next = { ...bannerAcks, [kind]: { ...data, ts: Date.now() } }
+    setBannerAcks(next)
+    try {
+      window.localStorage.setItem('cf-stock-banner-acks', JSON.stringify(next))
+    } catch {
+      /* sem storage: fecha só para esta sessão */
+    }
+  }
+  // Baseline recalcula quando a situação MELHORA (senão, fechado com 2
+  // expirados, um novo expirado depois de corrigir os 2 ficava escondido).
+  useEffect(() => {
+    const a = bannerAcks.expiry
+    if (!a) return
+    if (
+      (expiryBuckets.expired || 0) < (a.expired || 0) ||
+      (expiryBuckets['30'] || 0) < (a['30'] || 0) ||
+      (expiryBuckets['60'] || 0) < (a['60'] || 0) ||
+      (expiryBuckets['90'] || 0) < (a['90'] || 0)
+    ) {
+      const next = { ...bannerAcks }
+      delete next.expiry
+      setBannerAcks(next)
+      try {
+        window.localStorage.setItem('cf-stock-banner-acks', JSON.stringify(next))
+      } catch {
+        /* noop */
+      }
+    }
+  }, [expiryBuckets, bannerAcks])
+  useEffect(() => {
+    const a = bannerAcks.stale
+    if (!a) return
+    if (staleCount < (a.count || 0)) {
+      const next = { ...bannerAcks }
+      delete next.stale
+      setBannerAcks(next)
+      try {
+        window.localStorage.setItem('cf-stock-banner-acks', JSON.stringify(next))
+      } catch {
+        /* noop */
+      }
+    }
+  }, [staleCount, bannerAcks])
+  // Visibilidade: banner visível se NÃO fechado, ou se a situação piorou
+  // em relação à baseline guardada no fecho.
+  const showStale = stale && (!bannerAcks.stale || staleCount > (bannerAcks.stale.count || 0))
+  const showExpiry =
+    Boolean(expiryMessage) &&
+    (() => {
+      const a = bannerAcks.expiry
+      if (!a) return true
+      return (
+        (expiryBuckets.expired || 0) > (a.expired || 0) ||
+        (expiryBuckets['30'] || 0) > (a['30'] || 0) ||
+        (expiryBuckets['60'] || 0) > (a['60'] || 0) ||
+        (expiryBuckets['90'] || 0) > (a['90'] || 0)
+      )
+    })()
 
   const save = async (it, patch) => {
     const next = { ...it, ...patch }
@@ -875,17 +951,40 @@ export default function StockPanel({ compact = false }) {
         </button>
       </div>
 
-      {stale && (
+      {showStale && (
         <div className="portal-banner" role="status">
-          O seu stock está desactualizado — actualize para voltar a aparecer como «confirmado» no
-          Localizador.
+          <span>
+            {staleCount === 1
+              ? 'O seu stock está desactualizado — actualize para voltar a aparecer como «confirmado» no Localizador.'
+              : `${staleCount} produtos com stock desactualizado — actualize para voltarem a aparecer como «confirmados» no Localizador.`}
+          </span>
+          <button
+            type="button"
+            className="portal-banner-close"
+            aria-label="Dispensar este lembrete (volta se a situação piorar)"
+            title="Dispensar — volta se a situação piorar"
+            onClick={() => dismissBanner('stale', { count: staleCount })}
+          >
+            <CloseIcon size={12} />
+          </button>
         </div>
       )}
 
-      {expiryMessage && (
+      {showExpiry && (
         <div className="portal-banner portal-banner--danger" role="alert">
-          Validade: {expiryMessage}. Os produtos com validade passada deixam de aparecer no
-          Localizador até a validade ser corrigida.
+          <span>
+            Validade: {expiryMessage}. Os produtos com validade passada deixam de aparecer no
+            Localizador até a validade ser corrigida.
+          </span>
+          <button
+            type="button"
+            className="portal-banner-close"
+            aria-label="Dispensar este lembrete (volta se a situação piorar)"
+            title="Dispensar — volta se a situação piorar"
+            onClick={() => dismissBanner('expiry', { ...expiryBuckets })}
+          >
+            <CloseIcon size={12} />
+          </button>
         </div>
       )}
 

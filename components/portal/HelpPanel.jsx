@@ -320,6 +320,15 @@ export default function HelpPanel() {
 
   const toggle = (id) => setOpenId((cur) => (cur === id ? null : id))
 
+  // «Rever tour»: limpa o flag do onboarding e reabre o tour (o PortalTour
+  // ouve este evento, limpa o storage e recomeça do passo 0).
+  const [tourMsg, setTourMsg] = useState('')
+  const replayTour = () => {
+    window.dispatchEvent(new CustomEvent('portal-tour:restart'))
+    setTourMsg('Tour reaberto — segue os passos destacados no ecrã.')
+    setTimeout(() => setTourMsg(''), 4000)
+  }
+
   return (
     <section className="portal-section">
       {/* Padrão único do portal: cabeçalho compacto. */}
@@ -421,6 +430,22 @@ export default function HelpPanel() {
           <b>Duas regras que valem ouro:</b> 1. Responde às reservas em menos de 72 horas. · 2.
           Registra toda a mercadoria que chega.
         </div>
+      </div>
+
+      {/* Rever o tour de boas-vindas — para quem fechou à pressa ou
+          quer voltar a ver os 3 passos com os destaques no ecrã. */}
+      <div className="help-replay">
+        <div>
+          <b>Rever o tour de boas-vindas</b>
+          <p>
+            Os 3 passos essenciais, com destaques sobre as páginas reais: reservas, atenção e
+            entrada de stock.
+          </p>
+          {tourMsg && <p className="help-replay-msg">{tourMsg}</p>}
+        </div>
+        <button type="button" className="btn btn-primary" onClick={replayTour}>
+          Rever tour
+        </button>
       </div>
 
       <p className="help-foot">

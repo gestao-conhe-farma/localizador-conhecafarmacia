@@ -102,6 +102,22 @@ export default function PortalTour({ userSub }) {
     // Sem gravar: reabre na próxima sessão (ver depois).
   }, [])
 
+  // «Rever tour» na página de Ajuda: limpa o flag do utilizador e
+  // recomeça do passo 0. Por evento window — a Ajuda não precisa de
+  // receber userSub nem o setter do tour através do shell.
+  useEffect(() => {
+    const restart = () => {
+      try {
+        localStorage.removeItem(STORAGE_KEY(userSub))
+      } catch {
+        /* sem storage: o tour simplesmente reabre */
+      }
+      setStepIdx(0)
+    }
+    window.addEventListener('portal-tour:restart', restart)
+    return () => window.removeEventListener('portal-tour:restart', restart)
+  }, [userSub])
+
   // Dispara uma vez: já fez o tour? Se não, começa no passo 0.
   useEffect(() => {
     if (!userSub) return

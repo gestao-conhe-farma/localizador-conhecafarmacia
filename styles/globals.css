@@ -3714,6 +3714,24 @@ html.dark .form-note {
     color: color-mix(in srgb, var(--color-brand-deep) 45%, transparent);
   }
 
+  /* Cartão «Rever tour» — chamada de acção leve no fundo da Ajuda. */
+  .help-replay {
+    @apply flex items-center justify-between gap-4 rounded-xl border p-4;
+    background: color-mix(in srgb, var(--color-brand-primary) 5%, var(--color-brand-card));
+    border-color: color-mix(in srgb, var(--color-brand-primary) 25%, transparent);
+  }
+  .help-replay b {
+    color: var(--color-brand-deep);
+  }
+  .help-replay p {
+    @apply m-0 text-sm;
+    color: color-mix(in srgb, var(--color-brand-deep) 65%, transparent);
+  }
+  .help-replay-msg {
+    @apply font-semibold;
+    color: var(--color-brand-primary) !important;
+  }
+
   .help-item-body {
     @apply px-4 pb-4 pt-1 text-sm leading-relaxed;
     color: var(--color-brand-deep);

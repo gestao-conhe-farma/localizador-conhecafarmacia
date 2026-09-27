@@ -351,6 +351,14 @@ function NavGrupo({ item, num, pathname, onClose }) {
     if (grupoAtivo) setAberto(true)
   }, [grupoAtivo])
 
+  // O tour de onboarding pede para abrir o submenu (passo 3 — o alvo
+  // vive aqui dentro e fechado mede 0 de altura).
+  useEffect(() => {
+    const open = () => setAberto(true)
+    window.addEventListener('portal-tour:open-submenu', open)
+    return () => window.removeEventListener('portal-tour:open-submenu', open)
+  }, [])
+
   const active = pathname === item.href || pathname.startsWith(item.href + '/')
 
   return (
@@ -380,14 +388,14 @@ function NavGrupo({ item, num, pathname, onClose }) {
         >
           <ChevronIcon size={14} dir={aberto ? 'down' : 'right'} />
         </button>
-      </div>
-
+      </div>{' '}
       {/* Sempre montado — a animação de altura faz o abrir/fechar via
           max-height (grid-template-rows em CSS grid seria alternativa).
           aria-hidden esconde dos leitores de ecrã quando fechado. */}
       <div
         className={`portal-nav-sub${aberto ? ' portal-nav-sub--open' : ''}`}
         aria-hidden={!aberto}
+        data-tour="stock-sub"
       >
         {item.filhos.map((f) => {
           const subAtivo = pathname === f.href || pathname.startsWith(f.href + '/')

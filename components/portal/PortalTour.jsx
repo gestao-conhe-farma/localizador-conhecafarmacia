@@ -41,11 +41,15 @@ const STEPS = [
     placement: 'bottom',
   },
   {
-    href: '/portal/entrada',
-    target: '[data-tour="restock-input"]',
-    title: 'Chegou mercadoria? Registe aqui',
-    body: 'Escolha o medicamento, escreva quantas unidades chegaram e toque «Somar» — o saldo actualiza na hora e o produto volta a aparecer no Localizador.',
-    placement: 'top',
+    // Alvo no SUBMENU da sidebar (não na página de entrada): o passo
+    // ensina onde a Entrada de stock vive — dentro de Stock. O efeito
+    // abre o submenu (openSubmenu) antes de medir o alvo.
+    href: '/portal/stock',
+    target: '[data-tour="stock-sub"]',
+    title: 'A entrada de stock vive aqui',
+    body: 'Dentro do menu Stock fica a Entrada de stock — toque na seta para abrir. Chegou mercadoria? Escolha o medicamento, escreva quantas unidades chegaram e toque «Somar»: o produto volta a aparecer no Localizador.',
+    placement: 'right',
+    openSubmenu: true,
   },
 ]
 
@@ -129,6 +133,12 @@ export default function PortalTour({ userSub }) {
     if (!window.location.pathname.startsWith(s.href)) {
       router.push(s.href)
     }
+    // Passos com openSubmenu: pede à sidebar para abrir o submenu do
+    // Stock (o alvo vive lá dentro — fechado, tem max-height: 0 e o
+    // rect mediria zero). A sidebar ouve este evento window.
+    if (s.openSubmenu) {
+      window.dispatchEvent(new CustomEvent('portal-tour:open-submenu'))
+    }
     // Tenta medir várias vezes: a navegação é client-side e o alvo
     // só existe depois de a página do portal carregar.
     let tries = 0
@@ -138,6 +148,16 @@ export default function PortalTour({ userSub }) {
       if (el) {
         setRect(measure(el))
         setReady(true)
+        return
+      }
+      // Alvo dentro do submenu fechado mede 0 de altura — só aceita
+      // quando tem área visível.
+      if (tries < 60 && el.getBoundingClientRect().height === 0) {
+        if (s.openSubmenu) {
+          window.dispatchEvent(new CustomEvent('portal-tour:open-submenu'))
+        }
+        tries += 1
+        raf = requestAnimationFrame(attempt)
         return
       }
       if (tries < 60) {

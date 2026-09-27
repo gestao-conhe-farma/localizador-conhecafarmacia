@@ -1128,7 +1128,19 @@ export default function StockPanel({ compact = false }) {
                     {[it.form, it.dosage].filter(Boolean).join(' · ')}
                   </p>
                   <div className="stock-card-foot">
-                    <span className="stock-card-hint">Retirado do catálogo</span>
+                    {/* Data completa no hover (title); no card, só o há X d. */}
+                    <span
+                      className="stock-card-hint"
+                      title={`Retirado em ${new Date(it.retired_at).toLocaleString('pt-PT', {
+                        day: 'numeric',
+                        month: 'long',
+                        year: 'numeric',
+                        hour: '2-digit',
+                        minute: '2-digit',
+                      })}`}
+                    >
+                      Retirado {timeAgo(it.retired_at, now)}
+                    </span>
                     <button
                       type="button"
                       className="portal-toggle"

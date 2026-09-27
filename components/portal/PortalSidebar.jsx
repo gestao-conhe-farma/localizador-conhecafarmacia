@@ -82,7 +82,7 @@ const NAV = [
     items: [
       {
         href: '/portal/perfil',
-        label: 'Perfil da farmácia',
+        label: 'Perfil',
         icon: (
           <>
             <circle cx="12" cy="8" r="4" />

@@ -37,6 +37,7 @@ export function ChevronIcon({ size = 12, dir = 'down' }) {
       {...BASE}
       width={size}
       height={size}
+      className="ui-chevron"
       style={{ transform: `rotate(${rotate[dir] || 0}deg)` }}
     >
       <path d="m6 9 6 6 6-6" />

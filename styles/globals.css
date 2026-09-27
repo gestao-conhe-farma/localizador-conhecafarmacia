@@ -3713,6 +3713,16 @@ html.dark .form-note {
     @apply ml-auto text-xs flex-shrink-0;
     color: color-mix(in srgb, var(--color-brand-deep) 45%, transparent);
   }
+  /* Rotação suave do chevron do acordeão (e de qualquer ui-chevron):
+     a rotação vem do style inline do ícone; aqui só a animamos. */
+  .help-item-chevron svg {
+    transition: transform 0.2s ease;
+  }
+  @media (prefers-reduced-motion: reduce) {
+    .help-item-chevron svg {
+      transition: none;
+    }
+  }
 
   /* Cartão «Rever tour» — chamada de acção leve no fundo da Ajuda. */
   .help-replay {

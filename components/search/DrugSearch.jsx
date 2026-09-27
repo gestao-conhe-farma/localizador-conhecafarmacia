@@ -26,7 +26,7 @@ const MUNICIPIOS = [
   'Viana',
 ]
 
-const fmtKz = (n) => new Intl.NumberFormat('pt-AO', { maximumFractionDigits: 0 }).format(n) + ' Kz'
+import { fmtKzPublic as fmtKz } from '@/lib/reservation-format'
 
 /** Código do país da origem (0013) — «PT», «IN»… em selo de texto. */
 import { ORIGIN_CODES, originCode } from '@/lib/origin-flags'

@@ -10,7 +10,7 @@ import { logError } from '@/lib/log'
 import ReserveModal from '@/components/search/ReserveModal'
 import { formatOptionLabel, formatPerBase, unitLabel } from '@/lib/sale-options'
 
-const fmtKz = (n) => new Intl.NumberFormat('pt-AO', { maximumFractionDigits: 0 }).format(n) + ' Kz'
+import { fmtKzPublic as fmtKz } from '@/lib/reservation-format'
 
 import { originCode } from '@/lib/origin-flags'
 

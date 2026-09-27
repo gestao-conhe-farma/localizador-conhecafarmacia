@@ -77,21 +77,7 @@ function concludedMessage(stock) {
   return 'Reserva concluída — o stock foi actualizado.'
 }
 
-const fmtKz = (n) => new Intl.NumberFormat('pt-AO', { maximumFractionDigits: 2 }).format(n) + ' Kz'
-
-/**
- * Valor estimado da reserva (0012): quantidade × preço da opção.
- * Mesma regra do acompanhamento público — estimativa, o preço final
- * é o do balcão. Reservas legadas sem opção: nada a mostrar (não
- * há preço de onde vir sem arriscar mentir).
- */
-function estimateTotal(r) {
-  const opt = r.stock_sale_options
-  if (!opt || opt.price == null) return null
-  const qty = r.confirmed_quantity ?? r.quantity
-  if (qty == null) return null
-  return Math.round(qty * Number(opt.price) * 100) / 100
-}
+import { fmtKz, estimateTotal } from '@/lib/reservation-format'
 
 /**
  * Descrição completa do que foi reservado (0012): "1 caixa (3 lâminas)"

@@ -3,6 +3,7 @@
 import { useEffect, useMemo, useState } from 'react'
 import { getSalesReport } from '@/lib/actions/pharmacy-portal'
 import { logWarn } from '@/lib/log'
+import { fmtKz } from '@/lib/reservation-format'
 
 /**
  * Mini-relatório de vendas — total estimado por dia a partir das
@@ -20,8 +21,6 @@ const WINDOWS = [
   { id: 30, label: '30 dias' },
   { id: 90, label: '90 dias' },
 ]
-
-const fmtKz = (n) => new Intl.NumberFormat('pt-AO', { maximumFractionDigits: 2 }).format(n) + ' Kz'
 
 const ERRORES = {
   SESSAO_EXPIRADA: 'Sessão expirada — recarregue a página e entre novamente.',

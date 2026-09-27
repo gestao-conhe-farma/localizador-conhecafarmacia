@@ -45,47 +45,8 @@ function fmtDate(iso) {
   })
 }
 
-/**
- * O que foi pedido/confirmado, com a forma de venda (0012) quando
- * existe: "1 caixa (3 lâminas)" — nunca um número solto sem unidade.
- */
-function quantityLine(r) {
-  const opt = r.stock_sale_options
-  const base = opt ? opt.unit : null
-  const pack = opt ? (opt.pack_size ?? 1) : 1
-
-  const desc = (q) => {
-    if (!opt) return `${q} unidade${q !== 1 ? 's' : ''}`
-    if (pack > 1) return `${q} ${opt.unit}${q !== 1 ? 's' : ''} (${pack} ${base || 'un.'} cada)`
-    return `${q} ${opt.unit}${q !== 1 ? 's' : ''}`
-  }
-
-  if (r.confirmed_quantity != null && r.confirmed_quantity !== r.quantity) {
-    return `Confirmado: ${desc(r.confirmed_quantity)} (pediu ${desc(r.quantity)})`
-  }
-  return `Quantidade: ${desc(r.quantity)}`
-}
-
-const fmtKz = (n) => new Intl.NumberFormat('pt-AO', { maximumFractionDigits: 2 }).format(n) + ' Kz'
-
-/** Código do país da origem (0013) — «PT» em selo, igual aos outros ecrãs. */
 import { originCode } from '@/lib/origin-flags'
-
-/**
- * Preço total ESTIMADO da reserva (0012): quantidade da opção × preço
- * da opção. É uma estimativa — o preço final é o do balcão; a farmácia
- * pode ajustar a quantidade na confirmação (usa confirmed_quantity).
- *
- * @returns {number|null} null = sem opção de venda ou preço indisponível
- *   (reservas legadas não mostram preço — não há de onde vir)
- */
-function estimateTotal(r) {
-  const opt = r.stock_sale_options
-  if (!opt || opt.price == null) return null
-  const qty = r.confirmed_quantity ?? r.quantity
-  if (qty == null) return null
-  return Math.round(qty * Number(opt.price) * 100) / 100
-}
+import { fmtKz, estimateTotal, quantityDesc, quantityLine } from '@/lib/reservation-format'
 
 /**
  * Estado da reserva para o cliente — leitura directa por id (RLS da
@@ -192,31 +153,14 @@ export default function ReservationStatus({ reservationId }) {
   const originBits = [r.stock_items?.brand, r.stock_items?.origin].filter(Boolean)
   const drugDesc = originBits.length
     ? `${r.drugs?.name || 'medicamento'} (de ${originBits.join(', origem ')})`
-    : r.drugs?.name || 'medicamento' // Quantidade (com forma de venda, no formato das mensagens oficiais:
-  // "1 caixa (cada uma com 3 lâminas)") e valor estimado — o atendente
-  // recebe a reserva completa na primeira mensagem, sem ir ao portal.
-  const UNIT_LABELS = {
-    comprimido: 'comprimido',
-    lamina: 'lâmina',
-    caixa: 'caixa',
-    frasco: 'frasco',
-    ampola: 'ampola',
-    unidade: 'unidade',
-  }
-  const waQtyDesc = (q) => {
-    const opt = r.stock_sale_options
-    if (!opt) return `${q} unidade${q !== 1 ? 's' : ''}`
-    const label = UNIT_LABELS[opt.unit] || opt.unit
-    if ((opt.pack_size ?? 1) > 1)
-      return `${q} ${label}${q !== 1 ? 's' : ''} (cada uma com ${opt.pack_size} unidades)`
-    return `${q} ${label}${q !== 1 ? 's' : ''}`
-  }
-  const waQtyQty = r.confirmed_quantity ?? r.quantity
+    : r.drugs?.name || 'medicamento'
+  // Quantidade e valor pela formatação única (lib/reservation-format) —
+  // o atendente recebe a reserva completa na primeira mensagem.
   const waTotal = estimateTotal(r)
   const waLinkHref = waNumber
     ? `https://wa.me/${String(waNumber).replace(/\D/g, '')}?text=${encodeURIComponent(
         [
-          `Olá! Tenho uma reserva de ${drugDesc} — ${waQtyDesc(waQtyQty)}.`,
+          `Olá! Tenho uma reserva de ${drugDesc} — ${quantityDesc(r)}.`,
           waTotal != null ? `Valor estimado: ${fmtKz(waTotal)} (a confirmar no balcão).` : '',
           `Levantamento em nome de ${r.requester_name}.`,
           `Link da reserva: ${trackingUrl(r.id)}`,

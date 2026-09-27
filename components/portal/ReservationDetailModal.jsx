@@ -24,7 +24,7 @@ const BADGES = {
   expirada: { label: 'Expirada', cls: 'portal-badge--off' },
 }
 
-const fmtKz = (n) => new Intl.NumberFormat('pt-AO', { maximumFractionDigits: 2 }).format(n) + ' Kz'
+import { fmtKz, estimateTotal } from '@/lib/reservation-format'
 
 /** Data/hora completa — o modal é onde o "há 2 h" do card se abre em dia e hora. */
 function fmtDateTime(iso) {
@@ -61,15 +61,6 @@ function saleOptionInfo(r) {
   const pack = opt.pack_size ?? 1
   const unit = pack > 1 ? `${opt.unit} (${pack} ${baseLabel || 'un.'})` : opt.unit
   return `${r.quantity} × ${unit}`
-}
-
-/** Valor estimado (0012) — quantidade × preço da opção. */
-function estimateTotal(r) {
-  const opt = r.stock_sale_options
-  if (!opt || opt.price == null) return null
-  const qty = r.confirmed_quantity ?? r.quantity
-  if (qty == null) return null
-  return Math.round(qty * Number(opt.price) * 100) / 100
 }
 
 /**

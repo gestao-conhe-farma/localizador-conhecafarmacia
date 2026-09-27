@@ -284,6 +284,7 @@ export default function PortalSidebar({ pharmacyId, userName, navOpen, onClose }
                     )}
                     {t.bell && pending > 0 && (
                       <span
+                        data-tour="bell"
                         className={`portal-nav-badge portal-nav-badge--amber${pulse ? ' portal-nav-badge--pulse' : ''}`}
                         title={`${pending} reserva(s) por atender`}
                       >

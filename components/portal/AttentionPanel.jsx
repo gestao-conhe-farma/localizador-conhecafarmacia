@@ -181,7 +181,12 @@ export default function AttentionPanel({ pharmacyId }) {
       {/* Toolbar única — chips por tipo de assunto, na linha do padrão
           único do portal (igual a Stock/Reservas/Entrada). */}
       <div className="portal-toolbar portal-toolbar--left">
-        <div className="portal-chips" role="group" aria-label="Filtrar assuntos por tipo">
+        <div
+          className="portal-chips"
+          role="group"
+          aria-label="Filtrar assuntos por tipo"
+          data-tour="chips"
+        >
           {chips.map((c) => (
             <button
               key={c.id}

@@ -2755,6 +2755,78 @@ html.dark .form-note {
     }
   }
 
+  /* ── Tour de onboarding — spotlight sobre as páginas reais ── */
+  .portal-tour-spot {
+    position: fixed;
+    z-index: 80;
+    border-radius: 12px;
+    /* A caixa do alvo fica «transparente»: a sombra gigante escurece
+       tudo à volta (spread enorme), o elemento real continua visível
+       e clicável NÃO — clique no spotlight interrompe o tour. */
+    box-shadow: 0 0 0 9999px rgba(8, 22, 17, 0.72);
+    pointer-events: auto;
+    cursor: pointer;
+    transition: all 0.25s ease;
+  }
+
+  .portal-tour-card {
+    @apply fixed z-[90] flex flex-col gap-2 rounded-xl border p-4 shadow-lg;
+    width: 320px;
+    max-width: calc(100vw - 32px);
+    background: var(--color-brand-card);
+    border-color: var(--color-brand-line);
+    transition: all 0.25s ease;
+  }
+
+  .portal-tour-step {
+    @apply text-xs font-bold uppercase tracking-wide;
+    color: var(--color-brand-accent);
+  }
+
+  .portal-tour-title {
+    @apply text-lg font-semibold m-0;
+    color: var(--color-brand-deep);
+  }
+
+  .portal-tour-body {
+    @apply text-sm m-0;
+    color: color-mix(in srgb, var(--color-brand-deep) 70%, transparent);
+  }
+
+  .portal-tour-actions {
+    @apply flex items-center gap-2 mt-1;
+  }
+
+  .portal-tour-btn {
+    @apply cursor-pointer rounded-lg px-3 py-1.5 text-sm font-semibold;
+  }
+  .portal-tour-btn--ghost {
+    @apply border bg-transparent;
+    color: color-mix(in srgb, var(--color-brand-deep) 65%, transparent);
+    border-color: var(--color-brand-line);
+  }
+  .portal-tour-btn--main {
+    @apply border-0 text-white;
+    background: var(--color-brand-primary);
+  }
+  .portal-tour-btn--main:hover {
+    background: color-mix(in srgb, var(--color-brand-primary) 85%, black);
+  }
+
+  .portal-tour-dots {
+    @apply flex gap-1.5 ml-auto mr-1;
+  }
+  .portal-tour-dot {
+    width: 6px;
+    height: 6px;
+    border-radius: 999px;
+    background: var(--color-brand-line);
+  }
+  .portal-tour-dot.is-on {
+    background: var(--color-brand-primary);
+    width: 16px;
+  }
+
   /* Mobile: KPIs empilham, rótulos dos dias mostram só alguns. */
   @media (max-width: 640px) {
     .sales-kpis {

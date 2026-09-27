@@ -26,7 +26,7 @@ export default async function PortalLayout({ children }) {
   const { profile, pharmacy } = session
 
   return (
-    <PortalShell pharmacy={pharmacy} userName={profile.display_name}>
+    <PortalShell pharmacy={pharmacy} userName={profile.display_name} userSub={profile.user_id}>
       {children}
     </PortalShell>
   )

@@ -317,7 +317,7 @@ export default function RestockPanel() {
                 <span className="restock-balance-k">em stock</span>
               </div>
 
-              <div className="restock-form">
+              <div className="restock-form" data-tour="restock-input">
                 <label className="restock-field">
                   <span className="restock-field-k">Chegaram</span>
                   <input

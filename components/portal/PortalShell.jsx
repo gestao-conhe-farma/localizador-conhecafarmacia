@@ -2,6 +2,7 @@
 
 import { useState } from 'react'
 import PortalSidebar from '@/components/portal/PortalSidebar'
+import PortalTour from '@/components/portal/PortalTour'
 
 /**
  * Shell do portal (padrão da plataforma de gestão): sidebar verde de
@@ -9,8 +10,11 @@ import PortalSidebar from '@/components/portal/PortalSidebar'
  * utilizador no fundo; top-bar dentro da coluna de conteúdo ao lado,
  * com o nome da farmácia (onde antes estava o utilizador).
  * Fundo e conteúdo partilham a mesma cor (bg-alt); mobile: drawer.
+ *
+ * O tour de onboarding vive aqui — dentro do shell, por cima de tudo,
+ * porque navega entre as páginas reais do portal.
  */
-export default function PortalShell({ pharmacy, userName, children }) {
+export default function PortalShell({ pharmacy, userName, userSub, children }) {
   const [navOpen, setNavOpen] = useState(false)
 
   return (
@@ -86,6 +90,8 @@ export default function PortalShell({ pharmacy, userName, children }) {
 
         {children}
       </div>
+
+      <PortalTour userSub={userSub} />
     </div>
   )
 }

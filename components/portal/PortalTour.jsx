@@ -140,27 +140,36 @@ export default function PortalTour({ userSub }) {
       window.dispatchEvent(new CustomEvent('portal-tour:open-submenu'))
     }
     // Tenta medir várias vezes: a navegação é client-side e o alvo
-    // só existe depois de a página do portal carregar.
+    // só existe depois de a página do portal carregar. Se 3 segundos
+    // não chegarem (ex.: o sino não existe porque não há reservas
+    // pendentes), SALTA o passo automaticamente — o tour nunca fica
+    // preso à espera de um elemento que não vai nascer.
+    const skip = setTimeout(() => {
+      // Último passo: termina (grava como feito); senão avança.
+      if (stepIdx === STEPS.length - 1) {
+        finish()
+      } else {
+        setStepIdx((i) => i + 1)
+      }
+    }, 3000)
     let tries = 0
     let raf = 0
     const attempt = () => {
       const el = document.querySelector(s.target)
-      if (el) {
+      // Alvo dentro do submenu fechado mede 0 de altura — só aceita
+      // quando existe E tem área visível.
+      if (el && el.getBoundingClientRect().height > 0) {
         setRect(measure(el))
         setReady(true)
+        clearTimeout(skip)
         return
       }
-      // Alvo dentro do submenu fechado mede 0 de altura — só aceita
-      // quando tem área visível.
-      if (tries < 60 && el.getBoundingClientRect().height === 0) {
-        if (s.openSubmenu) {
-          window.dispatchEvent(new CustomEvent('portal-tour:open-submenu'))
-        }
-        tries += 1
-        raf = requestAnimationFrame(attempt)
-        return
+      if (!el && s.openSubmenu) {
+        // Pede de novo à sidebar (o evento pode ter chegado antes de
+        // o componente montar o listener).
+        window.dispatchEvent(new CustomEvent('portal-tour:open-submenu'))
       }
-      if (tries < 60) {
+      if (tries < 180) {
         tries += 1
         raf = requestAnimationFrame(attempt)
       }
@@ -173,12 +182,13 @@ export default function PortalTour({ userSub }) {
     window.addEventListener('resize', remeasure)
     window.addEventListener('scroll', remeasure, true)
     return () => {
+      clearTimeout(skip)
       cancelAnimationFrame(raf)
       window.removeEventListener('keydown', onKey)
       window.removeEventListener('resize', remeasure)
       window.removeEventListener('scroll', remeasure, true)
     }
-  }, [stepIdx, router, remeasure, postpone])
+  }, [stepIdx, router, remeasure, postpone, finish])
 
   // Inactivo ou ainda a medir o alvo: não renderiza nada (o rect pode
   // nem existir ainda — daí o return completo, sem if aninhado).

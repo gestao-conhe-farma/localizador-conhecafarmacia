@@ -94,6 +94,16 @@ export default function AttentionPanel({ pharmacyId }) {
 
   const total = restock.length + expiry.length + stale.length
 
+  // Chips de filtro — «Reposição» desconta as dispensadas neste browser
+  // (os acks), tal como a lista que mostra.
+  const [typeFilter, setTypeFilter] = useState('all')
+  const chips = [
+    { id: 'all', label: 'Todos', n: total },
+    { id: 'restock', label: 'Reposição', n: restock.length },
+    { id: 'expiry', label: 'Validade', n: expiry.length },
+    { id: 'stale', label: 'Desactualizado', n: stale.length },
+  ]
+
   /** Guarda por fármaco — o mesmo caminho do StockPanel, com todos os campos. */
   const save = async (it, patch) => {
     setBusy(`${it.kind}:${it.drug_id}`)
@@ -156,17 +166,21 @@ export default function AttentionPanel({ pharmacyId }) {
         </div>
       </div>
 
-      <div className="portal-section-head">
-        <h2 className="portal-h2">Assuntos do dia</h2>
-        <span className="portal-count">
-          {total > 0 ? (
-            <>
-              <b>{total}</b> assunto{total !== 1 && 's'} para hoje
-            </>
-          ) : (
-            'Nada para hoje'
-          )}
-        </span>
+      {/* Toolbar única — chips por tipo de assunto, na linha do padrão
+          único do portal (igual a Stock/Reservas/Entrada). */}
+      <div className="portal-toolbar portal-toolbar--left">
+        <div className="portal-chips" role="group" aria-label="Filtrar assuntos por tipo">
+          {chips.map((c) => (
+            <button
+              key={c.id}
+              type="button"
+              className={`portal-chip${typeFilter === c.id ? ' portal-chip--active' : ''}`}
+              onClick={() => setTypeFilter(c.id)}
+            >
+              {c.label} <span className="portal-chip-n">{c.n}</span>
+            </button>
+          ))}
+        </div>
       </div>
 
       {total === 0 && (
@@ -180,7 +194,7 @@ export default function AttentionPanel({ pharmacyId }) {
       )}
 
       {/* ── REPOSIÇÃO ─────────────────────────────────────────── */}
-      {restock.length > 0 && (
+      {(typeFilter === 'all' || typeFilter === 'restock') && restock.length > 0 && (
         <>
           <div className="portal-attention-group-head">
             <h3 className="portal-attention-h3">Repor stock — vendido até esgotar</h3>
@@ -236,7 +250,7 @@ export default function AttentionPanel({ pharmacyId }) {
       )}
 
       {/* ── VALIDADE ──────────────────────────────────────────── */}
-      {expiry.length > 0 && (
+      {(typeFilter === 'all' || typeFilter === 'expiry') && expiry.length > 0 && (
         <>
           <div className="portal-attention-group-head">
             <h3 className="portal-attention-h3">Validade — 90 / 60 / 30 dias e expirados</h3>
@@ -302,7 +316,7 @@ export default function AttentionPanel({ pharmacyId }) {
       )}
 
       {/* ── STALE ─────────────────────────────────────────────── */}
-      {stale.length > 0 && (
+      {(typeFilter === 'all' || typeFilter === 'stale') && stale.length > 0 && (
         <>
           <div className="portal-attention-group-head">
             <h3 className="portal-attention-h3">Stock desactualizado — mais de 5 dias</h3>

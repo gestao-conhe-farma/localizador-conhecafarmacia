@@ -112,13 +112,19 @@ medicamento. Abre o modal de edição:
 - **Disponível a partir de** — se a mercadoria só chega dia X, marca aqui:
   o cliente vê «chega dia X» no Localizador.
 - **Preço** — usado quando não há formas de venda (ver abaixo).
-- **Origem e Marca** — o cliente valoriza: 🇵🇹 Portugal, 🇮🇳 Índia… e a marca
+- **Origem e Marca** — o cliente valoriza: Portugal (PT), Índia (IN)… e a marca
   (ex.: Ben-u-ron). Preenche sempre que souberes — ajuda a venda!
 - **Foto da embalagem** — fotografa a caixa real da prateleira (até 2 MB).
   O cliente vê a foto e confia mais.
 - **Como vende este medicamento?** — se vendes **lâmina** e também **caixa**,
   registra as duas formas com o preço de cada uma. Ex.: lâmina 100 Kz ·
   caixa com 3 lâminas 300 Kz. Quem reserva escolhe a forma que quiser.
+- **Retirar do catálogo** — se a farmácia **deixou de vender** aquela
+  apresentação (descontinuada, lote perdido), toca no botão vermelho no fundo
+  do modal e confirma. O medicamento sai do Localizador e fica na **Lixeira**
+  (chip «Lixeira» na barra de filtros do Stock), de onde pode ser restaurado.
+  Atenção à diferença: «não disponível» = «não tenho agora, volto a ter»;
+  retirado = «não vendo mais». Em caso de dúvida, deixa só «não disponível».
 
 Toca em **Guardar** — tudo fica visível no Localizador imediatamente.
 

@@ -187,6 +187,12 @@ const TOPICS = [
             <b>Como vende este medicamento?</b> — se vendes lâmina e caixa, registra as duas formas
             com o preço de cada. Ex.: lâmina 100 Kz · caixa com 3 lâminas 300 Kz.
           </li>
+          <li>
+            <b>Retirar do catálogo</b> — para o que a farmácia <b>deixou de vender</b>: botão
+            vermelho no fundo do modal, confirma, e o medicamento sai do Localizador e das listas —
+            fica na <b>Lixeira</b> (chip no Stock), de onde pode ser restaurado. «Não disponível» é
+            «não tenho agora»; retirado é «não vendo mais».
+          </li>
         </ul>
         <p>
           Toca em <b>Guardar</b> — tudo fica visível no Localizador imediatamente.
@@ -240,6 +246,11 @@ const CHEATSHEET = [
   ['Produto esgotou', 'Atenção', '«Repor na entrada» quando chegar mercadoria'],
   ['Chegou fornecedor', 'Stock → Entrada de stock', 'Escrever unidades → Somar'],
   ['Mudou preço/validade/marca', 'Stock → nome do medicamento', 'Preencher no modal → Guardar'],
+  [
+    'Deixou de vender um produto',
+    'Stock → modal → Retirar',
+    'Confirma — fica na Lixeira (restaurável)',
+  ],
 ]
 
 export default function HelpPanel() {

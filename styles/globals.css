@@ -925,6 +925,31 @@ html.dark .form-note {
     border-color: var(--color-brand-primary);
   }
 
+  /* ── Retirada / Lixeira (0014) ── */
+  /* Botão de retirar dentro do modal — vermelho de atenção, separado. */
+  .stock-retire-btn {
+    @apply cursor-pointer rounded-lg px-3 py-2 text-sm font-semibold;
+    grid-column: 1 / -1;
+    margin-top: 0.25rem;
+    border: 1px solid color-mix(in srgb, #c0392b 40%, transparent);
+    background: transparent;
+    color: #c0392b;
+  }
+  .stock-retire-btn:hover {
+    background: color-mix(in srgb, #c0392b 8%, transparent);
+  }
+
+  /* Card na lixeira — esbatido, sem acções de stock. */
+  .stock-card--retired {
+    opacity: 0.72;
+    border-style: dashed;
+  }
+  .stock-card--retired .stock-card-name--static {
+    cursor: default;
+    text-decoration: line-through;
+    text-decoration-color: color-mix(in srgb, #c0392b 55%, transparent);
+  }
+
   /* Cabeçalho do acompanhamento: foto à esquerda, texto à direita. */
   .res-track-head {
     @apply flex items-start gap-4;

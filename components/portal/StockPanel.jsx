@@ -1,7 +1,13 @@
 'use client'
 
 import { useEffect, useMemo, useRef, useState } from 'react'
-import { getMyStockSnapshot, updateStockItem, uploadDrugImage } from '@/lib/actions/pharmacy-portal'
+import {
+  getMyStockSnapshot,
+  updateStockItem,
+  uploadDrugImage,
+  retireStockItem,
+  restoreStockItem,
+} from '@/lib/actions/pharmacy-portal'
 import { createClient } from '@/lib/supabase/client'
 import { compressDrugImage } from '@/lib/image-compress'
 import { countExpiryBuckets, expiryStatus, expirySummary } from '@/lib/expiry'
@@ -56,6 +62,9 @@ const ERRORES = {
   MEDICAMENTO_INEXISTENTE: 'Medicamento não disponível no catálogo.',
   FALHA_GUARDAR: 'Não foi possível guardar. Tente novamente.',
   FALHA_CARREGAR: 'Não foi possível carregar o stock.',
+  ITEM_INEXISTENTE: 'Item não encontrado no seu stock.',
+  FALHA_RETIRAR: 'Não foi possível retirar. Tente novamente.',
+  FALHA_RESTAURAR: 'Não foi possível restaurar. Tente novamente.',
 }
 
 /** Data (YYYY-MM-DD) local de hoje, para o min do input date. */
@@ -74,6 +83,7 @@ const FILTERS = [
   { id: 'in', label: 'Disponível' },
   { id: 'out', label: 'Não disponível' },
   { id: 'exp', label: 'Validade a vencer' },
+  { id: 'retired', label: 'Lixeira' },
 ]
 
 /** Critérios de ordenação — ids curtos, como os sci-sort-btn do principal. */
@@ -115,7 +125,7 @@ const PAGE_SIZE = 24
  * a partir de" e preço num só cartão, sobre um scrim que ofusca a página.
  * Guarda UMA vez — menos blur-save espalhado por inputs pequenos.
  */
-function StockEditModal({ item, saving, onClose, onSave, onSaveOptions }) {
+function StockEditModal({ item, saving, onClose, onSave, onSaveOptions, onRetire }) {
   // Estado local por campo — o modal é efémero (recriado a cada abertura),
   // por isso inicializar a partir do item é seguro.
   const [quantity, setQuantity] = useState(item.quantity != null ? String(item.quantity) : '')
@@ -526,6 +536,24 @@ function StockEditModal({ item, saving, onClose, onSave, onSaveOptions }) {
             <button type="submit" className="btn btn-primary" disabled={saving}>
               {saving ? 'A guardar…' : 'Guardar'}
             </button>
+            {/* Retirar (0014): Remove o medicamento do catálogo da farmácia
+                — vai para a Lixeira (restaurável). Separdo por linha. */}
+            <button
+              type="button"
+              className="stock-retire-btn"
+              disabled={saving}
+              onClick={() => {
+                if (
+                  window.confirm(
+                    `Retirar "${item.name}" do seu catálogo?\n\nO medicamento desaparece do Localizador e fica na Lixeira, onde pode ser restaurado.`,
+                  )
+                ) {
+                  onRetire(item)
+                }
+              }}
+            >
+              Retirar do catálogo
+            </button>
           </div>
         </form>
       </div>
@@ -602,6 +630,21 @@ export default function StockPanel({ compact = false }) {
     if (!items) return []
     const q = query.trim().toLowerCase()
     const rows = items.filter((it) => {
+      // Retirados (0014) só aparecem no chip Lixeira — nunca na lista
+      // normal, nem em «Todos», nem em «Não disponível».
+      const retirado = Boolean(it.retired_at)
+      if (filter !== 'retired' && retirado) return false
+      if (filter === 'retired') {
+        if (!retirado) return false
+        if (
+          q &&
+          !it.name.toLowerCase().includes(q) &&
+          !(it.molecule || '').toLowerCase().includes(q)
+        ) {
+          return false
+        }
+        return true
+      }
       if (
         q &&
         !it.name.toLowerCase().includes(q) &&
@@ -642,8 +685,12 @@ export default function StockPanel({ compact = false }) {
   // Contagens dos chips — sobre a lista COMPLETA (não a filtrada), para
   // funcionarem como atalhos de "quantos há em cada estado".
   const counts = useMemo(() => {
-    const c = { all: 0, in: 0, out: 0, exp: 0 }
+    const c = { all: 0, in: 0, out: 0, exp: 0, retired: 0 }
     for (const it of items || []) {
+      if (it.retired_at) {
+        c.retired += 1
+        continue // retirados não contam nos chips do catálogo
+      }
       c.all += 1
       if (it.in_stock) {
         c.in += 1
@@ -714,6 +761,53 @@ export default function StockPanel({ compact = false }) {
     }
     setToast(ERRORES[res.error] || 'Erro inesperado.')
     return false
+  }
+
+  /** RETIRAR (lixeira, 0014): confirma, marca retired_at, remove da lista. */
+  const retire = async (it) => {
+    if (
+      !window.confirm(
+        `Retirar "${it.name}" do seu catálogo?\n\nO medicamento desaparece do Localizador e desta lista — fica na Lixeira, onde pode ser restaurado.`,
+      )
+    ) {
+      return
+    }
+    setSavingId(it.drug_id)
+    setToast('')
+    const res = await retireStockItem({ drugId: it.drug_id })
+    setSavingId(null)
+    if (res.ok) {
+      setItems((list) =>
+        list.map((row) =>
+          row.drug_id === it.drug_id
+            ? { ...row, retired_at: new Date().toISOString(), in_stock: false }
+            : row,
+        ),
+      )
+      setToast(`"${it.name}" retirado — visível na Lixeira.`)
+      setTimeout(() => setToast(''), 3000)
+    } else {
+      setToast(ERRORES[res.error] || 'Erro inesperado.')
+    }
+  }
+
+  /** RESTAURAR da lixeira: volta à lista como «não disponível». */
+  const restore = async (it) => {
+    setSavingId(it.drug_id)
+    setToast('')
+    const res = await restoreStockItem({ drugId: it.drug_id })
+    setSavingId(null)
+    if (res.ok) {
+      setItems((list) =>
+        list.map((row) =>
+          row.drug_id === it.drug_id ? { ...row, retired_at: null, in_stock: false } : row,
+        ),
+      )
+      setToast(`"${it.name}" restaurado — religue no modal quando quiser.`)
+      setTimeout(() => setToast(''), 3000)
+    } else {
+      setToast(ERRORES[res.error] || 'Erro inesperado.')
+    }
   }
 
   /** Guarda a partir do modal e fecha-o se correu bem. */
@@ -879,6 +973,31 @@ export default function StockPanel({ compact = false }) {
           {filtered.slice(0, visibleCount).map((it) => {
             const expiry = expiryStatus(it.expires_at)
             const coming = it.available_from && new Date(it.available_from).getTime() > now
+            // Card na Lixeira: só nome, meta e o botão de restaurar.
+            if (it.retired_at) {
+              return (
+                <article key={it.drug_id} className="stock-card stock-card--retired">
+                  <div className="stock-card-top">
+                    <span className="stock-card-name-btn stock-card-name--static">{it.name}</span>
+                    {it.requires_rx && <span className="rx-badge">Receita</span>}
+                  </div>
+                  <p className="stock-card-meta">
+                    {[it.form, it.dosage].filter(Boolean).join(' · ')}
+                  </p>
+                  <div className="stock-card-foot">
+                    <span className="stock-card-hint">Retirado do catálogo</span>
+                    <button
+                      type="button"
+                      className="portal-toggle"
+                      disabled={savingId === it.drug_id}
+                      onClick={() => restore(it)}
+                    >
+                      {savingId === it.drug_id ? '…' : 'Restaurar'}
+                    </button>
+                  </div>
+                </article>
+              )
+            }
             return (
               <article
                 key={it.drug_id}
@@ -998,6 +1117,10 @@ export default function StockPanel({ compact = false }) {
           saving={savingId != null}
           onClose={() => setEditing(null)}
           onSave={(patch) => saveFromModal(editing, patch)}
+          onRetire={(it) => {
+            setEditing(null)
+            retire(it)
+          }}
         />
       )}
     </section>

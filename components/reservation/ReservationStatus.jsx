@@ -190,10 +190,36 @@ export default function ReservationStatus({ reservationId }) {
   const originBits = [r.stock_items?.brand, r.stock_items?.origin].filter(Boolean)
   const drugDesc = originBits.length
     ? `${r.drugs?.name || 'medicamento'} (de ${originBits.join(', origem ')})`
-    : r.drugs?.name || 'medicamento'
+    : r.drugs?.name || 'medicamento' // Quantidade (com forma de venda, no formato das mensagens oficiais:
+  // "1 caixa (cada uma com 3 lâminas)") e valor estimado — o atendente
+  // recebe a reserva completa na primeira mensagem, sem ir ao portal.
+  const UNIT_LABELS = {
+    comprimido: 'comprimido',
+    lamina: 'lâmina',
+    caixa: 'caixa',
+    frasco: 'frasco',
+    ampola: 'ampola',
+    unidade: 'unidade',
+  }
+  const waQtyDesc = (q) => {
+    const opt = r.stock_sale_options
+    if (!opt) return `${q} unidade${q !== 1 ? 's' : ''}`
+    const label = UNIT_LABELS[opt.unit] || opt.unit
+    if ((opt.pack_size ?? 1) > 1)
+      return `${q} ${label}${q !== 1 ? 's' : ''} (cada uma com ${opt.pack_size} unidades)`
+    return `${q} ${label}${q !== 1 ? 's' : ''}`
+  }
+  const waQtyQty = r.confirmed_quantity ?? r.quantity
+  const waTotal = estimateTotal(r)
   const waLinkHref = waNumber
     ? `https://wa.me/${String(waNumber).replace(/\D/g, '')}?text=${encodeURIComponent(
-        `Olá! Tenho uma reserva de ${drugDesc} (levantamento em nome de ${r.requester_name}).`,
+        [
+          `Olá! Tenho uma reserva de ${drugDesc} — ${waQtyDesc(waQtyQty)}.`,
+          waTotal != null ? `Valor estimado: ${fmtKz(waTotal)} (a confirmar no balcão).` : '',
+          `Levantamento em nome de ${r.requester_name}.`,
+        ]
+          .filter(Boolean)
+          .join(' '),
       )}`
     : null
 

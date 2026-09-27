@@ -2376,6 +2376,32 @@ html.dark .form-note {
     display: grid;
     place-items: center;
     padding: 0 0.375rem;
+    /* Aparecer/desaparecer e mudar de valor com suavidade: escala
+       (nasce/dies a 0.6) + fade; o min-width anima quando 9 → 10
+       (badge alarga). 0.2s ease, o mesmo ritmo dos submenus/chevron. */
+    animation: badge-in 0.2s ease;
+    transition:
+      min-width 0.2s ease,
+      opacity 0.2s ease,
+      transform 0.2s ease;
+  }
+
+  @keyframes badge-in {
+    from {
+      opacity: 0;
+      transform: scale(0.6);
+    }
+    to {
+      opacity: 1;
+      transform: scale(1);
+    }
+  }
+
+  @media (prefers-reduced-motion: reduce) {
+    .portal-nav-badge {
+      animation: none;
+      transition: none;
+    }
   }
 
   .portal-nav-badge--red {

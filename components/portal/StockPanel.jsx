@@ -2,6 +2,7 @@
 
 import { useEffect, useMemo, useRef, useState } from 'react'
 import { getMyStockSnapshot, updateStockItem, uploadDrugImage } from '@/lib/actions/pharmacy-portal'
+import { createClient } from '@/lib/supabase/client'
 import { countExpiryBuckets, expiryStatus, expirySummary } from '@/lib/expiry'
 import DrugCreateForm from '@/components/portal/DrugCreateForm'
 import { setSaleOptions } from '@/lib/actions/pharmacy-portal'
@@ -126,6 +127,13 @@ function StockEditModal({ item, saving, onClose, onSave, onSaveOptions }) {
   const [brand, setBrand] = useState(item.brand || '')
   const [imagePath, setImagePath] = useState(item.image_path || '')
   const [uploading, setUploading] = useState(false)
+  const [removing, setRemoving] = useState(false)
+  // URL público da foto actual — deriva do path no bucket (o mesmo que a
+  // view stock_confirmed expõe ao Localizador).
+  const supabaseUrl = createClient().supabaseUrl
+  const imageUrl = imagePath
+    ? `${supabaseUrl}/storage/v1/object/public/drug-images/${imagePath}`
+    : null
   // Mensagem de feedback do upload — LOCAL ao modal: o setToast do pai
   // não existe aqui (o erro «setToast is not defined» era isto) e o
   // toast do pai ficava debaixo do scrim, invisível.
@@ -278,6 +286,39 @@ function StockEditModal({ item, saving, onClose, onSave, onSaveOptions }) {
             </label>
             <label className="portal-label">
               Foto da embalagem
+              {imageUrl && (
+                <span className="stock-img-preview">
+                  <img
+                    src={imageUrl}
+                    alt={`Embalagem de ${item.name}`}
+                    className="stock-img-preview-img"
+                  />
+                  <button
+                    type="button"
+                    className="stock-img-preview-remove"
+                    disabled={removing || saving}
+                    title="Remover a foto deste medicamento"
+                    onClick={async () => {
+                      setRemoving(true)
+                      try {
+                        // Apaga do Storage e limpa o path. O item só perde a
+                        // foto no Localizador após «Guardar» — mas remover
+                        // aqui evita subir o modal para nada.
+                        await createClient()
+                          .storage.from('drug-images')
+                          .remove([imagePath])
+                          .catch(() => {})
+                        setImagePath('')
+                        setFileMsg('Foto removida — guarda para aplicar.')
+                      } finally {
+                        setRemoving(false)
+                      }
+                    }}
+                  >
+                    {removing ? '…' : '✕'}
+                  </button>
+                </span>
+              )}
               <input
                 type="file"
                 accept="image/jpeg,image/png,image/webp"

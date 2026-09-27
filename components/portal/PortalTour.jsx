@@ -160,10 +160,9 @@ export default function PortalTour({ userSub }) {
     }
   }, [stepIdx, router, remeasure, postpone])
 
-  if (stepIdx < 0 || !step || !rect || !ready) {
-    // Inactivo ou ainda a medir: não renderiza nada (o alvo pode nem existir).
-    if (stepIdx < 0) return null
-  }
+  // Inactivo ou ainda a medir o alvo: não renderiza nada (o rect pode
+  // nem existir ainda — daí o return completo, sem if aninhado).
+  if (stepIdx < 0 || !step || !rect || !ready) return null
 
   const pos = pickPosition(rect, step.placement)
   const pad = 8

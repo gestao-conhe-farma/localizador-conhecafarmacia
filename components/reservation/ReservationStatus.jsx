@@ -3,6 +3,7 @@
 import { useEffect, useState } from 'react'
 import { createClient } from '@/lib/supabase/client'
 import { CloseIcon } from '@/components/ui/Icon'
+import { trackingUrl } from '@/lib/reservation-messages'
 
 const STEPS = [
   { id: 'pendente', label: 'Recebida', hint: 'A farmácia vai responder em até 72 horas.' },
@@ -218,6 +219,7 @@ export default function ReservationStatus({ reservationId }) {
           `Olá! Tenho uma reserva de ${drugDesc} — ${waQtyDesc(waQtyQty)}.`,
           waTotal != null ? `Valor estimado: ${fmtKz(waTotal)} (a confirmar no balcão).` : '',
           `Levantamento em nome de ${r.requester_name}.`,
+          `Link da reserva: ${trackingUrl(r.id)}`,
         ]
           .filter(Boolean)
           .join(' '),

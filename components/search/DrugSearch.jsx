@@ -45,6 +45,9 @@ const ORIGIN_FLAGS = {
 }
 const originFlag = (o) => ORIGIN_FLAGS[o] || '🌍'
 
+// Ordem fixa dos chips de origem — a mesma da lista oficial do portal.
+const ORIGIN_ORDER = Object.keys(ORIGIN_FLAGS)
+
 /** Placeholder SVG (data-URI) para itens sem foto — inicial do fármaco. */
 const drugPlaceholder = (name) => {
   const letter = (name || '?').trim().charAt(0).toUpperCase()
@@ -70,6 +73,10 @@ export default function DrugSearch() {
   const [error, setError] = useState('')
   const [stats, setStats] = useState(null)
   const [onlyOpen, setOnlyOpen] = useState(false)
+  // Filtro por origem (0013): '' = todas; valor = só itens dessa origem.
+  // Pós-filtro local — a query já traz origin de todas as farmácias, não
+  // vale novo pedido para refinar.
+  const [originFilter, setOriginFilter] = useState('')
   // Item com modal de reserva aberto (null = fechado).
   const [reserving, setReserving] = useState(null)
   const boxRef = useRef(null)
@@ -241,18 +248,30 @@ export default function DrugSearch() {
 
   const hasResults = results && results.length > 0
 
-  // Filtro "só abertas agora": pós-filtro local (sem novo pedido) —
-  // farmácias fechadas/desconhecidas saem; grupos esvaziados desaparecem
+  // Origens presentes nos resultados (ordem fixa da lista oficial, só as
+  // que têm stock confirmado agora) — alimenta os chips do filtro.
+  const originsAvailable = useMemo(() => {
+    const present = new Set()
+    for (const r of results || []) for (const p of r.pharmacies) if (p.origin) present.add(p.origin)
+    return ORIGIN_ORDER.filter((o) => present.has(o))
+  }, [results])
+
+  // Filtros locais (sem novo pedido): "só abertas agora" remove farmácias
+  // fechadas/desconhecidas; origem remove itens de outras procedências.
+  // Grupos esvaziados desaparecem.
   const shown = useMemo(() => {
     if (!results) return null
-    if (!onlyOpen) return results
     return results
       .map((r) => ({
         ...r,
-        pharmacies: r.pharmacies.filter((p) => isOpenNow(p.pharmacy_opening_hours)),
+        pharmacies: r.pharmacies.filter(
+          (p) =>
+            (!onlyOpen || isOpenNow(p.pharmacy_opening_hours)) &&
+            (!originFilter || p.origin === originFilter),
+        ),
       }))
       .filter((r) => r.pharmacies.length > 0)
-  }, [results, onlyOpen])
+  }, [results, onlyOpen, originFilter])
 
   const visible = shown || []
   const hasVisible = visible.length > 0
@@ -399,6 +418,30 @@ export default function DrugSearch() {
               Só abertas agora
             </button>
           </div>
+          {/* Origem (0013) — chips com bandeira, só as origens com stock
+              confirmado nesta pesquisa. Pós-filtro local, sem novo pedido. */}
+          {originsAvailable.length > 0 && (
+            <div className="chip-row" style={{ marginTop: '0.6rem' }}>
+              <button
+                type="button"
+                className={`chip${originFilter === '' ? ' chip--active' : ''}`}
+                onClick={() => setOriginFilter('')}
+              >
+                Todas as origens
+              </button>
+              {originsAvailable.map((o) => (
+                <button
+                  key={o}
+                  type="button"
+                  className={`chip${originFilter === o ? ' chip--active' : ''}`}
+                  aria-pressed={originFilter === o}
+                  onClick={() => setOriginFilter(originFilter === o ? '' : o)}
+                >
+                  {ORIGIN_FLAGS[o] || '🌍'} {o}
+                </button>
+              ))}
+            </div>
+          )}
         </div>
       </section>
 
@@ -467,6 +510,7 @@ export default function DrugSearch() {
                     {totalPharmacies !== 1 && 's'}
                     {municipio && <> em {municipio}</>}
                     {onlyOpen && <> · abertas agora</>}
+                    {originFilter && <> · origem {originFilter}</>}
                   </span>
                 </div>
 

@@ -2,7 +2,7 @@
 
 import { useEffect, useState } from 'react'
 import { createClient } from '@/lib/supabase/client'
-import { CloseIcon } from '@/components/ui/Icon'
+import { CloseIcon, CheckIcon } from '@/components/ui/Icon'
 import { trackingUrl } from '@/lib/reservation-messages'
 
 const STEPS = [
@@ -58,6 +58,8 @@ export default function ReservationStatus({ reservationId }) {
   const [error, setError] = useState('')
   // Lightbox da foto da embalagem — tocar na miniatura abre em grande.
   const [zoom, setZoom] = useState(false)
+  // Feedback do «Copiar mensagem».
+  const [copied, setCopied] = useState(false)
 
   useEffect(() => {
     if (!/^[0-9a-f-]{36}$/i.test(reservationId || '')) {
@@ -157,17 +159,16 @@ export default function ReservationStatus({ reservationId }) {
   // Quantidade e valor pela formatação única (lib/reservation-format) —
   // o atendente recebe a reserva completa na primeira mensagem.
   const waTotal = estimateTotal(r)
+  const waMessage = [
+    `Olá! Tenho uma reserva de ${drugDesc} — ${quantityDesc(r)}.`,
+    waTotal != null ? `Valor estimado: ${fmtKz(waTotal)} (a confirmar no balcão).` : '',
+    `Levantamento em nome de ${r.requester_name}.`,
+    `Link da reserva: ${trackingUrl(r.id)}`,
+  ]
+    .filter(Boolean)
+    .join(' ')
   const waLinkHref = waNumber
-    ? `https://wa.me/${String(waNumber).replace(/\D/g, '')}?text=${encodeURIComponent(
-        [
-          `Olá! Tenho uma reserva de ${drugDesc} — ${quantityDesc(r)}.`,
-          waTotal != null ? `Valor estimado: ${fmtKz(waTotal)} (a confirmar no balcão).` : '',
-          `Levantamento em nome de ${r.requester_name}.`,
-          `Link da reserva: ${trackingUrl(r.id)}`,
-        ]
-          .filter(Boolean)
-          .join(' '),
-      )}`
+    ? `https://wa.me/${String(waNumber).replace(/\D/g, '')}?text=${encodeURIComponent(waMessage)}`
     : null
 
   return (
@@ -275,15 +276,45 @@ export default function ReservationStatus({ reservationId }) {
       )}
       {r.notes && <p className="res-track-note">A sua nota: “{r.notes}”</p>}
 
-      {waLinkHref && r.status !== 'concluida' && (
-        <a
-          href={waLinkHref}
-          target="_blank"
-          rel="noopener noreferrer"
-          className="btn btn-secondary res-track-wa"
-        >
-          Falar com a {r.pharmacies?.name} no WhatsApp
-        </a>
+      {waMessage && r.status !== 'concluida' && (
+        <div className="res-track-contact">
+          {waLinkHref && (
+            <a
+              href={waLinkHref}
+              target="_blank"
+              rel="noopener noreferrer"
+              className="btn btn-secondary res-track-wa"
+            >
+              Falar com a {r.pharmacies?.name} no WhatsApp
+            </a>
+          )}
+          {/* Copiar para outro canal (SMS, chamada, email) — o texto é
+              o mesmo do link wa.me. Cai para textarea em browsers sem
+              navigator.clipboard (HTTP puro, por ex.). */}
+          <button
+            type="button"
+            className="btn btn-secondary res-track-copy"
+            onClick={async () => {
+              try {
+                await navigator.clipboard.writeText(waMessage)
+                setCopied(true)
+                setTimeout(() => setCopied(false), 2500)
+              } catch {
+                setCopied(false)
+                // fallback silencioso: o utilizador copia à mão
+                window.prompt('Copie a mensagem:', waMessage)
+              }
+            }}
+          >
+            {copied ? (
+              <>
+                <CheckIcon /> Copiado
+              </>
+            ) : (
+              'Copiar mensagem'
+            )}
+          </button>
+        </div>
       )}
 
       {/* Lightbox da embalagem — simples: scrim, imagem centrada e

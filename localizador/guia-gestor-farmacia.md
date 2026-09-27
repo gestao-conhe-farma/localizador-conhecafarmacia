@@ -57,9 +57,30 @@ aparece em Stock, aceita entrada de stock e reservas.
 
 ---
 
+## 2.a. Retirar um medicamento do catálogo (Lixeira)
+
+Se a farmácia **deixou de vender** uma apresentação — descontinuada, lote
+perdido, erro de registo —, retire-a em vez de a deixar eterna como «não
+disponível»:
+
+1. Vai a **Stock** → toca no **nome** do medicamento.
+2. No fundo do modal, toca em **Retirar do catálogo** (vermelho) e confirma.
+3. O medicamento desaparece do Localizador e de todas as listas — e deixa
+   de gerar avisos de reposição ou validade.
+
+**A Lixeira** fica no chip «Lixeira» da barra de filtros do Stock. Lá os
+itens aparecem esbatidos, com o nome riscado e o botão **Restaurar** — que
+os devolve à lista como «não disponível», prontos a religar com dados.
+
+**Não disponível ≠ retirado:** «não disponível» é «não tenho agora, volto a
+ter»; retirado é «não vendo mais». Usa a retirada para o segundo caso — é
+o que mantém a lista de stock limpa para o dia-a-dia da equipa.
+
+---
+
 ## 3. Formas de venda — lâmina ou caixa?
 
-**Esta é a configuração que mais直接影响 a venda.** Em Angola vende-se de
+**Esta é a configuração que mais influencia a venda.** Em Angola vende-se de
 tudo: a lâmina, a caixa inteira, às vezes o comprimido solto. O cliente tem
 de saber **o que o preço significa**.
 
@@ -77,7 +98,7 @@ Cada medicamento pode ter **várias formas de venda**, cada uma com:
   lâminas);
 - **Preço** — o preço DESSA forma (ex.: lâmina 100 Kz, caixa 300 Kz);
 - **Padrão** — a unidade-base do saldo (uma só pode ser padrão);
-- **Ofereço** — liga/desliga sem apagar (a caixa esgotou? desliga a caixa,
+- **Oferece** — liga/desliga sem apagar (a caixa esgotou? desliga a caixa,
   continua a vender a lâmina).
 
 ### Exemplo concreto (o caso clássico)
@@ -130,6 +151,10 @@ a única transição que é uma venda real (o cliente levantou, o stock baixou).
 - **Total estimado** da janela (7 / 30 / 90 dias — chips no topo);
 - **Reservas concluídas** — quantas vendas;
 - **Melhor dia** — o dia com maior valor na janela;
+- **Tendência** — faixa com a comparação vs. o período anterior de igual
+  tamanho (↑ verde a subir, ↓ vermelho a descer), com o montante anterior
+  e as reservas de cada período. Sem vendas no período anterior, mostra
+  «sem base para tendência» — honestidade estatística em vez de +∞%;
 - **Gráfico de barras** por dia — dias sem vendas aparecem a zero (traço
   base), o eixo nunca colapsa.
 
@@ -149,6 +174,7 @@ a única transição que é uma venda real (o cliente levantou, o stock baixou).
 
 | Pergunta | Onde olhar |
 |---|---|
+| Estou a vender mais ou menos que antes? | A faixa de tendência do relatório (vs. período anterior) |
 | Vale a pena ter este produto sempre em stock? | Vendas 30/90 dias + avisos de reposição repetidos |
 | Os meus preços competem? | /pesquisa (anónima) — vê quem leva o «Melhor preço» |
 | A equipa está a atender rápido? | Tempo entre criação e estado «confirmada» nas reservas |
@@ -181,12 +207,12 @@ no Localizador (`/farmacia/o-teu-slug`). É a tua montra — mantém-na viva.
 
 ### Checklist do perfil (5 minutos, uma vez por trimestre)
 
-1. ☎️ O telefone/WhatsApp ainda são os mesmos?
-2. 🕐 O horário mudou (inverno, férias, feriados)?
-3. 📍 O link do Maps aponta para a entrada certa?
-4. 🏷️ Há itens de stock **sem origem/marca/foto**? (Stock → abre o item →
+1. O telefone/WhatsApp ainda são os mesmos?
+2. O horário mudou (inverno, férias, feriados)?
+3. O link do Maps aponta para a entrada certa?
+4. Há itens de stock **sem origem/marca/foto**? (Stock → abre o item →
    preenche. Fichas completas vendem mais.)
-5. 📸 A foto da embalagem de cada item está actualizada?
+5. A foto da embalagem de cada item está actualizada?
 
 ---
 
@@ -194,11 +220,12 @@ no Localizador (`/farmacia/o-teu-slug`). É a tua montra — mantém-na viva.
 
 | Frequência | Acção |
 |---|---|
-| **Semanal** | Vendas (5 min) — tendência da semana, melhor dia |
+| **Semanal** | Vendas (5 min) — tendência vs. semana anterior, melhor dia |
 | **Semanal** | Atenção — validar que os atendentes resolveram os avisos |
 | **Mensal** | Formas de venda — há itens ainda só com preço único? |
 | **Mensal** | Fichas de stock — origem, marca e foto dos itens mais vendidos |
 | **Trimestral** | Checklist do perfil público (secção 5) |
+| **Trimestral** | Lixeira — confirmar que o que foi retirado é mesmo para retirar |
 | **Pontual** | Criar fármaco em falta no catálogo (secção 2) |
 
 ---
@@ -210,9 +237,10 @@ no Localizador (`/farmacia/o-teu-slug`). É a tua montra — mantém-na viva.
 | Formas de venda (lâmina/caixa) | Stock → modal → «Como vende…» | Comparabilidade e confiança no preço |
 | Prioridade nos críticos | + Adicionar medicamento / stock | Destaque no painel de críticos |
 | Origem e marca | Stock → modal | O cliente decide mais rápido (e pesquisa pela marca!) |
-| Foto da embalagem | Stock → modal → Foto | Confirma a apresentação certa |
+| Foto da embalagem | Stock → modal → Foto | Confirma a apresentação certa (na câmara do telemóvel: botão «Tirar foto» no upload) |
 | Horário e Maps | Perfil | «Aberto agora» correcto = cliente que chega e compra |
-| Vendas | Vendas | Decide repor, promover ou descontinuar |
+| Vendas + tendência | Vendas | Decide repor, promover ou descontinuar |
+| Retirar descontinuados | Stock → modal → «Retirar do catálogo» (Lixeira) | Lista limpa; avisos só para o que interessa |
 
 > **A regra de fundo:** o Localizador mostra quem confirmou stock recente,
 > com preço claro e ficha completa. Tudo o que é falta de informação é

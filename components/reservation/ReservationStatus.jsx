@@ -119,7 +119,7 @@ export default function ReservationStatus({ reservationId }) {
       const { data, error: e } = await supabase
         .from('reservations')
         .select(
-          'id, status, quantity, confirmed_quantity, reason, notes, created_at, resolved_at, requester_name, sale_option_id, drugs(name, form, dosage), pharmacies(name, phone, whatsapp, address, municipio), stock_sale_options(unit, pack_size, price), stock_items(origin, brand)',
+          'id, status, quantity, confirmed_quantity, reason, notes, created_at, resolved_at, requester_name, sale_option_id, drugs(name, form, dosage), pharmacies(name, phone, whatsapp, address, municipio), stock_sale_options(unit, pack_size, price), stock_items(origin, brand, image_path)',
         )
         .eq('id', reservationId)
         .maybeSingle()
@@ -179,6 +179,12 @@ export default function ReservationStatus({ reservationId }) {
   const recusada = r.status === 'recusada'
   const expirada = r.status === 'expirada'
   const waNumber = r.pharmacies?.whatsapp || r.pharmacies?.phone
+  // Foto da embalagem (0013) — o mesmo ficheiro do bucket que o card do
+  // Localizador e o modal de reserva mostram. URL público do Storage.
+  const supabaseUrl = createClient().supabaseUrl
+  const photoUrl = r.stock_items?.image_path
+    ? `${supabaseUrl}/storage/v1/object/public/drug-images/${r.stock_items.image_path}`
+    : null
   const waLinkHref = waNumber
     ? `https://wa.me/${String(waNumber).replace(/\D/g, '')}?text=${encodeURIComponent(
         `Olá! Tenho uma reserva de ${r.drugs?.name} (levantamento em nome de ${r.requester_name}).`,
@@ -187,27 +193,46 @@ export default function ReservationStatus({ reservationId }) {
 
   return (
     <div className="res-track-card">
-      <p className="res-track-eyebrow">Reserva na {r.pharmacies?.name}</p>
-      <h1 className="res-track-title">{r.drugs?.name || 'Medicamento'}</h1>
-      <p className="res-track-meta">
-        {[r.drugs?.form, r.drugs?.dosage, r.pharmacies?.municipio].filter(Boolean).join(' · ')}
-        {r.pharmacies?.address ? ` · ${r.pharmacies.address}` : ''}
-      </p>
+      <div className="res-track-head">
+        {/* Foto/placeholder ao lado do nome — o cliente reconhece a caixa
+            que reservou, como no modal. Placeholder com a inicial quando
+            a farmácia ainda não fotografou. */}
+        {photoUrl ? (
+          <img
+            src={photoUrl}
+            alt={`Embalagem de ${r.drugs?.name || 'medicamento'}`}
+            className="drug-card-img drug-card-img--track"
+            loading="lazy"
+          />
+        ) : (
+          <span className="drug-card-img drug-card-img--track drug-card-img--ph" aria-hidden="true">
+            {(r.drugs?.name || '?').charAt(0).toUpperCase()}
+          </span>
+        )}
+        <div>
+          <p className="res-track-eyebrow">Reserva na {r.pharmacies?.name}</p>
+          <h1 className="res-track-title">{r.drugs?.name || 'Medicamento'}</h1>
+          <p className="res-track-meta">
+            {[r.drugs?.form, r.drugs?.dosage, r.pharmacies?.municipio].filter(Boolean).join(' · ')}
+            {r.pharmacies?.address ? ` · ${r.pharmacies.address}` : ''}
+          </p>
 
-      {/* Origem/marca (0013) — o cliente confirma a apresentação que
-          reservou, do mesmo modo que no modal e no WhatsApp. */}
-      {(r.stock_items?.brand || r.stock_items?.origin) && (
-        <div className="drug-card-origin">
-          {r.stock_items?.brand && (
-            <span className="origin-tag origin-tag--brand">{r.stock_items.brand}</span>
-          )}
-          {r.stock_items?.origin && (
-            <span className="origin-tag">
-              {ORIGIN_FLAGS[r.stock_items.origin] || '🌍'} {r.stock_items.origin}
-            </span>
+          {/* Origem/marca (0013) — o cliente confirma a apresentação que
+              reservou, do mesmo modo que no modal e no WhatsApp. */}
+          {(r.stock_items?.brand || r.stock_items?.origin) && (
+            <div className="drug-card-origin">
+              {r.stock_items?.brand && (
+                <span className="origin-tag origin-tag--brand">{r.stock_items.brand}</span>
+              )}
+              {r.stock_items?.origin && (
+                <span className="origin-tag">
+                  {ORIGIN_FLAGS[r.stock_items.origin] || '🌍'} {r.stock_items.origin}
+                </span>
+              )}
+            </div>
           )}
         </div>
-      )}
+      </div>
 
       {recusada || expirada ? (
         <div className="res-track-estado res-track-estado--ruim">

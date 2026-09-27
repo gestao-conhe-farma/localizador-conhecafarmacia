@@ -846,6 +846,29 @@ html.dark .form-note {
     background: #f0eee9;
   }
 
+  /* Foto/placeholder no cabeçalho do acompanhamento (/reserva/[id]) —
+     maior que no card, alinhada com o título. */
+  .drug-card-img--track {
+    width: 64px;
+    height: 64px;
+  }
+
+  /* Placeholder com a inicial do fármaco (sem foto registada). */
+  .drug-card-img--ph {
+    @apply inline-flex items-center justify-center font-semibold;
+    color: var(--color-brand-primary);
+    font-size: 1.375rem;
+  }
+
+  /* Cabeçalho do acompanhamento: foto à esquerda, texto à direita. */
+  .res-track-head {
+    @apply flex items-start gap-4;
+  }
+
+  .res-track-head .drug-card-img--track {
+    @apply mt-1;
+  }
+
   /* Preview da foto no modal de stock — miniatura com ✕ para remover. */
   .stock-img-preview {
     @apply relative inline-block w-fit;

@@ -195,7 +195,7 @@ no Localizador (`/farmacia/o-teu-slug`). É a tua montra — mantém-na viva.
 | Frequência | Acção |
 |---|---|
 | **Semanal** | Vendas (5 min) — tendência da semana, melhor dia |
-| **Semanal** | Precisa de atenção — validar que os atendentes resolveram os avisos |
+| **Semanal** | Atenção — validar que os atendentes resolveram os avisos |
 | **Mensal** | Formas de venda — há itens ainda só com preço único? |
 | **Mensal** | Fichas de stock — origem, marca e foto dos itens mais vendidos |
 | **Trimestral** | Checklist do perfil público (secção 5) |

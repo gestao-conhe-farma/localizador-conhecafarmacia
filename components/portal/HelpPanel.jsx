@@ -95,9 +95,10 @@ const TOPICS = [
           </li>
         </ol>
         <p className="help-tip">
-          O menu à esquerda tem dois grupos — <b>Gestão</b> (o dia-a-dia: atenção, stock, entrada,
-          reservas, vendas) e <b>Farmácia</b> (o perfil que o cliente vê). Os números nos badges
-          mostram o que está à espera de ti.
+          O menu à esquerda tem dois grupos — <b>Gestão</b> (o dia-a-dia: Atenção, Stock, Reservas,
+          Vendas) e <b>Farmácia</b> (o perfil que o cliente vê). Os itens têm um número por ordem e
+          os <b>badges</b> coloridos mostram o que está à espera de ti. A <b>Entrada de stock</b>{' '}
+          vive dentro de <b>Stock</b>: toca na <b>seta</b> ao lado de Stock para abrir o submenu.
         </p>
       </>
     ),
@@ -160,11 +161,11 @@ const TOPICS = [
       <>
         <p>
           Quando uma reserva concluída leva as últimas unidades, o produto sai do Localizador e
-          aparece em Precisa de atenção com o aviso «Vendeu · repor».
+          aparece em Atenção com o aviso «Vendeu · repor».
         </p>
         <ol className="help-ol">
           <li>
-            Vai a <b>Precisa de atenção</b> (ou <b>Entrada de stock</b>).
+            Vai a <b>Atenção</b> (ou abre <b>Stock</b> → <b>Entrada de stock</b>).
           </li>
           <li>
             No aviso do produto, toca em <b>Repor na entrada →</b> — a página abre logo no
@@ -190,7 +191,7 @@ const TOPICS = [
       <>
         <ol className="help-ol">
           <li>
-            Abre <b>Entrada de stock</b> no menu.
+            Abre <b>Stock</b> no menu e toca na <b>seta</b> para abrir a <b>Entrada de stock</b>.
           </li>
           <li>
             A lista vem já com os produtos <b>esgotados primeiro</b> (chip «Para repor»). Usa a
@@ -258,7 +259,7 @@ const TOPICS = [
   {
     id: 'avisos',
     icon: 'avisos',
-    title: 'Outros avisos (Precisa de atenção)',
+    title: 'Outros avisos (Atenção)',
     body: (
       <>
         <ul className="help-ul">
@@ -298,8 +299,8 @@ const TOPICS = [
 const CHEATSHEET = [
   ['Cliente reservou', 'Reservas', 'Confirmar (com quantidade) → WhatsApp → Concluída'],
   ['Não temos o produto', 'Reservas', 'Recusar + motivo (com texto, o cliente lê)'],
-  ['Produto esgotou', 'Precisa de atenção', '«Repor na entrada» quando chegar mercadoria'],
-  ['Chegou fornecedor', 'Entrada de stock', 'Escrever unidades → Somar'],
+  ['Produto esgotou', 'Atenção', '«Repor na entrada» quando chegar mercadoria'],
+  ['Chegou fornecedor', 'Stock → Entrada de stock', 'Escrever unidades → Somar'],
   ['Mudou preço/validade/marca', 'Stock → nome do medicamento', 'Preencher no modal → Guardar'],
 ]
 

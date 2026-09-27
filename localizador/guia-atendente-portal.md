@@ -15,8 +15,13 @@
 3. Vês a **Visão geral**: os cartões mostram o que pede atenção hoje.
 
 > **Dica:** o menu à esquerda tem dois grupos — **Gestão** (o dia-a-dia:
-> atenção, stock, entrada, reservas, vendas) e **Farmácia** (o perfil que o
-> cliente vê). O sino 🔴 mostra quantos assuntos estão à espera de ti.
+> Atenção, Stock, Reservas, Vendas) e **Farmácia** (o perfil que o cliente
+> vê). Os itens têm um número por ordem (01, 02…) e os badges coloridos
+> mostram o que está à espera de ti. A **Entrada de stock** vive dentro de
+> **Stock** — toca na seta ao lado de Stock para abrir o submenu.
+>
+> **Atenção** é o nome da página que junta os avisos do dia (reposições,
+> validades, stock desactualizado).
 
 ---
 
@@ -61,12 +66,12 @@ resposta, a reserva expira sozinha e o cliente é avisado.
 ## 3. Repor stock (produto esgotou)
 
 Quando uma reserva concluída leva as últimas unidades, o produto sai do
-Localizador e aparece na página **Precisa de atenção** com o aviso
+Localizador e aparece na página **Atenção** com o aviso
 *«Vendeu · repor»*.
 
 **Se já chegou mercadoria nova:**
 
-1. Vai a **Precisa de atenção** (ou **Entrada de stock**).
+1. Vai a **Atenção** (ou abre **Stock** → **Entrada de stock**).
 2. No aviso do produto, toca em **Repor na entrada →** — a página de
    entrada abre logo no medicamento certo.
 3. Escreve **quantas unidades chegaram** e toca em **Somar**.
@@ -79,7 +84,8 @@ Localizador e aparece na página **Precisa de atenção** com o aviso
 
 ## 4. Registar entradas de stock (chegou fornecedor)
 
-Sempre que o fornecedor entrega mercadoria, registra na **Entrada de stock**:
+Sempre que o fornecedor entrega mercadoria, registra na **Entrada de stock**
+(menu **Stock** → seta → **Entrada de stock**):
 
 1. Abre **Entrada de stock** no menu.
 2. A lista vem já com os produtos **esgotados primeiro** (chip «Para repor»).
@@ -118,7 +124,7 @@ Toca em **Guardar** — tudo fica visível no Localizador imediatamente.
 
 ---
 
-## 6. Outros avisos úteis (Precisa de atenção)
+## 6. Outros avisos úteis (Atenção)
 
 - **Validade a vencer (90/60/30 dias)** — avisa com tempo. Se chegou lote
   novo, corrige a validade; se não há reposição, marca «Já não disponível».
@@ -141,8 +147,8 @@ venda — o final é o apurado no balcão.
 |---|---|---|
 | Cliente reservou | Reservas | Confirmar (com quantidade) → WhatsApp → Concluída quando levantar |
 | Não temos o produto | Reservas | Recusar + motivo (com texto, o cliente lê) |
-| Produto esgotou | Precisa de atenção | «Repor na entrada» quando chegar mercadoria |
-| Chegou fornecedor | Entrada de stock | Escrever unidades → Somar |
+| Produto esgotou | Atenção | «Repor na entrada» quando chegar mercadoria |
+| Chegou fornecedor | Stock → Entrada de stock | Escrever unidades → Somar |
 | Mudou preço/validade/marca | Stock → nome do medicamento | Preencher no modal → Guardar |
 
 **Duas regras que valem ouro:**

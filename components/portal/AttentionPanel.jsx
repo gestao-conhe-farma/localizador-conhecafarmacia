@@ -44,6 +44,22 @@ const RESTOCK_HINT =
   'Repondo, o produto volta a aparecer no Localizador imediatamente (confirme que o lote está na prateleira). «Repor na entrada» soma as unidades recebidas ao saldo; «Repor sem qtd.» apenas religa o produto.'
 
 /**
+ * Estrutura da caixa no aviso de reposição (0016) — o que o atendente
+ * vai repor: «caixa com 10 lâminas de 10 comprimidos (100 no total)».
+ * '' quando a estrutura não está registada — nunca inventa informação.
+ */
+function restockPackSuffix(it) {
+  const lam = Number(it.pack_laminas) || null
+  const comp = Number(it.pack_comprimidos) || null
+  if (!lam && !comp) return ''
+  if (lam && comp) {
+    return ` · caixa com ${lam} lâminas de ${comp} comprimidos (${lam * comp} no total)`
+  }
+  if (lam) return ` · caixa com ${lam} lâminas`
+  return ` · lâmina com ${comp} comprimidos`
+}
+
+/**
  * "Precisa de Atenção" — tudo o que exige decisão da farmácia hoje,
  * agregado numa página com acções por linha:
  *
@@ -239,6 +255,7 @@ export default function AttentionPanel({ pharmacyId }) {
                   {[it.form, it.dosage].filter(Boolean).join(' · ')}
                   {it.soldQuantity != null && ` · última venda: ${it.soldQuantity}×`}
                   {it.when && ` · ${timeAgo(it.when)}`}
+                  {restockPackSuffix(it)}
                 </span>
                 <div className="portal-attention-form">
                   {/* Repor agora passa pela Entrada de stock: deep-link com

@@ -47,6 +47,7 @@ function fmtDate(iso) {
 
 import { originCode } from '@/lib/origin-flags'
 import { fmtKz, estimateTotal, quantityDesc, quantityLine } from '@/lib/reservation-format'
+import { packStructureText } from '@/lib/sale-options'
 
 /**
  * Estado da reserva para o cliente — leitura directa por id (RLS da
@@ -73,7 +74,7 @@ export default function ReservationStatus({ reservationId }) {
       const { data, error: e } = await supabase
         .from('reservations')
         .select(
-          'id, status, quantity, confirmed_quantity, reason, notes, created_at, resolved_at, requester_name, sale_option_id, drugs(name, form, dosage), pharmacies(name, phone, whatsapp, address, municipio), stock_sale_options(unit, pack_size, price), stock_items(origin, brand, image_path)',
+          'id, status, quantity, confirmed_quantity, reason, notes, created_at, resolved_at, requester_name, sale_option_id, drugs(name, form, dosage), pharmacies(name, phone, whatsapp, address, municipio), stock_sale_options(unit, pack_size, price), stock_items(origin, brand, image_path, pack_laminas, pack_comprimidos)',
         )
         .eq('id', reservationId)
         .maybeSingle()
@@ -156,6 +157,9 @@ export default function ReservationStatus({ reservationId }) {
   const drugDesc = originBits.length
     ? `${r.drugs?.name || 'medicamento'} (de ${originBits.join(', origem ')})`
     : r.drugs?.name || 'medicamento'
+  // Estrutura da caixa (0016/0017) — o cliente vê o que a embalagem
+  // contém («Caixa com 10 lâminas de 10 comprimidos — 100 no total»).
+  const packText = packStructureText(r.stock_items?.pack_laminas, r.stock_items?.pack_comprimidos)
   // Quantidade e valor pela formatação única (lib/reservation-format) —
   // o atendente recebe a reserva completa na primeira mensagem.
   const waTotal = estimateTotal(r)
@@ -204,6 +208,10 @@ export default function ReservationStatus({ reservationId }) {
             {[r.drugs?.form, r.drugs?.dosage, r.pharmacies?.municipio].filter(Boolean).join(' · ')}
             {r.pharmacies?.address ? ` · ${r.pharmacies.address}` : ''}
           </p>
+
+          {/* Estrutura da caixa (0016/0017) — mesma linha do modal de
+              reserva: o cliente confirma o que a embalagem contém. */}
+          {packText && <p className="res-track-pack">{packText}</p>}
 
           {/* Origem/marca (0013) — o cliente confirma a apresentação que
               reservou, do mesmo modo que no modal e no WhatsApp. */}

@@ -1084,6 +1084,20 @@ html.dark .form-note {
     color: color-mix(in srgb, var(--color-brand-deep) 45%, transparent);
   }
 
+  /* 0016/0017 — estrutura da caixa no modal de reserva («10 lâminas de
+     10 comprimidos»): informação do produto, não hint de passagem. */
+  .res-pack {
+    @apply text-xs font-semibold;
+    color: var(--color-brand-deep);
+  }
+
+  /* A mesma linha no acompanhamento público (/reserva/[id]). */
+  .res-track-pack {
+    @apply text-xs font-semibold;
+    margin-top: 0.25rem;
+    color: var(--color-brand-deep);
+  }
+
   .drug-card-meta .fresh {
     @apply font-semibold;
     color: var(--color-brand-accent);

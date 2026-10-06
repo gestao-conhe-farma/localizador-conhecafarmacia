@@ -2,7 +2,7 @@
 
 import { useEffect, useState } from 'react'
 import { createReservation } from '@/lib/actions/reservations'
-import { formatOptionLabel, unitLabel, perBasePrice } from '@/lib/sale-options'
+import { formatOptionLabel, unitLabel, perBasePrice, packStructureText } from '@/lib/sale-options'
 
 const ERRORES_BASE = {
   NOME_INVALIDO: 'Escreva o seu nome (pelo menos 2 letras).',
@@ -43,6 +43,9 @@ export default function ReserveModal({ item, onClose, onCreated }) {
   // Opções de venda do item (0012). A default vem pré-seleccionada.
   const opts = (item.sale_options || []).filter((o) => o.active !== false)
   const defaultOpt = opts.find((o) => o.is_default) || opts[0] || null
+  // Estrutura da caixa (0016/0017) — null quando não registada (a linha
+  // some; nunca inventa informação de embalagem).
+  const packText = packStructureText(item.pack_laminas, item.pack_comprimidos)
   const [name, setName] = useState('')
   const [phone, setPhone] = useState('')
   const [quantity, setQuantity] = useState('1')
@@ -213,17 +216,8 @@ export default function ReserveModal({ item, onClose, onCreated }) {
 
             {/* Estrutura da caixa (0016/0017) — o cliente sabe o que está
                 a comprar antes de reservar: «caixa com 10 lâminas de
-                10 comprimidos». Sem estrutura registada, some — nunca
-                inventa informação. */}
-            {(item.pack_laminas || item.pack_comprimidos) && (
-              <p className="portal-hint res-pack">
-                {item.pack_laminas && item.pack_comprimidos
-                  ? `Caixa com ${item.pack_laminas} lâminas de ${item.pack_comprimidos} comprimidos — ${item.pack_laminas * item.pack_comprimidos} comprimidos no total.`
-                  : item.pack_laminas
-                    ? `Caixa com ${item.pack_laminas} lâminas.`
-                    : `Cada lâmina traz ${item.pack_comprimidos} comprimidos.`}
-              </p>
-            )}
+                10 comprimidos». Sem estrutura registada, some. */}
+            {packText && <p className="portal-hint res-pack">{packText}</p>}
 
             <div className="portal-form-grid portal-form-grid--three">
               <label className="portal-label">

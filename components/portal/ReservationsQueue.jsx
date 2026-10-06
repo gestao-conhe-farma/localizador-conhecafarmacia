@@ -233,6 +233,9 @@ export default function ReservationsQueue() {
       // Origem/marca (0013) — entram na mensagem ao cliente.
       origin: r.origin,
       brand: r.brand,
+      // Estrutura da caixa (0016) — «1 caixa com 10 lâminas».
+      packLaminas: r.stock_items?.pack_laminas ?? null,
+      packComprimidos: r.stock_items?.pack_comprimidos ?? null,
     })
     const link = msg ? waLink(r.requester_phone, msg.text) : null
     if (link) window.open(link, '_blank', 'noopener,noreferrer')

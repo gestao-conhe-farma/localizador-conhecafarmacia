@@ -36,7 +36,10 @@ const supabaseUrl = process.env.NEXT_PUBLIC_SUPABASE_URL || ''
  * esse link que o cliente guarda e que a farmácia usa nas mensagens.
  */
 export default function ReserveModal({ item, onClose, onCreated }) {
-  // item: { stock_item_id, drug_name, drug_form, drug_dosage, pharmacy_name, pharmacy_municipio }
+  // item: { stock_item_id, drug_name, drug_form, drug_dosage, pharmacy_name,
+  //         pharmacy_municipio, pack_laminas, pack_comprimidos, … }
+  // Estrutura da caixa (0016/0017): lâminas por caixa e comprimidos
+  // por lâmina — mostrada ao cliente escolher ou não forma de venda.
   // Opções de venda do item (0012). A default vem pré-seleccionada.
   const opts = (item.sale_options || []).filter((o) => o.active !== false)
   const defaultOpt = opts.find((o) => o.is_default) || opts[0] || null
@@ -206,6 +209,20 @@ export default function ReserveModal({ item, onClose, onCreated }) {
                   })}
                 </select>
               </label>
+            )}
+
+            {/* Estrutura da caixa (0016/0017) — o cliente sabe o que está
+                a comprar antes de reservar: «caixa com 10 lâminas de
+                10 comprimidos». Sem estrutura registada, some — nunca
+                inventa informação. */}
+            {(item.pack_laminas || item.pack_comprimidos) && (
+              <p className="portal-hint res-pack">
+                {item.pack_laminas && item.pack_comprimidos
+                  ? `Caixa com ${item.pack_laminas} lâminas de ${item.pack_comprimidos} comprimidos — ${item.pack_laminas * item.pack_comprimidos} comprimidos no total.`
+                  : item.pack_laminas
+                    ? `Caixa com ${item.pack_laminas} lâminas.`
+                    : `Cada lâmina traz ${item.pack_comprimidos} comprimidos.`}
+              </p>
             )}
 
             <div className="portal-form-grid portal-form-grid--three">

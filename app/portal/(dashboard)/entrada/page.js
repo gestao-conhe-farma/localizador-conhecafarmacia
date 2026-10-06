@@ -8,8 +8,10 @@ export const metadata = {
 
 /**
  * Entrada de stock (reposição) — a farmácia soma as unidades recebidas
- * de cada medicamento. Complemento directo da baixa automática que as
- * reservas concluídas fazem (trigger 0006): a baixa sai aqui em cima.
+ * de cada medicamento, dizendo EM QUE unidade chegaram (caixas,
+ * lâminas, frascos…) e com a estrutura da caixa (0016). Complemento
+ * directo da baixa automática que as reservas concluídas fazem
+ * (trigger 0006): a baixa sai aqui em cima.
  *
  * Suspense obrigatório: o RestockPanel usa useSearchParams (deep-link
  * ?q=… vindo dos botões «Repor» da página de atenção) e, sem boundary,

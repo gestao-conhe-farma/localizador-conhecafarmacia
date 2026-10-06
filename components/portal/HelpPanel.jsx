@@ -110,7 +110,8 @@ const TOPICS = [
             medicamento certo.
           </li>
           <li>
-            Escreve <b>quantas unidades chegaram</b> e toca em <b>Somar</b>.
+            Escreve <b>quantas</b> chegaram, escolhe a <b>unidade</b> ao lado (caixas, lâminas…) e
+            toca em <b>Somar</b>.
           </li>
           <li>Pronto: o produto volta ao Localizador na hora e o aviso desaparece.</li>
         </ol>
@@ -139,8 +140,13 @@ const TOPICS = [
             Na linha do medicamento vês o <b>saldo actual</b> («12 em stock»).
           </li>
           <li>
-            Escreve quantas unidades chegaram em <b>Chegaram</b> e toca em <b>Somar</b> (a tecla
-            Enter também funciona).
+            Escreve quantas chegaram em <b>Chegaram</b> e escolhe a <b>unidade</b> ao lado — caixas,
+            lâminas, frascos… (a tecla Enter também funciona).
+          </li>
+          <li>
+            Com a quantidade escrita abre-se o <b>detalhe</b>: <b>lâminas por caixa</b>,{' '}
+            <b>comprimidos por lâmina</b> (o total de comprimidos aparece calculado) e os{' '}
+            <b>preços por forma de venda</b>. Toca em <b>Somar</b>.
           </li>
           <li>O saldo actualiza na hora e o produto volta a aparecer no Localizador.</li>
         </ol>
@@ -184,8 +190,8 @@ const TOPICS = [
             modal; o botão vermelho remove.
           </li>
           <li>
-            <b>Como vende este medicamento?</b> — se vendes lâmina e caixa, registra as duas formas
-            com o preço de cada. Ex.: lâmina 100 Kz · caixa com 3 lâminas 300 Kz.
+            <b>Formas de venda</b> — se vendes lâmina e caixa, registra as duas formas com o preço
+            de cada. Ex.: lâmina 100 Kz · caixa com 10 lâminas 950 Kz.
           </li>
           <li>
             <b>Retirar do catálogo</b> — para o que a farmácia <b>deixou de vender</b>: botão
@@ -244,7 +250,7 @@ const CHEATSHEET = [
   ['Cliente reservou', 'Reservas', 'Confirmar (com quantidade) → WhatsApp → Concluída'],
   ['Não temos o produto', 'Reservas', 'Recusar + motivo (com texto, o cliente lê)'],
   ['Produto esgotou', 'Atenção', '«Repor na entrada» quando chegar mercadoria'],
-  ['Chegou fornecedor', 'Stock → Entrada de stock', 'Escrever unidades → Somar'],
+  ['Chegou fornecedor', 'Stock → Entrada de stock', 'Escrever qtd + unidade → Somar'],
   ['Mudou preço/validade/marca', 'Stock → nome do medicamento', 'Preencher no modal → Guardar'],
   [
     'Deixou de vender um produto',

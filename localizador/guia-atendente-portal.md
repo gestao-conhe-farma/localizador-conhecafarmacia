@@ -74,7 +74,8 @@ Localizador e aparece na página **Atenção** com o aviso
 1. Vai a **Atenção** (ou abre **Stock** → **Entrada de stock**).
 2. No aviso do produto, toca em **Repor na entrada →** — a página de
    entrada abre logo no medicamento certo.
-3. Escreve **quantas unidades chegaram** e toca em **Somar**.
+3. Escreve **quantas** chegaram e escolhe a **unidade** ao lado (caixas,
+   lâminas…); toca em **Somar**.
 4. Pronto: o produto volta ao Localizador na hora e o aviso desaparece.
 
 **Atalho:** se só queres religar o produto sem indicar quantidade
@@ -91,9 +92,13 @@ Sempre que o fornecedor entrega mercadoria, registra na **Entrada de stock**
 2. A lista vem já com os produtos **esgotados primeiro** (chip «Para repor»).
    Usa a pesquisa ou o chip «Todos» para qualquer medicamento.
 3. Na linha do medicamento vê o **saldo actual** («12 em stock»).
-4. Escreve quantas unidades chegaram em **Chegaram** e toca em **Somar**
-   (a tecla Enter também funciona).
-5. O saldo actualiza na hora («12 + 10 = 22») e o produto volta a
+4. Escreve **quantas** chegaram em **Chegaram** e escolhe a **unidade**
+   ao lado — caixas, lâminas, frascos… (a tecla Enter também funciona).
+5. Com a quantidade escrita abre-se o **detalhe**: **lâminas por caixa** e
+   **comprimidos por lâmina** (o total de comprimidos aparece calculado),
+   mais os **preços por forma de venda** — preenche se o fornecedor mudou
+   preços. Toca em **Somar**.
+6. O saldo actualiza na hora («12 + 30 = 42») e o produto volta a
    aparecer no Localizador se estava escondido.
 
 > No fundo da página fica a lista das **entradas desta sessão** — confere
@@ -116,9 +121,9 @@ medicamento. Abre o modal de edição:
   (ex.: Ben-u-ron). Preenche sempre que souberes — ajuda a venda!
 - **Foto da embalagem** — fotografa a caixa real da prateleira (até 2 MB).
   O cliente vê a foto e confia mais.
-- **Como vende este medicamento?** — se vendes **lâmina** e também **caixa**,
+- **Formas de venda** — se vendes **lâmina** e também **caixa**,
   registra as duas formas com o preço de cada uma. Ex.: lâmina 100 Kz ·
-  caixa com 3 lâminas 300 Kz. Quem reserva escolhe a forma que quiser.
+  caixa com 10 lâminas 950 Kz. Quem reserva escolhe a forma que quiser.
 - **Retirar do catálogo** — se a farmácia **deixou de vender** aquela
   apresentação (descontinuada, lote perdido), toca no botão vermelho no fundo
   do modal e confirma. O medicamento sai do Localizador e fica na **Lixeira**

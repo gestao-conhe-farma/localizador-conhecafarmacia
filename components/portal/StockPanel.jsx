@@ -29,6 +29,26 @@ const UNITS = [
   { id: 'unidade', label: 'Unidade' },
 ]
 
+/** Plurais para os rótulos ("Saldo em lâminas"). */
+const UNIT_PLURALS = {
+  comprimido: 'comprimidos',
+  lamina: 'lâminas',
+  caixa: 'caixas',
+  frasco: 'frascos',
+  ampola: 'ampolas',
+  unidade: 'unidades',
+}
+const pluralUnit = (u) => UNIT_PLURALS[u] || 'unidades'
+
+/** Formas sólidas — as que têm lâminas e caixas (0016). */
+const isSolidForm = (f) => /comprimido|c[aá]psula/i.test(f || '')
+
+/** Unidade-base do item (opção padrão) — rótulos do modal. */
+function defaultSaleUnit(item) {
+  const def = (item.sale_options || []).find((o) => o.is_default && o.active !== false)
+  return def ? def.unit : 'unidade'
+}
+
 function suggestOptions(form) {
   const f = (form || '').toLowerCase()
   if (f.includes('comprimido') || f.includes('cápsula') || f.includes('capsula')) {
@@ -134,6 +154,15 @@ function StockEditModal({ item, saving, onClose, onSave, onSaveOptions, onRetire
   const [availableFrom, setAvailableFrom] = useState(
     item.available_from ? item.available_from.slice(0, 10) : '',
   )
+  // Estrutura da caixa (0016) — lâminas/caixa e comprimidos/lâmina.
+  const [packLaminas, setPackLaminas] = useState(
+    item.pack_laminas != null ? String(item.pack_laminas) : '',
+  )
+  const [packComprimidos, setPackComprimidos] = useState(
+    item.pack_comprimidos != null ? String(item.pack_comprimidos) : '',
+  )
+  const lamN = Number.parseInt(packLaminas, 10) || null
+  const compN = Number.parseInt(packComprimidos, 10) || null
   // Origem/marca/foto (0013).
   const [origin, setOrigin] = useState(item.origin || '')
   const [brand, setBrand] = useState(item.brand || '')
@@ -242,6 +271,8 @@ function StockEditModal({ item, saving, onClose, onSave, onSaveOptions, onRetire
               expires_at: expiresAt || null,
               available_from_input: availableFrom,
               available_from: availableFrom || null,
+              packLaminas,
+              packComprimidos,
               sale_options: opts,
               origin,
               brand,
@@ -249,9 +280,22 @@ function StockEditModal({ item, saving, onClose, onSave, onSaveOptions, onRetire
             })
           }}
         >
+          {/* Sectores no padrão dos grupos da sidebar — o que é do
+              fármaco, do saldo, do dinheiro e da apresentação. */}
+          <div className="modal-sector">Medicamento</div>
+          <p className="stock-modal-info">
+            {[item.molecule, item.form, item.dosage].filter(Boolean).join(' · ') ||
+              'Sem detalhes no catálogo.'}
+          </p>
+          <p className="portal-hint">
+            Ficha do catálogo partilhado — para corrigir nome ou gramagem, fale com a equipa Conheça
+            Farmácia.
+          </p>
+
+          <div className="modal-sector">Stock</div>
           <div className="portal-form-grid portal-form-grid--three">
             <label className="portal-label">
-              Caixas / unidades
+              {`Saldo em ${pluralUnit(defaultSaleUnit(item))}`}
               <input
                 type="number"
                 min="0"
@@ -280,6 +324,10 @@ function StockEditModal({ item, saving, onClose, onSave, onSaveOptions, onRetire
                 onChange={(e) => setAvailableFrom(e.target.value)}
               />
             </label>
+          </div>
+
+          <div className="modal-sector">Preços e formas de venda</div>
+          <div className="portal-form-grid portal-form-grid--three">
             <label className="portal-label">
               Preço (Kz)
               <input
@@ -292,8 +340,47 @@ function StockEditModal({ item, saving, onClose, onSave, onSaveOptions, onRetire
                 onChange={(e) => setPrice(e.target.value)}
               />
             </label>
+            {/* Estrutura da caixa (0016) — só nas formas sólidas. */}
+            {isSolidForm(item.form) && (
+              <label className="portal-label">
+                Lâminas por caixa
+                <input
+                  type="number"
+                  min="1"
+                  max="999"
+                  className="portal-input"
+                  placeholder="Ex.: 10"
+                  value={packLaminas}
+                  onChange={(e) => setPackLaminas(e.target.value)}
+                />
+              </label>
+            )}
+            {isSolidForm(item.form) && (
+              <label className="portal-label">
+                Comprimidos por lâmina
+                <input
+                  type="number"
+                  min="1"
+                  max="999"
+                  className="portal-input"
+                  placeholder="Ex.: 10"
+                  value={packComprimidos}
+                  onChange={(e) => setPackComprimidos(e.target.value)}
+                />
+              </label>
+            )}
           </div>
+          {isSolidForm(item.form) && (lamN || compN) && (
+            <p className="portal-hint">
+              {lamN && compN
+                ? `1 caixa = ${lamN} lâminas = ${lamN * compN} comprimidos.`
+                : lamN
+                  ? `1 caixa = ${lamN} lâminas.`
+                  : `1 lâmina = ${compN} comprimidos.`}
+            </p>
+          )}
 
+          <div className="modal-sector">Apresentação</div>
           {/* Origem e marca (0013) — a origem pesa na decisão em Angola.
               Marca livre ("Panadol", "Ben-u-ron"), origem da lista. */}
           <div className="portal-form-grid portal-form-grid--three">
@@ -388,14 +475,15 @@ function StockEditModal({ item, saving, onClose, onSave, onSaveOptions, onRetire
             </label>
           </div>
 
-          {/* Como vende este medicamento? (0012) — só faz sentido com
+          {/* Formas de venda (0012) — só faz sentido com
               stock; para item esgotado as opções esperam a reposição. */}
           <div className="sale-opts">
             <div className="sale-opts-head">
-              <b>Como vende este medicamento?</b>
+              <b>Formas de venda</b>
               <span className="sale-opts-hint">
-                Ex.: lâmina 100 Kz · caixa com 3 lâminas 300 Kz. O saldo acima é contado na unidade
-                marcada como padrão.
+                A farmácia decide se vende por lâmina, por caixa ou ambas — só as formas marcadas
+                «ofereço» aparecem ao cliente. Ex.: lâmina 100 Kz · caixa com 10 lâminas 950 Kz. O
+                saldo conta-se na unidade marcada como padrão.
               </span>
             </div>
             {opts.length === 0 ? (
@@ -862,6 +950,10 @@ export default function StockPanel({ compact = false }) {
       ...(patch.origin !== undefined && { origin: patch.origin }),
       ...(patch.brand !== undefined && { brand: patch.brand }),
       ...(patch.image_path !== undefined && { imagePath: patch.image_path }),
+      // Estrutura da caixa (0016) — só quando o patch a trouxe (o modal
+      // envia sempre; os toggles da fila/atenção nunca).
+      ...(patch.packLaminas !== undefined && { packLaminas: patch.packLaminas }),
+      ...(patch.packComprimidos !== undefined && { packComprimidos: patch.packComprimidos }),
     })
     setSavingId(null)
     if (res.ok) {
@@ -874,6 +966,13 @@ export default function StockPanel({ compact = false }) {
                 brand: patch.brand !== undefined ? patch.brand || null : row.brand,
                 image_path:
                   patch.image_path !== undefined ? patch.image_path || null : row.image_path,
+                ...(patch.packLaminas !== undefined && {
+                  pack_laminas: patch.packLaminas === '' ? null : Number(patch.packLaminas),
+                }),
+                ...(patch.packComprimidos !== undefined && {
+                  pack_comprimidos:
+                    patch.packComprimidos === '' ? null : Number(patch.packComprimidos),
+                }),
                 confirmed_at: new Date().toISOString(),
                 stock_item_id: row.stock_item_id || 'x',
               }

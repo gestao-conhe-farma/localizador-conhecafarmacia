@@ -86,8 +86,12 @@ de saber **o que o preço significa**.
 
 ### Onde configurar
 
-Vai a **Stock** → toca no **nome** do medicamento → secção **«Como vende
-este medicamento?»** no modal.
+Vai a **Stock** → toca no **nome** do medicamento → sectores do modal
+(no padrão do menu lateral: **Medicamento**, **Stock**, **Preços e formas
+de venda**, **Apresentação**). A configuração vive no sector **Preços e
+formas de venda** — aí preenches também a **estrutura da caixa** (lâminas
+por caixa e comprimidos por lâmina), que a Entrada de stock usa para
+converter e calcular o total de comprimidos.
 
 ### Como funciona o modelo
 
@@ -234,7 +238,7 @@ no Localizador (`/farmacia/o-teu-slug`). É a tua montra — mantém-na viva.
 
 | Alavanca | Onde | Impacto |
 |---|---|---|
-| Formas de venda (lâmina/caixa) | Stock → modal → «Como vende…» | Comparabilidade e confiança no preço |
+| Formas de venda (lâmina/caixa) | Stock → modal → «Formas de venda» | Comparabilidade e confiança no preço |
 | Prioridade nos críticos | + Adicionar medicamento / stock | Destaque no painel de críticos |
 | Origem e marca | Stock → modal | O cliente decide mais rápido (e pesquisa pela marca!) |
 | Foto da embalagem | Stock → modal → Foto | Confirma a apresentação certa (na câmara do telemóvel: botão «Tirar foto» no upload) |

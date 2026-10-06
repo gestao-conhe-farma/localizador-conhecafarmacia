@@ -3772,6 +3772,43 @@ html.dark .form-note {
     @apply w-24 px-3 py-2 text-sm;
   }
 
+  /* 0016 — detalhe da entrada: unidade de chegada, estrutura da caixa,
+     preços por forma de venda e prévia da conversão. */
+  .restock-qty {
+    @apply flex items-center gap-1.5;
+  }
+
+  .restock-unit {
+    @apply w-[6.75rem] px-2 py-2 text-xs font-semibold;
+  }
+
+  .restock-details {
+    @apply w-full flex flex-wrap items-center gap-x-4 gap-y-1.5 text-xs;
+    color: color-mix(in srgb, var(--color-brand-deep) 75%, transparent);
+  }
+
+  .restock-pack {
+    @apply flex items-center gap-1.5;
+  }
+
+  .restock-prices {
+    @apply flex flex-wrap items-center gap-2;
+  }
+
+  .restock-prices-k {
+    @apply font-semibold;
+    color: var(--color-brand-deep);
+  }
+
+  .restock-price {
+    @apply flex items-center gap-1;
+  }
+
+  .restock-preview {
+    @apply font-semibold;
+    color: var(--color-brand-deep);
+  }
+
   .restock-save {
     @apply px-4 py-2 text-xs;
   }
@@ -4233,6 +4270,25 @@ html.dark .form-note {
     border-color: var(--color-brand-line);
     box-shadow: 0 1.5rem 4rem rgb(0 30 24 / 0.35);
     max-height: min(85dvh, 42rem);
+  }
+
+  /* 0016 — sectores do modal de stock, no padrão dos grupos da sidebar
+     (mesmo micro-rótulo do .portal-nav-label). */
+  .modal-sector {
+    font-size: 0.625rem;
+    font-weight: 700;
+    letter-spacing: 0.12em;
+    text-transform: uppercase;
+    color: color-mix(in srgb, var(--color-brand-deep) 60%, transparent);
+    border-bottom: 1px solid var(--color-brand-divider);
+    padding-bottom: 0.25rem;
+    margin-top: 1.25rem;
+  }
+
+  .stock-modal-info {
+    @apply text-sm;
+    margin-top: 0.5rem;
+    color: var(--color-brand-deep);
   }
 
   .stock-modal-state {

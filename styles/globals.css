@@ -1127,6 +1127,13 @@ html.dark .form-note {
     color: #d9531e;
   }
 
+  /* 0015: fármaco criado pela farmácia, pendente de validação da equipa */
+  .pending-badge {
+    @apply text-[11px] font-bold uppercase tracking-wide px-2.5 py-0.5 rounded-full;
+    background: color-mix(in srgb, #c47f17 15%, transparent);
+    color: #a4670f;
+  }
+
   /* Linha de farmácia dentro do resultado */
   .pharmacy-row {
     @apply px-6 py-4 flex flex-wrap items-center gap-3 md:gap-5 border-b border-brand-line/60 last:border-b-0;

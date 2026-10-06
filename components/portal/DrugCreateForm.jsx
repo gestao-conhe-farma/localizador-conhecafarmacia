@@ -47,8 +47,8 @@ export default function DrugCreateForm({ embedded = false, onCreated } = {}) {
       setFeedback({
         type: 'ok',
         text: res.existed
-          ? 'Este medicamento já existe no catálogo — procure-o na lista acima.'
-          : 'Pedido enviado. Pode já marcar o stock dele na lista acima; o medicamento fica visível ao público após validação da equipa.',
+          ? 'Este medicamento já existe no catálogo — procure-o na lista de stock.'
+          : 'Adicionado ao catálogo — já aparece na lista de stock com a marca «Aguarda validação»; pode marcar o stock dele já. Fica visível aos clientes após validação da equipa.',
       })
       e.target.reset()
       // No modal do stock, sucesso fecha o popup (a mensagem ia ficar
@@ -119,7 +119,7 @@ export default function DrugCreateForm({ embedded = false, onCreated } = {}) {
         )}
 
         <button type="submit" className="btn btn-primary btn-small" disabled={saving}>
-          {saving ? 'A enviar…' : 'Pedir ao catálogo'}
+          {saving ? 'A guardar…' : 'Adicionar ao Catálogo'}
         </button>
       </form>
     </section>

@@ -1,6 +1,6 @@
 'use client'
 
-import { useEffect, useMemo, useRef, useState } from 'react'
+import { useCallback, useEffect, useMemo, useRef, useState } from 'react'
 import {
   getMyStockSnapshot,
   updateStockItem,
@@ -662,17 +662,18 @@ export default function StockPanel({ compact = false }) {
     return () => observer.disconnect()
   }, [items])
 
-  useEffect(() => {
-    let alive = true
-    ;(async () => {
-      const res = await getMyStockSnapshot()
-      if (alive && res.ok) setItems(res.items)
-      else if (alive) setItems([])
-    })()
-    return () => {
-      alive = false
-    }
+  // Carregamento único — o effect inicial e o refetch pós-criação
+  // ("Adicionar ao Catálogo") partilham-no, para o fármaco recém-criado
+  // aparecer na lista sem recarregar a página.
+  const load = useCallback(async () => {
+    const res = await getMyStockSnapshot()
+    if (res.ok) setItems(res.items)
+    else setItems([])
   }, [])
+
+  useEffect(() => {
+    load()
+  }, [load])
 
   const filtered = useMemo(() => {
     if (!items) return []
@@ -1170,6 +1171,15 @@ export default function StockPanel({ compact = false }) {
                     {it.name}
                   </button>
                   {it.requires_rx && <span className="rx-badge">Receita</span>}
+                  {/* 0015: criado por esta farmácia, aguarda validação */}
+                  {it.pending && (
+                    <span
+                      className="pending-badge"
+                      title="Criado por esta farmácia — visível aos clientes após validação da equipa Conheça Farmácia. Pode já marcar o stock dele."
+                    >
+                      Aguarda validação
+                    </span>
+                  )}
                 </div>
 
                 <p className="stock-card-meta">
@@ -1261,7 +1271,13 @@ export default function StockPanel({ compact = false }) {
                 Fechar
               </button>
             </div>
-            <DrugCreateForm embedded onCreated={() => setEditing(null)} />
+            <DrugCreateForm
+              embedded
+              onCreated={() => {
+                setEditing(null)
+                load() // o novo fármaco entra já na lista
+              }}
+            />
           </div>
         </div>
       )}

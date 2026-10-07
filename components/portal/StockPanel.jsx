@@ -2,6 +2,7 @@
 
 import { useCallback, useEffect, useMemo, useState } from 'react'
 import Link from 'next/link'
+import { useSearchParams } from 'next/navigation'
 import {
   getMyStockSnapshot,
   updateStockItem,
@@ -16,6 +17,7 @@ import DrugCreateForm from '@/components/portal/DrugCreateForm'
 import { setSaleOptions } from '@/lib/actions/pharmacy-portal'
 import { unitLabel } from '@/lib/sale-options'
 import { CloseIcon } from '@/components/ui/Icon'
+import StateLabel from '@/components/portal/StateLabel'
 
 /**
  * Opções de venda (0012 — fracionamento). Defaults inteligentes pela
@@ -709,6 +711,13 @@ function ConfirmRetire({ item, busy, onCancel, onConfirm }) {
 export default function StockPanel({ compact = false }) {
   const [items, setItems] = useState(null)
   const [query, setQuery] = useState('')
+  // Deep-link da pesquisa global da top-bar (`?q=Paracetamol`) — o
+  // resultado da pesquisa abre aqui isolado na lista.
+  const searchParams = useSearchParams()
+  const urlQ = searchParams.get('q')
+  useEffect(() => {
+    if (urlQ) setQuery(urlQ)
+  }, [urlQ])
   const [filter, setFilter] = useState('all')
   // Ordenação do grid — 'recent' é a de sempre: disponíveis primeiro.
   const [sort, setSort] = useState('recent')
@@ -1327,6 +1336,15 @@ export default function StockPanel({ compact = false }) {
 
           {!compact && pageItems.length > 0 && (
             <>
+              {/* Cabeçalho das colunas — rótulos micro sobre as linhas. */}
+              <div className="portal-rowhead portal-cols-stock" aria-hidden="true">
+                <span>Medicamento</span>
+                <span>Estado</span>
+                <span>Qtd.</span>
+                <span>Formas de venda</span>
+                <span>Validade</span>
+                <span />
+              </div>
               {pageItems.map((it) => {
                 const expiry = expiryStatus(it.expires_at)
                 const coming = it.available_from && new Date(it.available_from).getTime() > now
@@ -1416,10 +1434,7 @@ export default function StockPanel({ compact = false }) {
                         </span>
                       </div>
                       <div className="portal-cell">
-                        <span className="portal-st portal-st--mut">
-                          <i />
-                          Na lixeira
-                        </span>
+                        <StateLabel st="mut" label="Na lixeira" />
                       </div>
                       <div className="portal-cell">
                         <span className="strong">—</span>
@@ -1499,10 +1514,7 @@ export default function StockPanel({ compact = false }) {
                     </div>
 
                     <div className="portal-cell">
-                      <span className={`portal-st portal-st--${st.cls}`}>
-                        <i />
-                        {st.txt}
-                      </span>
+                      <StateLabel st={st.cls} label={st.txt} />
                     </div>
 
                     <div className="portal-cell">

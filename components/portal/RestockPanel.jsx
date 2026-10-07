@@ -4,6 +4,7 @@ import { useEffect, useMemo, useState } from 'react'
 import { useSearchParams } from 'next/navigation'
 import { getMyStockSnapshot, addStockUnits } from '@/lib/actions/pharmacy-portal'
 import { expiryStatus, monthYear } from '@/lib/expiry'
+import StateLabel from '@/components/portal/StateLabel'
 
 const ERRORES = {
   SESSAO_EXPIRADA: 'Sessão expirada — recarregue a página e entre novamente.',
@@ -301,6 +302,7 @@ export default function RestockPanel() {
     const list = items || []
     return {
       restock: list.filter((it) => !it.in_stock || (it.quantity ?? 0) === 0).length,
+      saldo: list.filter((it) => it.in_stock && (it.quantity ?? 0) > 0).length,
       all: list.length,
       exp: list.filter((it) => {
         if (!it.in_stock) return false
@@ -455,6 +457,134 @@ export default function RestockPanel() {
         </p>
       )}
 
+      {/* KPIs de resumo — contagens REAIS do snapshot + entradas da
+          sessão; ícone à esquerda, estado = ponto + palavra. */}
+      <div className="portal-kpi4-grid">
+        <div className="portal-kpi4">
+          <span className="portal-kpi4-ic portal-kpi4-ic--amber" aria-hidden="true">
+            <svg
+              viewBox="0 0 24 24"
+              fill="none"
+              stroke="currentColor"
+              strokeWidth="2"
+              strokeLinecap="round"
+              strokeLinejoin="round"
+            >
+              <path d="M4 8h16v12H4z" />
+              <path d="M9 8V5h6v3" />
+              <path d="M4 13h16" />
+            </svg>
+          </span>
+          <span className="portal-kpi4-txt">
+            <span className="portal-kpi4-k">A repor</span>
+            <span className="portal-kpi4-n">{counts.restock}</span>
+            <span className="portal-kpi4-d">esgotados ou fora do ar</span>
+          </span>
+          {counts.restock > 0 ? (
+            <span className="portal-st portal-st--warn">
+              <i />
+              prioridade
+            </span>
+          ) : (
+            <span className="portal-st portal-st--ok">
+              <i />
+              em dia
+            </span>
+          )}
+        </div>
+
+        <div className="portal-kpi4">
+          <span className="portal-kpi4-ic portal-kpi4-ic--green" aria-hidden="true">
+            <svg
+              viewBox="0 0 24 24"
+              fill="none"
+              stroke="currentColor"
+              strokeWidth="2"
+              strokeLinecap="round"
+              strokeLinejoin="round"
+            >
+              <circle cx="12" cy="12" r="9" />
+              <path d="m8 12 3 3 5-6" />
+            </svg>
+          </span>
+          <span className="portal-kpi4-txt">
+            <span className="portal-kpi4-k">Com saldo</span>
+            <span className="portal-kpi4-n">{counts.saldo}</span>
+            <span className="portal-kpi4-d">de {counts.all} no catálogo</span>
+          </span>
+          <span className="portal-st portal-st--ok">
+            <i />
+            no Localizador
+          </span>
+        </div>
+
+        <div className="portal-kpi4">
+          <span className="portal-kpi4-ic portal-kpi4-ic--amber" aria-hidden="true">
+            <svg
+              viewBox="0 0 24 24"
+              fill="none"
+              stroke="currentColor"
+              strokeWidth="2"
+              strokeLinecap="round"
+              strokeLinejoin="round"
+            >
+              <circle cx="12" cy="12" r="9" />
+              <path d="M12 7v5l3 2" />
+            </svg>
+          </span>
+          <span className="portal-kpi4-txt">
+            <span className="portal-kpi4-k">Validade a vencer</span>
+            <span className="portal-kpi4-n">{counts.exp}</span>
+            <span className="portal-kpi4-d">nos próximos 90 dias (ou já passada)</span>
+          </span>
+          {counts.exp > 0 ? (
+            <span className="portal-st portal-st--strong">
+              <i />
+              rever
+            </span>
+          ) : (
+            <span className="portal-st portal-st--ok">
+              <i />
+              em dia
+            </span>
+          )}
+        </div>
+
+        <div className="portal-kpi4">
+          <span className="portal-kpi4-ic portal-kpi4-ic--teal" aria-hidden="true">
+            <svg
+              viewBox="0 0 24 24"
+              fill="none"
+              stroke="currentColor"
+              strokeWidth="2"
+              strokeLinecap="round"
+              strokeLinejoin="round"
+            >
+              <path d="M12 4v10" />
+              <path d="m8 10 4 4 4-4" />
+              <path d="M5 20h14" />
+            </svg>
+          </span>
+          <span className="portal-kpi4-txt">
+            <span className="portal-kpi4-k">Nesta sessão</span>
+            <span className="portal-kpi4-n">{log.length}</span>
+            <span className="portal-kpi4-d">
+              {log.length ? 'entradas registadas' : 'ainda nada registado'}
+            </span>
+          </span>
+          {log.length > 0 ? (
+            <span className="portal-st portal-st--ok">
+              <i />
+              somado
+            </span>
+          ) : (
+            <span className="portal-st portal-st--mut">
+              <i />à espera
+            </span>
+          )}
+        </div>
+      </div>
+
       {/* Caixa com cabeçalho (sec-head do mock): pesquisa pill à
           direita; filtros viram tabs sublinhadas com contagem neutra. */}
       <div className="portal-box">
@@ -504,11 +634,30 @@ export default function RestockPanel() {
           </div>
         )}
 
+        {/* Cabeçalho das colunas — rótulos micro sobre as linhas. */}
+        {filtered.length > 0 && (
+          <div className="portal-rowhead portal-cols-entrada" aria-hidden="true">
+            <span>Medicamento</span>
+            <span>Estado</span>
+            <span>Saldo</span>
+            <span>Registar entrada</span>
+          </div>
+        )}
+
         <div className="restock-list">
           {filtered.slice(0, visibleCount).map((it) => {
             const expiry = expiryStatus(it.expires_at)
             const busy = savingId === it.drug_id
             const out = !it.in_stock || (it.quantity ?? 0) === 0
+            // Estado da linha (disciplina v2): ponto + palavra — o mesmo
+            // vocabulário do Stock, aqui com o caso «chegou lote novo».
+            const st = out
+              ? { cls: 'mut', txt: 'Sem stock' }
+              : expiry && expiry.level === 'expired'
+                ? { cls: 'bad', txt: 'Expirado' }
+                : expiry && expiry.level !== 'ok'
+                  ? { cls: 'warn', txt: expiry.label }
+                  : { cls: 'ok', txt: 'Disponível' }
             // 0016 — detalhe da entrada (unidade, estrutura, preços,
             // prévia de conversão). O detalhe só abre com quantidade
             // escrita: a lista mantém-se varrível, os campos aparecem
@@ -535,16 +684,16 @@ export default function RestockPanel() {
             return (
               <div
                 key={it.drug_id}
-                className={`restock-row${out ? ' restock-row--out' : ''}${
-                  highlightId === it.drug_id ? ' restock-row--focus' : ''
-                }`}
+                className={`portal-rowline portal-cols-entrada portal-rowline--static${
+                  out ? ' restock-row--out' : ''
+                }${highlightId === it.drug_id ? ' restock-row--focus' : ''}`}
               >
-                <div className="restock-main">
-                  <span className="restock-name">
+                <div className="portal-cell">
+                  <b>
                     {it.name}
-                    {it.requires_rx && <span className="rx-badge rx-badge--inline">Receita</span>}
-                  </span>
-                  <span className="restock-meta">
+                    {it.requires_rx && <span className="rx-badge rx-badge--inline"> Receita</span>}
+                  </b>
+                  <span className="sub">
                     {[it.form, it.dosage].filter(Boolean).join(' · ')}
                     {it.expires_at && expiry && expiry.level !== 'ok'
                       ? ` · validade ${monthYear(it.expires_at)} (${expiry.label})`
@@ -554,12 +703,16 @@ export default function RestockPanel() {
                   </span>
                 </div>
 
-                <div className="restock-balance" title="Saldo actual em stock">
-                  <span className="restock-balance-n">{it.in_stock ? (it.quantity ?? 0) : 0}</span>
-                  <span className="restock-balance-k">em stock</span>
+                <div className="portal-cell">
+                  <StateLabel st={st.cls} label={st.txt} />
                 </div>
 
-                <div className="restock-form" data-tour="restock-input">
+                <div className="portal-cell restock-balance" title="Saldo actual em stock">
+                  <span className="strong">{it.in_stock ? (it.quantity ?? 0) : 0}</span>
+                  <span className="sub">em stock</span>
+                </div>
+
+                <div className="portal-cell restock-form" data-tour="restock-input">
                   <label className="restock-field">
                     <span className="restock-field-k">Chegaram</span>
                     <div className="restock-qty">
@@ -687,24 +840,29 @@ export default function RestockPanel() {
         )}
       </div>
 
-      {/* Confirmação da sessão — as últimas entradas registadas. */}
+      {/* Confirmação da sessão — caixa hairline do v2. */}
       {log.length > 0 && (
-        <div className="restock-log">
-          <h2 className="portal-h2">Entradas desta sessão</h2>
-          <ul>
-            {log.slice(0, 8).map((e, i) => (
-              <li key={i}>
-                <b>
-                  +{e.added}
-                  {e.unit ? ` ${PLURALS[e.unit].toLowerCase()}` : ''}
-                </b>{' '}
-                {e.name} — saldo em <b>{e.total}</b>
-              </li>
-            ))}
-          </ul>
-          <p className="portal-hint">
-            O histórico completo do stock vive na página Stock (coluna «Confirmado»).
-          </p>
+        <div className="portal-box restock-log">
+          <div className="portal-card-head">
+            <h2>Entradas desta sessão</h2>
+            <span className="portal-card-hint">confere com a nota do fornecedor</span>
+          </div>
+          <div className="portal-card-body">
+            <ul>
+              {log.slice(0, 8).map((e, i) => (
+                <li key={i}>
+                  <b>
+                    +{e.added}
+                    {e.unit ? ` ${PLURALS[e.unit].toLowerCase()}` : ''}
+                  </b>{' '}
+                  {e.name} — saldo em <b>{e.total}</b>
+                </li>
+              ))}
+            </ul>
+            <p className="portal-hint">
+              O histórico completo do stock vive na página Stock (coluna «Confirmado»).
+            </p>
+          </div>
         </div>
       )}
     </section>

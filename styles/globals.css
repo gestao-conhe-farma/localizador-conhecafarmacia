@@ -3730,19 +3730,10 @@ html.dark .form-note {
 
   /* ── Entrada de stock (reposição) — linhas densas com saldo à direita,
      campo «chegaram» e botão Somar. Mesma família dos .portal-attention-*. ── */
+  /* Lista de entrada — linhas v2 (portal-rowline) dentro da caixa. */
   .restock-list {
-    @apply flex flex-col rounded-lg border overflow-hidden;
-    background: var(--color-brand-bg-alt);
-    border-color: var(--color-brand-divider);
-  }
-
-  .restock-row {
-    @apply flex items-center gap-4 px-4 py-3 flex-wrap;
-    border-bottom: 1px solid var(--color-brand-divider);
-  }
-
-  .restock-row:last-child {
-    border-bottom: none;
+    display: flex;
+    flex-direction: column;
   }
 
   /* Fora do ar (esgotado): tint verde suave — é o caso prioritário,
@@ -3759,31 +3750,8 @@ html.dark .form-note {
     outline-offset: -2px;
   }
 
-  .restock-main {
-    @apply flex flex-col min-w-[220px] flex-1;
-  }
-
-  .restock-name {
-    @apply font-semibold text-brand-deep text-sm flex items-center gap-2 flex-wrap;
-  }
-
-  .restock-meta {
-    @apply text-xs text-brand-deep/55 mt-0.5;
-  }
-
   .restock-balance {
-    @apply flex flex-col items-center min-w-[64px];
-  }
-
-  .restock-balance-n {
-    @apply text-lg font-bold leading-none;
     font-variant-numeric: tabular-nums;
-    color: var(--color-brand-deep);
-  }
-
-  .restock-balance-k {
-    @apply text-[10px] uppercase tracking-wide;
-    color: color-mix(in srgb, var(--color-brand-deep) 45%, transparent);
   }
 
   .restock-form {
@@ -3852,14 +3820,13 @@ html.dark .form-note {
     @apply mx-auto mt-4 block;
   }
 
+  /* Sessão: caixa hairline do v2 (portal-box traz moldura + cabeça). */
   .restock-log {
-    @apply mt-10 p-5 rounded-lg border;
-    background: var(--color-brand-card);
-    border-color: var(--color-brand-line);
+    margin-top: 0.875rem;
   }
 
   .restock-log ul {
-    @apply mt-3 flex flex-col gap-1.5 text-sm list-none;
+    @apply flex flex-col gap-1.5 text-sm list-none;
     color: var(--color-brand-deep);
   }
 
@@ -4841,8 +4808,10 @@ html.dark .form-note {
     border-left-color: var(--portal-red);
   }
 
-  /* Pesquisa visual na top-bar (sem acção por agora; o foco acorda-a). */
+  /* Pesquisa global da top-bar (v2): pill com campo real e painel de
+     resultados (PortalSearch) — `/` abre, Esc fecha, clique fora fecha. */
   .portal-topsearch {
+    position: relative;
     flex: 1;
     max-width: 26rem;
     margin: 0 auto;
@@ -4876,7 +4845,7 @@ html.dark .form-note {
     flex-shrink: 0;
   }
 
-  .portal-topsearch span {
+  .portal-topsearch > span {
     font-size: 0.8438rem;
     user-select: none;
   }
@@ -4892,6 +4861,98 @@ html.dark .form-note {
     background: var(--color-brand-card);
     border-radius: 0.3125rem;
     padding: 0.1rem 0.375rem;
+  }
+
+  .portal-topsearch input {
+    flex: 1;
+    min-width: 0;
+    border: 0;
+    outline: none;
+    background: transparent;
+    font: inherit;
+    font-size: 0.8438rem;
+    color: inherit;
+  }
+
+  .portal-topsearch input::placeholder {
+    color: var(--ink-45v);
+    opacity: 1;
+  }
+
+  /* Painel de resultados — cartão hairline pendurado na pill. */
+  .portal-search-backdrop {
+    position: fixed;
+    inset: 0;
+    z-index: 55;
+  }
+
+  .portal-search-pop {
+    position: absolute;
+    top: calc(100% + 0.5rem);
+    left: 0;
+    right: 0;
+    z-index: 60;
+    background: var(--color-brand-card);
+    border: 1px solid var(--color-brand-divider);
+    border-radius: 0.875rem;
+    box-shadow: 0 12px 32px rgb(6 51 26 / 0.14);
+    max-height: 24rem;
+    overflow-y: auto;
+    padding: 0.375rem;
+    text-align: left;
+  }
+
+  .portal-search-group-k {
+    display: block;
+    font-size: 0.625rem;
+    font-weight: 700;
+    letter-spacing: 0.06em;
+    text-transform: uppercase;
+    color: var(--ink-45v);
+    padding: 0.5rem 0.625rem 0.25rem;
+  }
+
+  .portal-search-item {
+    display: flex;
+    align-items: baseline;
+    justify-content: space-between;
+    gap: 0.75rem;
+    width: 100%;
+    text-align: left;
+    padding: 0.5rem 0.625rem;
+    border: 0;
+    border-radius: 0.5rem;
+    background: transparent;
+    font: inherit;
+    color: var(--color-brand-deep);
+    cursor: pointer;
+  }
+
+  .portal-search-item:hover,
+  .portal-search-item:focus-visible {
+    background: rgb(10 132 79 / 0.06);
+    outline: none;
+  }
+
+  .portal-search-item b {
+    font-size: 0.8125rem;
+    font-weight: 600;
+  }
+
+  .portal-search-item span {
+    font-size: 0.6875rem;
+    color: var(--ink-45v);
+    text-align: right;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+    max-width: 55%;
+  }
+
+  .portal-search-empty {
+    padding: 0.75rem 0.625rem;
+    font-size: 0.7813rem;
+    color: var(--ink-45v);
   }
 
   /* Sino circular da top-bar, quando a Fase 2 o trouxer — o dot
@@ -6075,6 +6136,66 @@ html.dark .form-note {
     justify-self: end;
   }
 
+  /* Cabeçalho das colunas — rótulos micro por cima das linhas, com a
+     mesma grelha da linha (stock, reservas e entrada). No ecrã estreito
+     herda o escondido das cols, como as próprias linhas. */
+  .portal-rowhead {
+    display: grid;
+    align-items: center;
+    gap: 0.875rem;
+    padding: 0.5rem 1.125rem;
+    border-bottom: 1px solid var(--color-brand-divider);
+    font-size: 0.625rem;
+    font-weight: 700;
+    letter-spacing: 0.06em;
+    text-transform: uppercase;
+    color: var(--ink-45v);
+  }
+
+  /* Estado recortável (StateLabel): o ponto e a coluna ficam alinhados,
+     o texto longo encadeia com reticências; title mostra o completo no
+     desktop e o toque (is-open) desdobra em mobile. */
+  .portal-st--clip {
+    display: flex;
+    max-width: 100%;
+    min-width: 0;
+  }
+
+  .portal-st--clip .portal-st-t {
+    min-width: 0;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+  }
+
+  .portal-st--clip.is-open .portal-st-t {
+    overflow: visible;
+    text-overflow: clip;
+    white-space: normal;
+  }
+
+  /* Grelha da Entrada de stock: medicamento · estado · saldo · registar.
+     O detalhe (estrutura + preços) ocupa a largura toda por baixo. */
+  .portal-cols-entrada {
+    grid-template-columns: 2.2fr 1fr 0.7fr minmax(15rem, auto);
+  }
+
+  .portal-cols-entrada > .restock-details {
+    grid-column: 1 / -1;
+  }
+
+  @media (max-width: 60rem) {
+    .portal-cols-entrada {
+      grid-template-columns: 1fr auto;
+    }
+
+    .portal-cols-entrada > :nth-child(3),
+    .portal-cols-entrada > :nth-child(4),
+    .portal-cols-entrada > :nth-child(5) {
+      grid-column: 1 / -1;
+    }
+  }
+
   /* Pill neutra (formas de venda, quantidades — antes verdes). */
   .portal-pill {
     display: inline-block;
@@ -6520,10 +6641,13 @@ html.dark .form-note {
   .portal-citem-time {
     font-size: 0.7188rem;
     color: var(--ink-45v);
-    white-space: nowrap;
+    white-space: normal;
     display: inline-flex;
     align-items: center;
+    flex-wrap: wrap;
+    justify-content: flex-end;
     gap: 0.375rem;
+    min-width: 0;
   }
 
   .portal-citem-meta {
@@ -6554,6 +6678,11 @@ html.dark .form-note {
     flex-direction: column;
     gap: 0.625rem;
     margin-top: 0.875rem;
+    /* Altura estável: as informações do dia rolam por fora para a
+       coluna direita nunca empurrar/mudar a altura do calendário. */
+    max-height: 24rem;
+    overflow-y: auto;
+    overscroll-behavior: contain;
   }
 }
 

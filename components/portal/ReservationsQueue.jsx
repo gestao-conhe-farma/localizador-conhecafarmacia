@@ -1,6 +1,7 @@
 'use client'
 
 import { useCallback, useEffect, useMemo, useRef, useState } from 'react'
+import { useSearchParams } from 'next/navigation'
 import { createClient } from '@/lib/supabase/client'
 import {
   getMyReservations,
@@ -10,6 +11,7 @@ import {
 import { buildReservationMessage, waLink } from '@/lib/reservation-messages'
 import { logWarn } from '@/lib/log'
 import ReservationDetailModal from '@/components/portal/ReservationDetailModal'
+import StateLabel from '@/components/portal/StateLabel'
 import { CheckIcon } from '@/components/ui/Icon'
 
 const ERRORES = {
@@ -159,6 +161,12 @@ export default function ReservationsQueue() {
   // Vista lista/calendário (viewtoggle do mock) + pesquisa no cabeçalho.
   const [view, setView] = useState('lista')
   const [q, setQ] = useState('')
+  // Deep-link da pesquisa global da top-bar (`?q=<cliente/medicamento>`).
+  const searchParams = useSearchParams()
+  const urlQ = searchParams.get('q')
+  useEffect(() => {
+    if (urlQ) setQ(urlQ)
+  }, [urlQ])
   // Menu kebab aberto (id da linha).
   const [kebabId, setKebabId] = useState(null)
   // Calendário: mês/selector resolvidos depois de montar — Date.now()
@@ -676,10 +684,7 @@ export default function ReservationsQueue() {
         </div>
 
         <div className="portal-cell">
-          <span className={`portal-st portal-st--${st}`}>
-            <i />
-            {estadoTxt}
-          </span>
+          <StateLabel st={st} label={estadoTxt} />
         </div>
 
         <div className="portal-cell">
@@ -909,7 +914,17 @@ export default function ReservationsQueue() {
                 : 'Mude de tab para ver as outras reservas.'}
             </div>
           ) : (
-            filtered.map(renderRow)
+            <>
+              {/* Cabeçalho das colunas — rótulos micro sobre as linhas. */}
+              <div className="portal-rowhead portal-cols-res" aria-hidden="true">
+                <span>Medicamento · cliente</span>
+                <span>Estado</span>
+                <span>Valor</span>
+                <span>Quando</span>
+                <span />
+              </div>
+              {filtered.map(renderRow)}
+            </>
           )}
 
           {filtered.length > 0 && (
@@ -1021,7 +1036,7 @@ export default function ReservationsQueue() {
                   : 'Sem reservas neste dia'}
               </div>
 
-              <div className="portal-cal-daylist">
+              <div className="portal-cal-daylist" key={cal ? cal.sel : 'sem-dia'}>
                 {dayItems.length === 0 && (
                   <div className="portal-cal-empty">
                     Sem reservas neste dia.
@@ -1047,11 +1062,7 @@ export default function ReservationsQueue() {
                           {d.name || 'Medicamento'}
                         </button>
                         <span className="portal-citem-time">
-                          <span className={`portal-st portal-st--${st}`}>
-                            <i />
-                            {BADGES[r.status]?.label || r.status}
-                          </span>
-                          · {hora}
+                          <StateLabel st={st} label={BADGES[r.status]?.label || r.status} />· {hora}
                         </span>
                       </div>
                       <div className="portal-citem-meta">

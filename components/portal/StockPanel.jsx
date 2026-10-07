@@ -1,6 +1,7 @@
 'use client'
 
-import { useCallback, useEffect, useMemo, useRef, useState } from 'react'
+import { useCallback, useEffect, useMemo, useState } from 'react'
+import Link from 'next/link'
 import {
   getMyStockSnapshot,
   updateStockItem,
@@ -10,9 +11,10 @@ import {
 } from '@/lib/actions/pharmacy-portal'
 import { createClient } from '@/lib/supabase/client'
 import { compressDrugImage } from '@/lib/image-compress'
-import { countExpiryBuckets, expiryStatus, expirySummary } from '@/lib/expiry'
+import { countExpiryBuckets, expiryStatus, expirySummary, monthYear } from '@/lib/expiry'
 import DrugCreateForm from '@/components/portal/DrugCreateForm'
 import { setSaleOptions } from '@/lib/actions/pharmacy-portal'
+import { unitLabel } from '@/lib/sale-options'
 import { CloseIcon } from '@/components/ui/Icon'
 
 /**
@@ -726,29 +728,17 @@ export default function StockPanel({ compact = false }) {
     return () => clearInterval(t)
   }, [])
 
-  // Scroll infinito: quantos cards do resultado filtrado já se mostram.
-  // Reinicia quando a pesquisa/filtro muda (o resultado é outro).
-  const [visibleCount, setVisibleCount] = useState(PAGE_SIZE)
-  const sentinelRef = useRef(null)
-  // Reset do contador assíncrono (microtask) — setState síncrono no corpo
-  // do effect é sinalizado pelo react-hooks/set-state-in-effect.
+  // Paginação (refs 4/6 do mock): 24 linhas por página, botões
+  // ‹ Anterior / Próxima › no fim da caixa. Reinicia quando a
+  // pesquisa/filtro muda (o resultado é outro).
+  const [page, setPage] = useState(0)
+  // Menu kebab aberto (id do item) — fecha com o backdrop ou outra escolha.
+  const [kebabId, setKebabId] = useState(null)
+  // Reset da página em microtask — setState síncrono no corpo do
+  // effect é sinalizado pelo react-hooks/set-state-in-effect.
   useEffect(() => {
-    queueMicrotask(() => setVisibleCount(PAGE_SIZE))
+    queueMicrotask(() => setPage(0))
   }, [query, filter, sort])
-  useEffect(() => {
-    const el = sentinelRef.current
-    if (!el || items === null) return
-    const observer = new IntersectionObserver(
-      (entries) => {
-        if (entries.some((e) => e.isIntersecting)) {
-          setVisibleCount((n) => n + PAGE_SIZE)
-        }
-      },
-      { rootMargin: '600px' },
-    )
-    observer.observe(el)
-    return () => observer.disconnect()
-  }, [items])
 
   // Carregamento único — o effect inicial e o refetch pós-criação
   // ("Adicionar ao Catálogo") partilham-no, para o fármaco recém-criado
@@ -841,6 +831,13 @@ export default function StockPanel({ compact = false }) {
   }, [items])
 
   const stockCount = (items || []).filter((it) => it.in_stock).length
+
+  // Paginação da lista — fatia do resultado já filtrado/ordenado.
+  const pageCount = Math.max(1, Math.ceil(filtered.length / PAGE_SIZE))
+  const safePage = Math.min(page, pageCount - 1)
+  const pageItems = filtered.slice(safePage * PAGE_SIZE, (safePage + 1) * PAGE_SIZE)
+  const pgFrom = filtered.length === 0 ? 0 : safePage * PAGE_SIZE + 1
+  const pgTo = Math.min(filtered.length, (safePage + 1) * PAGE_SIZE)
   // Itens desactualizados — a CONTAGEM, para o banner voltar quando a
   // situação piora (o fecho (X) guarda a baseline, não dispensa para sempre).
   const staleCount = (items || []).filter(
@@ -1132,214 +1129,470 @@ export default function StockPanel({ compact = false }) {
         </div>
       )}
 
-      {/* Toolbar única — pesquisa à esquerda, chips ao lado e ordenação
-          à direita, numa só linha (padrão único do portal). */}
-      <div className="portal-toolbar">
-        <div className="stock-search-wrap">
-          <span className="stock-search-icon" aria-hidden="true">
-            <svg
-              xmlns="http://www.w3.org/2000/svg"
-              fill="none"
-              viewBox="0 0 24 24"
-              stroke="currentColor"
-            >
-              <path
+      {/* KPIs de resumo (refs 4/6): contagens REAIS do snapshot —
+          ícone à esquerda, estado = ponto + palavra à direita. */}
+      {!compact && (
+        <div className="portal-kpi4-grid">
+          <div className="portal-kpi4">
+            <span className="portal-kpi4-ic portal-kpi4-ic--green" aria-hidden="true">
+              <svg
+                viewBox="0 0 24 24"
+                fill="none"
+                stroke="currentColor"
+                strokeWidth="2"
                 strokeLinecap="round"
                 strokeLinejoin="round"
+              >
+                <path d="M4 8h16v12H4z" />
+                <path d="M9 8V5h6v3" />
+                <path d="M4 13h16" />
+              </svg>
+            </span>
+            <span className="portal-kpi4-txt">
+              <span className="portal-kpi4-k">Disponíveis</span>
+              <span className="portal-kpi4-n">{counts.in}</span>
+              <span className="portal-kpi4-d">de {counts.all} no catálogo</span>
+            </span>
+            <span className="portal-st portal-st--ok">
+              <i />
+              no Localizador
+            </span>
+          </div>
+
+          <div className="portal-kpi4">
+            <span className="portal-kpi4-ic portal-kpi4-ic--gray" aria-hidden="true">
+              <svg
+                viewBox="0 0 24 24"
+                fill="none"
+                stroke="currentColor"
                 strokeWidth="2"
-                d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z"
-              />
-            </svg>
-          </span>
-          <input
-            type="search"
-            className="portal-input portal-search"
-            placeholder="Pesquisar medicamento..."
-            value={query}
-            onChange={(e) => setQuery(e.target.value)}
-            aria-label="Pesquisar medicamento no painel"
-          />
-        </div>
-        <div className="portal-chips" role="group" aria-label="Filtrar medicamentos por estado">
-          {FILTERS.map((f) => (
-            <button
-              key={f.id}
-              type="button"
-              className={`portal-chip${filter === f.id ? ' portal-chip--active' : ''}`}
-              onClick={() => setFilter(f.id)}
-            >
-              {f.label} <span className="portal-chip-n">{counts[f.id]}</span>
-            </button>
-          ))}
-        </div>
+                strokeLinecap="round"
+                strokeLinejoin="round"
+              >
+                <circle cx="12" cy="8" r="4" />
+                <path d="M4 21c1.5-4 4.5-6 8-6s6.5 2 8 6" />
+              </svg>
+            </span>
+            <span className="portal-kpi4-txt">
+              <span className="portal-kpi4-k">Sem stock</span>
+              <span className="portal-kpi4-n">{counts.out}</span>
+              <span className="portal-kpi4-d">de {counts.all} no catálogo</span>
+            </span>
+            <span className="portal-st portal-st--mut">
+              <i />
+              ocultos
+            </span>
+          </div>
 
-        <div
-          className="stock-sort inline-flex rounded-full border overflow-hidden"
-          role="group"
-          aria-label="Ordenar medicamentos"
-        >
-          {SORTS.map((s) => (
-            <button
-              key={s.id}
-              type="button"
-              className={`stock-sort-btn ${sort === s.id ? 'active' : ''}`}
-              onClick={() => setSort(s.id)}
-            >
-              {s.label}
-            </button>
-          ))}
-        </div>
-      </div>
+          <div className="portal-kpi4">
+            <span className="portal-kpi4-ic portal-kpi4-ic--amber" aria-hidden="true">
+              <svg
+                viewBox="0 0 24 24"
+                fill="none"
+                stroke="currentColor"
+                strokeWidth="2"
+                strokeLinecap="round"
+                strokeLinejoin="round"
+              >
+                <circle cx="12" cy="12" r="9" />
+                <path d="M12 7v5l3 2" />
+              </svg>
+            </span>
+            <span className="portal-kpi4-txt">
+              <span className="portal-kpi4-k">Validade a vencer</span>
+              <span className="portal-kpi4-n">{counts.exp}</span>
+              <span className="portal-kpi4-d">nos próximos 90 dias (ou já passada)</span>
+            </span>
+            {counts.exp > 0 ? (
+              <span className="portal-st portal-st--strong">
+                <i />
+                rever
+              </span>
+            ) : (
+              <span className="portal-st portal-st--ok">
+                <i />
+                em dia
+              </span>
+            )}
+          </div>
 
-      {items === null && (
-        <div className="empty-state" role="status">
-          <div className="spinner" />
+          <div className="portal-kpi4">
+            <span className="portal-kpi4-ic portal-kpi4-ic--amber" aria-hidden="true">
+              <svg
+                viewBox="0 0 24 24"
+                fill="none"
+                stroke="currentColor"
+                strokeWidth="2"
+                strokeLinecap="round"
+                strokeLinejoin="round"
+              >
+                <path d="M21 12a9 9 0 1 1-3-6.7" />
+                <path d="M21 3v6h-6" />
+              </svg>
+            </span>
+            <span className="portal-kpi4-txt">
+              <span className="portal-kpi4-k">Desactualizados</span>
+              <span className="portal-kpi4-n">{staleCount}</span>
+              <span className="portal-kpi4-d">sem reconfirmar há mais de 5 dias</span>
+            </span>
+            {staleCount > 0 ? (
+              <span className="portal-st portal-st--warn">
+                <i />
+                reconfirmar
+              </span>
+            ) : (
+              <span className="portal-st portal-st--ok">
+                <i />
+                em dia
+              </span>
+            )}
+          </div>
         </div>
       )}
 
-      {items !== null && filtered.length === 0 && (
-        <div className="empty-state">
-          <p className="empty-sub">
-            {query ? 'Nada encontrado para esta pesquisa.' : 'Sem medicamentos no catálogo.'}
-          </p>
-        </div>
-      )}
-
-      {!compact && filtered.length > visibleCount && (
-        <p className="stock-grid-count" role="status">
-          A mostrar {visibleCount} de {filtered.length} medicamentos
-        </p>
-      )}
-
+      {/* Caixa da lista (o .box do mock): cabeçalho com pesquisa e
+          ordenação, tabs sublinhadas com contagens, linhas arejadas
+          com kebab por linha e paginação no fim. */}
       {!compact && (
-        <div className="stock-grid">
-          {filtered.slice(0, visibleCount).map((it) => {
-            const expiry = expiryStatus(it.expires_at)
-            const coming = it.available_from && new Date(it.available_from).getTime() > now
-            // Card na Lixeira: só nome, meta e o botão de restaurar.
-            if (it.retired_at) {
-              return (
-                <article key={it.drug_id} className="stock-card stock-card--retired">
-                  <div className="stock-card-top">
-                    <span className="stock-card-name-btn stock-card-name--static">{it.name}</span>
-                    {it.requires_rx && <span className="rx-badge">Receita</span>}
-                  </div>
-                  <p className="stock-card-meta">
-                    {[it.form, it.dosage].filter(Boolean).join(' · ')}
-                  </p>
-                  <div className="stock-card-foot">
-                    {/* Data completa no hover (title); no card, só o há X d. */}
-                    <span
-                      className="stock-card-hint"
-                      title={`Retirado em ${new Date(it.retired_at).toLocaleString('pt-PT', {
-                        day: 'numeric',
-                        month: 'long',
-                        year: 'numeric',
-                        hour: '2-digit',
-                        minute: '2-digit',
-                      })}`}
-                    >
-                      Retirado {timeAgo(it.retired_at, now)}
-                    </span>
+        <div className="portal-box">
+          <div className="portal-sec-head">
+            <h2>Medicamentos</h2>
+            <div className="portal-sec-tools">
+              <label className="portal-sec-search">
+                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
+                  <circle cx="11" cy="11" r="7" />
+                  <path d="m21 21-4.3-4.3" />
+                </svg>
+                <input
+                  type="search"
+                  placeholder="Pesquisar por nome ou forma…"
+                  value={query}
+                  onChange={(e) => setQuery(e.target.value)}
+                  aria-label="Pesquisar medicamento no painel"
+                />
+              </label>
+              <div
+                className="stock-sort inline-flex rounded-full border overflow-hidden"
+                role="group"
+                aria-label="Ordenar medicamentos"
+              >
+                {SORTS.map((s) => (
+                  <button
+                    key={s.id}
+                    type="button"
+                    className={`stock-sort-btn ${sort === s.id ? 'active' : ''}`}
+                    onClick={() => setSort(s.id)}
+                  >
+                    {s.label}
+                  </button>
+                ))}
+              </div>
+            </div>
+          </div>
+
+          {/* Tabs sublinhadas no lugar dos chips — contagem neutra ao
+              lado do rótulo (disciplina do v2: sem chip colorido). */}
+          <div
+            className="portal-undertabs"
+            role="group"
+            aria-label="Filtrar medicamentos por estado"
+          >
+            {FILTERS.map((f) => (
+              <button
+                key={f.id}
+                type="button"
+                className={filter === f.id ? 'active' : ''}
+                aria-pressed={filter === f.id}
+                onClick={() => setFilter(f.id)}
+              >
+                {f.label} <span className="portal-cnt">{counts[f.id]}</span>
+              </button>
+            ))}
+          </div>
+
+          {items === null && (
+            <div className="empty-state" role="status">
+              <div className="spinner" />
+            </div>
+          )}
+
+          {items !== null && filtered.length === 0 && (
+            <div className="portal-rows-empty">
+              <b>{query ? 'Nada encontrado' : 'Sem medicamentos'}</b>
+              {query
+                ? `Nada encontrado para “${query}” — experimente outro nome ou forma farmacêutica.`
+                : 'Sem medicamentos no catálogo. Use «+ Adicionar medicamento» para criar o primeiro.'}
+            </div>
+          )}
+
+          {!compact && pageItems.length > 0 && (
+            <>
+              {pageItems.map((it) => {
+                const expiry = expiryStatus(it.expires_at)
+                const coming = it.available_from && new Date(it.available_from).getTime() > now
+
+                // Menu kebab aberto para este item?
+                const kebabOpen = kebabId === it.drug_id
+                const kebab = (
+                  <div className="portal-kebab-wrap">
                     <button
                       type="button"
-                      className="portal-toggle"
-                      disabled={savingId === it.drug_id}
-                      onClick={() => restore(it)}
+                      className="portal-kebab"
+                      aria-label={`Opções de ${it.name}`}
+                      aria-expanded={kebabOpen}
+                      onClick={(e) => {
+                        e.stopPropagation()
+                        setKebabId(kebabOpen ? null : it.drug_id)
+                      }}
                     >
-                      {savingId === it.drug_id ? '…' : 'Restaurar'}
+                      ⋯
                     </button>
+                    {kebabOpen && (
+                      <div className="portal-kebab-menu" role="menu">
+                        {it.retired_at ? (
+                          <button
+                            type="button"
+                            role="menuitem"
+                            disabled={savingId === it.drug_id}
+                            onClick={(e) => {
+                              e.stopPropagation()
+                              setKebabId(null)
+                              restore(it)
+                            }}
+                          >
+                            {savingId === it.drug_id ? '…' : 'Restaurar da lixeira'}
+                          </button>
+                        ) : (
+                          <>
+                            <button
+                              type="button"
+                              role="menuitem"
+                              onClick={(e) => {
+                                e.stopPropagation()
+                                setKebabId(null)
+                                setEditing(it)
+                              }}
+                            >
+                              Editar quantidade e preço
+                            </button>
+                            <Link
+                              href={`/portal/entrada?drug=${it.drug_id}`}
+                              role="menuitem"
+                              onClick={() => setKebabId(null)}
+                            >
+                              Registar entrada de stock
+                            </Link>
+                            <button
+                              type="button"
+                              role="menuitem"
+                              className="portal-kebab-danger"
+                              onClick={(e) => {
+                                e.stopPropagation()
+                                setKebabId(null)
+                                setConfirming(it)
+                              }}
+                            >
+                              Retirar do catálogo
+                            </button>
+                          </>
+                        )}
+                      </div>
+                    )}
                   </div>
-                </article>
-              )
-            }
-            return (
-              <article
-                key={it.drug_id}
-                className={`stock-card${it.in_stock ? ' stock-card--in' : ''}${
-                  coming ? ' stock-card--coming' : ''
-                }`}
-              >
-                <div className="stock-card-top">
-                  <button
-                    type="button"
-                    className="stock-card-name-btn"
-                    onClick={() => setEditing(it)}
-                    title="Editar quantidade, validade e preço"
-                  >
-                    {it.name}
-                  </button>
-                  {it.requires_rx && <span className="rx-badge">Receita</span>}
-                  {/* 0015: criado por esta farmácia, aguarda validação */}
-                  {it.pending && (
-                    <span
-                      className="pending-badge"
-                      title="Criado por esta farmácia — visível aos clientes após validação da equipa Conheça Farmácia. Pode já marcar o stock dele."
+                )
+
+                // Lixeira (0014): linha simples com restaurar no kebab.
+                if (it.retired_at) {
+                  return (
+                    <div
+                      key={it.drug_id}
+                      className="portal-rowline portal-cols-stock portal-rowline--static"
                     >
-                      Aguarda validação
-                    </span>
-                  )}
-                </div>
+                      <div className="portal-cell">
+                        <b>{it.name}</b>
+                        <span className="sub">
+                          {[it.form, it.dosage].filter(Boolean).join(' · ')}
+                          {it.requires_rx ? ' · Receita' : ''}
+                        </span>
+                      </div>
+                      <div className="portal-cell">
+                        <span className="portal-st portal-st--mut">
+                          <i />
+                          Na lixeira
+                        </span>
+                      </div>
+                      <div className="portal-cell">
+                        <span className="strong">—</span>
+                      </div>
+                      <div className="portal-cell">
+                        <span className="tiny">
+                          Retirado{' '}
+                          <span
+                            title={`Retirado em ${new Date(it.retired_at).toLocaleString('pt-PT', {
+                              day: 'numeric',
+                              month: 'long',
+                              year: 'numeric',
+                              hour: '2-digit',
+                              minute: '2-digit',
+                            })}`}
+                          >
+                            {timeAgo(it.retired_at, now)}
+                          </span>
+                        </span>
+                      </div>
+                      <div className="portal-cell">
+                        <span className="dim">—</span>
+                      </div>
+                      {kebab}
+                    </div>
+                  )
+                }
 
-                <p className="stock-card-meta">
-                  {[it.form, it.dosage].filter(Boolean).join(' · ')}
-                </p>
+                // Linha normal — clique abre o modal de edição (o "drawer"
+                // do mock); o kebab vive à direita e não abre o modal.
+                const st = (() => {
+                  if (coming) {
+                    return {
+                      cls: 'warn',
+                      txt: `Chega ${new Date(it.available_from).toLocaleDateString('pt-PT', { day: 'numeric', month: 'short' })}`,
+                    }
+                  }
+                  if (it.in_stock) return { cls: 'ok', txt: 'Disponível' }
+                  return { cls: 'mut', txt: 'Sem stock' }
+                })()
 
-                {/* Estado: disponível / a chegar / não disponível — o mesmo
-                    papel da linha "N medicamentos agora" do ph-card. */}
-                <div className="stock-card-tags">
-                  {it.in_stock && it.quantity != null && it.quantity !== '' && (
-                    <span className="stock-tag">{it.quantity} un.</span>
-                  )}
-                  {it.in_stock && it.price != null && it.price !== '' && (
-                    <span className="stock-tag">{it.price} Kz</span>
-                  )}
-                  {coming && (
-                    <span className="portal-eta stock-tag--eta">
-                      Chega{' '}
-                      {new Date(it.available_from).toLocaleDateString('pt-PT', {
-                        day: 'numeric',
-                        month: 'short',
-                      })}
-                    </span>
-                  )}
-                  {it.in_stock && !coming && expiry && (
-                    <span className={`expiry-tag expiry-tag--${expiry.level} stock-tag--expiry`}>
-                      {expiry.label}
-                    </span>
-                  )}
-                </div>
+                return (
+                  <div
+                    key={it.drug_id}
+                    className="portal-rowline portal-cols-stock"
+                    role="button"
+                    tabIndex={0}
+                    title="Editar quantidade, validade e preço"
+                    onClick={() => setEditing(it)}
+                    onKeyDown={(e) => {
+                      if (e.key === 'Enter' || e.key === ' ') {
+                        e.preventDefault()
+                        setEditing(it)
+                      }
+                    }}
+                  >
+                    <div className="portal-cell">
+                      <b>
+                        {it.name}
+                        {it.requires_rx && <span className="rx-badge"> Receita</span>}
+                        {it.pending && (
+                          <span
+                            className="pending-badge"
+                            title="Criado por esta farmácia — visível aos clientes após validação da equipa Conheça Farmácia."
+                          >
+                            {' '}
+                            Aguarda validação
+                          </span>
+                        )}
+                      </b>
+                      <span className="sub">
+                        {[it.form, it.dosage].filter(Boolean).join(' · ')}
+                        {it.in_stock && !coming && it.confirmed_at
+                          ? ` · confirmado ${timeAgo(it.confirmed_at, now)}`
+                          : ''}
+                      </span>
+                    </div>
 
-                <div className="stock-card-foot">
-                  {it.in_stock && !coming && it.confirmed_at && (
-                    <span className="stock-confirmed-at">
-                      <span className="confirmed-dot" />
-                      Confirmado {timeAgo(it.confirmed_at, now)}
-                    </span>
-                  )}
-                  {!it.in_stock && <span className="stock-card-hint">Sem stock registado</span>}
+                    <div className="portal-cell">
+                      <span className={`portal-st portal-st--${st.cls}`}>
+                        <i />
+                        {st.txt}
+                      </span>
+                    </div>
+
+                    <div className="portal-cell">
+                      <span className="strong">
+                        {it.in_stock && it.quantity != null && it.quantity !== ''
+                          ? it.quantity
+                          : '—'}
+                      </span>
+                    </div>
+
+                    {/* Formas de venda em pills neutras + preço quando há. */}
+                    <div className="portal-cell">
+                      {(it.sale_options || [])
+                        .filter((o) => o.active !== false)
+                        .slice(0, 3)
+                        .map((o) => (
+                          <span key={o.id} className="portal-pill">
+                            {unitLabel(o.unit)}
+                            {o.price != null ? ` ${o.price}` : ''}
+                          </span>
+                        ))}
+                      {(it.sale_options || []).filter((o) => o.active !== false).length === 0 &&
+                        it.in_stock &&
+                        it.price != null &&
+                        it.price !== '' && <span className="portal-pill">{it.price} Kz</span>}
+                    </div>
+
+                    {/* Validade — texto âmbar só quando exige leitura. */}
+                    <div className="portal-cell">
+                      {it.in_stock && !coming && expiry && expiry.level !== 'ok' ? (
+                        <span className={`expiry-tag expiry-tag--${expiry.level}`}>
+                          {expiry.level === 'expired' ? 'Expirado' : expiry.label}
+                        </span>
+                      ) : (
+                        <span className="dim">{monthYear(it.expires_at) || '—'}</span>
+                      )}
+                    </div>
+
+                    {kebab}
+                  </div>
+                )
+              })}
+            </>
+          )}
+
+          {/* Paginação (refs 4/6): contagem à esquerda, ‹ › à direita. */}
+          {!compact && filtered.length > 0 && (
+            <div className="portal-pgbar">
+              <span className="portal-pginfo">
+                A mostrar {pgFrom}–{pgTo} de {filtered.length}
+                {filter !== 'all'
+                  ? ` (${FILTERS.find((f) => f.id === filter)?.label.toLowerCase()})`
+                  : ''}
+              </span>
+              {pageCount > 1 && (
+                <div className="portal-pgbtns">
                   <button
                     type="button"
-                    className={`portal-toggle${it.in_stock ? ' portal-toggle--on' : ''}`}
-                    disabled={savingId === it.drug_id}
-                    onClick={() => setEditing(it)}
-                    aria-pressed={it.in_stock}
+                    disabled={safePage === 0}
+                    onClick={() => {
+                      setPage(safePage - 1)
+                      window.scrollTo({ top: 0 })
+                    }}
                   >
-                    {savingId === it.drug_id ? '…' : it.in_stock ? 'Disponível' : 'Não disponível'}
+                    ← Anterior
+                  </button>
+                  <button
+                    type="button"
+                    disabled={safePage >= pageCount - 1}
+                    onClick={() => {
+                      setPage(safePage + 1)
+                      window.scrollTo({ top: 0 })
+                    }}
+                  >
+                    Próxima →
                   </button>
                 </div>
-              </article>
-            )
-          })}
+              )}
+            </div>
+          )}
         </div>
       )}
 
-      {/* Sentinela do scroll infinito — fica após o grid; quando entra no
-          viewport (com 600px de antecedência), a próxima página carrega. */}
-      {!compact && filtered.length > visibleCount && (
-        <div ref={sentinelRef} className="stock-grid-sentinel" aria-hidden="true">
-          <div className="spinner" />
-        </div>
+      {/* Backdrop do menu kebab — tocar fora fecha. */}
+      {kebabId && (
+        <div
+          style={{ position: 'fixed', inset: 0, zIndex: 30 }}
+          aria-hidden="true"
+          onClick={() => setKebabId(null)}
+        />
       )}
 
       {toast && (

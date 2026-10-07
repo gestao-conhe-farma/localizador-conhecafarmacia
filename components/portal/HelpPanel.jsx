@@ -297,67 +297,60 @@ export default function HelpPanel() {
         </div>
       </div>
 
-      <div className="portal-toolbar portal-toolbar--left">
-        <div className="stock-search-wrap">
-          <span className="stock-search-icon" aria-hidden="true">
-            <svg
-              xmlns="http://www.w3.org/2000/svg"
-              fill="none"
-              viewBox="0 0 24 24"
-              stroke="currentColor"
-            >
-              <path
-                strokeLinecap="round"
-                strokeLinejoin="round"
-                strokeWidth="2"
-                d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z"
+      {/* Caixa com cabeçalho (sec-head do mock): título + pesquisa
+          pill à direita — o acordeão vive dentro da caixa. */}
+      <div className="portal-box">
+        <div className="portal-sec-head">
+          <h2>Guias</h2>
+          <div className="portal-sec-tools">
+            <label className="portal-sec-search">
+              <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
+                <circle cx="11" cy="11" r="7" />
+                <path d="m21 21-4.3-4.3" />
+              </svg>
+              <input
+                type="search"
+                placeholder="Pesquisar na ajuda (ex.: validade, recusar…)"
+                value={query}
+                onChange={(e) => setQuery(e.target.value)}
+                aria-label="Pesquisar na ajuda"
               />
-            </svg>
-          </span>
-          <input
-            type="search"
-            className="portal-input portal-search"
-            placeholder="Pesquisar na ajuda (ex.: validade, recusar, origem...)"
-            value={query}
-            onChange={(e) => setQuery(e.target.value)}
-            aria-label="Pesquisar na ajuda"
-          />
+            </label>
+          </div>
         </div>
-      </div>
 
-      {filtered.length === 0 && (
-        <div className="empty-state">
-          <p className="empty-sub">
-            Nada encontrado para «{query}». Tenta outra palavra — ou fala connosco:
-            suporte@conhecafarmacia.com
-          </p>
+        {filtered.length === 0 && (
+          <div className="portal-rows-empty">
+            <b>Nada encontrado</b>
+            Nada para «{query}» — tenta outra palavra, ou fala connosco: suporte@conhecafarmacia.com
+          </div>
+        )}
+
+        <div className="help-list">
+          {filtered.map((t) => {
+            const open = openId === t.id
+            return (
+              <div key={t.id} className={`help-item${open ? ' help-item--open' : ''}`}>
+                <button
+                  type="button"
+                  className="help-item-head"
+                  aria-expanded={open}
+                  onClick={() => toggle(t.id)}
+                >
+                  <span className="help-item-icon" aria-hidden="true">
+                    <NavIcon name={t.icon} size={16} />
+                  </span>
+                  <span className="help-item-title">{t.title}</span>
+                  {t.badge && <span className="help-item-badge">{t.badge}</span>}
+                  <span className="help-item-chevron" aria-hidden="true">
+                    <ChevronIcon dir={open ? 'down' : 'right'} />
+                  </span>
+                </button>
+                {open && <div className="help-item-body">{t.body}</div>}
+              </div>
+            )
+          })}
         </div>
-      )}
-
-      <div className="help-list">
-        {filtered.map((t) => {
-          const open = openId === t.id
-          return (
-            <div key={t.id} className={`help-item${open ? ' help-item--open' : ''}`}>
-              <button
-                type="button"
-                className="help-item-head"
-                aria-expanded={open}
-                onClick={() => toggle(t.id)}
-              >
-                <span className="help-item-icon" aria-hidden="true">
-                  <NavIcon name={t.icon} size={16} />
-                </span>
-                <span className="help-item-title">{t.title}</span>
-                {t.badge && <span className="help-item-badge">{t.badge}</span>}
-                <span className="help-item-chevron" aria-hidden="true">
-                  <ChevronIcon dir={open ? 'down' : 'right'} />
-                </span>
-              </button>
-              {open && <div className="help-item-body">{t.body}</div>}
-            </div>
-          )
-        })}
       </div>
 
       {/* Resumo de 30 segundos — sempre visível no fundo. */}

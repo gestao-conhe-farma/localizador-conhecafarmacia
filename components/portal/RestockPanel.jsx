@@ -449,34 +449,35 @@ export default function RestockPanel() {
         </div>
       </div>
 
-      {/* Toolbar única — pesquisa + chips numa linha. */}
-      <div className="portal-toolbar portal-toolbar--left">
-        <div className="stock-search-wrap">
-          <span className="stock-search-icon" aria-hidden="true">
-            <svg
-              xmlns="http://www.w3.org/2000/svg"
-              fill="none"
-              viewBox="0 0 24 24"
-              stroke="currentColor"
-            >
-              <path
-                strokeLinecap="round"
-                strokeLinejoin="round"
-                strokeWidth="2"
-                d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z"
+      {toast && (
+        <p className="portal-toast" role="status">
+          {toast}
+        </p>
+      )}
+
+      {/* Caixa com cabeçalho (sec-head do mock): pesquisa pill à
+          direita; filtros viram tabs sublinhadas com contagem neutra. */}
+      <div className="portal-box">
+        <div className="portal-sec-head">
+          <h2>Lista de entrada</h2>
+          <div className="portal-sec-tools">
+            <label className="portal-sec-search">
+              <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
+                <circle cx="11" cy="11" r="7" />
+                <path d="m21 21-4.3-4.3" />
+              </svg>
+              <input
+                type="search"
+                placeholder="Pesquisar medicamento…"
+                value={query}
+                onChange={(e) => setQuery(e.target.value)}
+                aria-label="Pesquisar medicamento na entrada de stock"
               />
-            </svg>
-          </span>
-          <input
-            type="search"
-            className="portal-input portal-search"
-            placeholder="Pesquisar medicamento..."
-            value={query}
-            onChange={(e) => setQuery(e.target.value)}
-            aria-label="Pesquisar medicamento na entrada de stock"
-          />
+            </label>
+          </div>
         </div>
-        <div className="portal-chips" role="group" aria-label="Filtrar lista de entrada">
+
+        <div className="portal-undertabs" role="group" aria-label="Filtrar lista de entrada">
           {[
             { id: 'restock', label: 'Para repor' },
             { id: 'all', label: 'Todos' },
@@ -485,212 +486,206 @@ export default function RestockPanel() {
             <button
               key={f.id}
               type="button"
-              className={`portal-chip${filter === f.id ? ' portal-chip--active' : ''}`}
+              className={filter === f.id ? 'active' : ''}
+              aria-pressed={filter === f.id}
               onClick={() => setFilter(f.id)}
             >
-              {f.label} <span className="portal-chip-n">{counts[f.id]}</span>
+              {f.label} <span className="portal-cnt">{counts[f.id]}</span>
             </button>
           ))}
         </div>
-      </div>
 
-      {toast && (
-        <p className="portal-toast" role="status">
-          {toast}
-        </p>
-      )}
-
-      {filtered.length === 0 && (
-        <div className="empty-state">
-          <p className="empty-title">
-            {filter === 'restock' && !query ? 'Nada a repor' : 'Nada encontrado'}
-          </p>
-          <p className="empty-sub">
+        {filtered.length === 0 && (
+          <div className="portal-rows-empty">
+            <b>{filter === 'restock' && !query ? 'Nada a repor' : 'Nada encontrado'}</b>
             {filter === 'restock' && !query
               ? 'Nenhum produto esgotado neste momento — mude para «Todos» para registar entrada em qualquer medicamento.'
               : 'Tente outro termo de pesquisa ou mude de filtro.'}
-          </p>
-        </div>
-      )}
+          </div>
+        )}
 
-      <div className="restock-list">
-        {filtered.slice(0, visibleCount).map((it) => {
-          const expiry = expiryStatus(it.expires_at)
-          const busy = savingId === it.drug_id
-          const out = !it.in_stock || (it.quantity ?? 0) === 0
-          // 0016 — detalhe da entrada (unidade, estrutura, preços,
-          // prévia de conversão). O detalhe só abre com quantidade
-          // escrita: a lista mantém-se varrível, os campos aparecem
-          // exactamente quando o atendente vai registar.
-          const id = it.drug_id
-          const solid = isSolid(it.form)
-          const selUnit = unitSel[id] || defaultUnit(it)
-          const pack = packs[id] || {}
-          const lam = Number(pack.lam ?? it.pack_laminas ?? '') || null
-          const comp = Number(pack.comp ?? it.pack_comprimidos ?? '') || null
-          const qtyN = Number.parseInt((units[id] || '').trim(), 10)
-          const detailsOn = (units[id] || '').trim() !== ''
-          const optList = buildOptions(it, { unit: selUnit, pack, priceMap: {} })
-          const chosen = optList.find((o) => o.unit === selUnit)
-          const factor = chosen ? Number(chosen.packSize) || 1 : 1
-          const baseUnit = (optList.find((o) => o.isDefault && o.active) || optList[0]).unit
-          const parts = qtyN >= 1 ? physicalParts(qtyN, selUnit, lam, comp, solid) : []
-          const preview =
-            qtyN >= 1
-              ? parts.length
-                ? `${parts.join(' · ')} · +${qtyN * factor} no saldo`
-                : `+${qtyN * factor} ${PLURALS[baseUnit].toLowerCase()}`
-              : ''
-          return (
-            <div
-              key={it.drug_id}
-              className={`restock-row${out ? ' restock-row--out' : ''}${
-                highlightId === it.drug_id ? ' restock-row--focus' : ''
-              }`}
-            >
-              <div className="restock-main">
-                <span className="restock-name">
-                  {it.name}
-                  {it.requires_rx && <span className="rx-badge rx-badge--inline">Receita</span>}
-                </span>
-                <span className="restock-meta">
-                  {[it.form, it.dosage].filter(Boolean).join(' · ')}
-                  {it.expires_at && expiry && expiry.level !== 'ok'
-                    ? ` · validade ${monthYear(it.expires_at)} (${expiry.label})`
-                    : it.expires_at
-                      ? ` · validade ${monthYear(it.expires_at)}`
-                      : ''}
-                </span>
-              </div>
+        <div className="restock-list">
+          {filtered.slice(0, visibleCount).map((it) => {
+            const expiry = expiryStatus(it.expires_at)
+            const busy = savingId === it.drug_id
+            const out = !it.in_stock || (it.quantity ?? 0) === 0
+            // 0016 — detalhe da entrada (unidade, estrutura, preços,
+            // prévia de conversão). O detalhe só abre com quantidade
+            // escrita: a lista mantém-se varrível, os campos aparecem
+            // exactamente quando o atendente vai registar.
+            const id = it.drug_id
+            const solid = isSolid(it.form)
+            const selUnit = unitSel[id] || defaultUnit(it)
+            const pack = packs[id] || {}
+            const lam = Number(pack.lam ?? it.pack_laminas ?? '') || null
+            const comp = Number(pack.comp ?? it.pack_comprimidos ?? '') || null
+            const qtyN = Number.parseInt((units[id] || '').trim(), 10)
+            const detailsOn = (units[id] || '').trim() !== ''
+            const optList = buildOptions(it, { unit: selUnit, pack, priceMap: {} })
+            const chosen = optList.find((o) => o.unit === selUnit)
+            const factor = chosen ? Number(chosen.packSize) || 1 : 1
+            const baseUnit = (optList.find((o) => o.isDefault && o.active) || optList[0]).unit
+            const parts = qtyN >= 1 ? physicalParts(qtyN, selUnit, lam, comp, solid) : []
+            const preview =
+              qtyN >= 1
+                ? parts.length
+                  ? `${parts.join(' · ')} · +${qtyN * factor} no saldo`
+                  : `+${qtyN * factor} ${PLURALS[baseUnit].toLowerCase()}`
+                : ''
+            return (
+              <div
+                key={it.drug_id}
+                className={`restock-row${out ? ' restock-row--out' : ''}${
+                  highlightId === it.drug_id ? ' restock-row--focus' : ''
+                }`}
+              >
+                <div className="restock-main">
+                  <span className="restock-name">
+                    {it.name}
+                    {it.requires_rx && <span className="rx-badge rx-badge--inline">Receita</span>}
+                  </span>
+                  <span className="restock-meta">
+                    {[it.form, it.dosage].filter(Boolean).join(' · ')}
+                    {it.expires_at && expiry && expiry.level !== 'ok'
+                      ? ` · validade ${monthYear(it.expires_at)} (${expiry.label})`
+                      : it.expires_at
+                        ? ` · validade ${monthYear(it.expires_at)}`
+                        : ''}
+                  </span>
+                </div>
 
-              <div className="restock-balance" title="Saldo actual em stock">
-                <span className="restock-balance-n">{it.in_stock ? (it.quantity ?? 0) : 0}</span>
-                <span className="restock-balance-k">em stock</span>
-              </div>
+                <div className="restock-balance" title="Saldo actual em stock">
+                  <span className="restock-balance-n">{it.in_stock ? (it.quantity ?? 0) : 0}</span>
+                  <span className="restock-balance-k">em stock</span>
+                </div>
 
-              <div className="restock-form" data-tour="restock-input">
-                <label className="restock-field">
-                  <span className="restock-field-k">Chegaram</span>
-                  <div className="restock-qty">
-                    <input
-                      type="number"
-                      min="1"
-                      step="1"
-                      inputMode="numeric"
-                      className="portal-input restock-input"
-                      placeholder="0"
-                      value={units[id] || ''}
-                      onChange={(e) => setUnits((u) => ({ ...u, [id]: e.target.value }))}
-                      onKeyDown={(e) => {
-                        if (e.key === 'Enter' && !busy) save(it)
-                      }}
-                      aria-label={`Unidades recebidas de ${it.name}`}
-                      disabled={busy}
-                    />
-                    {/* 0016 — EM QUE unidade chegou (caixas, lâminas,
+                <div className="restock-form" data-tour="restock-input">
+                  <label className="restock-field">
+                    <span className="restock-field-k">Chegaram</span>
+                    <div className="restock-qty">
+                      <input
+                        type="number"
+                        min="1"
+                        step="1"
+                        inputMode="numeric"
+                        className="portal-input restock-input"
+                        placeholder="0"
+                        value={units[id] || ''}
+                        onChange={(e) => setUnits((u) => ({ ...u, [id]: e.target.value }))}
+                        onKeyDown={(e) => {
+                          if (e.key === 'Enter' && !busy) save(it)
+                        }}
+                        aria-label={`Unidades recebidas de ${it.name}`}
+                        disabled={busy}
+                      />
+                      {/* 0016 — EM QUE unidade chegou (caixas, lâminas,
                         frascos…): o saldo converte-se sozinho. */}
-                    <select
-                      className="portal-input restock-unit"
-                      value={selUnit}
-                      onChange={(e) => setUnitSel((u) => ({ ...u, [id]: e.target.value }))}
-                      aria-label={`Unidade em que chegou ${it.name}`}
-                      disabled={busy}
-                    >
-                      {unitOptions(it).map((u) => (
-                        <option key={u} value={u}>
-                          {PLURALS[u]}
-                        </option>
-                      ))}
-                    </select>
-                  </div>
-                </label>
-                <button
-                  type="button"
-                  className="btn btn-primary restock-save"
-                  onClick={() => save(it)}
-                  disabled={busy}
-                >
-                  {busy ? 'A guardar…' : 'Somar'}
-                </button>
-              </div>
+                      <select
+                        className="portal-input restock-unit"
+                        value={selUnit}
+                        onChange={(e) => setUnitSel((u) => ({ ...u, [id]: e.target.value }))}
+                        aria-label={`Unidade em que chegou ${it.name}`}
+                        disabled={busy}
+                      >
+                        {unitOptions(it).map((u) => (
+                          <option key={u} value={u}>
+                            {PLURALS[u]}
+                          </option>
+                        ))}
+                      </select>
+                    </div>
+                  </label>
+                  <button
+                    type="button"
+                    className="btn btn-primary restock-save"
+                    onClick={() => save(it)}
+                    disabled={busy}
+                  >
+                    {busy ? 'A guardar…' : 'Somar'}
+                  </button>
+                </div>
 
-              {/* 0016 — detalhe da entrada: estrutura da caixa, preços
+                {/* 0016 — detalhe da entrada: estrutura da caixa, preços
                   por forma de venda e prévia do que vai entrar. Só
                   visível com quantidade escrita. */}
-              {detailsOn && (
-                <div className="restock-details">
-                  {solid && (
-                    <span className="restock-pack">
-                      Caixa com
-                      <input
-                        type="number"
-                        min="1"
-                        max="999"
-                        inputMode="numeric"
-                        className="portal-input portal-input--price"
-                        value={pack.lam ?? it.pack_laminas ?? ''}
-                        onChange={(e) =>
-                          setPacks((p) => ({ ...p, [id]: { ...p[id], lam: e.target.value } }))
-                        }
-                        aria-label={`Lâminas por caixa de ${it.name}`}
-                        disabled={busy}
-                      />
-                      lâminas ·
-                      <input
-                        type="number"
-                        min="1"
-                        max="999"
-                        inputMode="numeric"
-                        className="portal-input portal-input--price"
-                        value={pack.comp ?? it.pack_comprimidos ?? ''}
-                        onChange={(e) =>
-                          setPacks((p) => ({ ...p, [id]: { ...p[id], comp: e.target.value } }))
-                        }
-                        aria-label={`Comprimidos por lâmina de ${it.name}`}
-                        disabled={busy}
-                      />
-                      comprimidos/lâmina
-                    </span>
-                  )}
-                  <span className="restock-prices">
-                    <span className="restock-prices-k">Preços:</span>
-                    {priceUnits(it).map((u) => (
-                      <label key={u} className="restock-price">
-                        {PLURALS[u].toLowerCase()}
+                {detailsOn && (
+                  <div className="restock-details">
+                    {solid && (
+                      <span className="restock-pack">
+                        Caixa com
                         <input
                           type="number"
-                          min="0"
-                          step="0.01"
-                          inputMode="decimal"
+                          min="1"
+                          max="999"
+                          inputMode="numeric"
                           className="portal-input portal-input--price"
-                          value={(prices[id] || {})[u] ?? priceOf(it, u)}
+                          value={pack.lam ?? it.pack_laminas ?? ''}
                           onChange={(e) =>
-                            setPrices((p) => ({ ...p, [id]: { ...p[id], [u]: e.target.value } }))
+                            setPacks((p) => ({ ...p, [id]: { ...p[id], lam: e.target.value } }))
                           }
-                          aria-label={`Preço de ${PLURALS[u].toLowerCase()} de ${it.name}`}
+                          aria-label={`Lâminas por caixa de ${it.name}`}
                           disabled={busy}
                         />
-                        Kz
-                      </label>
-                    ))}
-                  </span>
-                  {preview && <span className="restock-preview">{preview}</span>}
-                </div>
-              )}
-            </div>
-          )
-        })}
-      </div>
+                        lâminas ·
+                        <input
+                          type="number"
+                          min="1"
+                          max="999"
+                          inputMode="numeric"
+                          className="portal-input portal-input--price"
+                          value={pack.comp ?? it.pack_comprimidos ?? ''}
+                          onChange={(e) =>
+                            setPacks((p) => ({ ...p, [id]: { ...p[id], comp: e.target.value } }))
+                          }
+                          aria-label={`Comprimidos por lâmina de ${it.name}`}
+                          disabled={busy}
+                        />
+                        comprimidos/lâmina
+                      </span>
+                    )}
+                    <span className="restock-prices">
+                      <span className="restock-prices-k">Preços:</span>
+                      {priceUnits(it).map((u) => (
+                        <label key={u} className="restock-price">
+                          {PLURALS[u].toLowerCase()}
+                          <input
+                            type="number"
+                            min="0"
+                            step="0.01"
+                            inputMode="decimal"
+                            className="portal-input portal-input--price"
+                            value={(prices[id] || {})[u] ?? priceOf(it, u)}
+                            onChange={(e) =>
+                              setPrices((p) => ({ ...p, [id]: { ...p[id], [u]: e.target.value } }))
+                            }
+                            aria-label={`Preço de ${PLURALS[u].toLowerCase()} de ${it.name}`}
+                            disabled={busy}
+                          />
+                          Kz
+                        </label>
+                      ))}
+                    </span>
+                    {preview && <span className="restock-preview">{preview}</span>}
+                  </div>
+                )}
+              </div>
+            )
+          })}
+        </div>
 
-      {filtered.length > visibleCount && (
-        <button
-          type="button"
-          className="portal-chip restock-more"
-          onClick={() => setVisibleCount((n) => n + PAGE_SIZE)}
-        >
-          Mostrar mais ({filtered.length - visibleCount})
-        </button>
-      )}
+        {filtered.length > visibleCount && (
+          <div className="portal-pgbar">
+            <span className="portal-pginfo">
+              A mostrar {visibleCount} de {filtered.length}
+            </span>
+            <div className="portal-pgbtns">
+              <button type="button" onClick={() => setVisibleCount((n) => n + PAGE_SIZE)}>
+                Mostrar mais →
+              </button>
+            </div>
+          </div>
+        )}
+      </div>
 
       {/* Confirmação da sessão — as últimas entradas registadas. */}
       {log.length > 0 && (

@@ -3907,10 +3907,11 @@ html.dark .form-note {
     @apply font-semibold text-sm;
   }
 
+  /* Badge do tema → pill neutra v2 (sem chip âmbar preenchido). */
   .help-item-badge {
     @apply text-[10px] font-bold uppercase tracking-wide px-2 py-0.5 rounded-full;
-    background: color-mix(in srgb, #c47f17 15%, transparent);
-    color: #9a630f;
+    background: var(--color-brand-bg-alt);
+    color: var(--ink-60v);
   }
 
   .help-item-chevron {
@@ -3929,10 +3930,14 @@ html.dark .form-note {
   }
 
   /* Cartão «Rever tour» — chamada de acção leve no fundo da Ajuda. */
+  /* Rever tour → superfície v2: hairline neutra, sem tint verde. */
   .help-replay {
     @apply flex items-center justify-between gap-4 rounded-xl border p-4;
-    background: color-mix(in srgb, var(--color-brand-primary) 5%, var(--color-brand-card));
-    border-color: color-mix(in srgb, var(--color-brand-primary) 25%, transparent);
+    background: var(--color-brand-card);
+    border-color: var(--color-brand-divider);
+    box-shadow:
+      0 1px 2px rgb(0 42 50 / 0.04),
+      0 4px 14px rgb(0 42 50 / 0.05);
   }
   .help-replay b {
     color: var(--color-brand-deep);
@@ -3970,24 +3975,38 @@ html.dark .form-note {
     border: 1px solid color-mix(in srgb, var(--color-brand-accent) 25%, transparent);
   }
 
+  /* Regra destacada → nota neutra v2: cor SÓ na borda esquerda. */
   .help-rule {
     @apply mb-3 px-3.5 py-2.5 rounded-lg text-[13px] font-medium;
-    background: color-mix(in srgb, #c47f17 10%, transparent);
-    border: 1px solid color-mix(in srgb, #c47f17 30%, transparent);
-    color: #7a5210;
+    background: var(--color-brand-card);
+    border: 1px solid var(--color-brand-divider);
+    border-left: 3px solid var(--portal-warn);
+    color: var(--ink-60v);
+  }
+
+  .help-rule b {
+    color: var(--color-brand-deep);
   }
 
   .help-rule--ok {
     @apply mt-4 mb-0;
-    background: color-mix(in srgb, var(--color-brand-accent) 10%, transparent);
-    border-color: color-mix(in srgb, var(--color-brand-accent) 30%, transparent);
-    color: var(--color-brand-primary);
+    background: var(--color-brand-card);
+    border: 1px solid var(--color-brand-divider);
+    border-left: 3px solid var(--color-brand-accent);
+    color: var(--ink-60v);
+  }
+
+  .help-rule--ok b {
+    color: var(--color-brand-deep);
   }
 
   .help-cheatsheet {
     @apply mt-8 p-5 rounded-lg border;
     background: var(--color-brand-card);
-    border-color: var(--color-brand-line);
+    border-color: var(--color-brand-divider);
+    box-shadow:
+      0 1px 2px rgb(0 42 50 / 0.04),
+      0 4px 14px rgb(0 42 50 / 0.05);
   }
 
   .help-table {
@@ -4590,6 +4609,17 @@ html.dark .form-note {
     background: rgb(224 123 111 / 0.14);
   }
 
+  /* Teal (vendas/relatórios) — mesmo tom do mock. */
+  .portal-kpi4-ic--teal {
+    background: rgb(13 110 139 / 0.07);
+    color: #0d6e8b;
+  }
+
+  html.dark .portal-kpi4-ic--teal {
+    background: rgb(90 184 214 / 0.12);
+    color: #5ab8d6;
+  }
+
   /* Neutro: o ícone recua (perfil, páginas sem urgência). */
   .portal-kpi4-ic--gray {
     background: var(--color-brand-bg-alt);
@@ -4825,7 +4855,9 @@ html.dark .form-note {
     padding: 0.5rem 1rem;
     cursor: text;
     color: var(--ink-45v);
-    transition: border-color 0.15s ease, color 0.15s ease;
+    transition:
+      border-color 0.15s ease,
+      color 0.15s ease;
   }
 
   .portal-topsearch:hover,
@@ -5874,3 +5906,1045 @@ html.dark .form-note {
   }
 }
 
+/* ============================================================
+   PORTAL v2 — LISTAS DE TRABALHO (stock · reservas · vendas ·
+   visão geral): o resto do vocabulário do mock modelo-a-v2.
+   Linhas com hairline e kebab, paginação, cabeçalho de secção com
+   pesquisa pill, calendário de reservas, gráfico de linha, donut e
+   feed do dia. Mesmas regras: verde só como acento, estado =
+   ponto + palavra, UM sólido por linha.
+   ============================================================ */
+@layer components {
+  /* Pesquisa pill dentro do cabeçalho de secção (sec-search do mock). */
+  .portal-sec-search {
+    display: flex;
+    align-items: center;
+    gap: 0.5rem;
+    background: var(--color-brand-bg-alt);
+    border: 1px solid var(--color-brand-divider);
+    border-radius: 999px;
+    padding: 0.4375rem 0.875rem;
+    min-width: 11.875rem;
+  }
+
+  .portal-sec-search:focus-within {
+    border-color: var(--color-brand-accent);
+  }
+
+  .portal-sec-search svg {
+    width: 0.875rem;
+    height: 0.875rem;
+    opacity: 0.45;
+    flex-shrink: 0;
+  }
+
+  .portal-sec-search input {
+    border: 0;
+    outline: 0;
+    background: transparent;
+    font: inherit;
+    font-size: 0.7813rem;
+    width: 100%;
+    min-width: 0;
+    color: inherit;
+    padding: 0;
+  }
+
+  /* Botão «+» sólido do cabeçalho de secção (sec-plus do mock). */
+  .portal-sec-plus {
+    display: inline-flex;
+    align-items: center;
+    gap: 0.375rem;
+    border-radius: 999px;
+    padding: 0.4375rem 0.875rem;
+    font-size: 0.7813rem;
+    font-weight: 700;
+    background: var(--color-brand-primary);
+    color: #fff;
+    border: 0;
+    cursor: pointer;
+    transition: filter 0.15s ease;
+  }
+
+  .portal-sec-plus:hover {
+    filter: brightness(1.12);
+  }
+
+  html.dark .portal-sec-plus {
+    background: var(--color-brand-accent);
+    color: #06331a;
+  }
+
+  /* Linha de lista arejada (refs 4/6 do mock): sem zebra, hairline
+     só entre linhas; a largura define-se pelo modificador de cols. */
+  .portal-rowline {
+    display: grid;
+    align-items: center;
+    gap: 0.875rem;
+    padding: 0.8125rem 1.125rem;
+    border-bottom: 1px solid var(--color-brand-divider);
+    transition: background 0.15s ease;
+    cursor: pointer;
+    text-align: left;
+    width: 100%;
+    font: inherit;
+    color: inherit;
+    background: transparent;
+    border-left: 0;
+    border-right: 0;
+    border-top: 0;
+  }
+
+  .portal-rowline:last-child {
+    border-bottom: 0;
+  }
+
+  .portal-rowline:hover {
+    background: rgb(10 132 79 / 0.03);
+  }
+
+  .portal-rowline--static {
+    cursor: default;
+  }
+
+  .portal-rowline--static:hover {
+    background: transparent;
+  }
+
+  .portal-cols-stock {
+    grid-template-columns: 2.2fr 1fr 0.6fr 1fr 0.9fr 36px;
+  }
+
+  .portal-cols-res {
+    grid-template-columns: 2.4fr 1.6fr 1fr 0.7fr auto;
+  }
+
+  @media (max-width: 60rem) {
+    .portal-cols-stock,
+    .portal-cols-res {
+      grid-template-columns: 1.6fr 1fr 36px;
+    }
+
+    .portal-cols-stock > :nth-child(3),
+    .portal-cols-stock > :nth-child(4),
+    .portal-cols-stock > :nth-child(5),
+    .portal-cols-res > :nth-child(3),
+    .portal-cols-res > :nth-child(4) {
+      display: none;
+    }
+  }
+
+  /* Células da linha. */
+  .portal-cell {
+    min-width: 0;
+  }
+
+  .portal-cell b {
+    display: block;
+    font-weight: 600;
+    font-size: 0.8438rem;
+    color: var(--color-brand-deep);
+  }
+
+  .portal-cell .sub {
+    display: block;
+    font-size: 0.7188rem;
+    color: var(--ink-60v);
+    margin-top: 1px;
+  }
+
+  .portal-cell .strong {
+    font-variant-numeric: tabular-nums;
+    font-weight: 600;
+    font-size: 0.8125rem;
+    color: var(--color-brand-deep);
+  }
+
+  .portal-cell .dim {
+    color: var(--ink-60v);
+    font-size: 0.8125rem;
+  }
+
+  .portal-cell .tiny {
+    font-size: 0.7188rem;
+    color: var(--ink-45v);
+  }
+
+  .portal-cell--right {
+    text-align: right;
+    justify-self: end;
+  }
+
+  /* Pill neutra (formas de venda, quantidades — antes verdes). */
+  .portal-pill {
+    display: inline-block;
+    border-radius: 0.4375rem;
+    padding: 0.1875rem 0.5rem;
+    font-size: 0.6563rem;
+    font-weight: 600;
+    background: var(--color-brand-bg-alt);
+    color: var(--ink-60v);
+    white-space: nowrap;
+    margin-right: 0.25rem;
+  }
+
+  html.dark .portal-pill {
+    background: rgb(255 255 255 / 0.07);
+  }
+
+  /* Kebab (⋯) por linha. */
+  .portal-kebab {
+    width: 1.875rem;
+    height: 1.875rem;
+    border-radius: 0.5625rem;
+    border: 0;
+    background: transparent;
+    color: var(--ink-45v);
+    cursor: pointer;
+    display: grid;
+    place-items: center;
+    font-size: 1rem;
+    line-height: 1;
+    justify-self: end;
+    padding: 0;
+  }
+
+  .portal-kebab:hover {
+    background: var(--color-brand-bg-alt);
+    color: var(--color-brand-deep);
+  }
+
+  .portal-kebab svg {
+    width: 1rem;
+    height: 1rem;
+  }
+
+  /* Menu do kebab — superfície com hairline, itens em tinta. */
+  .portal-kebab-wrap {
+    position: relative;
+    justify-self: end;
+  }
+
+  .portal-kebab-menu {
+    position: absolute;
+    right: 0;
+    top: calc(100% + 4px);
+    z-index: 40;
+    min-width: 11rem;
+    background: var(--color-brand-card);
+    border: 1px solid var(--color-brand-divider);
+    border-radius: 0.625rem;
+    box-shadow:
+      0 1px 2px rgb(0 42 50 / 0.06),
+      0 8px 24px rgb(0 42 50 / 0.12);
+    padding: 0.25rem;
+    display: flex;
+    flex-direction: column;
+  }
+
+  .portal-kebab-menu button,
+  .portal-kebab-menu a {
+    display: flex;
+    align-items: center;
+    gap: 0.5rem;
+    border: 0;
+    background: transparent;
+    color: var(--color-brand-deep);
+    font: inherit;
+    font-size: 0.7813rem;
+    font-weight: 600;
+    text-align: left;
+    padding: 0.5rem 0.625rem;
+    border-radius: 0.4375rem;
+    cursor: pointer;
+    text-decoration: none;
+  }
+
+  .portal-kebab-menu button:hover,
+  .portal-kebab-menu a:hover {
+    background: var(--color-brand-bg-alt);
+  }
+
+  .portal-kebab-menu .portal-kebab-danger {
+    color: var(--portal-red);
+  }
+
+  /* Paginação (refs 4/6). */
+  .portal-pgbar {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 0.75rem;
+    padding: 0.75rem 1.125rem;
+    border-top: 1px solid var(--color-brand-divider);
+    flex-wrap: wrap;
+  }
+
+  .portal-pginfo {
+    font-size: 0.75rem;
+    color: var(--ink-45v);
+    font-variant-numeric: tabular-nums;
+  }
+
+  .portal-pgbtns {
+    display: flex;
+    gap: 0.5rem;
+  }
+
+  .portal-pgbtns button {
+    border: 1px solid var(--color-brand-divider);
+    background: var(--color-brand-card);
+    color: inherit;
+    border-radius: 999px;
+    padding: 0.375rem 0.875rem;
+    font-size: 0.75rem;
+    font-weight: 600;
+    cursor: pointer;
+  }
+
+  .portal-pgbtns button:hover:not(:disabled) {
+    border-color: rgb(0 42 50 / 0.3);
+  }
+
+  .portal-pgbtns button:disabled {
+    opacity: 0.45;
+    cursor: default;
+  }
+
+  /* Alternador de vista lista/calendário (viewtoggle do mock). */
+  .portal-viewtoggle {
+    display: inline-flex;
+    border: 1px solid var(--color-brand-divider);
+    border-radius: 0.625rem;
+    overflow: hidden;
+    background: var(--color-brand-bg-alt);
+  }
+
+  .portal-viewtoggle button {
+    border: 0;
+    background: transparent;
+    color: var(--ink-45v);
+    width: 2.125rem;
+    height: 1.875rem;
+    display: grid;
+    place-items: center;
+    cursor: pointer;
+    padding: 0;
+  }
+
+  .portal-viewtoggle button + button {
+    border-left: 1px solid var(--color-brand-divider);
+  }
+
+  .portal-viewtoggle button:hover {
+    color: var(--color-brand-primary);
+  }
+
+  html.dark .portal-viewtoggle button:hover {
+    color: #7fd4ab;
+  }
+
+  .portal-viewtoggle button.on {
+    background: var(--color-brand-card);
+    color: var(--color-brand-primary);
+  }
+
+  html.dark .portal-viewtoggle button.on {
+    color: #7fd4ab;
+  }
+
+  .portal-viewtoggle svg {
+    width: 0.9375rem;
+    height: 0.9375rem;
+  }
+}
+
+/* ============================================================
+   PORTAL v2 — CALENDÁRIO DE RESERVAS (mock modelo-a-v2):
+   grelha mensal com pontos por estado + painel do dia.
+   ============================================================ */
+@layer components {
+  .portal-rescal {
+    display: grid;
+    grid-template-columns: 1.55fr 1fr;
+    align-items: stretch;
+  }
+
+  @media (max-width: 62.5rem) {
+    .portal-rescal {
+      grid-template-columns: 1fr;
+    }
+  }
+
+  .portal-rescal-left {
+    padding: 1rem 1.125rem;
+    border-right: 1px solid var(--color-brand-divider);
+  }
+
+  @media (max-width: 62.5rem) {
+    .portal-rescal-left {
+      border-right: 0;
+      border-bottom: 1px solid var(--color-brand-divider);
+    }
+  }
+
+  .portal-rescal-right {
+    padding: 1rem 1.25rem;
+    background: var(--color-brand-bg-alt);
+  }
+
+  html.dark .portal-rescal-right {
+    background: rgb(255 255 255 / 0.02);
+  }
+
+  .portal-calhead {
+    display: flex;
+    align-items: center;
+    gap: 0.625rem;
+    margin-bottom: 0.625rem;
+    flex-wrap: wrap;
+  }
+
+  .portal-calhead b {
+    font-family: var(--font-display), Georgia, serif;
+    font-weight: 600;
+    font-size: 1rem;
+    color: var(--color-brand-deep);
+  }
+
+  .portal-calnav {
+    display: flex;
+    gap: 0.3125rem;
+  }
+
+  .portal-calnav button {
+    width: 1.625rem;
+    height: 1.625rem;
+    border-radius: 0.5rem;
+    border: 1px solid var(--color-brand-divider);
+    background: var(--color-brand-card);
+    color: inherit;
+    cursor: pointer;
+    display: grid;
+    place-items: center;
+    font-size: 0.8125rem;
+    line-height: 1;
+    padding: 0;
+  }
+
+  .portal-calnav button:hover {
+    border-color: rgb(0 42 50 / 0.3);
+  }
+
+  .portal-cal-legend {
+    margin-left: auto;
+    display: flex;
+    gap: 0.75rem;
+    font-size: 0.6875rem;
+    color: var(--ink-45v);
+    flex-wrap: wrap;
+  }
+
+  .portal-cal-legend span {
+    display: inline-flex;
+    align-items: center;
+    gap: 0.3125rem;
+  }
+
+  .portal-cal-legend i {
+    width: 0.4375rem;
+    height: 0.4375rem;
+    border-radius: 50%;
+  }
+
+  .portal-calwk {
+    display: grid;
+    grid-template-columns: repeat(7, 1fr);
+    margin-bottom: 0.25rem;
+  }
+
+  .portal-calwk span {
+    font-size: 0.625rem;
+    font-weight: 700;
+    letter-spacing: 0.06em;
+    text-transform: uppercase;
+    color: var(--ink-45v);
+    text-align: center;
+    padding: 0.25rem 0;
+  }
+
+  .portal-calgrid {
+    display: grid;
+    grid-template-columns: repeat(7, 1fr);
+    gap: 0.25rem;
+  }
+
+  .portal-cald {
+    min-height: 4.75rem;
+    border: 1px solid transparent;
+    border-radius: 0.6875rem;
+    background: transparent;
+    text-align: left;
+    padding: 0.5rem 0.625rem 0.4375rem;
+    cursor: pointer;
+    display: flex;
+    flex-direction: column;
+    gap: 0.375rem;
+    font-family: inherit;
+    color: inherit;
+  }
+
+  .portal-cald:hover {
+    background: var(--color-brand-bg-alt);
+    border-color: var(--color-brand-divider);
+  }
+
+  .portal-cald .cdn {
+    font-size: 0.7813rem;
+    font-weight: 600;
+    color: var(--ink-60v);
+    line-height: 1;
+  }
+
+  .portal-cald--mut {
+    opacity: 0.3;
+    cursor: default;
+    pointer-events: none;
+  }
+
+  .portal-cald--today .cdn {
+    color: var(--color-brand-primary);
+    font-weight: 800;
+  }
+
+  html.dark .portal-cald--today .cdn {
+    color: #7fd4ab;
+  }
+
+  .portal-cald--sel {
+    background: var(--color-brand-primary);
+    border-color: var(--color-brand-primary);
+  }
+
+  html.dark .portal-cald--sel {
+    background: var(--color-brand-accent);
+    border-color: var(--color-brand-accent);
+  }
+
+  .portal-cald--sel .cdn {
+    color: #fff;
+  }
+
+  html.dark .portal-cald--sel .cdn {
+    color: #06331a;
+  }
+
+  .portal-caldots {
+    display: flex;
+    gap: 0.25rem;
+    flex-wrap: wrap;
+    align-items: center;
+  }
+
+  .portal-caldots i {
+    width: 0.4375rem;
+    height: 0.4375rem;
+    border-radius: 50%;
+  }
+
+  .portal-cald--sel .portal-caldots i {
+    outline: 2px solid rgb(255 255 255 / 0.25);
+    outline-offset: 1px;
+  }
+
+  .portal-calmore {
+    font-size: 0.625rem;
+    font-weight: 700;
+    color: var(--ink-45v);
+  }
+
+  .portal-cald--sel .portal-calmore {
+    color: rgb(255 255 255 / 0.75);
+  }
+
+  html.dark .portal-cald--sel .portal-calmore {
+    color: rgb(6 51 26 / 0.7);
+  }
+
+  .portal-calside-title {
+    font-family: var(--font-display), Georgia, serif;
+    font-weight: 600;
+    font-size: 1rem;
+    color: var(--color-brand-deep);
+  }
+
+  .portal-calside-sub {
+    font-size: 0.7813rem;
+    color: var(--ink-60v);
+    margin-top: 0.1875rem;
+  }
+
+  .portal-citem {
+    background: var(--color-brand-card);
+    border: 1px solid var(--color-brand-divider);
+    border-radius: 0.75rem;
+    padding: 0.75rem 0.875rem;
+    display: flex;
+    flex-direction: column;
+    gap: 0.25rem;
+  }
+
+  .portal-citem-top {
+    display: flex;
+    align-items: flex-start;
+    justify-content: space-between;
+    gap: 0.5rem;
+  }
+
+  .portal-citem-name {
+    font-size: 0.8438rem;
+    font-weight: 600;
+    color: var(--color-brand-deep);
+    background: none;
+    border: 0;
+    padding: 0;
+    text-align: left;
+    cursor: pointer;
+    font-family: inherit;
+  }
+
+  .portal-citem-name:hover {
+    color: var(--color-brand-accent);
+  }
+
+  .portal-citem-time {
+    font-size: 0.7188rem;
+    color: var(--ink-45v);
+    white-space: nowrap;
+    display: inline-flex;
+    align-items: center;
+    gap: 0.375rem;
+  }
+
+  .portal-citem-meta {
+    font-size: 0.75rem;
+    color: var(--ink-60v);
+  }
+
+  .portal-citem-foot {
+    display: flex;
+    gap: 0.4375rem;
+    align-items: center;
+    justify-content: flex-end;
+    margin-top: 0.125rem;
+    flex-wrap: wrap;
+  }
+
+  .portal-cal-empty {
+    border: 1px dashed var(--color-brand-divider);
+    border-radius: 0.75rem;
+    padding: 1.625rem 1rem;
+    text-align: center;
+    color: var(--ink-45v);
+    font-size: 0.8125rem;
+  }
+
+  .portal-cal-daylist {
+    display: flex;
+    flex-direction: column;
+    gap: 0.625rem;
+    margin-top: 0.875rem;
+  }
+}
+
+/* ============================================================
+   PORTAL v2 — SPARK (Vendas), DONUT + MINI-CALENDÁRIO + FEED
+   (Visão geral), grelha 2 colunas, cabeçalho de cartão, KPIs de
+   3 colunas e delta com ponto. Mock modelo-a-v2.
+   ============================================================ */
+@layer components {
+  /* Gráfico de linha com área verde suave (Vendas). */
+  .portal-spark {
+    position: relative;
+    height: 10.625rem;
+    padding: 0.5rem 0.25rem 0.125rem;
+  }
+
+  .portal-spark svg {
+    width: 100%;
+    height: 100%;
+    display: block;
+  }
+
+  .portal-spark-days {
+    display: flex;
+    justify-content: space-between;
+    padding: 0 0.5rem;
+    font-size: 0.5938rem;
+    color: var(--ink-45v);
+  }
+
+  /* Donut de stock no Localizador. */
+  .portal-donut-wrap {
+    display: flex;
+    align-items: center;
+    gap: 1.125rem;
+    flex-wrap: wrap;
+  }
+
+  .portal-donut {
+    --p: 43;
+    width: 8.25rem;
+    height: 8.25rem;
+    border-radius: 50%;
+    flex-shrink: 0;
+    background: conic-gradient(
+      var(--color-brand-accent) calc(var(--p) * 1%),
+      var(--color-brand-bg-alt) 0
+    );
+    display: grid;
+    place-items: center;
+    position: relative;
+  }
+
+  .portal-donut::before {
+    content: '';
+    position: absolute;
+    inset: 1rem;
+    border-radius: 50%;
+    background: var(--color-brand-card);
+  }
+
+  .portal-donut b {
+    position: relative;
+    font-size: 1.375rem;
+    font-weight: 700;
+    color: var(--color-brand-deep);
+    font-variant-numeric: tabular-nums;
+  }
+
+  .portal-donut-legend {
+    display: flex;
+    flex-direction: column;
+    gap: 0.5625rem;
+    font-size: 0.7813rem;
+    min-width: 9.375rem;
+    list-style: none;
+    padding: 0;
+    margin: 0;
+  }
+
+  .portal-donut-legend li {
+    display: flex;
+    align-items: center;
+    gap: 0.5rem;
+    color: var(--ink-60v);
+  }
+
+  .portal-donut-legend i {
+    width: 0.5625rem;
+    height: 0.5625rem;
+    border-radius: 0.1875rem;
+    flex-shrink: 0;
+  }
+
+  .portal-donut-legend b {
+    margin-left: auto;
+    color: var(--color-brand-deep);
+    font-variant-numeric: tabular-nums;
+  }
+
+  .portal-lg-green {
+    background: var(--color-brand-accent);
+  }
+
+  .portal-lg-dark {
+    background: var(--ink-30v);
+  }
+
+  .portal-lg-gray {
+    background: var(--color-brand-divider);
+  }
+
+  /* Mini-calendário «Hoje na farmácia». */
+  .portal-cal {
+    width: 100%;
+  }
+
+  .portal-cal-head {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    margin-bottom: 0.625rem;
+  }
+
+  .portal-cal-head b {
+    font-size: 0.8125rem;
+    font-weight: 600;
+    color: var(--color-brand-deep);
+  }
+
+  .portal-cal-grid {
+    display: grid;
+    grid-template-columns: repeat(7, 1fr);
+    gap: 0.125rem;
+    text-align: center;
+  }
+
+  .portal-cal-grid .dow {
+    font-size: 0.625rem;
+    font-weight: 700;
+    color: var(--ink-45v);
+    padding: 0.25rem 0;
+  }
+
+  .portal-cal-d {
+    aspect-ratio: 1;
+    display: grid;
+    place-items: center;
+    font-size: 0.75rem;
+    border-radius: 0.5625rem;
+    color: var(--ink-60v);
+  }
+
+  .portal-cal-d--mut {
+    opacity: 0.3;
+  }
+
+  .portal-cal-d--today {
+    background: var(--color-brand-primary);
+    color: #fff;
+    font-weight: 700;
+  }
+
+  html.dark .portal-cal-d--today {
+    background: var(--color-brand-accent);
+    color: #06331a;
+  }
+
+  .portal-cal-d--evt {
+    position: relative;
+    font-weight: 600;
+    color: var(--color-brand-primary);
+  }
+
+  html.dark .portal-cal-d--evt {
+    color: #7fd4ab;
+  }
+
+  .portal-cal-d--evt::after {
+    content: '';
+    position: absolute;
+    bottom: 0.25rem;
+    left: 50%;
+    transform: translateX(-50%);
+    width: 0.25rem;
+    height: 0.25rem;
+    border-radius: 50%;
+    background: var(--color-brand-accent);
+  }
+
+  /* Feed «Hoje na farmácia». */
+  .portal-feed {
+    display: flex;
+    flex-direction: column;
+  }
+
+  .portal-feed-item {
+    display: flex;
+    gap: 0.6875rem;
+    padding: 0.625rem 0;
+    border-bottom: 1px solid var(--color-brand-divider);
+    align-items: flex-start;
+  }
+
+  .portal-feed-item:last-child {
+    border-bottom: 0;
+  }
+
+  .portal-feed-item .portal-st {
+    margin-top: 0.125rem;
+    flex-shrink: 0;
+  }
+
+  .portal-feed-item b {
+    font-size: 0.8125rem;
+    font-weight: 600;
+    display: block;
+    color: var(--color-brand-deep);
+  }
+
+  .portal-feed-item span {
+    font-size: 0.7188rem;
+    color: var(--ink-45v);
+  }
+
+  .portal-feed-item .when {
+    margin-left: auto;
+    font-size: 0.6875rem;
+    color: var(--ink-45v);
+    white-space: nowrap;
+  }
+
+  /* Grelha 2 colunas da dashboard (1.6fr / 1fr). */
+  .portal-grid2 {
+    display: grid;
+    grid-template-columns: 1.6fr 1fr;
+    gap: 0.875rem;
+    margin-bottom: 1.125rem;
+    align-items: start;
+  }
+
+  @media (max-width: 67.5rem) {
+    .portal-grid2 {
+      grid-template-columns: 1fr;
+    }
+  }
+
+  .portal-grid2-col {
+    display: flex;
+    flex-direction: column;
+    gap: 0.875rem;
+  }
+
+  /* Cabeçalho de cartão (card-head do mock): título serif + link. */
+  .portal-card-head {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 0.75rem;
+    padding: 1rem 1.125rem 0;
+  }
+
+  .portal-card-head h2 {
+    font-family: var(--font-display), Georgia, serif;
+    font-weight: 600;
+    font-size: 1.0625rem;
+    margin: 0;
+    color: var(--color-brand-deep);
+  }
+
+  .portal-card-link {
+    font-size: 0.7813rem;
+    color: var(--ink-60v);
+    font-weight: 600;
+    text-decoration: none;
+    cursor: pointer;
+    background: none;
+    border: 0;
+    font-family: inherit;
+    padding: 0;
+  }
+
+  .portal-card-link:hover {
+    color: var(--color-brand-accent);
+  }
+
+  .portal-card-hint {
+    font-size: 0.75rem;
+    color: var(--ink-45v);
+  }
+
+  .portal-card-body {
+    padding: 1rem 1.125rem 1.125rem;
+  }
+
+  /* Linha de reserva pendente no cartão da dashboard. */
+  .portal-pend-row {
+    display: flex;
+    justify-content: space-between;
+    gap: 0.75rem;
+    flex-wrap: wrap;
+    align-items: center;
+    border-bottom: 1px solid var(--color-brand-divider);
+    padding: 0.75rem 0;
+  }
+
+  .portal-pend-row:last-child {
+    border-bottom: 0;
+    padding-bottom: 0;
+  }
+
+  .portal-pend-row:first-child {
+    padding-top: 0;
+  }
+
+  .portal-pend-name {
+    font-size: 0.8438rem;
+    font-weight: 600;
+    color: var(--color-brand-deep);
+  }
+
+  .portal-pend-meta {
+    font-size: 0.75rem;
+    color: var(--ink-60v);
+    margin-top: 1px;
+  }
+
+  /* KPIs de 3 colunas (Vendas). */
+  .portal-kpis--3 {
+    grid-template-columns: repeat(3, minmax(0, 1fr));
+  }
+
+  @media (max-width: 56.25rem) {
+    .portal-kpis--3 {
+      grid-template-columns: 1fr;
+    }
+  }
+
+  /* Delta com ponto em vez de seta colorida. */
+  .portal-kpi-delta {
+    display: inline-flex;
+    align-items: center;
+    gap: 0.375rem;
+    font-size: 0.7188rem;
+    font-weight: 600;
+    color: var(--ink-45v);
+    margin-top: 0.125rem;
+  }
+
+  .portal-kpi-delta i {
+    width: 0.375rem;
+    height: 0.375rem;
+    border-radius: 50%;
+    flex-shrink: 0;
+  }
+
+  .portal-kpi-delta .d-up {
+    background: var(--portal-ok);
+  }
+
+  .portal-kpi-delta .d-down {
+    background: var(--portal-red);
+  }
+
+  .portal-kpi-delta .d-warn {
+    background: #d99a1e;
+  }
+
+  /* Nota de rodapé (foot-note do mock). */
+  .portal-foot-note {
+    font-size: 0.7188rem;
+    color: var(--ink-45v);
+    margin-top: 1.375rem;
+  }
+}
+
+/* ============================================================
+   PORTAL v2 — Painel inline de acções na linha de reserva: ocupa
+   a largura toda por baixo das células (grid-column 1/-1).
+   ============================================================ */
+@layer components {
+  .portal-res-inline {
+    grid-column: 1 / -1;
+    display: flex;
+    flex-wrap: wrap;
+    gap: 0.375rem;
+    align-items: center;
+    padding-top: 0.25rem;
+  }
+
+  .portal-res-inline .res-other-box {
+    width: 100%;
+  }
+}

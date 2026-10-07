@@ -13,7 +13,11 @@ function filterFromUrl() {
   const v = new URLSearchParams(window.location.search).get('tipo')
   return ['restock', 'expiry', 'stale'].includes(v) ? v : 'all'
 }
-import { getMyAttentionFeed, updateStockItem } from '@/lib/actions/pharmacy-portal'
+import {
+  getMyAttentionFeed,
+  updateStockItem,
+  getPendingReservationsCount,
+} from '@/lib/actions/pharmacy-portal'
 import { getRestockAck, setRestockAck } from '@/lib/restock'
 import { expiryStatus, monthYear } from '@/lib/expiry'
 
@@ -60,15 +64,19 @@ function restockPackSuffix(it) {
 }
 
 /**
- * "Precisa de Atenção" — tudo o que exige decisão da farmácia hoje,
- * agregado numa página com acções por linha:
+ * "Precisa de Atenção" — tudo o que exige decisão da farmácia hoje.
  *
- *  • REPOSIÇÃO — produtos que saíram do ar porque uma reserva concluída
- *    esgotou o stock (trigger 0006). Acção: repôr (religa o item) ou
- *    "não repor" (ack local, o aviso volta na próxima venda).
- *  • VALIDADE — em stock e expirados / 30 / 60 / 90 dias (lib/expiry).
- *    Acção: corrigir validade (ex.: lote novo) ou desligar o item.
- *  • STALE — confirmado há mais de 5 dias. Acção: reconfirmar.
+ * v2 «Premium Calmo» (padrão aprovado, refs 4/6): KPIs do dia em cima
+ * (reservas · reposição · validade · desactualizado), por baixo UMA
+ * caixa «Fila de hoje» ordenada por urgência — sem grupos, com tabs
+ * sublinhadas e UM botão sólido por linha (o resto é ghost neutro).
+ *
+ *  • REPOSIÇÃO — saíram do Localizador quando uma reserva concluída
+ *    esgotou o stock (trigger 0006).
+ *  • VALIDADE — expirados / 30 / 60 / 90 dias (lib/expiry).
+ *  • STALE — confirmado há mais de 5 dias.
+ * A lógica (acks por browser, save por fármaco, deep-links ?q=/ ?drug=,
+ * filtro no URL) é a mesma de sempre — mudou só a roupa.
  */
 export default function AttentionPanel({ pharmacyId }) {
   const [feed, setFeed] = useState(null)
@@ -76,6 +84,7 @@ export default function AttentionPanel({ pharmacyId }) {
   const [toast, setToast] = useState('')
   const [acksReady, setAcksReady] = useState(false)
   const [dismissed, setDismissed] = useState({})
+  const [pending, setPending] = useState(0) // reservas por atender (KPI)
 
   const flash = (msg) => {
     setToast(msg)
@@ -88,6 +97,14 @@ export default function AttentionPanel({ pharmacyId }) {
     else {
       setFeed({ restock: [], expiry: [], stale: [] })
       setToast(ERRORES[res.error] || ERRORES.FALHA_CARREGAR)
+    }
+    // Contagem de reservas para o KPI do topo — falha não pode
+    // estragar o feed, por isso isolada.
+    try {
+      const pend = await getPendingReservationsCount()
+      if (pend?.ok) setPending(pend.count)
+    } catch {
+      // KPI fica a 0 até ao próximo load
     }
   }, [])
 
@@ -121,16 +138,69 @@ export default function AttentionPanel({ pharmacyId }) {
 
   const total = restock.length + expiry.length + stale.length
 
-  // Chips de filtro — «Reposição» desconta as dispensadas neste browser
-  // (os acks), tal como a lista que mostra. O chip activo vive no URL
-  // (?tipo=) para partilhar/recarregar sem perder o filtro.
+  const expiredCount = useMemo(
+    () =>
+      expiry.filter((it) => (expiryStatus(it.expires_at)?.level || it.level) === 'expired').length,
+    [expiry],
+  )
+
+  // Tabs sublinhadas (antes chips) — a contagem continua neutra ao
+  // lado do rótulo, nunca colorida. O activo vive no URL (?tipo=)
+  // para partilhar/recarregar sem perder o filtro.
   const [typeFilter, setTypeFilter] = useState(filterFromUrl)
-  const chips = [
+  const tabs = [
     { id: 'all', label: 'Todos', n: total },
     { id: 'restock', label: 'Reposição', n: restock.length },
     { id: 'expiry', label: 'Validade', n: expiry.length },
     { id: 'stale', label: 'Desactualizado', n: stale.length },
   ]
+
+  /**
+   * Fila única por urgência (ordem do mockup): expirados → reposição →
+   * validade (dias asc) → desactualizado. Com filtro activo, só esse
+   * tipo (com a sua ordem natural).
+   */
+  const fila = useMemo(() => {
+    const out = []
+    if (typeFilter === 'all' || typeFilter === 'expiry') {
+      for (const it of expiry) {
+        const st = expiryStatus(it.expires_at)
+        const lvl = st?.level || it.level
+        out.push({
+          tipo: 'expiry',
+          it,
+          st,
+          urg: lvl === 'expired' ? 0 : 2 + Math.max(0, st?.days ?? 9999) / 10000,
+        })
+      }
+    }
+    if (typeFilter === 'all' || typeFilter === 'restock') {
+      for (const it of restock) out.push({ tipo: 'restock', it, urg: 1 })
+    }
+    if (typeFilter === 'all' || typeFilter === 'stale') {
+      for (const it of stale) out.push({ tipo: 'stale', it, urg: 3 })
+    }
+    return out.sort((a, b) => a.urg - b.urg)
+  }, [typeFilter, expiry, restock, stale])
+
+  /**
+   * Nota neutra única por baixo das tabs — as explicações que antes
+   * viviam em títulos de grupo. Só o que não é óbvio sobrevive aqui.
+   */
+  const nota =
+    typeFilter === 'expiry'
+      ? {
+          b: 'Validade:',
+          t: 'Validade passada esconde o produto do Localizador (view stock_confirmed). Corrija o lote ou desligue o item até repor.',
+        }
+      : typeFilter === 'stale'
+        ? {
+            b: 'Desactualizado:',
+            t: 'Confirmado há mais de 5 dias: sai de «confirmado» no Localizador. Um clique volta a pôr o produto no ar.',
+          }
+        : restock.length > 0
+          ? { b: 'Como repor:', t: RESTOCK_HINT }
+          : null
 
   /** Guarda por fármaco — o mesmo caminho do StockPanel, com todos os campos. */
   const save = async (it, patch) => {
@@ -175,6 +245,247 @@ export default function AttentionPanel({ pharmacyId }) {
     )
   }
 
+  /** KPI do dia — ícone à esquerda, número, delta neutro, estado à direita. */
+  const kpis = [
+    {
+      k: 'Reservas por atender',
+      n: pending,
+      d: 'prazo de resposta: 72 h',
+      ic: 'amber',
+      svg: (
+        <svg
+          viewBox="0 0 24 24"
+          fill="none"
+          stroke="currentColor"
+          strokeWidth="2"
+          strokeLinecap="round"
+          strokeLinejoin="round"
+        >
+          <rect x="3" y="5" width="18" height="16" rx="2" />
+          <path d="M3 10h18" />
+          <path d="M8 3v4M16 3v4" />
+        </svg>
+      ),
+      st: pending > 0 ? ['warn', `${pending} por atender`] : ['ok', 'em dia'],
+    },
+    {
+      k: 'Para repor',
+      n: restock.length,
+      d: 'fora do Localizador até repor',
+      ic: 'red',
+      svg: (
+        <svg
+          viewBox="0 0 24 24"
+          fill="none"
+          stroke="currentColor"
+          strokeWidth="2"
+          strokeLinecap="round"
+          strokeLinejoin="round"
+        >
+          <path d="M4 8h16v12H4z" />
+          <path d="M9 8V5h6v3" />
+          <path d="M4 13h16" />
+        </svg>
+      ),
+      st:
+        restock.length > 0
+          ? ['bad', restock.length === 1 ? 'urgente' : 'urgentes']
+          : ['ok', 'em dia'],
+    },
+    {
+      k: 'Validade a vencer',
+      n: expiry.length,
+      d: 'janelas 90 / 60 / 30 dias e expirados',
+      ic: 'amber',
+      svg: (
+        <svg
+          viewBox="0 0 24 24"
+          fill="none"
+          stroke="currentColor"
+          strokeWidth="2"
+          strokeLinecap="round"
+        >
+          <circle cx="12" cy="12" r="9" />
+          <path d="M12 7v5l3 2" />
+        </svg>
+      ),
+      st:
+        expiredCount > 0
+          ? ['bad', `${expiredCount} já expirou${expiredCount !== 1 ? 'ram' : ''}`]
+          : expiry.length > 0
+            ? ['warn', 'a vencer']
+            : ['ok', 'em dia'],
+    },
+    {
+      k: 'Stock desactualizado',
+      n: stale.length,
+      d: 'confirmado há mais de 5 dias',
+      ic: 'gray',
+      svg: (
+        <svg
+          viewBox="0 0 24 24"
+          fill="none"
+          stroke="currentColor"
+          strokeWidth="2"
+          strokeLinecap="round"
+          strokeLinejoin="round"
+        >
+          <path d="M21 12a9 9 0 1 1-2.64-6.36" />
+          <path d="M21 3v6h-6" />
+        </svg>
+      ),
+      st: stale.length > 0 ? ['mut', 'reconfirmar'] : ['ok', 'em dia'],
+    },
+  ]
+
+  /** Uma linha da fila — nome+meta · ponto+palavra · quando · acções. */
+  const renderRow = ({ tipo, it, st }) => {
+    const key = `${tipo}:${it.drug_id}`
+    const metaBase = [it.form, it.dosage].filter(Boolean).join(' · ')
+
+    if (tipo === 'restock') {
+      return (
+        <div key={key} className="portal-atr">
+          <div className="portal-atr-main">
+            <span className="portal-atr-name">
+              {it.name}
+              {it.requires_rx && <span className="rx-badge rx-badge--inline">Receita</span>}
+            </span>
+            <span className="portal-atr-meta">
+              {metaBase}
+              {it.soldQuantity != null && ` · última venda: ${it.soldQuantity}×`}
+              {restockPackSuffix(it)}
+            </span>
+          </div>
+          <span className="portal-st portal-st--bad" title="Saiu do Localizador">
+            <i />Saiu do Localizador
+          </span>
+          <span className="portal-atr-when">{timeAgo(it.when) || '—'}</span>
+          <div className="portal-atr-actions">
+            {/* Repor agora passa pela Entrada de stock: deep-link com
+                ?q= pré-filtra a lista no medicamento e o foco vai ao
+                campo «Chegaram» — o fluxo de mercadoria recebida é
+                somar ao saldo, não sobrescrever. Único sólido da linha. */}
+            <Link
+              href={`/portal/entrada?q=${encodeURIComponent(it.name)}`}
+              className="portal-act portal-act--primary"
+            >
+              Repor na entrada →
+            </Link>
+            <button
+              type="button"
+              className="portal-act"
+              disabled={busy === `restock:${it.drug_id}`}
+              onClick={() => save(it, { in_stock: true })}
+            >
+              {busy === `restock:${it.drug_id}` ? '…' : 'Repor sem qtd.'}
+            </button>
+            <button type="button" className="portal-act" onClick={() => dismissRestock(it)}>
+              Não repor
+            </button>
+          </div>
+        </div>
+      )
+    }
+
+    if (tipo === 'expiry') {
+      const lvl = st?.level || it.level
+      const estado =
+        lvl === 'expired' || !st
+          ? { cls: 'bad', txt: st?.label || 'Expirado' }
+          : lvl === '30'
+            ? { cls: 'strong', txt: st.label }
+            : { cls: 'warn', txt: st.label }
+      const quando =
+        lvl === 'expired' && st ? `expirou há ${Math.abs(st.days)} d` : monthYear(it.expires_at)
+
+      return (
+        <div key={key} className="portal-atr">
+          <div className="portal-atr-main">
+            <span className="portal-atr-name">
+              {it.name}
+              {it.requires_rx && <span className="rx-badge rx-badge--inline">Receita</span>}
+            </span>
+            <span className="portal-atr-meta">
+              {metaBase}
+              {it.quantity != null && ` · ${it.quantity} em prateleira`}
+              {it.expires_at && ` · validade registada: ${monthYear(it.expires_at)}`}
+            </span>
+          </div>
+          <span className={`portal-st portal-st--${estado.cls}`}>
+            <i />
+            {estado.txt}
+          </span>
+          <span className="portal-atr-when">{quando || '—'}</span>
+          <div className="portal-atr-actions">
+            {/* Corrigir validade agora passa pela Entrada de stock:
+                deep-link por id (?drug=) isola a linha, força o
+                filtro «Todos» e destaca-a — o lote novo que chegou
+                soma-se aí, e a validade edifica-se no modal de stock. */}
+            <Link
+              href={`/portal/entrada?drug=${it.drug_id}`}
+              className="portal-act portal-act--primary"
+            >
+              Corrigir na entrada →
+            </Link>
+            <input
+              type="date"
+              className="portal-input portal-input--date"
+              aria-label={`Nova validade de ${it.name}`}
+              title="Nova validade (lote novo) — guarda logo ao mudar"
+              defaultValue={asDateInput(it.expires_at)}
+              onBlur={(e) => {
+                const v = e.target.value
+                if (v === asDateInput(it.expires_at)) return
+                save(it, { expires_at: v || null })
+              }}
+            />
+            <button
+              type="button"
+              className="portal-act"
+              disabled={busy === `expiry:${it.drug_id}`}
+              onClick={() => save(it, { in_stock: false })}
+            >
+              Já não disponível
+            </button>
+          </div>
+        </div>
+      )
+    }
+
+    // stale
+    return (
+      <div key={key} className="portal-atr">
+        <div className="portal-atr-main">
+          <span className="portal-atr-name">
+            {it.name}
+            {it.requires_rx && <span className="rx-badge rx-badge--inline">Receita</span>}
+          </span>
+          <span className="portal-atr-meta">
+            {metaBase}
+            {it.quantity != null && ` · ${it.quantity} em prateleira`}
+          </span>
+        </div>
+        <span className="portal-st portal-st--mut">
+          <i />Desactualizado
+        </span>
+        <span className="portal-atr-when">
+          {it.confirmed_at ? `confirmado ${timeAgo(it.confirmed_at)}` : '—'}
+        </span>
+        <div className="portal-atr-actions">
+          <button
+            type="button"
+            className="portal-act portal-act--primary"
+            disabled={busy === `stale:${it.drug_id}`}
+            onClick={() => save(it, { in_stock: true })}
+          >
+            {busy === `stale:${it.drug_id}` ? '…' : 'Reconfirmar agora'}
+          </button>
+        </div>
+      </div>
+    )
+  }
+
   return (
     <section className="portal-section">
       {/* Padrão único do portal: cabeçalho compacto, sem hero. */}
@@ -194,20 +505,51 @@ export default function AttentionPanel({ pharmacyId }) {
         </div>
       </div>
 
-      {/* Toolbar única — chips por tipo de assunto, na linha do padrão
-          único do portal (igual a Stock/Reservas/Entrada). */}
-      <div className="portal-toolbar portal-toolbar--left">
+      {/* KPIs do dia (padrão refs 4/6): ícone à esquerda + estado à
+          direita — só pontos e palavras, nunca chips coloridos. */}
+      <div className="portal-kpi4-grid">
+        {kpis.map((c) => (
+          <div key={c.k} className="portal-kpi4">
+            <span className={`portal-kpi4-ic portal-kpi4-ic--${c.ic}`} aria-hidden="true">
+              {c.svg}
+            </span>
+            <span className="portal-kpi4-txt">
+              <span className="portal-kpi4-k">{c.k}</span>
+              <span className="portal-kpi4-n">{c.n}</span>
+              <span className="portal-kpi4-d">{c.d}</span>
+            </span>
+            <span className={`portal-st portal-st--${c.st[0]}`}>
+              <i />
+              {c.st[1]}
+            </span>
+          </div>
+        ))}
+      </div>
+
+      {/* Fila de hoje — UMA caixa, ordenada por urgência (antes eram
+          três grupos separados; a urgência lê-se pela linha). */}
+      <div className="portal-box">
+        <div className="portal-sec-head">
+          <h2>Fila de hoje</h2>
+          <div className="portal-sec-tools">
+            <span className="portal-sec-head-b">ordenada por urgência</span>
+          </div>
+        </div>
+
+        {/* Tabs sublinhadas no lugar dos chips — a contagem fica neutra
+            ao lado do rótulo. O activo vive no URL (?tipo=). */}
         <div
-          className="portal-chips"
+          className="portal-undertabs"
           role="group"
           aria-label="Filtrar assuntos por tipo"
           data-tour="chips"
         >
-          {chips.map((c) => (
+          {tabs.map((c) => (
             <button
               key={c.id}
               type="button"
-              className={`portal-chip${typeFilter === c.id ? ' portal-chip--active' : ''}`}
+              className={typeFilter === c.id ? 'active' : ''}
+              aria-pressed={typeFilter === c.id}
               onClick={() => {
                 setTypeFilter(c.id)
                 // Sincroniza o URL sem navegar: history direto (sem
@@ -218,182 +560,29 @@ export default function AttentionPanel({ pharmacyId }) {
                 window.history.replaceState(null, '', url)
               }}
             >
-              {c.label} <span className="portal-chip-n">{c.n}</span>
+              {c.label} <span className="portal-cnt">{c.n}</span>
             </button>
           ))}
         </div>
-      </div>
 
-      {total === 0 && (
-        <div className="empty-state">
-          <p className="empty-title">Tudo em ordem</p>
-          <p className="empty-sub">
+        {nota && total > 0 && (
+          <div className="portal-box-note">
+            <p className="portal-note">
+              <b>{nota.b}</b> {nota.t}
+            </p>
+          </div>
+        )}
+
+        {fila.length > 0 ? (
+          fila.map(renderRow)
+        ) : (
+          <div className="portal-rows-empty">
+            <b>Tudo em ordem</b>
             Não há produtos esgotados por vendas, validades a vencer nem stock desactualizado. Volte
             amanhã — os avisos aparecem aqui sozinhos.
-          </p>
-        </div>
-      )}
-
-      {/* ── REPOSIÇÃO ─────────────────────────────────────────── */}
-      {(typeFilter === 'all' || typeFilter === 'restock') && restock.length > 0 && (
-        <>
-          <div className="portal-attention-group-head">
-            <h3 className="portal-attention-h3">Repor stock — vendido até esgotar</h3>
-            <p className="portal-attention-sub">
-              Estes produtos saíram do Localizador porque uma reserva concluída levou as últimas
-              unidades. Quem procura hoje não os encontra.
-            </p>
           </div>
-          {restock.map((it) => (
-            <div key={it.drug_id} className="portal-attention-row portal-attention-row--restock">
-              <div className="portal-attention-main">
-                <span className="portal-attention-name">
-                  {it.name}
-                  {it.requires_rx && <span className="rx-badge rx-badge--inline">Receita</span>}
-                </span>
-                <span className="portal-attention-meta">
-                  {[it.form, it.dosage].filter(Boolean).join(' · ')}
-                  {it.soldQuantity != null && ` · última venda: ${it.soldQuantity}×`}
-                  {it.when && ` · ${timeAgo(it.when)}`}
-                  {restockPackSuffix(it)}
-                </span>
-                <div className="portal-attention-form">
-                  {/* Repor agora passa pela Entrada de stock: deep-link com
-                      ?q= pré-filtra a lista no medicamento e o foco vai ao
-                      campo «Chegaram» — o fluxo de mercadoria recebida é
-                      somar ao saldo, não sobrescrever. */}
-                  <Link
-                    href={`/portal/entrada?q=${encodeURIComponent(it.name)}`}
-                    className="btn-mini portal-act-ok"
-                  >
-                    Repor na entrada →
-                  </Link>
-                  <button
-                    type="button"
-                    className="btn-mini portal-act-ok"
-                    disabled={busy === `restock:${it.drug_id}`}
-                    onClick={() => save(it, { in_stock: true })}
-                  >
-                    {busy === `restock:${it.drug_id}` ? '…' : 'Repor sem qtd.'}
-                  </button>
-                  <button
-                    type="button"
-                    className="btn-mini portal-act-no"
-                    onClick={() => dismissRestock(it)}
-                  >
-                    Não repor
-                  </button>
-                </div>
-                <p className="portal-attention-hint">{RESTOCK_HINT}</p>
-              </div>
-            </div>
-          ))}
-        </>
-      )}
-
-      {/* ── VALIDADE ──────────────────────────────────────────── */}
-      {(typeFilter === 'all' || typeFilter === 'expiry') && expiry.length > 0 && (
-        <>
-          <div className="portal-attention-group-head">
-            <h3 className="portal-attention-h3">Validade — 90 / 60 / 30 dias e expirados</h3>
-            <p className="portal-attention-sub">
-              Validade passada esconde o produto do Localizador (view stock_confirmed). Corrija o
-              lote ou desligue o item até repor.
-            </p>
-          </div>
-          {expiry.map((it) => (
-            <div key={it.drug_id} className="portal-attention-row portal-attention-row--expiry">
-              <div className="portal-attention-main">
-                <span className="portal-attention-name">
-                  {it.name}
-                  {it.requires_rx && <span className="rx-badge rx-badge--inline">Receita</span>}
-                </span>
-                <span className="portal-attention-meta">
-                  {[it.form, it.dosage].filter(Boolean).join(' · ')}
-                  {it.quantity != null && ` · ${it.quantity} em prateleira`}
-                  {it.expires_at && ` · validade registada: ${monthYear(it.expires_at)}`}
-                </span>
-                <span
-                  className={`expiry-tag expiry-tag--${expiryStatus(it.expires_at)?.level || it.level}`}
-                >
-                  {expiryStatus(it.expires_at)?.label || 'Expirado'}
-                </span>
-                <div className="portal-attention-form">
-                  {/* Corrigir validade agora passa pela Entrada de stock:
-                      deep-link por id (?drug=) isola a linha, força o
-                      filtro «Todos» e destaca-a — o lote novo que chegou
-                      soma-se aí, e a validade edifica-se no modal de
-                      stock (acessível pelo nome na lista). */}
-                  <Link
-                    href={`/portal/entrada?drug=${it.drug_id}`}
-                    className="btn-mini portal-act-ok"
-                  >
-                    Corrigir na entrada →
-                  </Link>
-                  <input
-                    type="date"
-                    className="portal-input portal-input--date"
-                    aria-label={`Nova validade de ${it.name}`}
-                    title="Nova validade (lote novo) — guarda logo ao mudar"
-                    defaultValue={asDateInput(it.expires_at)}
-                    onBlur={(e) => {
-                      const v = e.target.value
-                      if (v === asDateInput(it.expires_at)) return
-                      save(it, { expires_at: v || null })
-                    }}
-                  />
-                  <button
-                    type="button"
-                    className="btn-mini portal-act-no"
-                    disabled={busy === `expiry:${it.drug_id}`}
-                    onClick={() => save(it, { in_stock: false })}
-                  >
-                    Já não disponível
-                  </button>
-                </div>
-              </div>
-            </div>
-          ))}
-        </>
-      )}
-
-      {/* ── STALE ─────────────────────────────────────────────── */}
-      {(typeFilter === 'all' || typeFilter === 'stale') && stale.length > 0 && (
-        <>
-          <div className="portal-attention-group-head">
-            <h3 className="portal-attention-h3">Stock desactualizado — mais de 5 dias</h3>
-            <p className="portal-attention-sub">
-              Confirmado há mais de 5 dias: sai de «confirmado» no Localizador. Um clique volta a
-              pôr o produto no ar.
-            </p>
-          </div>
-          {stale.map((it) => (
-            <div key={it.drug_id} className="portal-attention-row portal-attention-row--stale">
-              <div className="portal-attention-main">
-                <span className="portal-attention-name">
-                  {it.name}
-                  {it.requires_rx && <span className="rx-badge rx-badge--inline">Receita</span>}
-                </span>
-                <span className="portal-attention-meta">
-                  {[it.form, it.dosage].filter(Boolean).join(' · ')}
-                  {it.quantity != null && ` · ${it.quantity} em prateleira`}
-                  {` · confirmado ${timeAgo(it.confirmed_at)}`}
-                </span>
-                <div className="portal-attention-form">
-                  <button
-                    type="button"
-                    className="btn-mini portal-act-ok"
-                    disabled={busy === `stale:${it.drug_id}`}
-                    onClick={() => save(it, { in_stock: true })}
-                  >
-                    {busy === `stale:${it.drug_id}` ? '…' : 'Reconfirmar agora'}
-                  </button>
-                </div>
-              </div>
-            </div>
-          ))}
-        </>
-      )}
+        )}
+      </div>
 
       {toast && (
         <p className="portal-toast" role="status">

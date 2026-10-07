@@ -2425,23 +2425,43 @@ html.dark .form-note {
     }
   }
 
+  /* v2 «Premium Calmo» (mock modelo-a-v2): o sino «Atenção» é o ÚNICO
+     badge colorido do sistema — e em TINTA, não cheio (o texto lê-se
+     sem competir com o verde da marca). */
   .portal-nav-badge--red {
-    background: #c0392b;
-    color: #fff;
+    background: rgb(178 58 46 / 0.1);
+    color: #b23a2e;
   }
 
-  /* Badge de reservas: verde-acento, como os badges do NavLateral. */
+  html.dark .portal-nav-badge--red {
+    background: rgb(224 123 111 / 0.16);
+    color: #e07b6f;
+  }
+
+  /* Badge de reservas — v2 «Premium Calmo»: contador NEUTRO (apenas o
+     sino «Atenção» mantém o badge vermelho). O fundo antigo era
+     verde-acento; o dot pulse continuou a sinalizar movimento. */
   .portal-nav-badge--amber {
-    background: var(--color-brand-accent);
-    color: #fff;
+    background: var(--color-brand-bg-alt);
+    color: var(--color-brand-deep-60, rgb(0 73 58 / 0.6));
   }
 
-  /* Badge de validade (0013/atenção): laranja — urgência de tempo
-     (lote a vencer), distinta do vermelho de reposição que partilha o
-     mesmo item de menu. Fica ao lado do vermelho com gap. */
+  html.dark .portal-nav-badge--amber {
+    background: rgb(255 255 255 / 0.08);
+    color: rgb(229 231 235 / 0.62);
+  }
+
+  /* Badge de validade (0013/atenção) — v2: contador NEUTRO como os
+     demais (só o sino vermelho fica colorido). Fica ao lado do
+     vermelho com gap. */
   .portal-nav-badge--orange {
-    background: #c47f17;
-    color: #fff;
+    background: var(--color-brand-bg-alt);
+    color: var(--color-brand-deep-60, rgb(0 73 58 / 0.6));
+  }
+
+  html.dark .portal-nav-badge--orange {
+    background: rgb(255 255 255 / 0.08);
+    color: rgb(229 231 235 / 0.62);
   }
 
   .portal-nav-badge--red + .portal-nav-badge--orange,
@@ -2524,13 +2544,10 @@ html.dark .form-note {
     gap: 1rem;
     flex-wrap: wrap;
     margin-bottom: 1.5rem;
-    /* Única régua forte da página, por baixo do cabeçalho (direção A) */
-    padding-bottom: 1.25rem;
-    border-bottom: 2px solid var(--color-brand-deep);
-  }
-
-  html.dark .portal-page-head {
-    border-bottom-color: var(--color-brand-divider);
+    /* v2: sem régua preta sob o cabeçalho — o mock não a tem e ela
+       competia com a hierarquia (pedido: remover de todas as páginas). */
+    padding-bottom: 0;
+    border-bottom: 0;
   }
 
   .portal-page-title {
@@ -4449,4 +4466,1411 @@ html.dark .form-note {
       gap: 0.1rem;
     }
   }
+
+  /* ============================================================
+     PORTAL v2 «PREMIUM CALMO» — redesign do painel (mockup
+     modelo-a-v2-premium-calmo.html, aprovado). Regras de disciplina:
+     (1) o verde é O acento; (2) estado = PONTO pequeno + palavra
+     neutra (nunca chip preenchido — badges cheios ficam na sidebar:
+     vermelho só no «Atenção»); (3) UM botão sólido por acção; (4)
+     texto colorido só para o que EXIGE leitura de relance.
+     Onde o mock tinha `--ink-60/45/30` e `--line/--divider`, aqui
+     usam-se as variáveis de marca (deep-60, line, divider).
+     ============================================================ */
+
+  /* Paleta do v2 — mesmos valores do mock modelo-a-v2: tinta de texto
+     em três níveis + a tríade de estado (validade/vermelho/ok).
+     Sem definir estas variáveis, todos os var() deste bloco caem e
+     as cores são descartadas em silêncio (pontos sem tinta, notas
+     sem borda, texto sem esbatimento). */
+  :root {
+    --portal-red: #b23a2e;
+    --portal-warn: #a4670f;
+    --portal-ok: #1f7a43;
+    --ink-60v: rgb(0 73 58 / 0.6);
+    --ink-45v: rgb(0 73 58 / 0.47);
+    --ink-30v: rgb(0 73 58 / 0.3);
+  }
+
+  html.dark {
+    --portal-red: #e07b6f;
+    --portal-warn: #e0b46a;
+    --portal-ok: #5fc48e;
+    --ink-60v: rgb(229 231 235 / 0.62);
+    --ink-45v: rgb(229 231 235 / 0.45);
+    --ink-30v: rgb(229 231 235 / 0.3);
+  }
+
+  /* Cartões KPI (4 colunas): ícone à esquerda + número + delta,
+     como nas refs 4/6. Hover levanta o cartão 2px. */
+  .portal-kpi4-grid {
+    @apply grid gap-3.5 mb-4;
+    grid-template-columns: repeat(4, minmax(0, 1fr));
+  }
+
+  .portal-kpi4 {
+    display: grid;
+    grid-template-columns: auto 1fr;
+    gap: 0.75rem;
+    align-items: center;
+    padding: 0.875rem 1rem;
+    border: 1px solid var(--color-brand-divider);
+    border-radius: 1rem;
+    background: var(--color-brand-card);
+    box-shadow:
+      0 1px 2px rgb(0 42 50 / 0.04),
+      0 4px 14px rgb(0 42 50 / 0.05);
+    text-decoration: none;
+    color: inherit;
+    transition:
+      transform 0.18s ease,
+      box-shadow 0.18s ease,
+      border-color 0.18s ease;
+  }
+
+  .portal-kpi4:hover {
+    transform: translateY(-2px);
+    box-shadow: 0 6px 22px rgb(0 42 50 / 0.09);
+  }
+
+  html.dark .portal-kpi4 {
+    box-shadow:
+      0 1px 2px rgb(0 0 0 / 0.3),
+      0 6px 18px rgb(0 0 0 / 0.25);
+  }
+
+  html.dark .portal-kpi4:hover {
+    box-shadow: 0 6px 22px rgb(0 0 0 / 0.4);
+  }
+
+  html.dark .portal-kpi4:hover {
+    border-color: var(--color-brand-divider);
+  }
+
+  .portal-kpi4-ic {
+    width: 2.625rem;
+    height: 2.625rem;
+    border-radius: 0.75rem;
+    display: grid;
+    place-items: center;
+    flex-shrink: 0;
+  }
+
+  .portal-kpi4-ic svg {
+    width: 1.2rem;
+    height: 1.2rem;
+  }
+
+  /* Tonalidades do ícone: verde da marca para o normal; âmbar e o
+     vermelho SUAVE do v2 só quando o número merece alarme. */
+  .portal-kpi4-ic--green {
+    background: rgb(10 132 79 / 0.09);
+    color: var(--color-brand-accent);
+  }
+
+  .portal-kpi4-ic--amber {
+    background: rgb(164 103 15 / 0.1);
+    color: var(--portal-warn);
+  }
+
+  .portal-kpi4-ic--red {
+    background: rgb(178 58 46 / 0.08);
+    color: var(--portal-red);
+  }
+
+  html.dark .portal-kpi4-ic--green {
+    background: rgb(13 153 95 / 0.14);
+  }
+
+  html.dark .portal-kpi4-ic--amber {
+    background: rgb(224 180 106 / 0.14);
+  }
+
+  html.dark .portal-kpi4-ic--red {
+    background: rgb(224 123 111 / 0.14);
+  }
+
+  /* Neutro: o ícone recua (perfil, páginas sem urgência). */
+  .portal-kpi4-ic--gray {
+    background: var(--color-brand-bg-alt);
+    color: var(--ink-45v);
+  }
+
+  html.dark .portal-kpi4-ic--gray {
+    background: rgb(255 255 255 / 0.06);
+    color: rgb(229 231 235 / 0.5);
+  }
+
+  .portal-kpi4-txt {
+    display: flex;
+    flex-direction: column;
+    gap: 1px;
+    min-width: 0;
+  }
+
+  .portal-kpi4-k {
+    font-size: 0.75rem;
+    font-weight: 600;
+    color: var(--ink-45v);
+  }
+
+  .portal-kpi4-n {
+    font-size: 1.375rem;
+    font-weight: 700;
+    font-variant-numeric: tabular-nums;
+    line-height: 1.1;
+    letter-spacing: -0.01em;
+    color: var(--color-brand-deep);
+  }
+
+  .portal-kpi4-d {
+    font-size: 0.6875rem;
+    font-variant-numeric: tabular-nums;
+    color: var(--ink-45v);
+  }
+
+  .portal-kpi4-d b {
+    font-weight: 700;
+    color: var(--portal-ok);
+  }
+
+  .portal-kpi4-d b.down {
+    color: var(--portal-red);
+  }
+
+  @media (max-width: 56.25rem) {
+    .portal-kpi4-grid {
+      grid-template-columns: 1fr 1fr;
+    }
+  }
+
+  @media (max-width: 30rem) {
+    .portal-kpi4-grid {
+      grid-template-columns: 1fr;
+    }
+  }
+
+  /* Estados: PONTO pequeno + palavra neutra (nunca chip preenchido). */
+  .portal-st {
+    display: inline-flex;
+    align-items: center;
+    gap: 0.4375rem;
+    font-size: 0.75rem;
+    font-weight: 600;
+    color: var(--ink-60v);
+    white-space: nowrap;
+  }
+
+  .portal-st i {
+    width: 0.4375rem;
+    height: 0.4375rem;
+    border-radius: 50%;
+    flex-shrink: 0;
+  }
+
+  .portal-st--ok i {
+    background: var(--portal-ok);
+  }
+
+  .portal-st--warn i {
+    background: #d99a1e;
+  }
+
+  .portal-st--bad i {
+    background: var(--portal-red);
+  }
+
+  .portal-st--mut i {
+    background: var(--ink-30v);
+  }
+
+  /* Excepção única: validade crítica lê-se de relance (texto âmbar,
+     sem preenchido); esgotado segue-a em vermelho. Fase 2. */
+  .portal-st--strong {
+    color: var(--portal-warn);
+    font-weight: 700;
+  }
+
+  .portal-st--strong-bad {
+    color: var(--portal-red);
+  }
+
+  /* Contador neutro em texto (sem fundo verde — era chip colorido). */
+  .portal-cnt {
+    font-size: 0.75rem;
+    font-weight: 600;
+    color: var(--ink-60v);
+  }
+
+  /* Cabeçalho de secção: título serif à esquerda, controlos à direita
+     (refs 4/6) + tabs sublinhadas. Fase 2 — fica em sistema já agora. */
+  .portal-sec-head {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 0.875rem;
+    flex-wrap: wrap;
+    padding: 1rem 1.125rem;
+    border-bottom: 1px solid var(--color-brand-divider);
+  }
+
+  .portal-sec-head h2 {
+    font-family: var(--font-display), Georgia, serif;
+    font-weight: 600;
+    font-size: 1.0625rem;
+    margin: 0;
+    color: var(--color-brand-deep);
+  }
+
+  .portal-sec-head-b {
+    color: var(--ink-45v);
+    font-size: 0.8125rem;
+  }
+
+  .portal-sec-tools {
+    display: flex;
+    align-items: center;
+    gap: 0.5625rem;
+    flex-wrap: wrap;
+  }
+
+  .portal-undertabs {
+    display: flex;
+    gap: 0.25rem;
+    padding: 0 1.125rem;
+    border-bottom: 1px solid var(--color-brand-divider);
+    overflow-x: auto;
+    scrollbar-width: none;
+  }
+
+  .portal-undertabs::-webkit-scrollbar {
+    display: none;
+  }
+
+  .portal-undertabs button {
+    border: 0;
+    background: transparent;
+    padding: 0.625rem 0.8125rem;
+    font-size: 0.8125rem;
+    font-weight: 600;
+    color: var(--ink-45v);
+    cursor: pointer;
+    white-space: nowrap;
+    position: relative;
+  }
+
+  .portal-undertabs button:hover {
+    color: var(--color-brand-primary);
+  }
+
+  .portal-undertabs button.active {
+    color: var(--color-brand-primary);
+    font-weight: 700;
+  }
+
+  html.dark .portal-undertabs button.active {
+    color: #7fd4ab;
+  }
+
+  .portal-undertabs button.active::after {
+    content: '';
+    position: absolute;
+    left: 0.8125rem;
+    right: 0.8125rem;
+    bottom: -1px;
+    height: 2px;
+    border-radius: 2px;
+    background: var(--color-brand-primary);
+  }
+
+  html.dark .portal-undertabs button.active::after {
+    background: var(--color-brand-accent);
+  }
+
+  /* Nota de aviso neutra (antes banner com fundo de acento): a cor
+     vive só na borda esquerda de 3px. DANGER = vermelho suave. */
+  .portal-note {
+    display: flex;
+    gap: 0.625rem;
+    align-items: flex-start;
+    background: var(--color-brand-card);
+    border: 1px solid var(--color-brand-divider);
+    border-left: 3px solid var(--portal-warn);
+    border-radius: 0.625rem;
+    padding: 0.6875rem 0.875rem;
+    font-size: 0.8125rem;
+    color: var(--ink-60v);
+    margin-bottom: 0.875rem;
+  }
+
+  .portal-note b {
+    color: var(--color-brand-deep);
+  }
+
+  .portal-note--danger {
+    border-left-color: var(--portal-red);
+  }
+
+  /* Pesquisa visual na top-bar (sem acção por agora; o foco acorda-a). */
+  .portal-topsearch {
+    flex: 1;
+    max-width: 26rem;
+    margin: 0 auto;
+    display: flex;
+    align-items: center;
+    gap: 0.5625rem;
+    background: var(--color-brand-bg-alt);
+    border: 1px solid var(--color-brand-divider);
+    border-radius: 999px;
+    padding: 0.5rem 1rem;
+    cursor: text;
+    color: var(--ink-45v);
+    transition: border-color 0.15s ease, color 0.15s ease;
+  }
+
+  .portal-topsearch:hover,
+  .portal-topsearch:focus-within {
+    border-color: var(--color-brand-accent);
+  }
+
+  .portal-topsearch:focus-within {
+    color: var(--color-brand-deep);
+  }
+
+  .portal-topsearch svg {
+    width: 1rem;
+    height: 1rem;
+    opacity: 0.45;
+    flex-shrink: 0;
+  }
+
+  .portal-topsearch span {
+    font-size: 0.8438rem;
+    user-select: none;
+  }
+
+  .portal-topsearch kbd {
+    margin-left: auto;
+    flex-shrink: 0;
+    font-family: inherit;
+    font-size: 0.625rem;
+    font-weight: 600;
+    color: var(--ink-45v);
+    border: 1px solid var(--color-brand-divider);
+    background: var(--color-brand-card);
+    border-radius: 0.3125rem;
+    padding: 0.1rem 0.375rem;
+  }
+
+  /* Sino circular da top-bar, quando a Fase 2 o trouxer — o dot
+     vermelho conta o mesmo que o badge da sidebar. */
+  .portal-iconbtn {
+    position: relative;
+    width: 2.375rem;
+    height: 2.375rem;
+    border-radius: 50%;
+    border: 1px solid var(--color-brand-divider);
+    background: var(--color-brand-card);
+    color: var(--color-brand-deep);
+    display: grid;
+    place-items: center;
+    cursor: pointer;
+    flex-shrink: 0;
+    text-decoration: none;
+  }
+
+  .portal-iconbtn:hover {
+    border-color: var(--color-brand-accent);
+    color: var(--color-brand-accent);
+  }
+
+  .portal-iconbtn svg {
+    width: 1.0625rem;
+    height: 1.0625rem;
+  }
+
+  .portal-iconbtn .portal-iconbtn-dot {
+    position: absolute;
+    top: 0.5rem;
+    right: 0.55rem;
+    width: 7px;
+    height: 7px;
+    border-radius: 50%;
+    background: var(--portal-red);
+    border: 2px solid var(--color-brand-card);
+  }
+
+  /* ThemeToggle circular em fundo escuro: o hover verde-escuro do
+     padrão global quase desaparece na sidebar/topbar dark. */
+  .theme-toggle--circ {
+    width: 2.375rem;
+    height: 2.375rem;
+    border-radius: 50%;
+    border: 1px solid var(--color-brand-divider);
+    background: var(--color-brand-card);
+  }
+
+  .theme-toggle--circ:hover {
+    background-color: var(--color-brand-card);
+    color: var(--color-brand-accent);
+    border-color: var(--color-brand-accent);
+    transform: none;
+  }
+
+  html.dark .portal-topsearch {
+    background: rgb(255 255 255 / 0.03);
+  }
+
+  /* ============================================================
+     PORTAL v2 — SIDEBAR CLARA (o mockup aprovado): painel branco com
+     hairline à direita; itens em tinta esbatida; activo com tint verde
+     + texto escuro. Nada de fundo escuro nos dois temas — em escuro
+     a sidebar assenta no cartão do tema.
+     ============================================================ */
+
+  .portal-sidebar-v2 {
+    background: var(--color-brand-card);
+    color: var(--color-brand-deep);
+    border-right: 1px solid var(--color-brand-divider);
+  }
+
+  html.dark .portal-sidebar-v2 {
+    background: var(--color-brand-card);
+  }
+
+  /* Mobile: substitui a sombra pesada da drawer escura. */
+  @media (max-width: 60rem) {
+    .portal-sidebar-v2.portal-sidebar {
+      box-shadow: 0.875rem 0 2.5rem rgb(0 42 50 / 0.1);
+    }
+  }
+
+  .portal-sidebar-v2 .portal-side-brand {
+    align-items: center;
+  }
+
+  /* Eyebrow da sidebar: era branco translúcido sobre fundo escuro. */
+  .portal-sidebar-v2 .portal-side-eyebrow {
+    color: var(--ink-45v);
+  }
+
+  /* Botão fechar (drawer móvel): era branco translúcido. */
+  .portal-sidebar-v2 .portal-side-close {
+    color: var(--ink-60v);
+  }
+
+  .portal-sidebar-v2 .portal-side-close:hover {
+    color: var(--color-brand-deep);
+    background: var(--color-brand-bg-alt);
+  }
+
+  /* Grupos: o side-label flutua sobre fundo claro. */
+  .portal-sidebar-v2 .portal-nav-label {
+    color: var(--ink-45v);
+  }
+
+  .portal-sidebar-v2 .portal-nav-item {
+    color: var(--ink-60v);
+    border-left: 2px solid transparent;
+    border-radius: 0 0.625rem 0.625rem 0;
+    transition:
+      background 0.15s ease,
+      color 0.15s ease;
+  }
+
+  .portal-sidebar-v2 .portal-nav-item:hover {
+    background: var(--color-brand-bg-alt);
+    color: var(--color-brand-primary);
+  }
+
+  .portal-sidebar-v2 .portal-nav-item svg {
+    opacity: 0.75;
+  }
+
+  .portal-sidebar-v2 .portal-nav-item--active {
+    background: rgb(10 132 79 / 0.09);
+    color: var(--color-brand-primary);
+    font-weight: 600;
+  }
+
+  html.dark .portal-sidebar-v2 .portal-nav-item--active {
+    background: rgb(13 153 95 / 0.14);
+    color: #7fd4ab;
+  }
+
+  .portal-sidebar-v2 .portal-nav-item--active svg {
+    opacity: 1;
+  }
+
+  /* Numeração estrutural (01, 02…): esbatida sobre fundo claro. */
+  .portal-sidebar-v2 .portal-nav-num {
+    color: var(--ink-30v);
+  }
+
+  .portal-sidebar-v2 .portal-nav-item--active .portal-nav-num {
+    color: var(--color-brand-accent);
+  }
+
+  .portal-sidebar-v2 .portal-nav-toggle {
+    color: var(--ink-45v);
+    border-radius: 0.375rem;
+  }
+
+  .portal-sidebar-v2 .portal-nav-toggle:hover {
+    color: var(--color-brand-primary);
+    background: var(--color-brand-bg-alt);
+  }
+
+  .portal-sidebar-v2 .portal-nav-subitem {
+    color: var(--ink-60v);
+  }
+
+  .portal-sidebar-v2 .portal-nav-subitem:hover {
+    color: var(--color-brand-primary);
+    background: var(--color-brand-bg-alt);
+  }
+
+  .portal-sidebar-v2 .portal-nav-subitem--active {
+    border-left-color: var(--color-brand-accent);
+    color: var(--color-brand-primary);
+    font-weight: 600;
+    background: rgb(10 132 79 / 0.07);
+  }
+
+  html.dark .portal-sidebar-v2 .portal-nav-subitem--active {
+    color: #7fd4ab;
+    background: rgb(13 153 95 / 0.1);
+  }
+
+  /* Rodapé (user + sair): hairline claro em vez de rgba branco. */
+  .portal-sidebar-v2 .portal-sidebar-foot {
+    border-top: 1px solid var(--color-brand-divider);
+  }
+
+  .portal-sidebar-v2 .portal-foot-avatar {
+    background: rgb(10 132 79 / 0.1);
+    color: var(--color-brand-primary);
+  }
+
+  html.dark .portal-sidebar-v2 .portal-foot-avatar {
+    color: #7fd4ab;
+  }
+
+  .portal-sidebar-v2 .portal-foot-meta {
+    color: var(--color-brand-deep);
+  }
+
+  .portal-sidebar-v2 .portal-logout {
+    border: 1px solid var(--color-brand-divider);
+    color: var(--ink-60v);
+  }
+
+  .portal-sidebar-v2 .portal-logout:hover {
+    background: var(--color-brand-bg-alt);
+    color: var(--color-brand-deep);
+  }
+
+  /* O logo troca de branco → verde: a régua branca extra sai. */
+  .portal-logo-white {
+    display: none;
+  }
+
+  .portal-logo-green {
+    display: block;
+  }
+
+  html.dark .portal-logo-white {
+    display: block;
+  }
+
+  html.dark .portal-logo-green {
+    display: none;
+  }
+
+  /* ============================================================
+     PORTAL v2 — /ATENÇÃO: KPIs do dia + caixa «Fila de hoje»
+     (padrão refs 4/6): um só cabeçalho, tabs sublinhadas, linhas
+     arejadas ordenadas por urgência, UM botão sólido por linha.
+     ============================================================ */
+
+  /* KPI com estado à direita (ponto + palavra) — só quando o filho
+     existe: as 3 colunas evitam gap fantasma nos KPIs sem estado. */
+  .portal-kpi4:has(> .portal-st) {
+    grid-template-columns: auto 1fr auto;
+  }
+
+  .portal-kpi4 > .portal-st {
+    align-self: center;
+  }
+
+  /* A caixa da lista — o .box do mockup. */
+  .portal-box {
+    background: var(--color-brand-card);
+    border: 1px solid var(--color-brand-divider);
+    border-radius: 1rem;
+    overflow: hidden;
+    box-shadow:
+      0 1px 2px rgb(0 42 50 / 0.04),
+      0 4px 14px rgb(0 42 50 / 0.05);
+  }
+
+  html.dark .portal-box {
+    box-shadow:
+      0 1px 2px rgb(0 0 0 / 0.3),
+      0 6px 18px rgb(0 0 0 / 0.25);
+  }
+
+  /* Nota neutra dentro da caixa (por baixo das tabs). */
+  .portal-box-note {
+    padding: 0.875rem 1.125rem;
+  }
+
+  .portal-box-note .portal-note {
+    margin-bottom: 0;
+  }
+
+  /* Contagem dentro de uma tab (neutra, sem chip). */
+  .portal-undertabs .portal-cnt {
+    margin-left: 0.25rem;
+    opacity: 0.7;
+  }
+
+  /* Linha da fila: nome+meta · estado (ponto+palavra) · quando ·
+     acções (1 sólida + ghosts) — arejada, sem zebra. */
+  .portal-atr {
+    display: flex;
+    align-items: center;
+    gap: 1rem;
+    padding: 0.8125rem 1.125rem;
+    border-bottom: 1px solid var(--color-brand-divider);
+    flex-wrap: wrap;
+    transition: background 0.15s ease;
+  }
+
+  .portal-atr:last-child {
+    border-bottom: 0;
+  }
+
+  .portal-atr:hover {
+    background: rgb(10 132 79 / 0.03);
+  }
+
+  .portal-atr-main {
+    display: flex;
+    flex-direction: column;
+    gap: 1px;
+    flex: 1;
+    min-width: 0;
+  }
+
+  .portal-atr-name {
+    display: flex;
+    align-items: center;
+    gap: 0.5rem;
+    flex-wrap: wrap;
+    font-size: 0.8438rem;
+    font-weight: 600;
+    color: var(--color-brand-deep);
+  }
+
+  .portal-atr-meta {
+    font-size: 0.75rem;
+    color: var(--ink-60v);
+    line-height: 1.45;
+  }
+
+  .portal-atr-when {
+    font-size: 0.6875rem;
+    font-variant-numeric: tabular-nums;
+    color: var(--ink-45v);
+    white-space: nowrap;
+  }
+
+  .portal-atr-actions {
+    display: flex;
+    align-items: center;
+    gap: 0.4375rem;
+    flex-wrap: wrap;
+    margin-left: auto;
+  }
+
+  /* Acções da linha: ghost neutro é a norma; o primário é ÚNICO. */
+  .portal-act {
+    display: inline-flex;
+    align-items: center;
+    gap: 0.375rem;
+    border: 1px solid var(--color-brand-divider);
+    background: var(--color-brand-card);
+    color: inherit;
+    border-radius: 999px;
+    padding: 0.3438rem 0.8125rem;
+    font-size: 0.75rem;
+    font-weight: 600;
+    text-decoration: none;
+    cursor: pointer;
+    white-space: nowrap;
+    transition:
+      border-color 0.15s ease,
+      color 0.15s ease,
+      filter 0.15s ease;
+  }
+
+  .portal-act:hover {
+    border-color: rgb(0 42 50 / 0.3);
+    color: var(--color-brand-primary);
+  }
+
+  html.dark .portal-act:hover {
+    border-color: rgb(229 231 235 / 0.3);
+    color: #7fd4ab;
+  }
+
+  .portal-act--primary {
+    background: var(--color-brand-primary);
+    border-color: var(--color-brand-primary);
+    color: #fff;
+  }
+
+  .portal-act--primary:hover {
+    color: #fff;
+    border-color: var(--color-brand-primary);
+    filter: brightness(1.15);
+  }
+
+  html.dark .portal-act--primary {
+    background: var(--color-brand-accent);
+    border-color: var(--color-brand-accent);
+    color: #06331a;
+  }
+
+  html.dark .portal-act--primary:hover {
+    color: #06331a;
+    border-color: var(--color-brand-accent);
+  }
+
+  .portal-act:disabled {
+    opacity: 0.5;
+    cursor: default;
+  }
+
+  .portal-act:disabled:hover {
+    filter: none;
+  }
+
+  /* Estado vazio dentro da caixa (o .rows-empty do mock). */
+  .portal-rows-empty {
+    padding: 2.125rem 1.125rem;
+    text-align: center;
+    color: var(--ink-45v);
+    font-size: 0.8125rem;
+    line-height: 1.5;
+  }
+
+  .portal-rows-empty b {
+    display: block;
+    color: var(--color-brand-deep);
+    font-size: 0.875rem;
+    margin-bottom: 0.25rem;
+  }
+
+  /* ============================================================
+     PORTAL v2 — VISÃO GERAL: cartões KPI do mock (kicker + ícone
+     à direita, número grande, sub em baixo) com contagens REAIS
+     buscadas ao servidor — sem deltas históricos (não há fonte).
+     ============================================================ */
+
+  .portal-kpis {
+    display: grid;
+    grid-template-columns: repeat(4, minmax(0, 1fr));
+    gap: 0.875rem;
+    margin-bottom: 1.125rem;
+  }
+
+  @media (max-width: 56.25rem) {
+    .portal-kpis {
+      grid-template-columns: 1fr 1fr;
+    }
+  }
+
+  @media (max-width: 30rem) {
+    .portal-kpis {
+      grid-template-columns: 1fr;
+    }
+  }
+
+  .portal-kpi {
+    display: flex;
+    flex-direction: column;
+    gap: 0.25rem;
+    background: var(--color-brand-card);
+    border: 1px solid var(--color-brand-divider);
+    border-radius: 1rem;
+    padding: 1rem 1.125rem;
+    box-shadow:
+      0 1px 2px rgb(0 42 50 / 0.04),
+      0 4px 14px rgb(0 42 50 / 0.05);
+    text-decoration: none;
+    color: inherit;
+    transition:
+      transform 0.18s ease,
+      box-shadow 0.18s ease,
+      border-color 0.18s ease;
+  }
+
+  .portal-kpi:hover {
+    transform: translateY(-2px);
+    box-shadow: 0 6px 22px rgb(0 42 50 / 0.09);
+  }
+
+  html.dark .portal-kpi {
+    box-shadow:
+      0 1px 2px rgb(0 0 0 / 0.3),
+      0 6px 18px rgb(0 0 0 / 0.25);
+  }
+
+  html.dark .portal-kpi:hover {
+    box-shadow: 0 6px 22px rgb(0 0 0 / 0.4);
+  }
+
+  .portal-kpi-top {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 0.5rem;
+  }
+
+  .portal-kpi-k {
+    font-size: 0.75rem;
+    font-weight: 600;
+    color: var(--ink-45v);
+  }
+
+  .portal-kpi-ic {
+    width: 2.375rem;
+    height: 2.375rem;
+    border-radius: 0.6875rem;
+    display: grid;
+    place-items: center;
+    flex-shrink: 0;
+    /* Defesa: o ícone nunca sai da caixa tintada, mesmo se o SVG
+       não receber as dimensões do CSS (reported: "ícones fora dos
+       limites" na dashboard). */
+    overflow: hidden;
+    line-height: 0;
+  }
+
+  .portal-kpi-ic svg {
+    display: block;
+    width: 1.1875rem;
+    height: 1.1875rem;
+    max-width: 100%;
+    max-height: 100%;
+  }
+
+  .portal-kpi-ic--red {
+    background: rgb(178 58 46 / 0.07);
+    color: var(--portal-red);
+  }
+
+  .portal-kpi-ic--amber {
+    background: rgb(164 103 15 / 0.1);
+    color: var(--portal-warn);
+  }
+
+  .portal-kpi-ic--green {
+    background: rgb(10 132 79 / 0.09);
+    color: var(--color-brand-accent);
+  }
+
+  .portal-kpi-ic--teal {
+    background: rgb(13 110 139 / 0.07);
+    color: #0d6e8b;
+  }
+
+  html.dark .portal-kpi-ic--red {
+    background: rgb(224 123 111 / 0.14);
+  }
+
+  html.dark .portal-kpi-ic--amber {
+    background: rgb(224 180 106 / 0.14);
+  }
+
+  html.dark .portal-kpi-ic--green {
+    background: rgb(13 153 95 / 0.14);
+  }
+
+  html.dark .portal-kpi-ic--teal {
+    background: rgb(90 184 214 / 0.12);
+    color: #5ab8d6;
+  }
+
+  .portal-kpi-n {
+    font-size: 1.625rem;
+    font-weight: 700;
+    font-variant-numeric: tabular-nums;
+    line-height: 1.05;
+    letter-spacing: -0.01em;
+    color: var(--color-brand-deep);
+    margin-top: 0.125rem;
+  }
+
+  .portal-kpi-s {
+    font-size: 0.7188rem;
+    line-height: 1.4;
+    color: var(--ink-45v);
+  }
+
+  /* ============================================================
+     PORTAL v2 — PÁGINAS RESTANTES (stock · reservas · vendas ·
+     perfil · entrada · ajuda): vocabulário do mock aplicado às
+     barras/listas já existentes, sem tocar na lógica — viewbar,
+     filtros segmentados, notas neutras, estados = ponto + palavra,
+     superfícies com hairline e UM botão sólido por linha.
+     ============================================================ */
+
+  /* Toolbar → viewbar do mock (barra única com pesquisa + filtros). */
+  .portal-toolbar {
+    display: flex;
+    flex-wrap: wrap;
+    align-items: center;
+    gap: 0.75rem;
+    margin-bottom: 1.125rem;
+    background: var(--color-brand-card);
+    border: 1px solid var(--color-brand-divider);
+    border-radius: 0.875rem;
+    padding: 0.5rem 0.75rem;
+    box-shadow:
+      0 1px 2px rgb(0 42 50 / 0.04),
+      0 4px 14px rgb(0 42 50 / 0.05);
+  }
+
+  html.dark .portal-toolbar {
+    box-shadow:
+      0 1px 2px rgb(0 0 0 / 0.3),
+      0 6px 18px rgb(0 0 0 / 0.25);
+  }
+
+  /* Filtros (chips) → segmentado do mock: neutro; o activo ganha
+     tinta verde + peso — nunca um chip colorido preenchido. */
+  .portal-chip {
+    display: inline-flex;
+    align-items: center;
+    gap: 0.375rem;
+    padding: 0.375rem 0.8125rem;
+    border: 1px solid var(--color-brand-divider);
+    border-radius: 999px;
+    background: transparent;
+    color: var(--ink-60v);
+    font-size: 0.75rem;
+    font-weight: 600;
+    cursor: pointer;
+    transition:
+      border-color 0.15s ease,
+      color 0.15s ease,
+      background 0.15s ease;
+  }
+
+  .portal-chip:hover {
+    border-color: rgb(0 42 50 / 0.3);
+    color: var(--color-brand-deep);
+  }
+
+  html.dark .portal-chip:hover {
+    border-color: rgb(229 231 235 / 0.3);
+  }
+
+  .portal-chip--active {
+    background: rgb(10 132 79 / 0.09);
+    border-color: rgb(10 132 79 / 0.45);
+    color: var(--color-brand-primary);
+    font-weight: 700;
+  }
+
+  html.dark .portal-chip--active {
+    background: rgb(13 153 95 / 0.14);
+    color: #7fd4ab;
+  }
+
+  .portal-chip-n {
+    color: var(--ink-45v);
+    font-weight: 600;
+  }
+
+  .portal-chip--active .portal-chip-n {
+    color: inherit;
+    opacity: 0.75;
+  }
+
+  /* Pesquisa da viewbar → pill (a sec-search do mock). */
+  .stock-search-wrap {
+    display: flex;
+    align-items: center;
+    gap: 0.5rem;
+    flex: 1;
+    min-width: 12rem;
+    background: var(--color-brand-bg-alt);
+    border: 1px solid var(--color-brand-divider);
+    border-radius: 999px;
+    padding: 0.375rem 0.875rem;
+    cursor: text;
+  }
+
+  .stock-search-wrap:focus-within {
+    border-color: var(--color-brand-accent);
+  }
+
+  .stock-search-icon {
+    display: grid;
+    place-items: center;
+    opacity: 0.45;
+    flex-shrink: 0;
+  }
+
+  .stock-search-icon svg {
+    width: 0.9375rem;
+    height: 0.9375rem;
+  }
+
+  .portal-search {
+    background: transparent;
+    border: 0;
+    padding: 0;
+    font-size: 0.8125rem;
+    flex: 1;
+    min-width: 0;
+    outline: none;
+  }
+
+  /* Ordenação (stock-sort) → segmented, mesmo tratamento dos filtros. */
+  .stock-sort {
+    border: 1px solid var(--color-brand-divider) !important;
+    border-radius: 0.625rem !important;
+    background: var(--color-brand-bg-alt) !important;
+    overflow: hidden;
+  }
+
+  .stock-sort-btn {
+    border: 0;
+    background: transparent;
+    color: var(--ink-60v);
+    font-size: 0.75rem;
+    font-weight: 600;
+    padding: 0.4375rem 0.8125rem;
+    cursor: pointer;
+  }
+
+  .stock-sort-btn + .stock-sort-btn {
+    border-left: 1px solid var(--color-brand-divider);
+  }
+
+  .stock-sort-btn.active {
+    background: var(--color-brand-card);
+    color: var(--color-brand-primary);
+    font-weight: 700;
+  }
+
+  html.dark .stock-sort-btn.active {
+    color: #7fd4ab;
+  }
+
+  /* Banners → nota neutra (a .note do mock): cor SÓ na borda esquerda. */
+  .portal-banner {
+    display: flex;
+    align-items: flex-start;
+    gap: 0.75rem;
+    background: var(--color-brand-card);
+    border: 1px solid var(--color-brand-divider);
+    border-left: 3px solid var(--portal-warn);
+    border-radius: 0.625rem;
+    padding: 0.6875rem 0.875rem;
+    margin-bottom: 0.875rem;
+    font-size: 0.8125rem;
+    color: var(--ink-60v);
+    box-shadow: none;
+  }
+
+  .portal-banner--danger {
+    border-left-color: var(--portal-red);
+  }
+
+  .portal-banner-close {
+    color: var(--ink-45v);
+    background: transparent;
+    border: 0;
+    cursor: pointer;
+    flex-shrink: 0;
+  }
+
+  .portal-banner-close:hover {
+    color: var(--color-brand-deep);
+  }
+
+  /* Estados nas listas (badges de reserva) → ponto + palavra, nunca
+     chip colorido — a excepção do sistema. */
+  .portal-badge {
+    display: inline-flex;
+    align-items: center;
+    gap: 0.4375rem;
+    padding: 0;
+    border: 0;
+    background: transparent;
+    color: var(--ink-60v);
+    font-size: 0.75rem;
+    font-weight: 600;
+    white-space: nowrap;
+  }
+
+  .portal-badge::before {
+    content: '';
+    width: 0.4375rem;
+    height: 0.4375rem;
+    border-radius: 50%;
+    flex-shrink: 0;
+    background: var(--ink-30v);
+  }
+
+  .portal-badge--warn::before {
+    background: #d99a1e;
+  }
+
+  .portal-badge--info::before {
+    background: var(--color-brand-accent);
+  }
+
+  .portal-badge--ok::before {
+    background: var(--portal-ok);
+  }
+
+  .portal-badge--off::before {
+    background: var(--ink-30v);
+  }
+
+  /* Cartões de lista (stock/reservas) → superfície v2: hairline,
+     hover levanta 2px; o estado «em stock» é borda tinta verde, não
+     fundo colorido. */
+  .stock-card,
+  .res-card {
+    background: var(--color-brand-card);
+    border: 1px solid var(--color-brand-divider);
+    border-radius: 1rem;
+    box-shadow:
+      0 1px 2px rgb(0 42 50 / 0.04),
+      0 4px 14px rgb(0 42 50 / 0.05);
+    transition:
+      transform 0.18s ease,
+      box-shadow 0.18s ease,
+      border-color 0.18s ease;
+  }
+
+  .stock-card:hover,
+  .res-card:hover {
+    transform: translateY(-2px);
+    box-shadow: 0 6px 22px rgb(0 42 50 / 0.09);
+  }
+
+  html.dark .stock-card,
+  html.dark .res-card {
+    box-shadow:
+      0 1px 2px rgb(0 0 0 / 0.3),
+      0 6px 18px rgb(0 0 0 / 0.25);
+  }
+
+  .stock-card--in {
+    border-color: rgb(10 132 79 / 0.4);
+  }
+
+  html.dark .stock-card--in {
+    border-color: rgb(13 153 95 / 0.45);
+  }
+
+  .res-card--urgent {
+    border-color: rgb(164 103 15 / 0.45);
+  }
+
+  html.dark .res-card--urgent {
+    border-color: rgb(224 180 106 / 0.4);
+  }
+
+  .stock-card-name-btn {
+    background: transparent;
+    border: 0;
+    padding: 0;
+    font: inherit;
+    font-weight: 600;
+    color: var(--color-brand-deep);
+    cursor: pointer;
+    text-align: left;
+  }
+
+  .stock-card-name-btn:hover {
+    color: var(--color-brand-primary);
+  }
+
+  html.dark .stock-card-name-btn:hover {
+    color: #7fd4ab;
+  }
+
+  /* Validade → TEXTO âmbar sem preenchido (excepção única da
+     disciplina: lê-se de relance); expirado → vermelho suave. */
+  .expiry-tag {
+    display: inline-flex;
+    align-items: center;
+    gap: 0.375rem;
+    background: transparent;
+    border: 0;
+    padding: 0;
+    font-size: 0.6875rem;
+    font-weight: 700;
+    color: var(--portal-warn);
+  }
+
+  .expiry-tag::before {
+    content: '';
+    width: 0.4375rem;
+    height: 0.4375rem;
+    border-radius: 50%;
+    background: currentColor;
+    flex-shrink: 0;
+  }
+
+  .expiry-tag--expired,
+  .expiry-tag--30 {
+    color: var(--portal-red);
+  }
+
+  html.dark .expiry-tag--expired,
+  html.dark .expiry-tag--30 {
+    color: var(--portal-red);
+  }
+
+  /* Toggle de estado (Disponível / Não) → ghost; o activo é o
+     único sólido da linha. */
+  .portal-toggle {
+    border: 1px solid var(--color-brand-divider);
+    background: var(--color-brand-card);
+    color: var(--ink-60v);
+    font-size: 0.75rem;
+    font-weight: 700;
+    padding: 0.375rem 0.8125rem;
+    border-radius: 999px;
+    transition:
+      border-color 0.15s ease,
+      background 0.15s ease,
+      color 0.15s ease;
+  }
+
+  .portal-toggle:hover {
+    border-color: rgb(0 42 50 / 0.3);
+    color: var(--color-brand-deep);
+  }
+
+  html.dark .portal-toggle:hover {
+    border-color: rgb(229 231 235 / 0.3);
+  }
+
+  .portal-toggle--on {
+    background: var(--color-brand-primary);
+    border-color: var(--color-brand-primary);
+    color: #fff;
+  }
+
+  .portal-toggle--on:hover {
+    color: #fff;
+    border-color: var(--color-brand-primary);
+    filter: brightness(1.15);
+  }
+
+  html.dark .portal-toggle--on {
+    background: var(--color-brand-accent);
+    border-color: var(--color-brand-accent);
+    color: #06331a;
+  }
+
+  html.dark .portal-toggle--on:hover {
+    color: #06331a;
+    border-color: var(--color-brand-accent);
+    filter: none;
+  }
+
+  /* Acções dos cards (reservas): ghosts neutros — só o act-ok
+     (Confirmar / Pronta tudo) é sólido. */
+  .btn-mini {
+    display: inline-flex;
+    align-items: center;
+    gap: 0.375rem;
+    border: 1px solid var(--color-brand-divider);
+    background: var(--color-brand-card);
+    color: inherit;
+    border-radius: 999px;
+    padding: 0.3438rem 0.8125rem;
+    font-size: 0.75rem;
+    font-weight: 600;
+    cursor: pointer;
+    transition:
+      border-color 0.15s ease,
+      color 0.15s ease,
+      filter 0.15s ease;
+  }
+
+  .btn-mini:hover {
+    border-color: rgb(0 42 50 / 0.3);
+    color: var(--color-brand-primary);
+  }
+
+  html.dark .btn-mini:hover {
+    border-color: rgb(229 231 235 / 0.3);
+    color: #7fd4ab;
+  }
+
+  .portal-act-ok {
+    background: var(--color-brand-primary);
+    border-color: var(--color-brand-primary);
+    color: #fff;
+  }
+
+  .portal-act-ok:hover {
+    color: #fff;
+    border-color: var(--color-brand-primary);
+    filter: brightness(1.15);
+  }
+
+  html.dark .portal-act-ok {
+    background: var(--color-brand-accent);
+    border-color: var(--color-brand-accent);
+    color: #06331a;
+  }
+
+  html.dark .portal-act-ok:hover {
+    color: #06331a;
+    border-color: var(--color-brand-accent);
+    filter: none;
+  }
+
+  .portal-act-no {
+    background: transparent;
+    color: var(--ink-60v);
+  }
+
+  .portal-res-actions {
+    display: flex;
+    align-items: center;
+    gap: 0.4375rem;
+    flex-wrap: wrap;
+  }
+
+  /* Tags dos cartões (qtd/preço/cliente) → pill neutra sem sombra. */
+  .stock-tag {
+    background: var(--color-brand-bg-alt);
+    border: 1px solid transparent;
+    color: var(--ink-60v);
+    font-size: 0.6875rem;
+    font-weight: 600;
+    border-radius: 0.4375rem;
+    padding: 0.1875rem 0.5rem;
+  }
+
+  html.dark .stock-tag {
+    background: rgb(255 255 255 / 0.06);
+  }
 }
+

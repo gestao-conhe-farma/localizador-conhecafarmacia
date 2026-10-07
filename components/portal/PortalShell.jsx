@@ -3,6 +3,7 @@
 import { useState } from 'react'
 import PortalSidebar from '@/components/portal/PortalSidebar'
 import PortalTour from '@/components/portal/PortalTour'
+import ThemeToggle from '@/components/ui/ThemeToggle'
 
 /**
  * Shell do portal (padrão da plataforma de gestão): sidebar verde de
@@ -82,9 +83,35 @@ export default function PortalShell({ pharmacy, userName, userSub, children }) {
             </svg>
           </a>
 
+          {/* Pesquisa visual (v2): pill central como no mockup aprovado.
+              Ainda sem acção — chega quando houver pesquisa global. */}
+          <button
+            type="button"
+            className="portal-topsearch"
+            aria-label="Pesquisar no portal (em breve)"
+            title="Pesquisar no portal — em breve"
+          >
+            <svg
+              viewBox="0 0 24 24"
+              fill="none"
+              stroke="currentColor"
+              strokeWidth="2"
+              strokeLinecap="round"
+              aria-hidden="true"
+            >
+              <circle cx="11" cy="11" r="7" />
+              <path d="m20 20-3.5-3.5" />
+            </svg>
+            <span>Pesquisar no portal…</span>
+            <kbd>/</kbd>
+          </button>
+
           <div className="portal-topbar-right">
             {/* O nome da farmácia ocupa o lugar do utilizador na top-bar. */}
             <span className="portal-topbar-name">{pharmacy.name}</span>
+            {/* v2 «Premium Calmo»: tema do portal alternável na top-bar
+                (mesmo provider do site público; noite/dia num clique). */}
+            <ThemeToggle className="theme-toggle--circ" />
           </div>
         </header>
 

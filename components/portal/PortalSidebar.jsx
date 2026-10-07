@@ -143,17 +143,34 @@ export default function PortalSidebar({ pharmacyId, userName, navOpen, onClose }
       {/* Véu por baixo do drawer mobile */}
       {navOpen && <div className="portal-scrim" onClick={onClose} aria-hidden="true" />}
 
-      <aside className={`portal-sidebar${navOpen ? ' portal-sidebar--open' : ''}`}>
+      {/* v2 «Premium Calmo»: portal-sidebar-v2 ativa a versão CLARA do
+          painel (branco + hairline no tema claro; cartão no escuro) —
+          sem ela, continuaria o verde escuro antigo. */}
+      <aside
+        className={`portal-sidebar portal-sidebar-v2${navOpen ? ' portal-sidebar--open' : ''}`}
+      >
         {/* Logo branco do site público + eyebrow, como no gestão. */}
         <div className="portal-side-brand">
           <div className="portal-side-brand-main">
             <Link href="/portal" className="portal-side-logo-link" aria-label="Portal — início">
+              {/* v2: sidebar clara → logo VERDE em dia; mantém o branco em
+                  escuro (a régua branca das duas versões fica em CSS). */}
               <Image
-                src="/logo/logo-principal-branco.png"
+                src="/logo/logo-principal-verde.png"
                 alt="Conheça Farmácia"
                 width={150}
                 height={51}
                 priority
+                className="portal-logo-green"
+              />
+              <Image
+                src="/logo/logo-principal-branco.png"
+                alt=""
+                width={150}
+                height={51}
+                priority
+                aria-hidden="true"
+                className="portal-logo-white"
               />
             </Link>
             <p className="portal-side-eyebrow">Portal da farmácia</p>

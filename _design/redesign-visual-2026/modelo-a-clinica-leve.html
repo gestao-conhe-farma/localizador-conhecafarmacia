@@ -1,0 +1,855 @@
+<!DOCTYPE html>
+<!--
+  ══════════════════════════════════════════════════════════════════
+  Portal Conheça Farmácia — MODELO A «Clínica Leve» (mockup navegável)
+  ══════════════════════════════════════════════════════════════════
+  Direcção: o estilo das 3 referências (HealthyCare / Pharmacy / Medic).
+  Sidebar CLARA com itens verdes activos; topbar com pesquisa + sino +
+  avatar; cartões KPI com ícone quadrado colorido + número grande +
+  delta; coluna direita com perfil e calendário; donut de stock e
+  gráfico de vendas. Verde #00493a/#0a844f mantido como cor principal.
+
+  Páginas navegáveis: Visão geral · Atenção · Stock · Reservas ·
+  Vendas · Perfil. Toggle claro/escuro no topo. Dados todos demo.
+-->
+<html lang="pt">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Portal · Modelo A «Clínica Leve» — Conheça Farmácia</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Fraunces:opsz,wght@9..144,400..700&family=Inter:wght@400..700&display=swap" rel="stylesheet">
+<style>
+:root{
+  --primary:#00493a; --accent:#0a844f; --deep:#002a32;
+  --bg:#f6f8f7; --bg-alt:#f7f5f1; --card:#ffffff;
+  --line:#e5e9e6; --divider:#dfe4e0;
+  --red:#c0392b; --orange:#d9531e; --amber:#c47f17; --ok:#1f7a43; --wa:#25d366;
+  --ink:rgba(0,42,50,.92); --ink-60:rgba(0,42,50,.6); --ink-45:rgba(0,42,50,.45); --ink-12:rgba(0,42,50,.12);
+  --serif:'Fraunces',Georgia,serif; --sans:'Inter',system-ui,-apple-system,sans-serif;
+  --r-card:16px; --r-ctl:10px;
+  --shadow-card:0 1px 2px rgba(0,42,50,.04),0 4px 14px rgba(0,42,50,.05);
+}
+html.dark{
+  --bg:#0a0f0d; --bg-alt:#111816; --card:#151c19;
+  --line:#1f2927; --divider:#1f2927;
+  --ink:#e5e7eb; --ink-60:rgba(229,231,235,.62); --ink-45:rgba(229,231,235,.45); --ink-12:rgba(255,255,255,.1);
+  --shadow-card:0 1px 2px rgba(0,0,0,.3),0 6px 18px rgba(0,0,0,.25);
+}
+*{box-sizing:border-box;margin:0;padding:0}
+html{-webkit-text-size-adjust:100%}
+body{font-family:var(--sans);color:var(--deep);background:var(--bg);font-size:14px;line-height:1.5;transition:background .2s,color .2s}
+html.dark body{color:var(--ink)}
+button{font-family:inherit}
+a{color:var(--accent)}
+
+/* ── Topbar ───────────────────────────────────────────── */
+.topbar{position:sticky;top:0;z-index:60;height:62px;display:flex;align-items:center;gap:14px;padding:0 20px;
+  background:color-mix(in srgb, var(--card) 88%, transparent);border-bottom:1px solid var(--line);
+  backdrop-filter:blur(12px);-webkit-backdrop-filter:blur(12px)}
+.brand{display:flex;align-items:center;gap:10px;text-decoration:none;color:inherit}
+.brand-mark{width:36px;height:36px;border-radius:11px;background:linear-gradient(135deg,#00493a,#0a844f);color:#fff;
+  display:grid;place-items:center;box-shadow:0 2px 6px rgba(10,132,79,.35)}
+.brand-mark svg{width:20px;height:20px}
+.brand-name{font-weight:700;font-size:15px;letter-spacing:-.01em}
+.brand-sub{font-size:11px;color:var(--ink-45);border-left:1px solid var(--line);padding-left:10px;margin-left:2px}
+.top-search{flex:1;max-width:420px;margin:0 auto;display:flex;align-items:center;gap:9px;background:var(--bg-alt);
+  border:1px solid var(--line);border-radius:999px;padding:9px 16px}
+html.dark .top-search{background:var(--bg-alt)}
+.top-search svg{width:16px;height:16px;opacity:.45;flex-shrink:0}
+.top-search input{border:0;outline:0;font:inherit;font-size:13.5px;width:100%;color:inherit;background:transparent}
+.topbar-right{margin-left:auto;display:flex;align-items:center;gap:12px}
+.icon-btn{position:relative;width:38px;height:38px;border-radius:50%;border:1px solid var(--line);background:var(--card);
+  color:var(--deep);display:grid;place-items:center;cursor:pointer}
+html.dark .icon-btn{color:var(--ink)}
+.icon-btn:hover{border-color:var(--accent);color:var(--accent)}
+.icon-btn svg{width:17px;height:17px}
+.icon-btn .dot{position:absolute;top:8px;right:9px;width:7px;height:7px;border-radius:50%;background:var(--red);border:2px solid var(--card)}
+.me{display:flex;align-items:center;gap:9px}
+.avatar{width:36px;height:36px;border-radius:50%;background:rgba(10,132,79,.12);border:1px solid var(--line);
+  color:var(--accent);font-size:12.5px;font-weight:700;display:grid;place-items:center}
+.me .who{line-height:1.15;display:none}
+@media(min-width:1100px){.me .who{display:block}}
+.me .who b{display:block;font-size:12.5px}
+.me .who span{font-size:11px;color:var(--ink-45)}
+.theme-toggle{width:38px;height:38px;border-radius:50%;border:1px solid var(--line);background:var(--card);cursor:pointer;
+  display:grid;place-items:center;color:inherit}
+html.dark .theme-toggle{color:var(--ink)}
+.theme-toggle:hover{border-color:var(--accent)}
+.theme-toggle svg{width:16px;height:16px}
+.theme-toggle .sun{display:none}
+html.dark .theme-toggle .sun{display:block}
+html.dark .theme-toggle .moon{display:none}
+
+.shell{display:flex;align-items:flex-start;min-height:calc(100vh - 62px)}
+
+/* ── Sidebar CLARA ────────────────────────────────────── */
+.sidebar{width:232px;flex-shrink:0;background:var(--card);border-right:1px solid var(--line);
+  padding:18px 12px;display:flex;flex-direction:column;gap:2px;position:sticky;top:62px;
+  height:calc(100vh - 62px);overflow:auto}
+.side-label{font-size:10px;font-weight:700;letter-spacing:.14em;text-transform:uppercase;color:var(--ink-45);padding:12px 12px 6px}
+.side-item{display:flex;align-items:center;gap:11px;padding:10px 12px;border-radius:11px;color:var(--ink-60);
+  text-decoration:none;font-size:13.5px;font-weight:500;cursor:pointer;border:0;background:transparent;width:100%;text-align:left;transition:all .15s}
+html.dark .side-item{color:var(--ink-60)}
+.side-item svg{width:18px;height:18px;flex-shrink:0;opacity:.75}
+.side-item:hover{background:rgba(10,132,79,.07);color:var(--primary)}
+html.dark .side-item:hover{color:var(--ink)}
+.side-item.active{background:rgba(10,132,79,.1);color:var(--primary);font-weight:700}
+html.dark .side-item.active{background:rgba(13,153,95,.16);color:#7fd4ab}
+.side-item.active svg{opacity:1}
+.side-badge{margin-left:auto;min-width:20px;height:20px;border-radius:999px;font-size:10.5px;font-weight:700;
+  display:grid;place-items:center;padding:0 6px}
+.badge-red{background:var(--red);color:#fff}
+.badge-amber{background:rgba(196,127,23,.15);color:#9a630f}
+html.dark .badge-amber{color:#e8b45a}
+.sidebar-foot{margin-top:auto;margin:14px 8px 4px;padding:14px 14px 6px;border-top:1px solid var(--line);font-size:11px;color:var(--ink-45)}
+.sidebar-foot b{display:block;color:inherit;font-size:12.5px;margin-bottom:2px}
+.side-ver{display:inline-flex;align-items:center;gap:5px;color:var(--ok);font-weight:600;font-size:10.5px}
+
+.content{flex:1;padding:26px 30px 80px;min-width:0}
+.wrap{max-width:1160px;margin:0 auto}
+
+/* ── Cabeçalho de página ──────────────────────────────── */
+.page-head{display:flex;align-items:flex-end;justify-content:space-between;gap:16px;flex-wrap:wrap;margin-bottom:20px}
+.page-head h1{font-family:var(--serif);font-weight:600;font-size:27px;line-height:1.15;letter-spacing:-.01em}
+.page-head .sub{color:var(--ink-60);font-size:13.5px;margin-top:4px;max-width:64ch}
+.page-head .sub b{color:inherit}
+
+.btn{display:inline-flex;align-items:center;justify-content:center;gap:8px;border-radius:999px;
+  font-weight:600;font-size:13.5px;padding:10px 18px;border:1px solid transparent;cursor:pointer;
+  text-decoration:none;transition:filter .2s,border-color .2s}
+.btn-primary{background:linear-gradient(135deg,#00493a,#0a844f);color:#fff;box-shadow:0 2px 8px rgba(10,132,79,.3)}
+.btn-primary:hover{filter:brightness(1.12)}
+.btn-ghost{background:var(--card);border-color:var(--line);color:inherit}
+.btn-ghost:hover{border-color:var(--accent)}
+.btn-sm{padding:7px 13px;font-size:12.5px}
+.btn-wa{background:var(--wa);color:#06331a;font-weight:700}
+
+/* ── KPI cards (estilo referência: ícone quadrado + número + delta) ── */
+.kpis{display:grid;grid-template-columns:repeat(4,minmax(0,1fr));gap:14px;margin-bottom:18px}
+.kpi{background:var(--card);border:1px solid var(--line);border-radius:var(--r-card);padding:16px 18px;
+  box-shadow:var(--shadow-card);display:flex;flex-direction:column;gap:6px;text-decoration:none;color:inherit;
+  transition:transform .18s,box-shadow .18s,border-color .18s}
+.kpi:hover{transform:translateY(-2px);box-shadow:0 6px 22px rgba(0,42,50,.1);border-color:color-mix(in srgb,var(--accent) 40%,var(--line))}
+.kpi-top{display:flex;align-items:center;justify-content:space-between;gap:8px}
+.kpi-k{font-size:12px;font-weight:600;color:var(--ink-60)}
+.kpi-ic{width:38px;height:38px;border-radius:11px;display:grid;place-items:center;flex-shrink:0}
+.kpi-ic svg{width:19px;height:19px}
+.ic-green{background:rgba(10,132,79,.12);color:var(--accent)}
+.ic-red{background:rgba(192,57,43,.1);color:var(--red)}
+.ic-amber{background:rgba(196,127,23,.14);color:var(--amber)}
+.ic-teal{background:rgba(13,110,139,.1);color:#0d6e8b}
+html.dark .ic-teal{background:rgba(13,110,139,.2);color:#5ab8d6}
+.kpi-n{font-size:26px;font-weight:700;font-variant-numeric:tabular-nums;line-height:1.05;letter-spacing:-.01em}
+.kpi-s{font-size:11.5px;color:var(--ink-45)}
+.kpi-delta{display:inline-flex;align-items:center;gap:4px;font-size:11.5px;font-weight:700}
+.delta-up{color:var(--ok)} .delta-down{color:var(--red)} .delta-warn{color:var(--amber)}
+
+/* ── Painéis / cartões ────────────────────────────────── */
+.card{background:var(--card);border:1px solid var(--line);border-radius:var(--r-card);box-shadow:var(--shadow-card)}
+.card-head{display:flex;align-items:center;justify-content:space-between;gap:12px;padding:16px 18px 0}
+.card-head h2{font-family:var(--serif);font-weight:600;font-size:17px}
+.card-hint{font-size:12px;color:var(--ink-45)}
+.card-link{font-size:12.5px;color:var(--accent);font-weight:600;text-decoration:none;cursor:pointer}
+.card-body{padding:16px 18px 18px}
+
+.grid-2{display:grid;grid-template-columns:1.6fr 1fr;gap:14px;margin-bottom:18px}
+@media(max-width:1080px){.grid-2{grid-template-columns:1fr}}
+
+/* Donut */
+.donut-wrap{display:flex;align-items:center;gap:18px;flex-wrap:wrap}
+.donut{--p:43;--c:var(--accent);width:132px;height:132px;border-radius:50%;flex-shrink:0;
+  background:conic-gradient(var(--c) calc(var(--p)*1%),rgba(10,132,79,.12) 0);
+  display:grid;place-items:center;position:relative}
+html.dark .donut{background:conic-gradient(var(--c) calc(var(--p)*1%),rgba(255,255,255,.08) 0)}
+.donut::before{content:'';position:absolute;inset:16px;border-radius:50%;background:var(--card)}
+.donut b{position:relative;font-size:22px;font-weight:700}
+.donut-legend{display:flex;flex-direction:column;gap:9px;font-size:12.5px}
+.donut-legend li{display:flex;align-items:center;gap:8px;list-style:none;color:var(--ink-60)}
+.donut-legend i{width:10px;height:10px;border-radius:3px;flex-shrink:0}
+.donut-legend b{margin-left:auto;color:inherit;font-variant-numeric:tabular-nums}
+.lg-green{background:var(--accent)} .lg-dark{background:var(--primary)} .lg-gray{background:var(--ink-12);background-color:rgba(136,136,136,.35)}
+
+/* Calendário */
+.cal{width:100%}
+.cal-head{display:flex;align-items:center;justify-content:space-between;margin-bottom:10px}
+.cal-head b{font-size:13px}
+.cal-nav{display:flex;gap:6px}
+.cal-nav button{width:26px;height:26px;border-radius:8px;border:1px solid var(--line);background:transparent;color:inherit;cursor:pointer;font-size:13px;display:grid;place-items:center}
+.cal-nav button:hover{border-color:var(--accent)}
+.cal-grid{display:grid;grid-template-columns:repeat(7,1fr);gap:2px;text-align:center}
+.cal-grid .dow{font-size:10px;font-weight:700;color:var(--ink-45);padding:4px 0}
+.cal-d{aspect-ratio:1;display:grid;place-items:center;font-size:12px;border-radius:9px;cursor:default;color:var(--ink-60)}
+.cal-d.mut{opacity:.3}
+.cal-d.today{background:var(--primary);color:#fff;font-weight:700}
+.cal-d.evt{position:relative;font-weight:600;color:var(--primary)}
+html.dark .cal-d.evt{color:#7fd4ab}
+.cal-d.evt::after{content:'';position:absolute;bottom:4px;left:50%;transform:translateX(-50%);width:4px;height:4px;border-radius:50%;background:var(--accent)}
+html.dark .cal-d.today{background:var(--accent)}
+
+/* Lista de atenção à direita (mini feed) */
+.feed{display:flex;flex-direction:column}
+.feed-item{display:flex;gap:11px;padding:11px 0;border-bottom:1px solid var(--line);align-items:flex-start}
+.feed-item:last-child{border-bottom:0}
+.feed-ic{width:32px;height:32px;border-radius:9px;display:grid;place-items:center;flex-shrink:0}
+.feed-ic svg{width:15px;height:15px}
+.feed-item b{font-size:13px;font-weight:600;display:block}
+.feed-item span{font-size:11.5px;color:var(--ink-45)}
+.feed-item .when{margin-left:auto;font-size:11px;color:var(--ink-45);white-space:nowrap}
+
+/* Toolbar */
+.toolbar{display:flex;gap:10px;flex-wrap:wrap;align-items:center;margin-bottom:14px}
+.search{flex:1;min-width:200px;max-width:340px;display:flex;align-items:center;gap:9px;background:var(--card);
+  border:1px solid var(--line);border-radius:12px;padding:9px 13px;box-shadow:var(--shadow-card)}
+.search svg{width:16px;height:16px;opacity:.5;flex-shrink:0}
+.search input{border:0;outline:0;font:inherit;font-size:13.5px;width:100%;color:inherit;background:transparent}
+.chips{display:flex;gap:8px;flex-wrap:wrap;align-items:center}
+.chip{border:1px solid var(--line);background:var(--card);color:inherit;border-radius:999px;
+  padding:7px 14px;font-size:12.5px;font-weight:600;cursor:pointer;transition:border-color .15s}
+.chip:hover{border-color:var(--accent)}
+.chip.active{background:var(--primary);border-color:var(--primary);color:#fff}
+html.dark .chip.active{background:var(--accent);border-color:var(--accent);color:#06331a}
+.chip .n{opacity:.6;font-weight:500;margin-left:4px}
+.sort{margin-left:auto;display:inline-flex;border:1px solid var(--line);border-radius:999px;overflow:hidden;background:var(--card)}
+.sort button{border:0;background:transparent;color:inherit;font-size:12px;font-weight:600;padding:7px 12px;cursor:pointer}
+.sort button.active{background:var(--primary);color:#fff}
+html.dark .sort button.active{background:var(--accent);color:#06331a}
+
+/* Tabela */
+.table-wrap{background:var(--card);border:1px solid var(--line);border-radius:var(--r-card);overflow:hidden;box-shadow:var(--shadow-card)}
+table{width:100%;border-collapse:collapse}
+thead th{font-size:10.5px;font-weight:700;letter-spacing:.08em;text-transform:uppercase;color:var(--ink-45);
+  text-align:left;padding:11px 16px;border-bottom:1px solid var(--line);white-space:nowrap;background:var(--bg-alt)}
+html.dark thead th{background:var(--bg-alt)}
+tbody td{padding:11px 16px;border-bottom:1px solid var(--line);font-size:13px;vertical-align:middle}
+tbody tr:last-child td{border-bottom:0}
+tbody tr{cursor:pointer;transition:background .15s}
+tbody tr:hover{background:rgba(10,132,79,.05)}
+td.name b{display:block;font-weight:600}
+td.name span{font-size:11.5px;color:var(--ink-60)}
+td.num{font-variant-numeric:tabular-nums;font-weight:600;white-space:nowrap}
+
+/* Tags */
+.tags{display:flex;gap:6px;flex-wrap:wrap}
+.tag{display:inline-block;border-radius:7px;padding:2.5px 8px;font-size:10.5px;font-weight:700;white-space:nowrap}
+.tag-ok{background:rgba(31,122,67,.12);color:var(--ok)}
+.tag-off{background:rgba(136,136,136,.14);color:#666}
+html.dark .tag-off{color:#9ca3af}
+.tag-red{background:rgba(192,57,43,.12);color:var(--red)}
+html.dark .tag-red{color:#f3a29a}
+.tag-amber{background:rgba(196,127,23,.15);color:#9a630f}
+html.dark .tag-amber{color:#e8b45a}
+.tag-info{background:rgba(10,132,79,.1);color:var(--accent)}
+html.dark .tag-info{color:#7fd4ab}
+.tag-price{background:rgba(10,132,79,.12);color:var(--accent)}
+html.dark .tag-price{color:#7fd4ab}
+
+/* Cartões de reserva (grid) */
+.grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(265px,1fr));gap:13px}
+.rcard{background:var(--card);border:1px solid var(--line);border-radius:var(--r-card);padding:15px 17px;
+  box-shadow:var(--shadow-card);display:flex;flex-direction:column;gap:8px;transition:transform .18s,box-shadow .18s}
+.rcard:hover{transform:translateY(-2px);box-shadow:0 6px 22px rgba(0,42,50,.1)}
+.rcard-top{display:flex;align-items:flex-start;justify-content:space-between;gap:8px}
+.rcard-name{font-weight:600;font-size:14.5px;line-height:1.3;background:none;border:0;cursor:pointer;text-align:left;color:inherit;font-family:inherit;padding:0}
+.rcard-name:hover{color:var(--accent)}
+.rcard-meta{font-size:12px;color:var(--ink-60)}
+.rcard-foot{margin-top:auto;display:flex;align-items:center;justify-content:space-between;gap:8px;padding-top:4px}
+.rcard-hint{font-size:11.5px;color:var(--ink-45)}
+.rcard-hint.ok{color:var(--ok);font-weight:600}
+.actions{display:flex;gap:6px;flex-wrap:wrap;align-items:center}
+.mini{border:1px solid var(--line);background:var(--card);color:inherit;border-radius:999px;
+  padding:5.5px 13px;font-size:12px;font-weight:600;cursor:pointer}
+.mini:hover{border-color:var(--accent)}
+.mini.ok{background:var(--primary);border-color:var(--primary);color:#fff}
+html.dark .mini.ok{background:var(--accent);border-color:var(--accent);color:#06331a}
+.mini.no{background:transparent;color:var(--red);border-color:rgba(192,57,43,.35)}
+.mini.no:hover{border-color:var(--red)}
+
+/* Gráfico de barras CSS */
+.chart{display:flex;align-items:stretch;gap:6px;height:180px;padding:16px}
+.bar-col{flex:1;display:flex;flex-direction:column;gap:6px;min-width:0}
+.bar-wrap{flex:1;display:flex;align-items:flex-end}
+.bar{width:100%;border-radius:7px 7px 0 0;background:linear-gradient(180deg,#0a844f,#00493a);min-height:3px}
+.bar.zero{background:var(--line)}
+.bar-col span{font-size:9.5px;color:var(--ink-45);text-align:center;white-space:nowrap}
+
+/* Perfil / formulário */
+.panel{background:var(--card);border:1px solid var(--line);border-radius:var(--r-card);overflow:hidden;box-shadow:var(--shadow-card);margin-bottom:16px}
+.panel-head{display:flex;align-items:center;justify-content:space-between;gap:12px;padding:16px 18px;border-bottom:1px solid var(--line)}
+.panel-head h2{font-family:var(--serif);font-weight:600;font-size:17px}
+.panel-hint{font-size:12px;color:var(--ink-45)}
+.panel-body{padding:18px}
+.field{display:flex;flex-direction:column;gap:5px;margin-bottom:14px}
+.field label{font-weight:600;font-size:13px}
+.field .hint{font-size:11.5px;color:var(--ink-60)}
+.input{border:1px solid var(--line);border-radius:var(--r-ctl);background:var(--card);color:inherit;
+  font:inherit;font-size:13.5px;padding:9px 12px;outline:0;width:100%}
+.input:focus{border-color:var(--accent)}
+.input:disabled{opacity:.6}
+.form-grid{display:grid;grid-template-columns:1fr 1fr;gap:0 16px}
+
+/* Estado vazio / banners / toast */
+.empty{border:1px dashed var(--line);border-radius:var(--r-card);padding:36px 20px;text-align:center;
+  color:var(--ink-60);font-size:13.5px;background:color-mix(in srgb, var(--card) 55%, transparent)}
+.banner{display:flex;gap:10px;align-items:flex-start;border:1px solid rgba(196,127,23,.35);background:rgba(196,127,23,.08);
+  color:#7a5210;border-radius:var(--r-ctl);padding:11px 14px;font-size:13px;margin-bottom:14px}
+html.dark .banner{color:#e8b45a}
+.banner.danger{border-color:rgba(192,57,43,.3);background:rgba(192,57,43,.07);color:#8c2c20}
+html.dark .banner.danger{color:#f3a29a}
+.toast{position:fixed;left:50%;bottom:26px;transform:translateX(-50%) translateY(80px);background:var(--deep);color:#fff;
+  border-radius:999px;padding:10px 20px;font-size:13px;font-weight:600;opacity:0;transition:.3s;z-index:90;pointer-events:none}
+html.dark .toast{background:#0d995f}
+.toast.show{opacity:1;transform:translateX(-50%)}
+.foot-note{font-size:11.5px;color:var(--ink-45);margin-top:22px}
+
+@media (max-width:900px){
+  .sidebar{position:fixed;left:0;top:62px;bottom:0;z-index:66;transform:translateX(-105%);transition:transform .25s;box-shadow:0 0 40px rgba(0,0,0,.2)}
+  .sidebar.open{transform:none}
+  .content{padding:18px 16px 64px}
+  .kpis{grid-template-columns:1fr 1fr}
+  .brand-sub{display:none}
+}
+@media (max-width:560px){
+  .kpis{grid-template-columns:1fr}
+  .form-grid{grid-template-columns:1fr}
+  .toolbar .sort{margin-left:0}
+}
+</style>
+</head>
+<body>
+
+<header class="topbar">
+  <button class="icon-btn" id="menuBtn" style="display:none" aria-label="Menu">☰</button>
+  <a class="brand" href="#">
+    <span class="brand-mark"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round"><path d="M12 5v14M5 12h14"/></svg></span>
+    <span class="brand-name">Conheça Farmácia</span>
+    <span class="brand-sub">Portal da farmácia</span>
+  </a>
+  <label class="top-search">
+    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="11" cy="11" r="7"/><path d="m21 21-4.3-4.3"/></svg>
+    <input type="search" placeholder="Pesquisar medicamento ou cliente…">
+  </label>
+  <div class="topbar-right">
+    <button class="icon-btn" aria-label="Notificações">
+      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round"><path d="M18 9a6 6 0 1 0-12 0c0 5-2 6-2 6h16s-2-1-2-6"/><path d="M10.3 19a2 2 0 0 0 3.4 0"/></svg>
+      <span class="dot"></span>
+    </button>
+    <button class="theme-toggle" onclick="toggleTheme()" aria-label="Alternar tema">
+      <svg class="moon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round"><path d="M21 12.8A9 9 0 1 1 11.2 3 7 7 0 0 0 21 12.8z"/></svg>
+      <svg class="sun" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round"><circle cx="12" cy="12" r="4"/><path d="M12 2v2M12 20v2M4.9 4.9l1.4 1.4M17.7 17.7l1.4 1.4M2 12h2M20 12h2M4.9 19.1l1.4-1.4M17.7 6.3l1.4-1.4"/></svg>
+    </button>
+    <div class="me">
+      <span class="avatar">FC</span>
+      <span class="who"><b>Farmácia CF Central</b><span>Verificada · Talatona</span></span>
+    </div>
+  </div>
+</header>
+
+<div class="shell">
+  <aside class="sidebar" id="sidebar">
+    <span class="side-label">Gestão</span>
+    <button class="side-item" data-page="visao">
+      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M3 10.5 12 3l9 7.5"/><path d="M5 9.5V21h14V9.5"/></svg>
+      Visão geral
+    </button>
+    <button class="side-item" data-page="atencao">
+      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M12 3 2.5 20h19L12 3z"/><path d="M12 10v4"/><path d="M12 17.5h.01"/></svg>
+      Precisa de atenção
+      <span class="side-badge badge-red">4</span>
+    </button>
+    <button class="side-item" data-page="stock">
+      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M4 8h16v12H4z"/><path d="M9 8V5h6v3"/><path d="M4 13h16"/></svg>
+      Stock
+    </button>
+    <button class="side-item" data-page="reservas">
+      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="5" width="18" height="16" rx="2"/><path d="M3 10h18"/><path d="M8 3v4M16 3v4"/></svg>
+      Reservas
+      <span class="side-badge badge-amber">3</span>
+    </button>
+    <button class="side-item" data-page="vendas">
+      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M4 20V10"/><path d="M10 20V4"/><path d="M16 20v-8"/><path d="M22 20H2"/></svg>
+      Vendas
+    </button>
+    <span class="side-label">Farmácia</span>
+    <button class="side-item" data-page="perfil">
+      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="8" r="4"/><path d="M4 21c1.5-4 4.5-6 8-6s6.5 2 8 6"/></svg>
+      Perfil
+    </button>
+    <div class="sidebar-foot">
+      <b>Farmácia CF Central</b>
+      <span class="side-ver">✓ Verificada</span> · Talatona, Luanda
+    </div>
+  </aside>
+
+  <main class="content"><div class="wrap">
+
+  <!-- ══════════════ VISÃO GERAL ══════════════ -->
+  <section class="page" id="page-visao">
+    <div class="page-head">
+      <div>
+        <h1>Bom dia, Domingos</h1>
+        <p class="sub">Quarta, 23 de Setembro · Tudo o que precisa de decisão hoje, numa só vista.</p>
+      </div>
+      <button class="btn btn-primary" onclick="toast('Formulário «Novo medicamento» abriria aqui')">+ Adicionar medicamento</button>
+    </div>
+
+    <div class="kpis">
+      <a class="kpi" href="#" onclick="go('atencao');return false">
+        <div class="kpi-top"><span class="kpi-k">Precisa de atenção</span>
+          <span class="kpi-ic ic-red"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 3 2.5 20h19L12 3z"/><path d="M12 10v4"/><path d="M12 17.5h.01"/></svg></span></div>
+        <span class="kpi-n">4</span>
+        <span class="kpi-delta delta-down">▲ 2 desde ontem</span>
+        <span class="kpi-s">3 reposições · 1 validade a vencer</span>
+      </a>
+      <a class="kpi" href="#" onclick="go('reservas');return false">
+        <div class="kpi-top"><span class="kpi-k">Reservas por atender</span>
+          <span class="kpi-ic ic-amber"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="5" width="18" height="16" rx="2"/><path d="M3 10h18"/><path d="M8 3v4M16 3v4"/></svg></span></div>
+        <span class="kpi-n">3</span>
+        <span class="kpi-delta delta-warn">1 espera há 2h</span>
+        <span class="kpi-s">prazo de resposta: 72 h</span>
+      </a>
+      <a class="kpi" href="#" onclick="go('stock');return false">
+        <div class="kpi-top"><span class="kpi-k">Stock disponível</span>
+          <span class="kpi-ic ic-green"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M4 8h16v12H4z"/><path d="M9 8V5h6v3"/><path d="M4 13h16"/></svg></span></div>
+        <span class="kpi-n">128</span>
+        <span class="kpi-delta delta-up">▲ 6 esta semana</span>
+        <span class="kpi-s">de 300 do catálogo marcados «temos»</span>
+      </a>
+      <a class="kpi" href="#" onclick="go('vendas');return false">
+        <div class="kpi-top"><span class="kpi-k">Vendas (7 dias)</span>
+          <span class="kpi-ic ic-teal"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M4 20V10"/><path d="M10 20V4"/><path d="M16 20v-8"/><path d="M22 20H2"/></svg></span></div>
+        <span class="kpi-n">37 500 Kz</span>
+        <span class="kpi-delta delta-up">▲ 12% vs. semana anterior</span>
+        <span class="kpi-s">12 reservas concluídas</span>
+      </a>
+    </div>
+
+    <div class="grid-2">
+      <div class="card">
+        <div class="card-head">
+          <h2>Reservas por atender</h2>
+          <a class="card-link" onclick="go('reservas')">Ver todas →</a>
+        </div>
+        <div class="card-body" style="display:flex;flex-direction:column;gap:0">
+          <div style="display:flex;justify-content:space-between;gap:12px;flex-wrap:wrap;align-items:center;border-bottom:1px solid var(--line);padding:12px 0">
+            <div>
+              <b style="font-size:13.5px">Amoxicilina 500 mg</b> <span class="tag tag-amber">há 2h</span>
+              <div class="rcard-meta">Ana Cardoso · 923 411 208 · 2 caixas · «para criança»</div>
+            </div>
+            <div class="actions">
+              <button class="mini ok" onclick="toast('Confirmação com ajuste de quantidade abriria aqui')">Confirmar</button>
+              <button class="mini no" onclick="toast('Painel de motivos abriria aqui')">Recusar</button>
+            </div>
+          </div>
+          <div style="display:flex;justify-content:space-between;gap:12px;flex-wrap:wrap;align-items:center;border-bottom:1px solid var(--line);padding:12px 0">
+            <div>
+              <b style="font-size:13.5px">Insulina glargina caneta</b> <span class="tag tag-amber">há 4h</span>
+              <div class="rcard-meta">Jorge Kiala · 924 118 776 · 1 caixa</div>
+            </div>
+            <div class="actions">
+              <button class="mini ok" onclick="toast('…')">Confirmar</button>
+              <button class="mini no" onclick="toast('…')">Recusar</button>
+            </div>
+          </div>
+          <div style="display:flex;justify-content:space-between;gap:12px;flex-wrap:wrap;align-items:center;padding:12px 0">
+            <div>
+              <b style="font-size:13.5px">Salbutamol inalador</b> <span class="tag tag-amber">há 6h</span>
+              <div class="rcard-meta">Marta Domingos · 921 903 445 · 2 unidades</div>
+            </div>
+            <div class="actions">
+              <button class="mini ok" onclick="toast('…')">Confirmar</button>
+              <button class="mini no" onclick="toast('…')">Recusar</button>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <div style="display:flex;flex-direction:column;gap:14px">
+        <div class="card">
+          <div class="card-head"><h2>Stock no Localizador</h2></div>
+          <div class="card-body donut-wrap">
+            <div class="donut" style="--p:43"><b>43%</b></div>
+            <ul class="donut-legend">
+              <li><i class="lg-green"></i>Disponível <b>128</b></li>
+              <li><i class="lg-dark"></i>Catálogo activo <b>172</b></li>
+              <li><i class="lg-gray"></i>Pendentes validação <b>5</b></li>
+            </ul>
+          </div>
+        </div>
+        <div class="card">
+          <div class="card-head">
+            <h2>Hoje na farmácia</h2>
+            <span class="card-hint">23 set</span>
+          </div>
+          <div class="card-body">
+            <div class="cal">
+              <div class="cal-head">
+                <b>Setembro 2026</b>
+                <div class="cal-nav"><button>‹</button><button>›</button></div>
+              </div>
+              <div class="cal-grid">
+                <span class="dow">S</span><span class="dow">T</span><span class="dow">Q</span><span class="dow">Q</span><span class="dow">S</span><span class="dow">S</span><span class="dow">D</span>
+                <span class="cal-d mut">30</span><span class="cal-d mut">31</span><span class="cal-d">1</span><span class="cal-d">2</span><span class="cal-d">3</span><span class="cal-d">4</span><span class="cal-d">5</span>
+                <span class="cal-d">6</span><span class="cal-d">7</span><span class="cal-d">8</span><span class="cal-d">9</span><span class="cal-d">10</span><span class="cal-d">11</span><span class="cal-d">12</span>
+                <span class="cal-d">13</span><span class="cal-d">14</span><span class="cal-d">15</span><span class="cal-d">16</span><span class="cal-d">17</span><span class="cal-d">18</span><span class="cal-d">19</span>
+                <span class="cal-d">20</span><span class="cal-d">21</span><span class="cal-d">22</span><span class="cal-d today">23</span><span class="cal-d evt">24</span><span class="cal-d evt">25</span><span class="cal-d">26</span>
+                <span class="cal-d">27</span><span class="cal-d evt">28</span><span class="cal-d">29</span><span class="cal-d">30</span><span class="cal-d mut">1</span><span class="cal-d mut">2</span><span class="cal-d mut">3</span>
+              </div>
+            </div>
+            <div class="feed" style="margin-top:12px">
+              <div class="feed-item">
+                <span class="feed-ic ic-green"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><path d="M20 6 9 17l-5-5"/></svg></span>
+                <div><b>Repor Paracetamol 500 mg</b><span>vendeu ontem · restam 2</span></div>
+                <span class="when">hoje</span>
+              </div>
+              <div class="feed-item">
+                <span class="feed-ic ic-amber"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><circle cx="12" cy="12" r="9"/><path d="M12 7v5l3 2"/></svg></span>
+                <div><b>Validade Amoxicilina 250</b><span>expira em 28 dias</span></div>
+                <span class="when">24 set</span>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <p class="foot-note">O stock fica visível no Localizador durante 72 h após cada confirmação · Suporte: suporte@conhecafarmacia.com</p>
+  </section>
+
+  <!-- ══════════════ ATENÇÃO ══════════════ -->
+  <section class="page" id="page-atencao" hidden>
+    <div class="page-head">
+      <div>
+        <h1>Precisa de atenção</h1>
+        <p class="sub">Reposições após vendas, validades a vencer e stock desactualizado — resolva da lista para zerar o sino.</p>
+      </div>
+    </div>
+
+    <div class="banner">Validade: <b>&nbsp;2 produtos expiram em menos de 30 dias</b>. Produtos expirados deixam de aparecer no Localizador até a validade ser corrigida.</div>
+
+    <div class="toolbar">
+      <div class="chips">
+        <button class="chip active">Todos <span class="n">4</span></button>
+        <button class="chip">Reposições <span class="n">3</span></button>
+        <button class="chip">Validade <span class="n">1</span></button>
+      </div>
+    </div>
+
+    <div class="grid">
+      <article class="rcard">
+        <div class="rcard-top">
+          <button class="rcard-name">Paracetamol 500 mg</button>
+          <span class="tag tag-red">Vendeu · repor</span>
+        </div>
+        <p class="rcard-meta">Comp. · 500 mg · restam 2 caixas</p>
+        <div class="rcard-foot">
+          <span class="rcard-hint">Vendido ontem</span>
+          <div class="actions"><button class="mini ok" onclick="toast('Abriria o modal de stock')">Repor</button></div>
+        </div>
+      </article>
+      <article class="rcard">
+        <div class="rcard-top">
+          <button class="rcard-name">Amoxicilina 250 mg</button>
+          <span class="tag tag-amber">Validade 21 out</span>
+        </div>
+        <p class="rcard-meta">Cáps. · 12 caixas em stock</p>
+        <div class="rcard-foot">
+          <span class="rcard-hint">Faltam 28 dias</span>
+          <div class="actions"><button class="mini" onclick="toast('Abriria o modal de stock')">Corrigir</button></div>
+        </div>
+      </article>
+      <article class="rcard">
+        <div class="rcard-top">
+          <button class="rcard-name">Ibuprofeno 400 mg</button>
+          <span class="tag tag-red">Vendeu · repor</span>
+        </div>
+        <p class="rcard-meta">Comp. · esgotado após venda</p>
+        <div class="rcard-foot">
+          <span class="rcard-hint">Saiu do Localizador</span>
+          <div class="actions"><button class="mini ok" onclick="toast('…')">Repor</button></div>
+        </div>
+      </article>
+      <article class="rcard">
+        <div class="rcard-top">
+          <button class="rcard-name">Ventolina inalador</button>
+          <span class="tag tag-off">Stock antigo</span>
+        </div>
+        <p class="rcard-meta">Confirmado há 9 dias</p>
+        <div class="rcard-foot">
+          <span class="rcard-hint">Reconfirmar para manter visível</span>
+          <div class="actions"><button class="mini" onclick="toast('…')">Confirmar</button></div>
+        </div>
+      </article>
+    </div>
+  </section>
+
+  <!-- ══════════════ STOCK ══════════════ -->
+  <section class="page" id="page-stock" hidden>
+    <div class="page-head">
+      <div>
+        <h1>Stock</h1>
+        <p class="sub"><b>128</b> de 300 medicamentos marcados «disponível» — visível no Localizador agora.</p>
+      </div>
+      <button class="btn btn-primary" onclick="toast('Formulário «Novo medicamento» abriria aqui')">+ Adicionar medicamento</button>
+    </div>
+
+    <div class="toolbar">
+      <label class="search">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="11" cy="11" r="7"/><path d="m21 21-4.3-4.3"/></svg>
+        <input type="search" placeholder="Pesquisar medicamento...">
+      </label>
+      <div class="chips">
+        <button class="chip active">Todos <span class="n">300</span></button>
+        <button class="chip">Disponível <span class="n">128</span></button>
+        <button class="chip">Não disponível <span class="n">172</span></button>
+        <button class="chip">Validade <span class="n">6</span></button>
+      </div>
+      <div class="sort">
+        <button class="active">Recentes</button><button>Nome</button><button>Qtd.</button><button>Preço</button><button>Validade</button>
+      </div>
+    </div>
+
+    <div class="table-wrap">
+      <table>
+        <thead><tr><th>Medicamento</th><th>Estado</th><th>Qtd.</th><th>Formas de venda</th><th>Validade</th><th>Confirmado</th></tr></thead>
+        <tbody>
+          <tr onclick="toast('Drawer de edição abriria aqui')">
+            <td class="name"><b>Paracetamol 500 mg</b><span>Comp. · Comprimido antipirético</span></td>
+            <td><span class="tag tag-ok">Disponível</span></td>
+            <td class="num">40</td>
+            <td><span class="tag tag-info">lâmina 100</span> <span class="tag tag-info">caixa 300</span></td>
+            <td>12/2027</td>
+            <td class="num">há 2h</td>
+          </tr>
+          <tr onclick="toast('Drawer de edição abriria aqui')">
+            <td class="name"><b>Amoxicilina 500 mg</b><span>Cáps. · Antibiótico</span></td>
+            <td><span class="tag tag-ok">Disponível</span></td>
+            <td class="num">12</td>
+            <td><span class="tag tag-info">caixa 850</span></td>
+            <td>03/2027</td>
+            <td class="num">há 1d</td>
+          </tr>
+          <tr onclick="toast('Drawer de edição abriria aqui')">
+            <td class="name"><b>Ibuprofeno 400 mg</b><span>Comp. · Anti-inflamatório</span></td>
+            <td><span class="tag tag-off">Sem stock</span></td>
+            <td class="num">0</td>
+            <td><span class="tag tag-info">lâmina 80</span></td>
+            <td>—</td>
+            <td class="num">há 3d</td>
+          </tr>
+          <tr onclick="toast('Drawer de edição abriria aqui')">
+            <td class="name"><b>Insulina glargina</b><span>Caneta · 100 UI/ml</span></td>
+            <td><span class="tag tag-amber">Chega 30 set</span></td>
+            <td class="num">—</td>
+            <td><span class="tag tag-info">caixa 4 500</span></td>
+            <td>08/2027</td>
+            <td class="num">há 5h</td>
+          </tr>
+        </tbody>
+      </table>
+    </div>
+    <p class="foot-note">Clique numa linha para editar quantidade, preço, validade, «disponível a partir de» e formas de venda (lâmina/caixa).</p>
+  </section>
+
+  <!-- ══════════════ RESERVAS ══════════════ -->
+  <section class="page" id="page-reservas" hidden>
+    <div class="page-head">
+      <div>
+        <h1>Reservas</h1>
+        <p class="sub"><b>3</b> por atender — responda em menos de 72 horas para não expirarem.</p>
+      </div>
+    </div>
+
+    <div class="toolbar">
+      <div class="chips">
+        <button class="chip active">Todas <span class="n">14</span></button>
+        <button class="chip">Pendentes <span class="n">3</span></button>
+        <button class="chip">A decorrer <span class="n">2</span></button>
+        <button class="chip">Resolvidas <span class="n">9</span></button>
+      </div>
+    </div>
+
+    <div class="grid">
+      <article class="rcard">
+        <div class="rcard-top">
+          <button class="rcard-name" onclick="toast('Drawer de detalhe abriria aqui')">Amoxicilina 500 mg</button>
+          <span class="tag tag-amber">Pendente</span>
+        </div>
+        <p class="rcard-meta">Cáps. · Ana Cardoso · 923 411 208</p>
+        <div class="tags">
+          <span class="tag">2 × caixa</span>
+          <span class="tag tag-price">≈ 1 700 Kz</span>
+          <span class="tag tag-amber">há 2h</span>
+        </div>
+        <p class="rcard-meta">«Para criança, se possível»</p>
+        <div class="rcard-foot">
+          <span class="rcard-hint">Responde em até 70 h</span>
+          <div class="actions">
+            <button class="mini" onclick="toast('Drawer de detalhe abriria aqui')">Detalhes</button>
+            <button class="mini ok" onclick="toast('Confirmação com quantidade abriria aqui')">Confirmar</button>
+            <button class="mini no" onclick="toast('Painel de motivos abriria aqui')">Recusar</button>
+          </div>
+        </div>
+      </article>
+
+      <article class="rcard">
+        <div class="rcard-top">
+          <button class="rcard-name" onclick="toast('Drawer de detalhe abriria aqui')">Insulina glargina</button>
+          <span class="tag tag-info">Confirmada</span>
+        </div>
+        <p class="rcard-meta">Caneta · Jorge Kiala · 924 118 776</p>
+        <div class="tags">
+          <span class="tag">1 × caixa</span>
+          <span class="tag tag-price">≈ 4 500 Kz</span>
+          <span class="tag">há 4h</span>
+        </div>
+        <div class="rcard-foot">
+          <span class="rcard-hint ok">✓ cliente avisado</span>
+          <div class="actions">
+            <button class="mini" onclick="toast('Drawer de detalhe abriria aqui')">Detalhes</button>
+            <button class="mini ok" onclick="toast('…')">Pronta</button>
+            <button class="btn btn-wa btn-sm" onclick="toast('Abriria wa.me com a mensagem pronta')">WhatsApp</button>
+          </div>
+        </div>
+      </article>
+
+      <article class="rcard">
+        <div class="rcard-top">
+          <button class="rcard-name" onclick="toast('Drawer de detalhe abriria aqui')">Salbutamol inalador</button>
+          <span class="tag tag-ok">Pronta</span>
+        </div>
+        <p class="rcard-meta">Inalador · Marta Domingos · 921 903 445</p>
+        <div class="tags">
+          <span class="tag">2 × unidade</span>
+          <span class="tag tag-price">≈ 3 000 Kz</span>
+          <span class="tag">há 1d</span>
+        </div>
+        <div class="rcard-foot">
+          <span class="rcard-hint ok">✓ cliente avisado</span>
+          <div class="actions">
+            <button class="mini" onclick="toast('Drawer de detalhe abriria aqui')">Detalhes</button>
+            <button class="mini ok" onclick="toast('…')">Concluída</button>
+            <button class="btn btn-wa btn-sm" onclick="toast('…')">WhatsApp</button>
+          </div>
+        </div>
+      </article>
+    </div>
+
+    <p class="foot-note">Cada transição prepara a mensagem de WhatsApp pronta — o atendente revê e envia do número da farmácia.</p>
+  </section>
+
+  <!-- ══════════════ VENDAS ══════════════ -->
+  <section class="page" id="page-vendas" hidden>
+    <div class="page-head">
+      <div>
+        <h1>Vendas</h1>
+        <p class="sub">Valor estimado por dia — reservas concluídas (levantadas no balcão).</p>
+      </div>
+    </div>
+
+    <div class="toolbar">
+      <div class="chips">
+        <button class="chip active">7 dias</button>
+        <button class="chip">30 dias</button>
+        <button class="chip">90 dias</button>
+      </div>
+    </div>
+
+    <div class="kpis" style="grid-template-columns:repeat(3,minmax(0,1fr))">
+      <div class="kpi"><div class="kpi-top"><span class="kpi-k">Total estimado</span><span class="kpi-ic ic-green"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><path d="M12 2v20M17 6H9.5a3.5 3.5 0 0 0 0 7h5a3.5 3.5 0 0 1 0 7H6"/></svg></span></div><span class="kpi-n">37 500 Kz</span><span class="kpi-delta delta-up">▲ 12% vs. anterior</span><span class="kpi-s">últimos 7 dias</span></div>
+      <div class="kpi"><div class="kpi-top"><span class="kpi-k">Reservas concluídas</span><span class="kpi-ic ic-teal"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><path d="M20 6 9 17l-5-5"/></svg></span></div><span class="kpi-n">12</span><span class="kpi-s">levantadas no balcão</span></div>
+      <div class="kpi"><div class="kpi-top"><span class="kpi-k">Melhor dia</span><span class="kpi-ic ic-amber"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><path d="M8 21h8M12 17v4"/><path d="M7 4h10v4a5 5 0 0 1-10 0V4z"/><path d="M7 6H4a2 2 0 0 0 2 4h1M17 6h3a2 2 0 0 1-2 4h-1"/></svg></span></div><span class="kpi-n">9 800 Kz</span><span class="kpi-s">sábado, 20 set</span></div>
+    </div>
+
+    <div class="card">
+      <div class="card-head"><h2>Vendas por dia</h2><span class="card-hint">Kz estimados</span></div>
+      <div class="chart">
+        <div class="bar-col"><div class="bar-wrap"><div class="bar zero"></div></div><span>17 qui</span></div>
+        <div class="bar-col"><div class="bar-wrap"><div class="bar" style="height:45%"></div></div><span>18 sex</span></div>
+        <div class="bar-col"><div class="bar-wrap"><div class="bar" style="height:30%"></div></div><span>19 sáb</span></div>
+        <div class="bar-col"><div class="bar-wrap"><div class="bar zero"></div></div><span>20 dom</span></div>
+        <div class="bar-col"><div class="bar-wrap"><div class="bar" style="height:60%"></div></div><span>21 seg</span></div>
+        <div class="bar-col"><div class="bar-wrap"><div class="bar" style="height:75%"></div></div><span>22 ter</span></div>
+        <div class="bar-col"><div class="bar-wrap"><div class="bar" style="height:100%"></div></div><span>23 qua</span></div>
+      </div>
+    </div>
+    <p class="foot-note">Valores estimados pelo preço das formas de venda — o final é o apurado no balcão.</p>
+  </section>
+
+  <!-- ══════════════ PERFIL ══════════════ -->
+  <section class="page" id="page-perfil" hidden>
+    <div class="page-head">
+      <div>
+        <h1>Perfil da farmácia</h1>
+        <p class="sub">Os dados abaixo são os que o cliente vê na página pública da farmácia no Localizador.</p>
+      </div>
+      <button class="btn btn-primary" onclick="toast('Perfil guardado — visível no Localizador imediatamente')">Guardar</button>
+    </div>
+
+    <div class="panel">
+      <div class="panel-head"><h2>Identificação</h2><span class="panel-hint">Nome e verificação são geridos pela equipa CF</span></div>
+      <div class="panel-body">
+        <div class="form-grid">
+          <div class="field"><label>Nome público</label><input class="input" value="Farmácia CF Central" disabled></div>
+          <div class="field"><label>Estado</label><input class="input" value="✓ Verificada · activa no Localizador" disabled></div>
+        </div>
+      </div>
+    </div>
+
+    <div class="panel">
+      <div class="panel-head"><h2>Contacto e localização</h2></div>
+      <div class="panel-body">
+        <div class="form-grid">
+          <div class="field"><label>Endereço</label><input class="input" value="Rua da Samba 145, Talatona"></div>
+          <div class="field"><label>Município</label><input class="input" value="Talatona, Luanda" disabled></div>
+          <div class="field"><label>Telefone</label><input class="input" value="+244 923 000 111"></div>
+          <div class="field"><label>WhatsApp</label><input class="input" value="+244 923 000 111"><span class="hint">Usado nos botões «falar com a farmácia»</span></div>
+          <div class="field" style="grid-column:1/-1"><label>Link do Google Maps</label><input class="input" value="https://maps.app.goo.gl/…"><span class="hint">Cole o link partilhado do sítio — aparece como botão na página pública</span></div>
+        </div>
+      </div>
+    </div>
+
+    <div class="panel">
+      <div class="panel-head"><h2>Horário de atendimento</h2></div>
+      <div class="panel-body">
+        <div class="field"><label>Horário</label><input class="input" value="Seg–Sex 08:00–18:00 · Sáb 08:00–13:00"><span class="hint">Texto livre — aparece no Localizador e alimenta a indicação «aberto agora»</span></div>
+      </div>
+    </div>
+  </section>
+
+  </div></main>
+</div>
+
+<div class="toast" id="toastEl"></div>
+
+<script>
+const PAGES = ['visao','atencao','stock','reservas','vendas','perfil']
+function go(id){
+  PAGES.forEach(p => { document.getElementById('page-'+p).hidden = p !== id })
+  document.querySelectorAll('.side-item').forEach(b => b.classList.toggle('active', b.dataset.page === id))
+  window.scrollTo({top:0})
+  document.getElementById('sidebar').classList.remove('open')
+}
+document.querySelectorAll('.side-item').forEach(b => b.addEventListener('click', () => go(b.dataset.page)))
+
+function toggleTheme(){
+  document.documentElement.classList.toggle('dark')
+}
+
+let toastTimer
+function toast(msg){
+  const el = document.getElementById('toastEl')
+  el.textContent = msg; el.classList.add('show')
+  clearTimeout(toastTimer)
+  toastTimer = setTimeout(() => el.classList.remove('show'), 2400)
+}
+
+const menuBtn = document.getElementById('menuBtn')
+if (matchMedia('(max-width:900px)').matches) {
+  menuBtn.style.display = ''
+  menuBtn.onclick = () => document.getElementById('sidebar').classList.toggle('open')
+}
+</script>
+</body>
+</html>

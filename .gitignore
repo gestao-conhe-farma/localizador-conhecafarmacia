@@ -40,3 +40,24 @@ credenciais.txt
 .env*
 
 .vercel
+
+# artefactos de trabalho da pasta _design (ecrãs, perfis de Chromium,
+# scripts de diagnóstico) — nunca versionar
+_design/**/_shots/
+_design/**/_diag*.mjs
+_design/**/_verify*.mjs
+_diag*.mjs
+_verify*.mjs
+erro.txt
+ideias.txt
+referencias/
+
+# ferramentas locais de agentes (não são código do projecto)
+.agents/
+.claude/
+skills-lock.json
+bklit skills.txt
+
+# gerados pelo Next/TypeScript
+next-env.d.ts
+*.tsbuildinfo

@@ -1,6 +1,7 @@
 import { redirect } from 'next/navigation'
 import PortalShell from '@/components/portal/PortalShell'
 import { getPharmacySessionVerbose } from '@/lib/pharmacy-session'
+import { getActiveStaff } from '@/lib/staff-session'
 
 // Sessão sempre fresca: nada disto pode ser estático.
 export const dynamic = 'force-dynamic'
@@ -25,8 +26,18 @@ export default async function PortalLayout({ children }) {
   }
   const { profile, pharmacy } = session
 
+  // 0018: sem perfil de farmacêutico activo não há portal — o dispositivo
+  // vai ao ecrã de escolha com PIN. Os registos ficam em nome do activo.
+  const staff = await getActiveStaff(session)
+  if (!staff) redirect('/portal/perfis')
+
   return (
-    <PortalShell pharmacy={pharmacy} userName={profile.display_name} userSub={profile.user_id}>
+    <PortalShell
+      pharmacy={pharmacy}
+      userName={profile.display_name}
+      userSub={profile.user_id}
+      staff={staff}
+    >
       {children}
     </PortalShell>
   )

@@ -18,6 +18,7 @@ import { setSaleOptions } from '@/lib/actions/pharmacy-portal'
 import { unitLabel } from '@/lib/sale-options'
 import { CloseIcon } from '@/components/ui/Icon'
 import StateLabel from '@/components/portal/StateLabel'
+import RestockDrawer from '@/components/portal/RestockDrawer'
 
 /**
  * Opções de venda (0012 — fracionamento). Defaults inteligentes pela
@@ -725,6 +726,9 @@ export default function StockPanel({ compact = false }) {
   const [toast, setToast] = useState('')
   // Item em edição no modal (null = fechado).
   const [editing, setEditing] = useState(null)
+  // «+ Nova entrada» — drawer rápido a partir do Stock (a página
+  // /portal/entrada com os deep-links fica intacta).
+  const [restockOpen, setRestockOpen] = useState(false)
   // Item pendente de confirmação de retirada (ConfirmRetire).
   const [confirming, setConfirming] = useState(null)
   // "Agora" vive em estado — Date.now() no render é impuro (react-hooks/
@@ -1096,10 +1100,23 @@ export default function StockPanel({ compact = false }) {
             “disponível” — visível no Localizador agora.
           </p>
         </div>
-        <button type="button" className="btn btn-primary" onClick={() => setEditing('new')}>
-          + Adicionar medicamento
-        </button>
+        <div className="portal-page-head-acts">
+          <button
+            type="button"
+            className="btn btn-secondary"
+            data-tour="nova-entrada"
+            onClick={() => setRestockOpen(true)}
+          >
+            + Nova entrada
+          </button>
+          <button type="button" className="btn btn-primary" onClick={() => setEditing('new')}>
+            + Adicionar medicamento
+          </button>
+        </div>
       </div>
+
+      {/* Drawer de entrada rápida — formulário fora da página. */}
+      <RestockDrawer open={restockOpen} onClose={() => setRestockOpen(false)} />
 
       {showStale && (
         <div className="portal-banner" role="status">

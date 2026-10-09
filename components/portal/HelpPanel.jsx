@@ -42,6 +42,41 @@ const TOPICS = [
     ),
   },
   {
+    id: 'perfil',
+    icon: 'perfil',
+    title: 'Quem está ao balcão (trocar perfil)',
+    body: (
+      <>
+        <p>
+          No canto superior direito da top-bar está o <b>perfil activo</b> — tudo o que registar
+          (vendas, reservas, entradas) fica em nome dele.
+        </p>
+        <ol className="help-ol">
+          <li>
+            Toca no <b>nome do perfil</b> (top-bar) ou no bloco com o nome no fundo da sidebar —
+            abre o mesmo menu directo.
+          </li>
+          <li>
+            <b>Trocar perfil</b> — abre os cartões da equipa: escolhe o teu cartão e escreve o{' '}
+            <b>PIN de 4 dígitos</b>. Só os perfis activos aparecem.
+          </li>
+          <li>
+            <b>Sessão e PIN</b> — o cartão de identidade do perfil em uso: início de sessão,
+            validade e a troca do PIN (actual + novo).
+          </li>
+          <li>
+            <b>Sair do perfil</b> — o dispositivo volta ao ecrã de escolha. A sessão da farmácia
+            mantém-se.
+          </li>
+        </ol>
+        <p className="help-tip">
+          PIN errado é apenas registado em log (para o gerente ver tentativas suspeitas) —{' '}
+          <b>não há bloqueio de conta</b>.
+        </p>
+      </>
+    ),
+  },
+  {
     id: 'reservas',
     icon: 'reservas',
     title: 'Atender reservas',
@@ -151,6 +186,12 @@ const TOPICS = [
           <li>O saldo actualiza na hora e o produto volta a aparecer no Localizador.</li>
         </ol>
         <p className="help-tip">
+          Atalho rápido: no próprio <b>Stock</b>, o botão <b>«+ Nova entrada»</b> abre um{' '}
+          <b>painel lateral</b> — pesquisa, quantidade, unidade, <b>Somar</b> — sem sair da página.
+          A página completa (com preços e estrutura da caixa) continua em Stock → seta →{' '}
+          <b>Entrada de stock</b>.
+        </p>
+        <p className="help-tip">
           No fundo da página fica a lista das <b>entradas desta sessão</b> — confere com a nota do
           fornecedor antes de fechar.
         </p>
@@ -250,7 +291,13 @@ const CHEATSHEET = [
   ['Cliente reservou', 'Reservas', 'Confirmar (com quantidade) → WhatsApp → Concluída'],
   ['Não temos o produto', 'Reservas', 'Recusar + motivo (com texto, o cliente lê)'],
   ['Produto esgotou', 'Atenção', '«Repor na entrada» quando chegar mercadoria'],
-  ['Chegou fornecedor', 'Stock → Entrada de stock', 'Escrever qtd + unidade → Somar'],
+  ['Chegou fornecedor', 'Stock → «+ Nova entrada»', 'Painel lateral: qtd + unidade → Somar'],
+  [
+    'Entrada completa (preços)',
+    'Stock → seta → Entrada de stock',
+    'Escrever qtd + unidade → Somar',
+  ],
+  ['Mudou de turno / outro colega', 'Menu do nome (top-bar)', 'Trocar perfil → cartão → PIN'],
   ['Mudou preço/validade/marca', 'Stock → nome do medicamento', 'Preencher no modal → Guardar'],
   [
     'Deixou de vender um produto',
@@ -381,13 +428,13 @@ export default function HelpPanel() {
       </div>
 
       {/* Rever o tour de boas-vindas — para quem fechou à pressa ou
-          quer voltar a ver os 3 passos com os destaques no ecrã. */}
+          quer voltar a ver os 5 passos com os destaques no ecrã. */}
       <div className="help-replay">
         <div>
           <b>Rever o tour de boas-vindas</b>
           <p>
-            Os 3 passos essenciais, com destaques sobre as páginas reais: reservas, atenção e
-            entrada de stock.
+            Os 5 passos essenciais, com destaques sobre as páginas reais: reservas, perfil do
+            balcão, atenção e entrada de stock (submenu + «Nova entrada»).
           </p>
           {tourMsg && <p className="help-replay-msg">{tourMsg}</p>}
         </div>

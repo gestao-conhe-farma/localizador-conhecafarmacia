@@ -141,6 +141,22 @@ const NAV_PATHS = {
       <path d="M10.3 21a2 2 0 0 0 3.4 0" />
     </>
   ),
+  // Desempenho (só gerente) — linha de tendência a subir.
+  desempenho: (
+    <>
+      <path d="M3 17l6-6 4 4 8-8" />
+      <path d="M15 7h6v6" />
+    </>
+  ),
+  // Equipa (só gerente) — dois perfis lado a lado.
+  equipa: (
+    <>
+      <circle cx="9" cy="8" r="3.5" />
+      <path d="M2.5 20c1-3.6 3.6-5.2 6.5-5.2s5.5 1.6 6.5 5.2" />
+      <path d="M16.5 5a3.5 3.5 0 0 1 0 6.6" />
+      <path d="M18 14.9c2 .8 3.3 2.4 3.7 5.1" />
+    </>
+  ),
 }
 
 const NAV_BASE = {

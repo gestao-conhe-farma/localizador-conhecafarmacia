@@ -358,7 +358,8 @@ export default function AttentionPanel({ pharmacyId }) {
             </span>
           </div>
           <span className="portal-st portal-st--bad" title="Saiu do Localizador">
-            <i />Saiu do Localizador
+            <i />
+            Saiu do Localizador
           </span>
           <span className="portal-atr-when">{timeAgo(it.when) || '—'}</span>
           <div className="portal-atr-actions">
@@ -467,7 +468,8 @@ export default function AttentionPanel({ pharmacyId }) {
           </span>
         </div>
         <span className="portal-st portal-st--mut">
-          <i />Desactualizado
+          <i />
+          Desactualizado
         </span>
         <span className="portal-atr-when">
           {it.confirmed_at ? `confirmado ${timeAgo(it.confirmed_at)}` : '—'}

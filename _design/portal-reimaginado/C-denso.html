@@ -1,0 +1,720 @@
+<!doctype html>
+<!-- ============================================================
+  Portal da Farmácia · Reimaginação — Variação C · DENSO
+  Assumptions (Junior pass):
+  - Identidade mantida: Fraunces (display) + verde #00493a/#0a844f;
+    sidebar invertida em verde profundo (mesma marca, outro valor).
+  - Padrão "tabela-herói" (ref. 3/7/11): tira de KPIs com divisórias,
+    tabelas densas 13px, chips de estado, acções em ···.
+  - Formulários só em drawer/modal. Dados são EXEMPLO.
+  - HTML único, sem dependências além do Google Fonts. Clicável.
+============================================================ -->
+<html lang="pt-PT">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Portal da Farmácia · Variação C — Denso</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Fraunces:opsz,wght@9..144,400;9..144,500;9..144,600&display=swap" rel="stylesheet">
+<style>
+:root{
+  --brand:#00493a; --deep:#012f26; --accent:#0a844f; --ink:#101613; --muted:#67726d;
+  --bg:#f5f6f4; --card:#ffffff; --line:#e5e7e3; --soft:#eef2ef;
+  --warn:#9a6b00; --warn-bg:#fbf3df; --danger:#a33a2c; --danger-bg:#f9e9e6;
+  --ok:#0a844f; --ok-bg:#e7f4ec;
+  --r:8px;
+  --serif:Fraunces,Georgia,serif;
+  --sans:system-ui,-apple-system,'Segoe UI',Roboto,sans-serif;
+}
+*{box-sizing:border-box}
+html,body{margin:0;padding:0}
+body{background:var(--bg);color:var(--ink);font:13px/1.45 var(--sans);-webkit-font-smoothing:antialiased}
+button{font:inherit;cursor:pointer}
+input,select{font:inherit}
+
+.app{display:grid;grid-template-columns:212px 1fr;min-height:100vh}
+
+/* ---------- Sidebar verde profundo ---------- */
+.side{background:linear-gradient(180deg,#013327 0%,#012419 100%);color:#d6e6dd;padding:18px 12px;display:flex;flex-direction:column;position:sticky;top:0;height:100vh}
+.logo{display:flex;align-items:center;gap:9px;padding:4px 8px 6px}
+.logo-mark{width:26px;height:26px;border-radius:7px;background:#fff;color:var(--brand);display:grid;place-items:center;font:700 14px var(--serif);flex:none}
+.logo-name{font:600 14.5px var(--serif);color:#fff}
+.logo-eyebrow{display:block;font-size:9px;letter-spacing:.16em;text-transform:uppercase;color:#7fae97;padding:2px 8px 16px}
+.nav-group{font-size:9.5px;font-weight:700;letter-spacing:.15em;text-transform:uppercase;color:#5f8f79;padding:14px 10px 5px}
+.nav-item{display:flex;align-items:center;gap:9px;width:100%;text-align:left;background:none;border:0;border-radius:7px;padding:7px 10px;color:#cfe0d7;font-size:13px}
+.nav-item .ic{width:14px;height:14px;flex:none;opacity:.6}
+.nav-item:hover{background:rgba(255,255,255,.07);color:#fff}
+.nav-item.on{background:rgba(255,255,255,.13);color:#fff;font-weight:600}
+.nav-item.on .ic{opacity:1;color:#7fe0b2}
+.nav-badge{margin-left:auto;background:#0a844f;color:#fff;font-size:10px;font-weight:700;border-radius:99px;padding:1px 7px}
+.side-foot{margin-top:auto;position:relative;padding-top:12px}
+.me{display:flex;align-items:center;gap:9px;width:100%;background:rgba(255,255,255,.08);border:1px solid rgba(255,255,255,.1);border-radius:8px;padding:8px 9px;text-align:left;color:#fff}
+.me-av{width:27px;height:27px;border-radius:50%;background:#7fe0b2;color:#012f26;display:grid;place-items:center;font:700 10.5px var(--serif);flex:none}
+.me-n{font-size:12.5px;font-weight:600;line-height:1.2}
+.me-r{font-size:11px;color:#9cc4b1}
+.prof-menu{position:absolute;bottom:calc(100% + 6px);left:0;right:0;background:#fff;border:1px solid var(--line);border-radius:9px;padding:5px;box-shadow:0 12px 30px rgba(16,22,19,.25);display:none;z-index:40}
+.prof-menu.open{display:block}
+.prof-menu button{display:block;width:100%;text-align:left;background:none;border:0;padding:8px 9px;border-radius:6px;font-size:12.5px;color:var(--ink)}
+.prof-menu button:hover{background:var(--soft)}
+.prof-menu .sep{height:1px;background:var(--line);margin:4px 3px}
+.prof-menu .out{color:var(--danger)}
+
+/* ---------- Topbar + tira de KPI global ---------- */
+.main{min-width:0;display:flex;flex-direction:column}
+.top{display:flex;align-items:center;gap:14px;padding:11px 24px;background:#fff;border-bottom:1px solid var(--line);position:sticky;top:0;z-index:30}
+.crumb{font-size:13.5px;font-weight:700}
+.crumb span{color:var(--muted);font-weight:400}
+.search{display:flex;align-items:center;gap:7px;background:var(--bg);border:1px solid var(--line);border-radius:7px;padding:6px 11px;width:240px;margin-left:14px}
+.search input{border:0;background:none;outline:none;font-size:12.5px;width:100%}
+.search input::placeholder{color:#9aa5a0}
+.varbadge{margin-left:auto;font-size:9.5px;font-weight:700;letter-spacing:.12em;text-transform:uppercase;color:var(--brand);background:var(--soft);border:1px solid var(--line);border-radius:99px;padding:4px 10px}
+.pill{display:flex;align-items:center;gap:7px;background:#fff;border:1px solid var(--line);border-radius:99px;padding:3px 11px 3px 3px;font-size:12px;font-weight:600}
+.pill .me-av{width:23px;height:23px;font-size:9px;background:var(--brand);color:#7fe0b2}
+
+/* ---------- Screens ---------- */
+.screens{padding:22px 24px 60px;max-width:1240px;width:100%;margin:0 auto}
+.screen{display:none;animation:in .25s ease}
+.screen.on{display:block}
+@keyframes in{from{opacity:0;transform:translateY(4px)}to{opacity:1;transform:none}}
+
+.pg-head{display:flex;align-items:center;justify-content:space-between;gap:16px;margin-bottom:14px}
+.pg-title{font:600 20px var(--serif);margin:0;letter-spacing:-.01em}
+.pg-sub{font-size:12.5px;color:var(--muted);margin:2px 0 0}
+
+/* Tira de KPIs com divisórias (strip) */
+.strip{display:grid;grid-template-columns:repeat(4,1fr);background:#fff;border:1px solid var(--line);border-radius:var(--r);margin-bottom:14px;overflow:hidden}
+.kpi{padding:13px 18px;border-right:1px solid var(--line);position:relative}
+.kpi:last-child{border-right:0}
+.kpi-l{font-size:9.5px;font-weight:700;letter-spacing:.13em;text-transform:uppercase;color:var(--muted)}
+.kpi-v{font:600 22px var(--serif);margin:4px 0 1px;font-variant-numeric:tabular-nums}
+.kpi-d{font-size:11px;color:var(--muted)}
+.kpi-d b{color:var(--ok)}
+.kpi-d b.down{color:var(--danger)}
+.kpi-spark{position:absolute;right:14px;top:14px;opacity:.7}
+
+/* Cartão tabela */
+.card{background:var(--card);border:1px solid var(--line);border-radius:var(--r);padding:16px 18px;margin-bottom:14px}
+.card-head{display:flex;align-items:center;justify-content:space-between;gap:12px;margin-bottom:12px;flex-wrap:wrap}
+.card-title{font-size:11px;font-weight:700;letter-spacing:.13em;text-transform:uppercase;color:var(--muted);margin:0}
+.grid{display:grid;gap:14px}
+.g-2{grid-template-columns:1.7fr 1fr}
+
+.tbl{width:100%;border-collapse:collapse;font-size:12.5px}
+.tbl th{font-size:9.5px;font-weight:700;letter-spacing:.12em;text-transform:uppercase;color:var(--muted);text-align:left;padding:0 10px 8px;border-bottom:1px solid var(--line);background:#fafbf9}
+.tbl th:first-child{border-radius:5px 0 0 0}
+.tbl th:last-child{border-radius:0 5px 0 0}
+.tbl td{padding:8px 10px;border-bottom:1px solid var(--line);vertical-align:middle;height:38px}
+.tbl tr:last-child td{border-bottom:0}
+.tbl .num{text-align:right;font-variant-numeric:tabular-nums}
+.tbl tbody tr:hover{background:#f7f9f7}
+.who{display:flex;align-items:center;gap:8px}
+.av{width:24px;height:24px;border-radius:50%;background:var(--soft);color:var(--brand);display:grid;place-items:center;font:700 9.5px var(--serif);flex:none;border:1px solid var(--line)}
+.who-n{font-weight:600;font-size:12.5px}
+.who-s{font-size:10.5px;color:var(--muted)}
+.dots-btn{border:1px solid var(--line);background:#fff;border-radius:6px;width:26px;height:24px;color:var(--muted);letter-spacing:1px;line-height:1;font-size:11px}
+.dots-btn:hover{background:var(--soft)}
+
+.chip{display:inline-flex;align-items:center;gap:5px;font-size:10.5px;font-weight:700;border-radius:99px;padding:2.5px 9px;background:var(--soft);color:var(--brand);white-space:nowrap}
+.chip::before{content:"";width:5px;height:5px;border-radius:50%;background:currentColor;opacity:.7}
+.chip.ok{background:var(--ok-bg);color:var(--ok)}
+.chip.warn{background:var(--warn-bg);color:var(--warn)}
+.chip.dgr{background:var(--danger-bg);color:var(--danger)}
+.chip.mute{background:#eff0ee;color:var(--muted)}
+.chip.sans-dot::before{display:none}
+
+.btn{display:inline-flex;align-items:center;gap:6px;border-radius:7px;padding:8px 14px;font-size:12.5px;font-weight:600;border:1px solid var(--line);background:#fff;color:var(--ink)}
+.btn:hover{border-color:#cfd4cf}
+.btn.primary{background:var(--brand);border-color:var(--brand);color:#fff}
+.btn.primary:hover{background:#013a2e}
+.btn.sm{padding:6px 11px;font-size:12px}
+.segs{display:flex;gap:5px;flex-wrap:wrap}
+.seg{border:1px solid var(--line);background:#fff;border-radius:99px;padding:5px 12px;font-size:11.5px;font-weight:600;color:var(--muted)}
+.seg.on{background:var(--brand);border-color:var(--brand);color:#fff}
+.link{background:none;border:0;color:var(--accent);font-size:12px;font-weight:600;padding:0}
+.link:hover{text-decoration:underline}
+.filter-input{border:1px solid var(--line);border-radius:7px;padding:6px 10px;font-size:12px;width:190px;outline:none;background:#fff}
+.filter-input:focus{border-color:var(--accent)}
+
+.mini{list-style:none;margin:0;padding:0}
+.mini li{display:flex;align-items:center;gap:10px;padding:8px 0;border-bottom:1px solid var(--line);font-size:12.5px}
+.mini li:last-child{border-bottom:0;padding-bottom:0}
+.mini .dot{width:6px;height:6px;border-radius:50%;background:var(--accent);flex:none}
+.mini .dot.w{background:#d9a13a}.mini .dot.d{background:#c25b4a}
+.mini .muted{color:var(--muted);font-size:11.5px}
+.mini .grow{flex:1;min-width:0}
+.mini .t{font-weight:600}
+.chart{width:100%;height:170px;display:block}
+.chart-legend{display:flex;gap:14px;font-size:11.5px;color:var(--muted);margin-top:6px}
+.chart-legend i{display:inline-block;width:9px;height:9px;border-radius:2px;background:var(--accent);margin-right:5px}
+
+/* Perfis */
+.staff-grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(180px,1fr));gap:10px;margin-bottom:16px}
+.staff-card{background:#fff;border:1px solid var(--line);border-radius:var(--r);padding:15px 12px;text-align:center;transition:.14s}
+.staff-card:hover{border-color:#c9d2cc}
+.staff-card.sel{border-color:var(--brand);box-shadow:0 0 0 3px rgba(0,73,58,.07)}
+.staff-card .av{width:40px;height:40px;font-size:13px;margin:0 auto 8px}
+.staff-card .n{font:600 14px var(--serif);margin:0 0 1px}
+.staff-card .r{font-size:11px;color:var(--muted);margin:0 0 8px}
+.pin-panel{background:#fff;border:1px solid var(--line);border-radius:var(--r);padding:20px;display:none;max-width:400px;margin:0 auto;text-align:center}
+.pin-panel.on{display:block;animation:in .25s ease}
+.pin-who{display:flex;align-items:center;gap:11px;text-align:left;border-bottom:1px solid var(--line);padding-bottom:12px;margin-bottom:14px}
+.pin-label{font-size:9.5px;font-weight:700;letter-spacing:.14em;text-transform:uppercase;color:var(--muted);margin-bottom:10px}
+.pin-dots{display:flex;justify-content:center;gap:11px;margin-bottom:15px}
+.pin-dots i{width:11px;height:11px;border-radius:50%;border:1.5px solid var(--brand);transition:.15s}
+.pin-dots i.f{background:var(--brand)}
+.keys{display:grid;grid-template-columns:repeat(3,1fr);gap:7px;max-width:235px;margin:0 auto 12px}
+.key{height:42px;border-radius:8px;border:1px solid var(--line);background:var(--bg);font:600 16px var(--serif);color:var(--ink)}
+.key:hover{background:#fff;border-color:#cfd4cf}
+.key.fn{background:none;font:700 9.5px var(--sans);letter-spacing:.07em;color:var(--muted)}
+
+/* Sessão */
+.sess-wrap{display:grid;grid-template-columns:1fr 1fr;gap:14px}
+.id-card{background:linear-gradient(155deg,#00493a,#012318);color:#e8f2ec;border-radius:var(--r);padding:22px}
+.id-card .eb{font-size:9.5px;font-weight:700;letter-spacing:.15em;text-transform:uppercase;color:#8fc4ae;margin:0 0 7px}
+.id-card h2{font:500 23px var(--serif);margin:0 0 2px}
+.id-card .role{color:#b7d6c8;font-size:12.5px;margin:0 0 16px}
+.id-meta{display:grid;grid-template-columns:1fr 1fr;gap:10px;border-top:1px solid rgba(255,255,255,.16);padding-top:13px}
+.id-meta div span{display:block;font-size:9px;font-weight:700;letter-spacing:.14em;text-transform:uppercase;color:#8fc4ae;margin-bottom:2px}
+.id-meta div b{font-weight:500;font-size:13px;font-family:var(--serif)}
+.short-list{display:flex;flex-direction:column;gap:9px}
+.short{display:flex;align-items:center;justify-content:space-between;gap:10px;background:#fff;border:1px solid var(--line);border-radius:var(--r);padding:12px 14px;text-align:left}
+.short:hover{border-color:#c9d2cc}
+.short b{display:block;font-size:13px;margin-bottom:1px}
+.short span{font-size:11.5px;color:var(--muted)}
+.short .arw{color:var(--accent);font-weight:700}
+
+/* Reveal + drawer */
+.reveal{display:none;background:#fff;border:1px solid var(--line);border-radius:var(--r);padding:16px;margin-bottom:12px}
+.reveal.on{display:block;animation:in .25s ease}
+.form-grid{display:grid;grid-template-columns:1fr 1fr;gap:13px}
+.field label{display:block;font-size:9.5px;font-weight:700;letter-spacing:.12em;text-transform:uppercase;color:var(--muted);margin-bottom:5px}
+.field input,.field select{width:100%;height:36px;border:1px solid var(--line);border-radius:7px;padding:0 11px;background:#fff;color:var(--ink);outline:none;font-size:13px}
+.field input:focus,.field select:focus{border-color:var(--accent)}
+.field.wide{grid-column:1/-1}
+.form-foot{display:flex;justify-content:flex-end;gap:8px;margin-top:14px}
+.hint{font-size:11.5px;color:var(--muted);background:var(--soft);border-radius:7px;padding:8px 11px;margin-top:11px}
+
+.scrim{position:fixed;inset:0;background:rgba(16,22,19,.4);opacity:0;pointer-events:none;transition:.2s;z-index:50}
+.scrim.on{opacity:1;pointer-events:auto}
+.drawer{position:fixed;top:0;right:0;bottom:0;width:410px;max-width:92vw;background:#fff;border-left:1px solid var(--line);z-index:60;transform:translateX(102%);transition:.28s cubic-bezier(.3,.9,.3,1);display:flex;flex-direction:column}
+.drawer.on{transform:none;box-shadow:-22px 0 55px rgba(16,22,19,.16)}
+.drawer-head{display:flex;align-items:center;justify-content:space-between;padding:18px 22px 14px;border-bottom:1px solid var(--line)}
+.drawer-head h3{font:600 17px var(--serif);margin:0}
+.x{border:1px solid var(--line);background:#fff;border-radius:6px;width:28px;height:28px;font-size:13px;color:var(--muted)}
+.x:hover{background:var(--soft)}
+.drawer-body{padding:20px 22px;overflow:auto;flex:1;display:flex;flex-direction:column;gap:14px}
+
+.toast{position:fixed;bottom:22px;left:50%;transform:translate(-50%,20px);background:var(--brand);color:#fff;font-size:13px;font-weight:600;padding:10px 20px;border-radius:99px;opacity:0;pointer-events:none;transition:.3s;z-index:80}
+.toast.on{opacity:1;transform:translate(-50%,0)}
+.foot-note{color:var(--muted);font-size:11px;margin-top:20px;border-top:1px dashed var(--line);padding-top:10px}
+.hide{display:none!important}
+
+@media(max-width:960px){
+  .app{grid-template-columns:1fr}
+  .side{display:none}
+  .strip{grid-template-columns:repeat(2,1fr)}
+  .g-2,.sess-wrap{grid-template-columns:1fr}
+}
+</style>
+</head>
+<body>
+<div class="app">
+
+<!-- ================= SIDEBAR ================= -->
+<aside class="side">
+  <div class="logo"><span class="logo-mark">C</span><span class="logo-name">Conheça Farmácia</span></div>
+  <span class="logo-eyebrow">Portal da farmácia</span>
+
+  <button class="nav-item on" data-go="dashboard"><svg class="ic" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="3" y="3" width="7" height="7"/><rect x="14" y="3" width="7" height="7"/><rect x="3" y="14" width="7" height="7"/><rect x="14" y="14" width="7" height="7"/></svg>Visão geral</button>
+  <button class="nav-item" data-go="vendas"><svg class="ic" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M3 3v18h18"/><path d="M7 14l4-4 3 3 5-6"/></svg>Vendas</button>
+  <button class="nav-item" data-go="stock"><svg class="ic" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M21 16V8l-9-5-9 5v8l9 5z"/><path d="M3.3 7L12 12l8.7-5"/></svg>Stock<span class="nav-badge">7</span></button>
+  <button class="nav-item" data-go="desempenho"><svg class="ic" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="9"/><path d="M12 7v5l3 3"/></svg>Desempenho</button>
+
+  <div class="nav-group">Gestão</div>
+  <button class="nav-item" data-go="equipa"><svg class="ic" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="9" cy="8" r="3.5"/><path d="M2.5 20c0-3.6 2.9-6 6.5-6s6.5 2.4 6.5 6"/><circle cx="17.5" cy="9" r="2.5"/><path d="M17.5 14c2.5 0 4 1.8 4 4.5"/></svg>Equipa</button>
+  <button class="nav-item" data-go="perfis"><svg class="ic" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="8" r="4"/><path d="M4 21c0-4 3.6-7 8-7s8 3 8 7"/></svg>Perfis</button>
+  <button class="nav-item" data-go="sessao"><svg class="ic" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="4" y="3" width="16" height="18" rx="2"/><circle cx="12" cy="10" r="2.5"/><path d="M8 17c.8-1.6 2.3-2.5 4-2.5s3.2.9 4 2.5"/></svg>Sessão</button>
+
+  <div class="side-foot">
+    <div class="prof-menu" id="profMenu">
+      <button data-go="perfis">Trocar perfil</button>
+      <button data-go="sessao">Sessão e PIN</button>
+      <div class="sep"></div>
+      <button class="out" data-toast="Sessão terminada (demonstração)">Sair</button>
+    </div>
+    <button class="me" id="meBtn">
+      <span class="me-av">BL</span>
+      <span><span class="me-n">Batista Lima</span><span class="me-r">Gerente</span></span>
+    </button>
+  </div>
+</aside>
+
+<!-- ================= MAIN ================= -->
+<div class="main">
+  <header class="top">
+    <span class="crumb" id="crumb">Visão geral</span>
+    <div class="search"><svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="#9aa5a0" stroke-width="2"><circle cx="11" cy="11" r="7"/><path d="M21 21l-4-4"/></svg><input placeholder="Pesquisar…"></div>
+    <span class="varbadge">Variação C · Denso</span>
+    <span class="pill"><span class="me-av">BL</span>Batista</span>
+  </header>
+
+  <div class="screens">
+
+  <!-- ============ DASHBOARD ============ -->
+  <section class="screen on" id="dashboard">
+    <div class="pg-head">
+      <div><h1 class="pg-title">Visão geral</h1><p class="pg-sub">Terça, 9 Dez · tarde · 2 em balcão</p></div>
+      <div class="segs">
+        <button class="seg on">Hoje</button>
+        <button class="seg" data-toast="Semana (demonstração)">Semana</button>
+        <button class="seg" data-toast="Mês (demonstração)">Mês</button>
+      </div>
+    </div>
+
+    <div class="strip">
+      <div class="kpi"><div class="kpi-l">Vendas hoje</div><div class="kpi-v">1 240 €</div><div class="kpi-d"><b>+12%</b> vs. ontem</div></div>
+      <div class="kpi"><div class="kpi-l">Reservas</div><div class="kpi-v">4</div><div class="kpi-d">por confirmar</div></div>
+      <div class="kpi"><div class="kpi-l">Stock baixo</div><div class="kpi-v">7</div><div class="kpi-d"><b class="down">2 críticos</b></div></div>
+      <div class="kpi"><div class="kpi-l">Perfis activos</div><div class="kpi-v">5</div><div class="kpi-d">2 em balcão agora</div></div>
+    </div>
+
+    <div class="grid g-2">
+      <div class="card">
+        <div class="card-head"><h3 class="card-title">Vendas da semana</h3><button class="link" data-go="vendas">Ver relatório →</button></div>
+        <div id="weekChart"></div>
+        <div class="chart-legend"><span><i></i>Receita por dia (€)</span></div>
+      </div>
+      <div class="card">
+        <div class="card-head"><h3 class="card-title">Requer atenção</h3></div>
+        <ul class="mini">
+          <li><span class="dot d"></span><span class="grow"><span class="t">Insulina Lantus</span><span class="muted"> — 2 un., crítico</span></span><button class="link" data-go="stock">Stock</button></li>
+          <li><span class="dot w"></span><span class="grow"><span class="t">Amoxicilina 500mg</span><span class="muted"> — 8 caixas</span></span><button class="link" data-go="stock">Stock</button></li>
+          <li><span class="dot w"></span><span class="grow"><span class="t">4 reservas</span><span class="muted"> — expiram hoje 19h</span></span><button class="link" data-toast="Reservas (demonstração)">Abrir</button></li>
+          <li><span class="dot"></span><span class="grow"><span class="t">PIN errado 2×</span><span class="muted"> — Balcão 2, ontem</span></span><button class="link" data-go="perfis">Perfis</button></li>
+        </ul>
+      </div>
+    </div>
+
+    <div class="card">
+      <div class="card-head"><h3 class="card-title">Últimas vendas</h3><button class="link" data-go="vendas">Ver todas →</button></div>
+      <table class="tbl">
+        <thead><tr><th>Hora</th><th>Artigo</th><th>Perfil</th><th>Estado</th><th class="num">Valor</th></tr></thead>
+        <tbody>
+          <tr><td>14:32</td><td>Paracetamol 500mg ×2</td><td><div class="who"><span class="av">AC</span><span class="who-n">Ana Costa</span></div></td><td><span class="chip ok">Concluída</span></td><td class="num">4,60 €</td></tr>
+          <tr><td>14:18</td><td>Reserva · Omeprazol 20mg</td><td><div class="who"><span class="av">MR</span><span class="who-n">Miguel Reis</span></div></td><td><span class="chip warn">Reserva</span></td><td class="num">7,20 €</td></tr>
+          <tr><td>13:55</td><td>Ibuprofeno 600mg + Soro</td><td><div class="who"><span class="av">SN</span><span class="who-n">Sofia Nunes</span></div></td><td><span class="chip ok">Concluída</span></td><td class="num">9,10 €</td></tr>
+        </tbody>
+      </table>
+    </div>
+    <p class="foot-note">Dados de exemplo · protótipo de design, sem ligação à base de dados.</p>
+  </section>
+
+  <!-- ============ VENDAS ============ -->
+  <section class="screen" id="vendas">
+    <div class="pg-head">
+      <div><h1 class="pg-title">Vendas</h1><p class="pg-sub">Histórico de transacções do balcão</p></div>
+      <div class="segs" id="saleSegs">
+        <button class="seg on" data-scope="all">Todas</button>
+        <button class="seg" data-scope="mine">As minhas</button>
+      </div>
+    </div>
+
+    <div class="strip">
+      <div class="kpi"><div class="kpi-l">Hoje</div><div class="kpi-v">1 240 €</div><div class="kpi-d"><b>+12%</b></div></div>
+      <div class="kpi"><div class="kpi-l">Este mês</div><div class="kpi-v">18 630 €</div><div class="kpi-d"><b>+4%</b></div></div>
+      <div class="kpi"><div class="kpi-l">Ticket médio</div><div class="kpi-v">11,40 €</div><div class="kpi-d">108 vendas</div></div>
+      <div class="kpi"><div class="kpi-l">Reservas activas</div><div class="kpi-v">4</div><div class="kpi-d">7 dias</div></div>
+    </div>
+
+    <div class="card">
+      <div class="card-head">
+        <h3 class="card-title">Transacções</h3>
+        <input class="filter-input" placeholder="Filtrar artigo ou perfil…">
+      </div>
+      <table class="tbl" id="salesTbl">
+        <thead><tr><th>Hora</th><th>Artigo</th><th>Perfil</th><th>Estado</th><th class="num">Valor</th><th></th></tr></thead>
+        <tbody>
+          <tr data-owner="ana"><td>14:32</td><td>Paracetamol 500mg ×2</td><td><div class="who"><span class="av">AC</span><span class="who-n">Ana Costa</span></div></td><td><span class="chip ok">Concluída</span></td><td class="num">4,60 €</td><td class="num"><button class="dots-btn" data-drawer="sale">···</button></td></tr>
+          <tr data-owner="miguel"><td>14:18</td><td>Reserva · Omeprazol 20mg</td><td><div class="who"><span class="av">MR</span><span class="who-n">Miguel Reis</span></div></td><td><span class="chip warn">Reserva</span></td><td class="num">7,20 €</td><td class="num"><button class="dots-btn" data-drawer="sale">···</button></td></tr>
+          <tr data-owner="batista"><td>13:55</td><td>Ibuprofeno 600mg + Soro Fisiológico</td><td><div class="who"><span class="av">BL</span><span class="who-n">Batista Lima</span></div></td><td><span class="chip ok">Concluída</span></td><td class="num">9,10 €</td><td class="num"><button class="dots-btn" data-drawer="sale">···</button></td></tr>
+          <tr data-owner="sofia"><td>13:41</td><td>Vitamina D3 2000UI</td><td><div class="who"><span class="av">SN</span><span class="who-n">Sofia Nunes</span></div></td><td><span class="chip ok">Concluída</span></td><td class="num">12,80 €</td><td class="num"><button class="dots-btn" data-drawer="sale">···</button></td></tr>
+          <tr data-owner="batista"><td>13:20</td><td>Amoxicilina 500mg ×1</td><td><div class="who"><span class="av">BL</span><span class="who-n">Batista Lima</span></div></td><td><span class="chip ok">Concluída</span></td><td class="num">6,35 €</td><td class="num"><button class="dots-btn" data-drawer="sale">···</button></td></tr>
+          <tr data-owner="ana"><td>12:58</td><td>Aspirina 100mg ×3</td><td><div class="who"><span class="av">AC</span><span class="who-n">Ana Costa</span></div></td><td><span class="chip dgr">Devolvida</span></td><td class="num">5,40 €</td><td class="num"><button class="dots-btn" data-drawer="sale">···</button></td></tr>
+          <tr data-owner="miguel"><td>12:30</td><td>Insulina Lantus (reserva)</td><td><div class="who"><span class="av">MR</span><span class="who-n">Miguel Reis</span></div></td><td><span class="chip warn">Reserva</span></td><td class="num">42,00 €</td><td class="num"><button class="dots-btn" data-drawer="sale">···</button></td></tr>
+          <tr data-owner="batista"><td>11:47</td><td>Dolomite Cálcio + D3</td><td><div class="who"><span class="av">BL</span><span class="who-n">Batista Lima</span></div></td><td><span class="chip ok">Concluída</span></td><td class="num">8,95 €</td><td class="num"><button class="dots-btn" data-drawer="sale">···</button></td></tr>
+        </tbody>
+      </table>
+    </div>
+    <p class="foot-note">Dados de exemplo · protótipo de design, sem ligação à base de dados.</p>
+  </section>
+
+  <!-- ============ STOCK ============ -->
+  <section class="screen" id="stock">
+    <div class="pg-head">
+      <div><h1 class="pg-title">Stock</h1><p class="pg-sub">412 referências activas</p></div>
+      <button class="btn primary sm" data-drawer="stock">+ Nova entrada</button>
+    </div>
+
+    <div class="strip">
+      <div class="kpi"><div class="kpi-l">Referências</div><div class="kpi-v">412</div><div class="kpi-d">activas</div></div>
+      <div class="kpi"><div class="kpi-l">Stock baixo</div><div class="kpi-v">7</div><div class="kpi-d"><b class="down">2 críticos</b></div></div>
+      <div class="kpi"><div class="kpi-l">Por chegar</div><div class="kpi-v">3</div><div class="kpi-d">encomendas</div></div>
+      <div class="kpi"><div class="kpi-l">Validade ≤ 30d</div><div class="kpi-v">11</div><div class="kpi-d">a verificar</div></div>
+    </div>
+
+    <div class="card">
+      <div class="card-head">
+        <div class="segs" id="stockSegs">
+          <button class="seg on" data-st="all">Todos</button>
+          <button class="seg" data-st="baixo">Baixos</button>
+          <button class="seg" data-st="esgotado">Críticos</button>
+        </div>
+        <input class="filter-input" placeholder="Filtrar produto ou lote…">
+      </div>
+      <table class="tbl" id="stockTbl">
+        <thead><tr><th>Produto</th><th>Lote</th><th>Validade</th><th class="num">Qtd.</th><th>Estado</th><th></th></tr></thead>
+        <tbody>
+          <tr data-st="ok"><td><span class="who-n">Paracetamol 500mg</span></td><td>PT-8841</td><td>08/2027</td><td class="num">124</td><td><span class="chip ok">OK</span></td><td class="num"><button class="dots-btn" data-drawer="edit">···</button></td></tr>
+          <tr data-st="baixo"><td><span class="who-n">Amoxicilina 500mg</span></td><td>PT-2210</td><td>03/2026</td><td class="num">8</td><td><span class="chip warn">Baixo</span></td><td class="num"><button class="dots-btn" data-drawer="edit">···</button></td></tr>
+          <tr data-st="esgotado"><td><span class="who-n">Insulina Lantus</span></td><td>PT-9017</td><td>11/2026</td><td class="num">2</td><td><span class="chip dgr">Crítico</span></td><td class="num"><button class="dots-btn" data-drawer="edit">···</button></td></tr>
+          <tr data-st="ok"><td><span class="who-n">Ibuprofeno 600mg</span></td><td>PT-7732</td><td>01/2028</td><td class="num">86</td><td><span class="chip ok">OK</span></td><td class="num"><button class="dots-btn" data-drawer="edit">···</button></td></tr>
+          <tr data-st="baixo"><td><span class="who-n">Omeprazol 20mg</span></td><td>PT-5518</td><td>05/2026</td><td class="num">14</td><td><span class="chip warn">Baixo</span></td><td class="num"><button class="dots-btn" data-drawer="edit">···</button></td></tr>
+          <tr data-st="ok"><td><span class="who-n">Soro Fisiológico 0,9%</span></td><td>PT-3341</td><td>09/2027</td><td class="num">210</td><td><span class="chip ok">OK</span></td><td class="num"><button class="dots-btn" data-drawer="edit">···</button></td></tr>
+          <tr data-st="ok"><td><span class="who-n">Vitamina D3 2000UI</span></td><td>PT-6604</td><td>02/2027</td><td class="num">57</td><td><span class="chip ok">OK</span></td><td class="num"><button class="dots-btn" data-drawer="edit">···</button></td></tr>
+          <tr data-st="baixo"><td><span class="who-n">Aspirina 100mg</span></td><td>PT-1129</td><td>12/2026</td><td class="num">9</td><td><span class="chip warn">Baixo</span></td><td class="num"><button class="dots-btn" data-drawer="edit">···</button></td></tr>
+        </tbody>
+      </table>
+    </div>
+    <p class="foot-note">Dados de exemplo · protótipo de design, sem ligação à base de dados.</p>
+  </section>
+
+  <!-- ============ DESEMPENHO ============ -->
+  <section class="screen" id="desempenho">
+    <div class="pg-head">
+      <div><h1 class="pg-title">Desempenho</h1><p class="pg-sub">Movimento e reservas por perfil</p></div>
+      <div class="segs">
+        <button class="seg on">7 dias</button>
+        <button class="seg" data-toast="30 dias (demonstração)">30 dias</button>
+        <button class="seg" data-toast="Trimestre (demonstração)">Trimestre</button>
+      </div>
+    </div>
+
+    <div class="strip">
+      <div class="kpi"><div class="kpi-l">Tratadas</div><div class="kpi-v">96</div><div class="kpi-d"><b>+18</b> semana</div></div>
+      <div class="kpi"><div class="kpi-l">Recusas</div><div class="kpi-v">7</div><div class="kpi-d">7% do total</div></div>
+      <div class="kpi"><div class="kpi-l">Expiradas</div><div class="kpi-v">12</div><div class="kpi-d"><b class="down">−3</b></div></div>
+      <div class="kpi"><div class="kpi-l">Tempo médio</div><div class="kpi-v">1m 48s</div><div class="kpi-d">por tratamento</div></div>
+    </div>
+
+    <div class="grid g-2">
+      <div class="card">
+        <div class="card-head"><h3 class="card-title">Reservas tratadas por perfil</h3></div>
+        <div id="staffBars"></div>
+      </div>
+      <div class="card">
+        <div class="card-head"><h3 class="card-title">Movimento por perfil</h3></div>
+        <div id="shareDonut" style="display:flex;gap:14px;align-items:center"></div>
+      </div>
+    </div>
+
+    <div class="card">
+      <div class="card-head"><h3 class="card-title">Movimento do balcão · 7 dias</h3></div>
+      <table class="tbl">
+        <thead><tr><th>Perfil</th><th class="num">Tratadas</th><th class="num">Recusas</th><th class="num">Expiradas</th><th class="num">Vendas</th></tr></thead>
+        <tbody>
+          <tr><td><div class="who"><span class="av">BL</span><span><span class="who-n">Batista Lima</span><span class="who-s">Gerente</span></span></div></td><td class="num">31</td><td class="num">2</td><td class="num">3</td><td class="num">44</td></tr>
+          <tr><td><div class="who"><span class="av">AC</span><span><span class="who-n">Ana Costa</span><span class="who-s">Balcão</span></span></div></td><td class="num">26</td><td class="num">1</td><td class="num">4</td><td class="num">37</td></tr>
+          <tr><td><div class="who"><span class="av">MR</span><span><span class="who-n">Miguel Reis</span><span class="who-s">Balcão</span></span></div></td><td class="num">22</td><td class="num">3</td><td class="num">2</td><td class="num">29</td></tr>
+          <tr><td><div class="who"><span class="av">SN</span><span><span class="who-n">Sofia Nunes</span><span class="who-s">Balcão</span></span></div></td><td class="num">17</td><td class="num">1</td><td class="num">3</td><td class="num">24</td></tr>
+        </tbody>
+      </table>
+    </div>
+    <p class="foot-note">Dados de exemplo · protótipo de design, sem ligação à base de dados.</p>
+  </section>
+
+  <!-- ============ EQUIPA ============ -->
+  <section class="screen" id="equipa">
+    <div class="pg-head">
+      <div><h1 class="pg-title">Equipa</h1><p class="pg-sub">5 perfis · 4 activos</p></div>
+      <button class="btn primary sm" id="newStaffBtn">+ Novo perfil</button>
+    </div>
+
+    <div class="reveal" id="staffForm">
+      <div class="form-grid">
+        <div class="field"><label>Nome</label><input placeholder="Nome completo"></div>
+        <div class="field"><label>Papel</label><select><option>Balcão</option><option>Gerente</option><option>Estagiário</option></select></div>
+        <div class="field"><label>PIN (4 dígitos)</label><input placeholder="••••" maxlength="4" inputmode="numeric"></div>
+        <div class="field"><label>Estado</label><select><option>Activo</option><option>Inactivo</option></select></div>
+      </div>
+      <div class="hint">PIN guardado com scrypt; erros ficam em log, sem bloqueio.</div>
+      <div class="form-foot">
+        <button class="btn sm" id="cancelStaff">Cancelar</button>
+        <button class="btn primary sm" data-toast="Perfil criado (demonstração)">Criar perfil</button>
+      </div>
+    </div>
+
+    <div class="card">
+      <div class="card-head">
+        <h3 class="card-title">Membros</h3>
+        <input class="filter-input" placeholder="Pesquisar membro…">
+      </div>
+      <table class="tbl">
+        <thead><tr><th>Membro</th><th>Papel</th><th>Última actividade</th><th>Estado</th><th></th></tr></thead>
+        <tbody>
+          <tr><td><div class="who"><span class="av">BL</span><span><span class="who-n">Batista Lima</span><span class="who-s">batista@conhecafarmacia.pt</span></span></div></td><td><span class="chip">Gerente</span></td><td>Agora mesmo</td><td><span class="chip ok">Activo</span></td><td class="num"><button class="dots-btn" data-drawer="staff">···</button></td></tr>
+          <tr><td><div class="who"><span class="av">AC</span><span><span class="who-n">Ana Costa</span><span class="who-s">ana@conhecafarmacia.pt</span></span></div></td><td><span class="chip mute sans-dot">Balcão</span></td><td>há 12 min</td><td><span class="chip ok">Activo</span></td><td class="num"><button class="dots-btn" data-drawer="staff">···</button></td></tr>
+          <tr><td><div class="who"><span class="av">MR</span><span><span class="who-n">Miguel Reis</span><span class="who-s">miguel@conhecafarmacia.pt</span></span></div></td><td><span class="chip mute sans-dot">Balcão</span></td><td>há 1 h</td><td><span class="chip ok">Activo</span></td><td class="num"><button class="dots-btn" data-drawer="staff">···</button></td></tr>
+          <tr><td><div class="who"><span class="av">SN</span><span><span class="who-n">Sofia Nunes</span><span class="who-s">sofia@conhecafarmacia.pt</span></span></div></td><td><span class="chip mute sans-dot">Balcão</span></td><td>ontem, 19:02</td><td><span class="chip ok">Activo</span></td><td class="num"><button class="dots-btn" data-drawer="staff">···</button></td></tr>
+          <tr><td><div class="who"><span class="av">RF</span><span><span class="who-n">Rui Farinha</span><span class="who-s">rui@conhecafarmacia.pt</span></span></div></td><td><span class="chip mute sans-dot">Estagiário</span></td><td>há 3 dias</td><td><span class="chip mute">Inactivo</span></td><td class="num"><button class="dots-btn" data-drawer="staff">···</button></td></tr>
+        </tbody>
+      </table>
+    </div>
+    <p class="foot-note">Dados de exemplo · protótipo de design, sem ligação à base de dados.</p>
+  </section>
+
+  <!-- ============ PERFIS ============ -->
+  <section class="screen" id="perfis">
+    <div class="pg-head">
+      <div><h1 class="pg-title">Escolher perfil</h1><p class="pg-sub">Acesso ao balcão com PIN · erros registados em log</p></div>
+      <button class="btn sm" data-go="equipa">Gerir equipa</button>
+    </div>
+
+    <div class="staff-grid" id="staffGrid">
+      <button class="staff-card" data-name="Batista Lima" data-role="Gerente" data-ini="BL"><span class="av">BL</span><p class="n">Batista Lima</p><p class="r">Gerente</p><span class="chip ok">Em uso</span></button>
+      <button class="staff-card" data-name="Ana Costa" data-role="Balcão" data-ini="AC"><span class="av">AC</span><p class="n">Ana Costa</p><p class="r">Balcão</p><span class="chip mute sans-dot">Activo</span></button>
+      <button class="staff-card" data-name="Miguel Reis" data-role="Balcão" data-ini="MR"><span class="av">MR</span><p class="n">Miguel Reis</p><p class="r">Balcão</p><span class="chip mute sans-dot">Activo</span></button>
+      <button class="staff-card" data-name="Sofia Nunes" data-role="Balcão" data-ini="SN"><span class="av">SN</span><p class="n">Sofia Nunes</p><p class="r">Balcão</p><span class="chip mute sans-dot">Activo</span></button>
+      <button class="staff-card" data-name="Rui Farinha" data-role="Estagiário" data-ini="RF"><span class="av">RF</span><p class="n">Rui Farinha</p><p class="r">Estagiário</p><span class="chip mute">Inactivo</span></button>
+    </div>
+
+    <div class="pin-panel" id="pinPanel">
+      <div class="pin-who">
+        <span class="av" id="pinAv">AC</span>
+        <span><span class="who-n" id="pinName" style="font-size:14.5px">Ana Costa</span><br><span class="who-s" id="pinRole">Balcão</span></span>
+        <button class="x" id="pinClose" style="margin-left:auto">✕</button>
+      </div>
+      <div class="pin-label">Introduza o PIN</div>
+      <div class="pin-dots" id="pinDots"><i></i><i></i><i></i><i></i></div>
+      <div class="keys" id="keys">
+        <button class="key">1</button><button class="key">2</button><button class="key">3</button>
+        <button class="key">4</button><button class="key">5</button><button class="key">6</button>
+        <button class="key">7</button><button class="key">8</button><button class="key">9</button>
+        <button class="key fn" data-k="clear">Limpar</button><button class="key">0</button><button class="key fn" data-k="del">Apagar</button>
+      </div>
+      <button class="btn primary" style="width:100%;justify-content:center" id="pinEnter">Entrar</button>
+      <div class="hint">PIN errado é registado em log, sem bloqueio.</div>
+    </div>
+    <p class="foot-note">Dados de exemplo · protótipo de design, sem ligação à base de dados.</p>
+  </section>
+
+  <!-- ============ SESSÃO ============ -->
+  <section class="screen" id="sessao">
+    <div class="pg-head">
+      <div><h1 class="pg-title">Sessão</h1><p class="pg-sub">Perfil activo e segurança</p></div>
+    </div>
+
+    <div class="sess-wrap">
+      <div class="id-card">
+        <p class="eb">Perfil activo</p>
+        <h2>Batista Lima</h2>
+        <p class="role">Gerente · acesso total</p>
+        <div class="id-meta">
+          <div><span>Início</span><b>Hoje, 08:47</b></div>
+          <div><span>Expira em</span><b>23 h 12 min</b></div>
+          <div><span>PIN alterado</span><b>14 Nov 2025</b></div>
+          <div><span>Último erro</span><b>Nenhum</b></div>
+        </div>
+      </div>
+      <div class="short-list">
+        <button class="short" data-go="perfis"><span><b>Trocar perfil</b><span>Escolher outro membro</span></span><span class="arw">→</span></button>
+        <button class="short" data-drawer="pin"><span><b>Alterar PIN</b><span>Pedido com PIN actual</span></span><span class="arw">→</span></button>
+        <button class="short" data-toast="Sessão terminada (demonstração)"><span><b>Sair</b><span>Terminar sessão</span></span><span class="arw">→</span></button>
+      </div>
+    </div>
+    <p class="foot-note">Dados de exemplo · protótipo de design, sem ligação à base de dados.</p>
+  </section>
+
+  </div><!-- /screens -->
+</div><!-- /main -->
+</div><!-- /app -->
+
+<!-- Drawer -->
+<div class="scrim" id="scrim"></div>
+<aside class="drawer" id="drawer" role="dialog" aria-hidden="true">
+  <div class="drawer-head"><h3 id="drTitle">Nova entrada</h3><button class="x" id="drClose">✕</button></div>
+  <div class="drawer-body" id="drBody"></div>
+</aside>
+
+<div class="toast" id="toast"></div>
+
+<script>
+/* ============ helpers ============ */
+const $=s=>document.querySelector(s), $$=s=>[...document.querySelectorAll(s)];
+
+/* ============ navegação ============ */
+const CRUMB={dashboard:'Visão geral',vendas:'Vendas',stock:'Stock',desempenho:'Desempenho',equipa:'Equipa',perfis:'Perfis',sessao:'Sessão'};
+function go(id){
+  $$('.screen').forEach(s=>s.classList.toggle('on',s.id===id));
+  $$('.nav-item').forEach(n=>n.classList.toggle('on',n.dataset.go===id));
+  $('#crumb').innerHTML=CRUMB[id]||id;
+  $('#profMenu').classList.remove('open');
+  window.scrollTo(0,0);
+}
+document.addEventListener('click',e=>{
+  const g=e.target.closest('[data-go]'); if(g){go(g.dataset.go);return;}
+  const t=e.target.closest('[data-toast]'); if(t){toast(t.dataset.toast);}
+});
+
+/* ============ toast ============ */
+let tTimer;
+function toast(msg){const el=$('#toast');el.textContent=msg;el.classList.add('on');clearTimeout(tTimer);tTimer=setTimeout(()=>el.classList.remove('on'),2400);}
+
+/* ============ menu do perfil ============ */
+$('#meBtn').addEventListener('click',e=>{e.stopPropagation();$('#profMenu').classList.toggle('open');});
+document.addEventListener('click',e=>{if(!e.target.closest('.side-foot'))$('#profMenu').classList.remove('open');});
+
+/* ============ filtros ============ */
+$('#saleSegs').addEventListener('click',e=>{
+  const b=e.target.closest('.seg'); if(!b)return;
+  $$('#saleSegs .seg').forEach(s=>s.classList.toggle('on',s===b));
+  const mine=b.dataset.scope==='mine';
+  $$('#salesTbl tbody tr').forEach(r=>r.classList.toggle('hide',mine&&r.dataset.owner!=='batista'));
+});
+$('#stockSegs').addEventListener('click',e=>{
+  const b=e.target.closest('.seg'); if(!b)return;
+  $$('#stockSegs .seg').forEach(s=>s.classList.toggle('on',s===b));
+  const st=b.dataset.st;
+  $$('#stockTbl tbody tr').forEach(r=>r.classList.toggle('hide',st!=='all'&&r.dataset.st!==st));
+});
+
+/* ============ reveal (Equipa) ============ */
+$('#newStaffBtn').addEventListener('click',()=>{const f=$('#staffForm');f.classList.toggle('on');if(f.classList.contains('on'))f.querySelector('input').focus();});
+$('#cancelStaff').addEventListener('click',()=>$('#staffForm').classList.remove('on'));
+
+/* ============ drawer ============ */
+const FORMS={
+  stock:{title:'Nova entrada de stock',body:`
+    <div class="field"><label>Produto</label><input placeholder="Pesquisar por nome ou princípio activo"></div>
+    <div class="form-grid">
+      <div class="field"><label>Lote</label><input placeholder="PT-0000"></div>
+      <div class="field"><label>Validade</label><input placeholder="MM/AAAA"></div>
+      <div class="field"><label>Quantidade</label><input placeholder="0" inputmode="numeric"></div>
+      <div class="field"><label>Local</label><select><option>Prateleira A</option><option>Frigorífico</option><option>Armazém</option></select></div>
+    </div>
+    <div class="hint">Entrada registada no histórico com data, hora e perfil activo.</div>
+    <div class="form-foot"><button class="btn sm" data-close>Cancelar</button><button class="btn primary sm" data-submit>Registar entrada</button></div>`},
+  edit:{title:'Editar produto',body:`
+    <div class="field"><label>Produto</label><input value="Amoxicilina 500mg"></div>
+    <div class="form-grid">
+      <div class="field"><label>Lote</label><input value="PT-2210"></div>
+      <div class="field"><label>Validade</label><input value="03/2026"></div>
+      <div class="field"><label>Quantidade</label><input value="8" inputmode="numeric"></div>
+      <div class="field"><label>Estado</label><select><option>Baixo</option><option>OK</option><option>Crítico</option></select></div>
+    </div>
+    <div class="hint">Alterações ficam registadas no log com o perfil que as fez.</div>
+    <div class="form-foot"><button class="btn sm" data-close>Cancelar</button><button class="btn primary sm" data-submit>Guardar</button></div>`},
+  staff:{title:'Editar perfil',body:`
+    <div class="field"><label>Nome</label><input value="Ana Costa"></div>
+    <div class="form-grid">
+      <div class="field"><label>Papel</label><select><option>Balcão</option><option>Gerente</option><option>Estagiário</option></select></div>
+      <div class="field"><label>Estado</label><select><option>Activo</option><option>Inactivo</option></select></div>
+      <div class="field wide"><label>Novo PIN (vazio = manter)</label><input placeholder="••••" maxlength="4" inputmode="numeric"></div>
+    </div>
+    <div class="hint">Erros de PIN ficam em log (logWarn), sem bloqueio.</div>
+    <div class="form-foot"><button class="btn sm" data-close>Cancelar</button><button class="btn primary sm" data-submit>Guardar</button></div>`},
+  sale:{title:'Venda · opções',body:`
+    <div class="field"><label>Estado</label><select><option>Concluída</option><option>Reserva</option><option>Devolvida</option></select></div>
+    <div class="field"><label>Nota</label><input placeholder="Opcional"></div>
+    <div class="form-foot"><button class="btn sm" data-close>Cancelar</button><button class="btn primary sm" data-submit>Guardar</button></div>`},
+  pin:{title:'Alterar PIN',body:`
+    <div class="field"><label>PIN actual</label><input placeholder="••••" maxlength="4" inputmode="numeric"></div>
+    <div class="field"><label>Novo PIN</label><input placeholder="••••" maxlength="4" inputmode="numeric"></div>
+    <div class="field"><label>Repetir novo PIN</label><input placeholder="••••" maxlength="4" inputmode="numeric"></div>
+    <div class="hint">Erros de validação são registados em log, sem bloqueio.</div>
+    <div class="form-foot"><button class="btn sm" data-close>Cancelar</button><button class="btn primary sm" data-submit>Alterar PIN</button></div>`}
+};
+function openDrawer(k){
+  const f=FORMS[k]; if(!f)return;
+  $('#drTitle').textContent=f.title;
+  $('#drBody').innerHTML=f.body;
+  $('#drawer').classList.add('on'); $('#scrim').classList.add('on');
+}
+function closeDrawer(){$('#drawer').classList.remove('on');$('#scrim').classList.remove('on');}
+document.addEventListener('click',e=>{
+  const o=e.target.closest('[data-drawer]'); if(o){openDrawer(o.dataset.drawer);return;}
+  if(e.target.closest('[data-close]')||e.target.closest('#drClose')||e.target.id==='scrim')closeDrawer();
+  if(e.target.closest('[data-submit]')){closeDrawer();toast('Guardado (demonstração)');}
+});
+document.addEventListener('keydown',e=>{if(e.key==='Escape')closeDrawer();});
+
+/* ============ PIN ============ */
+let pinLen=0;
+const dots=()=>$$('#pinDots i').forEach((d,i)=>d.classList.toggle('f',i<pinLen));
+$('#staffGrid').addEventListener('click',e=>{
+  const c=e.target.closest('.staff-card'); if(!c)return;
+  $$('.staff-card').forEach(x=>x.classList.toggle('sel',x===c));
+  $('#pinName').textContent=c.dataset.name;
+  $('#pinRole').textContent=c.dataset.role;
+  $('#pinAv').textContent=c.dataset.ini;
+  $('#pinPanel').classList.add('on');
+  pinLen=0;dots();
+  $('#pinPanel').scrollIntoView({behavior:'smooth',block:'center'});
+});
+$('#pinClose').addEventListener('click',()=>{$('#pinPanel').classList.remove('on');$$('.staff-card').forEach(x=>x.classList.remove('sel'));});
+$('#keys').addEventListener('click',e=>{
+  const k=e.target.closest('.key'); if(!k)return;
+  if(k.dataset.k==='clear')pinLen=0;
+  else if(k.dataset.k==='del')pinLen=Math.max(0,pinLen-1);
+  else if(pinLen<4)pinLen++;
+  dots();
+});
+$('#pinEnter').addEventListener('click',()=>{
+  if(pinLen<4){toast('Introduza 4 dígitos');return;}
+  toast('A abrir perfil… (demonstração)');
+});
+
+/* ============ gráficos ============ */
+function barChart(el,vals,labels,h=170){
+  const max=Math.max(...vals)*1.15,W=100;
+  let s=`<svg class="chart" viewBox="0 0 ${W} ${h}" preserveAspectRatio="none">`;
+  const bw=W/vals.length*0.5,gap=W/vals.length;
+  vals.forEach((v,i)=>{
+    const bh=(v/max)*(h-26), x=i*gap+(gap-bw)/2, y=h-18-bh;
+    s+=`<rect x="${x}" y="${y}" width="${bw}" height="${bh}" rx="1.2" fill="${i===4?'#00493a':'#0a844f'}" opacity="${i===4?1:.7}"/>`;
+    s+=`<text x="${x+bw/2}" y="${h-5}" font-size="6.5" fill="#67726d" text-anchor="middle" font-family="system-ui">${labels[i]}</text>`;
+  });
+  s+='</svg>';
+  el.innerHTML=s;
+}
+barChart($('#weekChart'),[820,640,1180,960,1420,1310,430],['Seg','Ter','Qua','Qui','Sex','Sáb','Dom']);
+
+function hBars(el,rows){
+  const max=Math.max(...rows.map(r=>r.v));
+  el.innerHTML=rows.map(r=>`
+    <div style="margin-bottom:11px">
+      <div style="display:flex;justify-content:space-between;font-size:12px;margin-bottom:4px">
+        <span style="font-weight:600">${r.n}</span><span style="color:#67726d;font-variant-numeric:tabular-nums">${r.v}</span>
+      </div>
+      <div style="height:7px;background:#eef2ef;border-radius:99px;overflow:hidden">
+        <div style="height:100%;width:${r.v/max*100}%;background:${r.hi?'#00493a':'#0a844f'};border-radius:99px"></div>
+      </div>
+    </div>`).join('');
+}
+hBars($('#staffBars'),[{n:'Batista Lima',v:31,hi:1},{n:'Ana Costa',v:26},{n:'Miguel Reis',v:22},{n:'Sofia Nunes',v:17}]);
+
+function donut(el,parts){
+  const total=parts.reduce((a,p)=>a+p.v,0);let acc=0;const R=54,C=2*Math.PI*R;
+  const circles=parts.map(p=>{
+    const frac=p.v/total,off=acc;acc+=frac;
+    return `<circle r="${R}" cx="70" cy="70" fill="none" stroke="${p.c}" stroke-width="20" stroke-dasharray="${frac*C} ${C}" stroke-dashoffset="${-off*C}" transform="rotate(-90 70 70)"/>`;
+  }).join('');
+  el.innerHTML=`<svg width="140" height="140" viewBox="0 0 140 140">${circles}
+    <text x="70" y="66" text-anchor="middle" font-size="20" font-family="Fraunces,serif" fill="#101613">108</text>
+    <text x="70" y="84" text-anchor="middle" font-size="9" fill="#67726d" font-family="system-ui">vendas hoje</text></svg>
+    <ul class="mini" style="flex:1">${parts.map(p=>`<li><span class="dot" style="background:${p.c}"></span><span class="grow">${p.n}</span><b style="font-variant-numeric:tabular-nums">${Math.round(p.v/total*100)}%</b></li>`).join('')}</ul>`;
+}
+donut($('#shareDonut'),[{n:'Ana Costa',v:34,c:'#00493a'},{n:'Miguel Reis',v:28,c:'#0a844f'},{n:'Sofia Nunes',v:22,c:'#57b189'},{n:'Batista Lima',v:16,c:'#b9dccb'}]);
+</script>
+</body>
+</html>

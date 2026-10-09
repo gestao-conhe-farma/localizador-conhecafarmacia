@@ -1,5 +1,7 @@
 @import 'tailwindcss';
 
+@custom-variant dark (&:is(.dark *));
+
 @theme {
   /* Core Brand Colors — idênticos ao site principal (conhecafarmacia.com) */
   --color-brand-primary: #00493a;
@@ -2133,30 +2135,42 @@ html.dark .form-note {
     display: flex;
     align-items: flex-start;
     gap: 0.5rem;
-    padding: 1.375rem 0.75rem 1.125rem;
+    /* Bloco mais curto: o eyebrow ficou na linha do logo, por isso a
+       navegação sobe (era 1.375rem de topo + 1.125rem de base). */
+    padding: 0.875rem 0.75rem 0.75rem;
   }
 
   .portal-side-brand-main {
     min-width: 0;
     flex: 1;
+    /* Logo e eyebrow lado a lado, centrados na mesma linha. */
+    display: flex;
+    align-items: center;
+    gap: 0.625rem;
+    min-width: 0;
   }
 
   .portal-side-logo-link {
     display: block;
     width: fit-content;
+    flex-shrink: 0;
   }
 
   .portal-side-logo-link img {
     display: block;
+    /* Encolhe para o eyebrow caber ao lado, na largura da sidebar. */
+    width: 7.25rem;
     height: auto;
   }
 
   .portal-side-eyebrow {
-    margin-top: 0.625rem;
-    font-size: 0.625rem;
+    /* Lado do logo: pode quebrar em duas linhas na sidebar estreita. */
+    margin-top: 0;
+    font-size: 0.5625rem;
+    line-height: 1.25;
     font-weight: 700;
     text-transform: uppercase;
-    letter-spacing: 0.22em;
+    letter-spacing: 0.16em;
     color: rgb(255 255 255 / 0.45);
   }
 
@@ -2196,6 +2210,95 @@ html.dark .form-note {
     display: flex;
     align-items: center;
     gap: 0.875rem;
+  }
+
+  /* Perfil activo do balcão na top-bar (0018) — avatar + nome + papel;
+     o clique leva a /portal/sessao (trocar perfil, sair, PIN). */
+  /* Pill do perfil na top-bar — hoje é um BOTÃO que abre o menu
+     directo (trocar/sair/sessão); /sessão só daí, nunca directo. */
+  .portal-topbar-staff {
+    display: inline-flex;
+    align-items: center;
+    gap: 0.5rem;
+    padding: 0.25rem 0.625rem 0.25rem 0.25rem;
+    border: 1px solid var(--color-brand-divider);
+    border-radius: 999px;
+    text-decoration: none;
+    color: var(--color-brand-deep);
+    transition: background 0.15s ease;
+    max-width: 14rem;
+    background: transparent;
+    font: inherit;
+    cursor: pointer;
+    text-align: left;
+  }
+
+  /* Wrapper relativo para o menu abrir por baixo da pill. */
+  .portal-topbar-staff-wrap {
+    position: relative;
+  }
+
+  /* O mesmo menu do rodapé, ancorado à direita da pill da top-bar. */
+  .portal-foot-menu--top {
+    bottom: auto;
+    top: calc(100% + 0.375rem);
+    left: auto;
+    right: 0;
+    min-width: 12rem;
+  }
+
+  .portal-topbar-staff:hover {
+    background: var(--color-brand-bg-alt);
+  }
+
+  .portal-topbar-staff-av {
+    width: 1.75rem;
+    height: 1.75rem;
+    border-radius: 50%;
+    background: rgb(10 132 79 / 0.1);
+    color: var(--color-brand-primary);
+    font-size: 0.625rem;
+    font-weight: 700;
+    display: grid;
+    place-items: center;
+    flex-shrink: 0;
+  }
+
+  html.dark .portal-topbar-staff-av {
+    color: #7fd4ab;
+  }
+
+  .portal-topbar-staff-meta {
+    display: flex;
+    flex-direction: column;
+    line-height: 1.15;
+    min-width: 0;
+  }
+
+  .portal-topbar-staff-meta b {
+    font-size: 0.75rem;
+    font-weight: 600;
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+  }
+
+  .portal-topbar-staff-meta span {
+    font-size: 0.625rem;
+    color: var(--ink-45v);
+    text-transform: uppercase;
+    letter-spacing: 0.06em;
+  }
+
+  @media (max-width: 64rem) {
+    .portal-topbar-staff-meta {
+      display: none;
+    }
+
+    .portal-topbar-staff {
+      padding: 0.25rem;
+      border: 0;
+    }
   }
 
   .portal-ext {
@@ -3840,18 +3943,25 @@ html.dark .form-note {
 
   /* ── Ajuda do portal — acordeão por tema + resumo de 30 segundos. ── */
   .help-list {
-    @apply flex flex-col gap-2;
+    @apply flex flex-col;
   }
 
+  /* Sem caixas na secção «Guias»: cada tema é uma linha separada só
+     por uma hairline por baixo — o mesmo desenho da tabela do
+     «Resumo de 30 segundos» (pedido do utilizador). */
   .help-item {
-    @apply rounded-lg border;
-    background: var(--color-brand-card);
-    border-color: var(--color-brand-line);
-    transition: border-color 0.2s ease;
+    border: 0;
+    border-bottom: 1px solid var(--color-brand-divider);
+    border-radius: 0;
+    background: transparent;
   }
 
-  .help-item--open {
-    border-color: color-mix(in srgb, var(--color-brand-accent) 45%, var(--color-brand-line));
+  .help-item:last-child {
+    border-bottom: 0;
+  }
+
+  .help-item--open .help-item-title {
+    color: var(--color-brand-accent);
   }
 
   .help-item-head {
@@ -3874,11 +3984,16 @@ html.dark .form-note {
     @apply font-semibold text-sm;
   }
 
-  /* Badge do tema → pill neutra v2 (sem chip âmbar preenchido). */
+  /* Badge do tema → chip redondo com tint verde (novo modelo). */
   .help-item-badge {
-    @apply text-[10px] font-bold uppercase tracking-wide px-2 py-0.5 rounded-full;
-    background: var(--color-brand-bg-alt);
-    color: var(--ink-60v);
+    @apply text-[10px] font-bold uppercase tracking-wide px-2.5 py-0.5 rounded-full;
+    background: rgb(10 132 79 / 0.1);
+    color: var(--color-brand-deep);
+  }
+
+  html.dark .help-item-badge {
+    background: rgb(10 132 79 / 0.22);
+    color: #baf0d5;
   }
 
   .help-item-chevron {
@@ -3899,7 +4014,7 @@ html.dark .form-note {
   /* Cartão «Rever tour» — chamada de acção leve no fundo da Ajuda. */
   /* Rever tour → superfície v2: hairline neutra, sem tint verde. */
   .help-replay {
-    @apply flex items-center justify-between gap-4 rounded-xl border p-4;
+    @apply flex items-center justify-between gap-4 rounded-2xl border p-4;
     background: var(--color-brand-card);
     border-color: var(--color-brand-divider);
     box-shadow:
@@ -3968,7 +4083,7 @@ html.dark .form-note {
   }
 
   .help-cheatsheet {
-    @apply mt-8 p-5 rounded-lg border;
+    @apply mt-8 p-5 rounded-2xl border;
     background: var(--color-brand-card);
     border-color: var(--color-brand-divider);
     box-shadow:
@@ -3981,13 +4096,13 @@ html.dark .form-note {
   }
 
   .help-table th {
-    @apply text-left text-[10px] font-bold uppercase tracking-wide py-2 px-2;
+    @apply text-left text-[10px] font-bold uppercase tracking-[0.1em] py-2.5 px-2;
     color: color-mix(in srgb, var(--color-brand-deep) 50%, transparent);
     border-bottom: 1px solid var(--color-brand-divider);
   }
 
   .help-table td {
-    @apply py-2.5 px-2 align-top;
+    @apply py-4 px-2 align-top;
     border-bottom: 1px solid var(--color-brand-divider);
   }
 
@@ -6042,7 +6157,8 @@ html.dark .form-note {
     display: grid;
     align-items: center;
     gap: 0.875rem;
-    padding: 0.8125rem 1.125rem;
+    padding: 0.875rem 1.125rem;
+    min-height: 3rem;
     border-bottom: 1px solid var(--color-brand-divider);
     transition: background 0.15s ease;
     cursor: pointer;
@@ -6143,11 +6259,11 @@ html.dark .form-note {
     display: grid;
     align-items: center;
     gap: 0.875rem;
-    padding: 0.5rem 1.125rem;
+    padding: 0.5625rem 1.125rem;
     border-bottom: 1px solid var(--color-brand-divider);
     font-size: 0.625rem;
     font-weight: 700;
-    letter-spacing: 0.06em;
+    letter-spacing: 0.1em;
     text-transform: uppercase;
     color: var(--ink-45v);
   }
@@ -6155,10 +6271,52 @@ html.dark .form-note {
   /* Estado recortável (StateLabel): o ponto e a coluna ficam alinhados,
      o texto longo encadeia com reticências; title mostra o completo no
      desktop e o toque (is-open) desdobra em mobile. */
+  /* Chip de estado redondo (editorial): o rótulo da linha ganha fundo
+     tintado por variante — os KPIs usam .portal-st SEM --clip e ficam
+     como estão (decisão do utilizador: detalhes globais, sem KPIs). */
   .portal-st--clip {
-    display: flex;
+    display: inline-flex;
     max-width: 100%;
     min-width: 0;
+    padding: 0.1875rem 0.625rem;
+    border-radius: 999px;
+    background: var(--color-brand-bg-alt);
+    font-size: 0.6875rem;
+    letter-spacing: 0.01em;
+  }
+
+  .portal-st--clip.portal-st--ok {
+    background: rgb(10 132 79 / 0.1);
+    color: var(--color-brand-deep);
+  }
+
+  .portal-st--clip.portal-st--warn,
+  .portal-st--clip.portal-st--strong {
+    background: rgb(217 154 30 / 0.14);
+  }
+
+  .portal-st--clip.portal-st--bad,
+  .portal-st--clip.portal-st--strong-bad {
+    background: rgb(194 58 44 / 0.1);
+  }
+
+  html.dark .portal-st--clip {
+    background: rgb(255 255 255 / 0.07);
+  }
+
+  html.dark .portal-st--clip.portal-st--ok {
+    background: rgb(10 132 79 / 0.22);
+    color: #baf0d5;
+  }
+
+  html.dark .portal-st--clip.portal-st--warn,
+  html.dark .portal-st--clip.portal-st--strong {
+    background: rgb(217 154 30 / 0.18);
+  }
+
+  html.dark .portal-st--clip.portal-st--bad,
+  html.dark .portal-st--clip.portal-st--strong-bad {
+    background: rgb(194 58 44 / 0.2);
   }
 
   .portal-st--clip .portal-st-t {
@@ -6199,7 +6357,7 @@ html.dark .form-note {
   /* Pill neutra (formas de venda, quantidades — antes verdes). */
   .portal-pill {
     display: inline-block;
-    border-radius: 0.4375rem;
+    border-radius: 999px;
     padding: 0.1875rem 0.5rem;
     font-size: 0.6563rem;
     font-weight: 600;
@@ -6705,6 +6863,13 @@ html.dark .form-note {
     display: block;
   }
 
+  /* Área @bklit: o container deixa de ter altura fixa — quem decide é
+     o aspectRatio do AreaChart (a altura antiga cortava o tooltip). */
+  .portal-spark--area {
+    height: auto;
+    padding: 0;
+  }
+
   .portal-spark-days {
     display: flex;
     justify-content: space-between;
@@ -7076,4 +7241,1772 @@ html.dark .form-note {
   .portal-res-inline .res-other-box {
     width: 100%;
   }
+}
+
+/* ============================================================
+   PORTAL · Perfis de farmacêutico (0018) — ecrã de escolha com
+   PIN, sessão do perfil, equipa e desempenho.
+   ============================================================ */
+@layer components {
+  /* ---- /portal/perfis — ecrã de escolha de perfil ---------
+     Hierarquia nova: o assunto da página é a ESCOLHA, não o
+     formulário. Título serif em cima, grelha de cartões com avatar,
+     e o PIN abre-se sobre o cartão escolhido (sem empurrar nada). */
+  .portal-staff-screen {
+    min-height: 100dvh;
+    display: flex;
+    flex-direction: column;
+    justify-content: center;
+    align-items: center;
+    padding: 2rem 1.25rem;
+    gap: 1.5rem;
+  }
+
+  .portal-staff-screen > * {
+    width: 100%;
+    max-width: 26rem;
+  }
+
+  .portal-staff-head {
+    text-align: center;
+  }
+
+  .portal-staff-eyebrow {
+    font-size: 0.625rem;
+    font-weight: 700;
+    text-transform: uppercase;
+    letter-spacing: 0.2em;
+    color: var(--color-brand-accent);
+  }
+
+  .portal-staff-title {
+    font-family: var(--font-display);
+    font-size: 1.75rem;
+    font-weight: 600;
+    letter-spacing: -0.01em;
+    color: var(--color-brand-deep);
+    margin-top: 0.375rem;
+    text-wrap: balance;
+  }
+
+  .portal-staff-lead {
+    font-size: 0.8125rem;
+    line-height: 1.55;
+    color: var(--ink-60v);
+    margin-top: 0.5rem;
+    text-wrap: pretty;
+  }
+
+  /* Continuar é o caminho mais curto — aparece acima da grelha. */
+  .portal-staff-continue {
+    display: flex;
+    align-items: center;
+    gap: 0.75rem;
+    padding: 0.75rem 0.875rem;
+    border: 1px solid var(--color-brand-divider);
+    border-radius: 1rem;
+    background: var(--color-brand-card);
+    text-decoration: none;
+    color: inherit;
+    box-shadow: var(--shadow-soft);
+    transition: border-color 0.15s ease;
+  }
+
+  .portal-staff-continue:hover {
+    border-color: var(--color-brand-accent);
+  }
+
+  .portal-staff-continue-meta {
+    display: flex;
+    flex-direction: column;
+    min-width: 0;
+    flex: 1;
+  }
+
+  .portal-staff-continue-meta b {
+    font-size: 0.875rem;
+    color: var(--color-brand-deep);
+  }
+
+  .portal-staff-continue-meta span {
+    font-size: 0.6875rem;
+    color: var(--ink-45v);
+  }
+
+  .portal-staff-continue-go {
+    font-size: 0.75rem;
+    font-weight: 600;
+    color: var(--color-brand-accent);
+    white-space: nowrap;
+  }
+
+  .portal-staff-screen-body {
+    display: grid;
+    gap: 0.875rem;
+  }
+
+  .portal-staff-grid--pick {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(7.5rem, 1fr));
+    gap: 0.625rem;
+  }
+
+  /* Cartão de perfil — avatar grande + nome + papel. Escolhe-se de
+     relance, de pé, sem ler: o avatar é o identificador real. */
+  .portal-staff-card {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    gap: 0.375rem;
+    padding: 1.125rem 0.75rem 1rem;
+    border: 1px solid var(--color-brand-divider);
+    border-radius: 1rem;
+    background: var(--color-brand-card);
+    font: inherit;
+    color: inherit;
+    cursor: pointer;
+    text-align: center;
+    transition:
+      border-color 0.15s ease,
+      background 0.15s ease,
+      transform 0.15s ease,
+      opacity 0.15s ease;
+  }
+
+  .portal-staff-card:hover {
+    border-color: var(--color-brand-primary);
+    transform: translateY(-2px);
+  }
+
+  .portal-staff-card.is-sel {
+    border-color: var(--color-brand-primary);
+    background: rgb(10 132 79 / 0.05);
+    box-shadow:
+      0 0 0 1px var(--color-brand-primary),
+      0 0 0 4px rgb(10 132 79 / 0.12);
+  }
+
+  .portal-staff-card.is-dim {
+    opacity: 0.5;
+  }
+
+  html.dark .portal-staff-card.is-sel {
+    background: rgb(10 132 79 / 0.16);
+  }
+
+  .portal-staff-card-name {
+    font-size: 0.8438rem;
+    font-weight: 600;
+    color: var(--color-brand-deep);
+    max-width: 100%;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+  }
+
+  .portal-staff-card-role {
+    display: flex;
+    justify-content: center;
+    gap: 0.375rem;
+    flex-wrap: wrap;
+    font-size: 0.6875rem;
+    color: var(--ink-45v);
+  }
+
+  /* Chips dentro do cartão de perfil — sem a margem da pill em linha. */
+  .portal-staff-card-role .portal-pill {
+    margin-right: 0;
+  }
+
+  /* Chip verde do perfil já activo neste dispositivo («Em uso»). */
+  .portal-pill--ok {
+    background: rgb(10 132 79 / 0.1);
+    color: var(--color-brand-deep);
+  }
+
+  html.dark .portal-pill--ok {
+    background: rgb(10 132 79 / 0.22);
+    color: #baf0d5;
+  }
+
+  /* ---- /portal/equipa — criação colapsada ----------------- */
+  .portal-eq-new {
+    display: grid;
+    gap: 0.875rem;
+  }
+
+  .portal-eq-new-bar {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 0.875rem;
+    flex-wrap: wrap;
+  }
+
+  .portal-eq-new-txt {
+    display: flex;
+    flex-direction: column;
+    gap: 0.1875rem;
+    min-width: 0;
+  }
+
+  .portal-eq-new-txt b {
+    font-size: 0.9375rem;
+    color: var(--color-brand-deep);
+  }
+
+  .portal-eq-new-txt span {
+    font-size: 0.7188rem;
+    line-height: 1.45;
+    color: var(--ink-60v);
+    text-wrap: pretty;
+  }
+
+  /* Linha da equipa — avatar + nome + papel/estado + editar. */
+  .portal-eq-row {
+    grid-template-columns: auto minmax(0, 1fr) auto auto auto;
+    align-items: center;
+    gap: 0.75rem;
+  }
+
+  .portal-eq-who {
+    display: flex;
+    flex-direction: column;
+    gap: 0.125rem;
+    min-width: 0;
+  }
+
+  @media (max-width: 60rem) {
+    .portal-cols-equipa > :nth-child(3),
+    .portal-cols-equipa > :nth-child(4) {
+      display: none;
+    }
+  }
+
+  .portal-staff-hint {
+    margin-bottom: 0.75rem;
+  }
+
+  .portal-staff-grid {
+    display: grid;
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+    gap: 0.875rem;
+  }
+
+  @media (max-width: 30rem) {
+    .portal-staff-grid {
+      grid-template-columns: 1fr;
+    }
+
+    .portal-staff-grid--pick {
+      grid-template-columns: repeat(2, minmax(0, 1fr));
+    }
+  }
+
+  /* Ecrã de escolha (página alargada): 3 cartões por fila — os perfis
+     lêem-se de relance, como uma equipa, não como uma lista. */
+  @media (min-width: 36rem) {
+    .portal-staff-grid--pick {
+      grid-template-columns: repeat(3, minmax(0, 1fr));
+    }
+  }
+
+  .portal-staff-av {
+    width: 2.5rem;
+    height: 2.5rem;
+    border-radius: 50%;
+    background: var(--color-brand-primary);
+    color: #fff;
+    font-size: 0.8125rem;
+    font-weight: 700;
+    display: grid;
+    place-items: center;
+    flex-shrink: 0;
+  }
+
+  .portal-staff-av--lg {
+    width: 3rem;
+    height: 3rem;
+    font-size: 0.9375rem;
+  }
+
+  .portal-staff-av--xl {
+    width: 3.5rem;
+    height: 3.5rem;
+    font-size: 1.0625rem;
+    letter-spacing: 0.01em;
+  }
+
+  .portal-staff-name {
+    font-size: 0.8438rem;
+    font-weight: 600;
+    color: var(--color-brand-deep);
+    max-width: 100%;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+  }
+
+  .portal-staff-role {
+    font-size: 0.6875rem;
+    color: var(--ink-45v);
+  }
+
+  /* Painel do PIN — abre sob a grelha com o rosto de quem entra. */
+  .portal-staff-pin-card {
+    display: grid;
+    gap: 0.875rem;
+    padding: 1rem;
+    border: 1px solid var(--color-brand-divider);
+    border-radius: 1rem;
+    background: var(--color-brand-card);
+    box-shadow: var(--shadow-soft);
+  }
+
+  .portal-staff-pin-who {
+    display: flex;
+    align-items: center;
+    gap: 0.75rem;
+  }
+
+  .portal-staff-pin-who-meta {
+    display: flex;
+    flex-direction: column;
+    min-width: 0;
+    flex: 1;
+  }
+
+  .portal-staff-pin-who-meta b {
+    font-size: 0.9375rem;
+    color: var(--color-brand-deep);
+    overflow: hidden;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+  }
+
+  .portal-staff-pin-who-meta span {
+    font-size: 0.6875rem;
+    color: var(--ink-45v);
+  }
+
+  .portal-staff-pin-back {
+    border: 0;
+    background: none;
+    font: inherit;
+    font-size: 0.75rem;
+    font-weight: 600;
+    color: var(--color-brand-accent);
+    cursor: pointer;
+    white-space: nowrap;
+  }
+
+  .portal-input--pin {
+    max-width: 10rem;
+    letter-spacing: 0.35em;
+    font-size: 1.05rem;
+    font-weight: 700;
+    text-align: center;
+  }
+
+  .portal-input--pin-lg {
+    max-width: none;
+    width: 100%;
+    font-size: 1.375rem;
+    letter-spacing: 0.5em;
+    text-indent: 0.5em;
+    padding-block: 0.75rem;
+  }
+
+  .portal-staff-pin-go {
+    width: 100%;
+  }
+
+  .portal-staff-bootstrap {
+    display: grid;
+    gap: 0.625rem;
+  }
+
+  .portal-staff-screen-foot {
+    font-size: 0.6875rem;
+    color: var(--ink-45v);
+    text-align: center;
+    text-wrap: balance;
+  }
+
+  .portal-staff-screen-foot b {
+    color: var(--ink-60v);
+    font-weight: 600;
+  }
+
+  .portal-staff-acts {
+    display: flex;
+    gap: 0.5rem;
+    justify-content: flex-end;
+    align-items: center;
+    flex-wrap: wrap;
+  }
+
+  .portal-staff-acts--start {
+    justify-content: flex-start;
+  }
+
+  .portal-staff-foot {
+    margin-top: 0.875rem;
+  }
+
+  /* ---- /portal/sessao — cartão de identidade --------------
+     O perfil em uso é o protagonista da página: avatar grande,
+     papel com ponto de estado e as acções à vista (trocar/sair). */
+  .portal-id-card {
+    display: grid;
+    grid-template-columns: auto minmax(0, 1fr);
+    gap: 1rem 1.125rem;
+    align-items: center;
+    padding: 1.375rem;
+    border: 1px solid var(--color-brand-divider);
+    border-radius: 1rem;
+    background:
+      linear-gradient(180deg, rgb(10 132 79 / 0.05), rgb(10 132 79 / 0) 55%),
+      var(--color-brand-card);
+    box-shadow:
+      0 1px 2px rgb(0 42 50 / 0.04),
+      0 4px 14px rgb(0 42 50 / 0.05);
+  }
+
+  html.dark .portal-id-card {
+    background:
+      linear-gradient(180deg, rgb(127 212 171 / 0.07), rgb(127 212 171 / 0) 55%),
+      var(--color-brand-card);
+  }
+
+  .portal-id-av {
+    width: 4rem;
+    height: 4rem;
+    border-radius: 50%;
+    background: var(--color-brand-primary);
+    color: #fff;
+    font-family: var(--font-display);
+    font-size: 1.25rem;
+    font-weight: 600;
+    letter-spacing: 0.01em;
+    display: grid;
+    place-items: center;
+  }
+
+  .portal-id-meta {
+    display: flex;
+    flex-direction: column;
+    gap: 0.1875rem;
+    min-width: 0;
+  }
+
+  .portal-id-role {
+    display: inline-flex;
+    align-items: center;
+    gap: 0.375rem;
+    font-size: 0.625rem;
+    font-weight: 700;
+    text-transform: uppercase;
+    letter-spacing: 0.16em;
+    color: var(--color-brand-accent);
+    /* Chip redondo (novo modelo) em vez de texto solto. */
+    background: rgb(10 132 79 / 0.1);
+    border-radius: 999px;
+    padding: 0.1875rem 0.625rem;
+    align-self: start;
+  }
+
+  html.dark .portal-id-role {
+    background: rgb(10 132 79 / 0.22);
+  }
+
+  /* Ponto de estado — verde cheio = gerente (mais permissão),
+     contorno = balcão. Um indicador, não uma etiqueta inteira. */
+  .portal-id-role i {
+    width: 0.375rem;
+    height: 0.375rem;
+    border-radius: 50%;
+    border: 1.5px solid currentColor;
+  }
+
+  .portal-id-role i.is-on {
+    background: currentColor;
+  }
+
+  .portal-id-name {
+    font-family: var(--font-display);
+    font-size: 1.5rem;
+    font-weight: 600;
+    letter-spacing: -0.01em;
+    line-height: 1.15;
+    color: var(--color-brand-deep);
+    overflow-wrap: anywhere;
+  }
+
+  .portal-id-note {
+    font-size: 0.75rem;
+    line-height: 1.5;
+    color: var(--ink-60v);
+    max-width: 42ch;
+    margin-top: 0.125rem;
+    text-wrap: pretty;
+  }
+
+  .portal-id-acts {
+    grid-column: 1 / -1;
+    display: flex;
+    gap: 0.5rem;
+    flex-wrap: wrap;
+    padding-top: 0.25rem;
+    border-top: 1px solid var(--color-brand-divider);
+  }
+
+  .portal-id-acts form {
+    display: inline-block;
+  }
+
+  @media (min-width: 40rem) {
+    .portal-id-card {
+      grid-template-columns: auto minmax(0, 1fr) auto;
+    }
+
+    .portal-id-acts {
+      grid-column: auto;
+      flex-direction: column;
+      align-items: stretch;
+      padding-top: 0;
+      padding-left: 1.125rem;
+      border-top: 0;
+      border-left: 1px solid var(--color-brand-divider);
+    }
+  }
+
+  /* Atalhos de gerência — duas entradas descritivas em vez de dois
+     botões iguais sem contexto. */
+  .portal-shortcuts {
+    display: grid;
+    gap: 0.625rem;
+  }
+
+  @media (min-width: 40rem) {
+    .portal-shortcuts {
+      grid-template-columns: repeat(2, minmax(0, 1fr));
+    }
+  }
+
+  .portal-shortcut {
+    display: flex;
+    flex-direction: column;
+    gap: 0.1875rem;
+    padding: 0.875rem 1rem;
+    border: 1px solid var(--color-brand-divider);
+    border-radius: 1rem;
+    background: var(--color-brand-card);
+    text-decoration: none;
+    color: inherit;
+    transition:
+      border-color 0.15s ease,
+      background 0.15s ease;
+  }
+
+  .portal-shortcut:hover {
+    border-color: var(--color-brand-accent);
+    background: var(--color-brand-card);
+  }
+
+  .portal-shortcut b {
+    font-size: 0.875rem;
+    color: var(--color-brand-deep);
+  }
+
+  .portal-shortcut span {
+    font-size: 0.7188rem;
+    line-height: 1.45;
+    color: var(--ink-60v);
+    text-wrap: pretty;
+  }
+
+  /* ---- /portal/sessao — perfil activo (legado) ------------ */
+  .portal-staff-me {
+    display: flex;
+    align-items: center;
+    gap: 0.875rem;
+    flex-wrap: wrap;
+    padding-top: 0.25rem;
+  }
+
+  .portal-staff-me-meta {
+    min-width: 0;
+    flex: 1;
+    display: flex;
+    flex-direction: column;
+  }
+
+  .portal-staff-me-meta b {
+    font-size: 0.9375rem;
+    color: var(--color-brand-deep);
+  }
+
+  .portal-staff-me-meta .sub {
+    font-size: 0.75rem;
+    color: var(--ink-60v);
+  }
+
+  .portal-staff-me-acts {
+    display: flex;
+    gap: 0.5rem;
+    align-items: center;
+    flex-wrap: wrap;
+  }
+
+  .portal-staff-me-acts form {
+    display: inline-block;
+  }
+
+  .portal-staff-account {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 0.75rem;
+    flex-wrap: wrap;
+  }
+
+  .portal-staff-account .dim {
+    font-size: 0.8125rem;
+    color: var(--ink-60v);
+  }
+
+  /* ---- Sidebar: bloco do fundo liga à sessão -------------- */
+  .portal-foot-wrap {
+    position: relative;
+  }
+
+  .portal-foot-link {
+    display: flex;
+    align-items: center;
+    gap: 0.625rem;
+    width: 100%;
+    padding: 0.5rem 0.625rem;
+    border: 0;
+    background: none;
+    font: inherit;
+    text-align: left;
+    cursor: pointer;
+    text-decoration: none;
+    color: inherit;
+    border-radius: 0.625rem;
+    transition: background 0.15s ease;
+  }
+
+  /* Menu directo do rodapé — trocar perfil / sessão / sair sem sair
+     da página (abre para cima, ancorado ao bloco do nome). */
+  .portal-foot-menu {
+    position: absolute;
+    left: 0;
+    right: 0;
+    bottom: calc(100% + 0.375rem);
+    z-index: 40;
+    display: flex;
+    flex-direction: column;
+    gap: 2px;
+    padding: 0.375rem;
+    background: #fff;
+    border: 1px solid var(--color-brand-divider);
+    border-radius: 0.75rem;
+    box-shadow: 0 10px 28px rgb(9 30 20 / 0.16);
+  }
+
+  html.dark .portal-foot-menu {
+    background: var(--color-brand-bg-card, #12261d);
+    border-color: rgb(255 255 255 / 0.1);
+  }
+
+  .portal-foot-menu-h {
+    padding: 0.25rem 0.5rem 0.125rem;
+    font-size: 0.625rem;
+    font-weight: 700;
+    letter-spacing: 0.1em;
+    text-transform: uppercase;
+    color: var(--ink-45v);
+  }
+
+  .portal-foot-menu-i {
+    display: block;
+    width: 100%;
+    padding: 0.5rem 0.5rem;
+    border: 0;
+    background: none;
+    font: inherit;
+    font-size: 0.8125rem;
+    font-weight: 500;
+    text-align: left;
+    text-decoration: none;
+    color: var(--color-brand-deep);
+    border-radius: 0.5rem;
+    cursor: pointer;
+  }
+
+  .portal-foot-menu-i:hover {
+    background: rgb(10 132 79 / 0.08);
+    color: var(--color-brand-primary);
+  }
+
+  html.dark .portal-foot-menu-i:hover {
+    background: rgb(13 153 95 / 0.16);
+    color: #7fd4ab;
+  }
+
+  .portal-foot-menu-form {
+    display: block;
+  }
+
+  .portal-foot-link:hover {
+    background: rgb(10 132 79 / 0.06);
+  }
+
+  html.dark .portal-foot-link:hover {
+    background: rgb(255 255 255 / 0.06);
+  }
+
+  .portal-foot-link .portal-foot-meta {
+    display: flex;
+    flex-direction: column;
+  }
+
+  .portal-foot-name {
+    overflow: hidden;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+  }
+
+  .portal-foot-sub {
+    display: block;
+    font-size: 0.625rem;
+    font-weight: 500;
+    opacity: 0.7;
+    margin-top: 1px;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+  }
+
+  .portal-foot-link .ui-chevron {
+    flex-shrink: 0;
+    opacity: 0.6;
+  }
+
+  /* ---- /portal/equipa — grelha de perfis ------------------ */
+  .portal-cols-equipa {
+    grid-template-columns: auto 2fr 1fr 0.9fr auto;
+  }
+
+  @media (max-width: 60rem) {
+    .portal-cols-equipa {
+      grid-template-columns: auto 1fr auto;
+    }
+  }
+
+  .portal-cell .portal-cell-mob {
+    display: none;
+    font-size: 0.7188rem;
+    color: var(--ink-60v);
+    margin-top: 1px;
+  }
+
+  @media (max-width: 60rem) {
+    .portal-cell .portal-cell-mob {
+      display: block;
+    }
+  }
+
+  /* Chip de estado redondo (editorial) — ponto + palavra com fundo
+     tintado, em vez de texto solto. */
+  .portal-dot-state {
+    display: inline-flex;
+    align-items: center;
+    gap: 0.375rem;
+    font-size: 0.6875rem;
+    font-weight: 700;
+    letter-spacing: 0.01em;
+    color: var(--ink-60v);
+    background: rgb(10 132 79 / 0.1);
+    border-radius: 999px;
+    padding: 0.1875rem 0.625rem;
+  }
+
+  html.dark .portal-dot-state {
+    background: rgb(10 132 79 / 0.22);
+  }
+
+  .portal-dot-state::before {
+    content: '';
+    width: 0.5rem;
+    height: 0.5rem;
+    border-radius: 50%;
+    background: var(--portal-ok);
+  }
+
+  .portal-dot-state.is-off {
+    background: rgb(0 0 0 / 0.05);
+    color: var(--ink-45v);
+  }
+
+  html.dark .portal-dot-state.is-off {
+    background: rgb(255 255 255 / 0.07);
+  }
+
+  .portal-dot-state.is-off::before {
+    background: var(--ink-45v);
+  }
+
+  .portal-staff-edit {
+    grid-template-columns: 1fr;
+    gap: 0.75rem;
+    cursor: default;
+  }
+
+  .portal-staff-edit:hover {
+    background: transparent;
+  }
+
+  .portal-staff-active {
+    display: inline-flex;
+    align-items: center;
+    gap: 0.5rem;
+    font-size: 0.8125rem;
+    color: var(--color-brand-deep);
+    cursor: pointer;
+  }
+
+  .portal-staff-active input {
+    width: 1rem;
+    height: 1rem;
+    accent-color: var(--color-brand-primary);
+  }
+
+  .portal-staff-active .tiny {
+    color: var(--ink-45v);
+    font-size: 0.7188rem;
+  }
+
+  /* ---- /portal/desempenho — ranking com barras ------------ */
+  .portal-rank {
+    display: grid;
+    grid-template-columns: auto minmax(8rem, 1.1fr) 2fr auto;
+    align-items: center;
+    gap: 0.875rem;
+    padding: 0.6875rem 0;
+    border-bottom: 1px solid var(--color-brand-divider);
+  }
+
+  .portal-rank:last-child {
+    border-bottom: 0;
+  }
+
+  .portal-rank-n {
+    font-size: 0.6875rem;
+    font-weight: 700;
+    color: var(--ink-45v);
+    font-variant-numeric: tabular-nums;
+  }
+
+  .portal-rank-name {
+    min-width: 0;
+    display: flex;
+    flex-direction: column;
+  }
+
+  .portal-rank-name b {
+    font-size: 0.8438rem;
+    color: var(--color-brand-deep);
+    overflow: hidden;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+  }
+
+  .portal-rank-name .sub {
+    font-size: 0.7188rem;
+    color: var(--ink-60v);
+  }
+
+  .portal-rank-bar {
+    height: 0.5rem;
+    border-radius: 999px;
+    background: rgb(10 132 79 / 0.08);
+    overflow: hidden;
+  }
+
+  html.dark .portal-rank-bar {
+    background: rgb(255 255 255 / 0.07);
+  }
+
+  .portal-rank-fill {
+    display: block;
+    height: 100%;
+    border-radius: 999px;
+    background: var(--color-brand-primary);
+    transition: width 0.4s ease;
+  }
+
+  .portal-rank-v {
+    font-size: 0.8125rem;
+    font-weight: 700;
+    color: var(--color-brand-deep);
+    font-variant-numeric: tabular-nums;
+    text-align: right;
+  }
+
+  @media (max-width: 60rem) {
+    .portal-rank {
+      grid-template-columns: auto 1fr auto;
+    }
+
+    .portal-rank-bar {
+      grid-column: 1 / -1;
+    }
+  }
+
+  /* ---- /portal/desempenho — tabela avançada --------------- */
+  .portal-cols-desempenho {
+    grid-template-columns: 1.4fr 0.9fr 0.45fr 0.85fr 0.65fr 0.7fr 0.65fr 0.65fr 0.8fr;
+  }
+
+  @media (max-width: 60rem) {
+    .portal-cols-desempenho {
+      grid-template-columns: 1.4fr 1fr;
+    }
+
+    .portal-cols-desempenho > :nth-child(n + 3) {
+      display: none;
+    }
+  }
+
+  .portal-trend {
+    display: inline-block;
+    font-size: 0.75rem;
+    font-weight: 700;
+    font-variant-numeric: tabular-nums;
+  }
+
+  .portal-trend.is-up {
+    color: var(--portal-ok);
+  }
+
+  .portal-trend.is-down {
+    color: var(--portal-red);
+  }
+
+  .portal-trend.is-flat {
+    color: var(--ink-45v);
+  }
+
+  /* ---- /portal/desempenho — comparação lado a lado -------- */
+  .portal-cmp {
+    display: grid;
+    grid-template-columns: 1fr auto 1fr;
+    gap: 0.875rem;
+    align-items: stretch;
+    padding-top: 0.25rem;
+  }
+
+  @media (max-width: 48rem) {
+    .portal-cmp {
+      grid-template-columns: 1fr;
+    }
+
+    .portal-cmp-gap {
+      order: 3;
+      max-width: none;
+    }
+  }
+
+  .portal-cmp-card {
+    display: grid;
+    gap: 0.75rem;
+    align-content: start;
+    border: 1px solid var(--color-brand-divider);
+    border-radius: 0.875rem;
+    padding: 0.875rem;
+    background: var(--color-brand-bg-alt);
+  }
+
+  html.dark .portal-cmp-card {
+    background: rgb(255 255 255 / 0.03);
+  }
+
+  .portal-cmp-gap {
+    align-self: center;
+    max-width: 11rem;
+    text-align: center;
+    font-size: 0.75rem;
+    font-weight: 600;
+    color: var(--ink-60v);
+    padding: 0.5rem 0;
+  }
+
+  .portal-cmp-metrics {
+    display: grid;
+    gap: 0.375rem;
+  }
+
+  .portal-cmp-metric {
+    display: flex;
+    justify-content: space-between;
+    gap: 0.75rem;
+    font-size: 0.7813rem;
+    padding-bottom: 0.375rem;
+    border-bottom: 1px solid var(--color-brand-divider);
+  }
+
+  /* Donut (@bklit) da fatia de cada farmacêutico — gráfico + legenda. */
+  .portal-donut-share {
+    display: flex;
+    align-items: center;
+    gap: 1.25rem;
+    flex-wrap: wrap;
+    justify-content: center;
+  }
+
+  .portal-donut-share-c {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    text-align: center;
+    gap: 0.125rem;
+    max-width: 9rem;
+  }
+
+  .portal-donut-share-c b {
+    font-size: 0.9375rem;
+    color: var(--color-brand-deep);
+    font-variant-numeric: tabular-nums;
+  }
+
+  .portal-donut-share-c span {
+    font-size: 0.625rem;
+    color: var(--ink-45v);
+    overflow: hidden;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+    max-width: 100%;
+  }
+
+  .portal-donut-share-list {
+    display: flex;
+    flex-direction: column;
+    gap: 0.375rem;
+    margin: 0;
+    padding: 0;
+    list-style: none;
+    min-width: 11rem;
+  }
+
+  .portal-donut-share-list li {
+    display: grid;
+    grid-template-columns: 0.625rem 1fr auto;
+    align-items: center;
+    gap: 0.5rem;
+    font-size: 0.75rem;
+    color: var(--color-brand-deep);
+  }
+
+  .portal-donut-share-list i {
+    width: 0.625rem;
+    height: 0.625rem;
+    border-radius: 2px;
+  }
+
+  .portal-donut-share-list .nm {
+    overflow: hidden;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+  }
+
+  .portal-donut-share-list .pc {
+    font-weight: 700;
+    font-variant-numeric: tabular-nums;
+    color: var(--ink-45v);
+  }
+
+  /* Radar (@bklit) da comparação — centrado, com legenda em baixo. */
+  .portal-radar {
+    margin-top: 1.125rem;
+    padding-top: 1rem;
+    border-top: 1px solid var(--color-brand-divider);
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    gap: 0.75rem;
+  }
+
+  .portal-radar-gfx {
+    width: 100%;
+    max-width: 26rem;
+  }
+
+  .portal-radar-legend {
+    display: flex;
+    flex-wrap: wrap;
+    justify-content: center;
+    gap: 0.375rem 1.125rem;
+    margin: 0;
+    padding: 0;
+    list-style: none;
+    font-size: 0.75rem;
+    font-weight: 600;
+    color: var(--color-brand-deep);
+  }
+
+  .portal-radar-legend li {
+    display: inline-flex;
+    align-items: center;
+    gap: 0.375rem;
+  }
+
+  .portal-radar-legend i {
+    width: 0.625rem;
+    height: 0.625rem;
+    border-radius: 2px;
+  }
+
+  /* Movimento do balcão — as 4 métricas de fila numa linha só. */
+  .portal-staff-flow {
+    grid-template-columns: repeat(4, minmax(0, 1fr));
+    gap: 0.875rem;
+    margin-bottom: 0.25rem;
+  }
+
+  @media (max-width: 48rem) {
+    .portal-staff-flow {
+      grid-template-columns: 1fr 1fr;
+    }
+  }
+
+  .portal-staff-flow .portal-cmp-metric {
+    border: 0;
+    padding: 0.375rem 0;
+    background: none;
+  }
+
+  .portal-cell .strong.is-warn {
+    color: var(--portal-warn, #b7791f);
+  }
+
+  .portal-cmp-metric:last-child {
+    border-bottom: 0;
+    padding-bottom: 0;
+  }
+
+  .portal-cmp-k {
+    color: var(--ink-45v);
+  }
+
+  .portal-cmp-v {
+    font-weight: 700;
+    color: var(--color-brand-deep);
+    font-variant-numeric: tabular-nums;
+  }
+}
+
+/* ============================================================
+   PORTAL · Ajustes de composição das páginas novas — o .portal-box
+   nativo não tem padding nem margem: o conteúdo simples fornece o
+   seu e as caixas novas ganham respiro entre si.
+   ============================================================ */
+@layer components {
+  /* Padding do conteúdo directo (cabeçalho já fornece o seu). */
+  .portal-box--pad > :not(.portal-sec-head):not(.portal-rows-empty):not(.empty-state) {
+    padding-inline: 1.125rem;
+  }
+
+  .portal-box--pad > :not(.portal-sec-head):first-child {
+    padding-top: 1rem;
+  }
+
+  .portal-box--pad > :not(.portal-sec-head):last-child {
+    padding-bottom: 1.125rem;
+  }
+
+  /* Respiro entre caixas empilhadas — a nativa nasce colada. */
+  .portal-box--pad + .portal-box,
+  .portal-box + .portal-box--pad {
+    margin-top: 0.875rem;
+  }
+
+  .portal-page > .portal-hint {
+    margin-top: 0.875rem;
+  }
+
+  /* Botão dos formulários novos: ao tamanho do rótulo — em flex-col
+     o .btn estica para a largura toda e fica fora de lugar. */
+  .portal-form--start > .btn {
+    align-self: flex-start;
+  }
+
+  /* Campos curtos alinhados à esquerda: o auto-fit do portal-form-grid
+     transforma 3 campos minúsculos em 3 colunas de 1000px. */
+  .portal-form-grid--pin {
+    grid-template-columns: repeat(3, minmax(0, 10rem));
+    justify-content: start;
+  }
+
+  .portal-form-grid--tight {
+    grid-template-columns: repeat(3, minmax(0, 1fr));
+    max-width: 44rem;
+  }
+
+  @media (max-width: 40rem) {
+    .portal-form-grid--pin,
+    .portal-form-grid--tight {
+      grid-template-columns: minmax(0, 1fr);
+      max-width: none;
+    }
+  }
+}
+
+:root {
+  /* Paleta dos gráficos Bklit — verde da marca Conheça Farmácia
+     (primary #00493a · accent #0a844f) em degradê, para as séries
+     ficarem legíveis umas sobre as outras. */
+  --chart-1: #00493a;
+  --chart-2: #0a844f;
+  --chart-3: #4aa981;
+  --chart-4: #8cc9ae;
+  --chart-5: #c2e2d2;
+  --chart-background: #fffdf9;
+  --chart-foreground: #002a32;
+  --chart-foreground-muted: #5b6b66;
+  --chart-line-primary: var(--chart-1);
+  --chart-line-secondary: var(--chart-2);
+  --chart-crosshair: #0a844f;
+  --chart-grid: #dfe4e0;
+  --chart-brush-border: var(--chart-grid);
+  --chart-tooltip-background: rgb(0 42 50 / 0.92);
+  --chart-tooltip-foreground: #fffdf9;
+  --chart-tooltip-muted: #b9c8c3;
+  --chart-marker-background: #f7f5f1;
+  --chart-marker-border: #dfe4e0;
+  --chart-marker-foreground: #002a32;
+  --chart-label: #5b6b66;
+  --chart-scale-01: #f2f8f5;
+  --chart-scale-02: #d7ebe1;
+  --chart-scale-03: #a6d3bd;
+  --chart-scale-04: #4aa981;
+  --chart-scale-05: #00493a;
+  --chart-scale-pattern-color: #eef6f2;
+}
+
+.dark {
+  /* Modo noite do portal — série clara sobre fundo escuro. */
+  --chart-1: #7fd4ab;
+  --chart-2: #4fc08d;
+  --chart-3: #2f9e6f;
+  --chart-4: #b7e8d0;
+  --chart-5: #59736a;
+  --chart-background: #0a0f0d;
+  --chart-foreground: #e6efeb;
+  --chart-foreground-muted: #9fb2ab;
+  --chart-crosshair: #7fd4ab;
+  --chart-grid: rgb(255 255 255 / 0.1);
+  --chart-brush-border: var(--chart-grid);
+  --chart-tooltip-background: rgb(21 28 25 / 0.94);
+  --chart-tooltip-foreground: #e6efeb;
+  --chart-tooltip-muted: #9fb2ab;
+  --chart-marker-background: #151c19;
+  --chart-marker-border: rgb(255 255 255 / 0.12);
+  --chart-marker-foreground: #e6efeb;
+  --chart-label: #9fb2ab;
+  --chart-scale-01: #16241e;
+  --chart-scale-02: #1f3d31;
+  --chart-scale-03: #2f6b52;
+  --chart-scale-04: #4fc08d;
+  --chart-scale-05: #a7e8c8;
+  --chart-scale-pattern-color: #151c19;
+}
+
+@theme inline {
+  --color-chart-1: var(--chart-1);
+  --color-chart-2: var(--chart-2);
+  --color-chart-3: var(--chart-3);
+  --color-chart-4: var(--chart-4);
+  --color-chart-5: var(--chart-5);
+  --color-chart-background: var(--chart-background);
+  --color-chart-foreground: var(--chart-foreground);
+  --color-chart-foreground-muted: var(--chart-foreground-muted);
+  --chart-line-primary: var(--chart-line-primary);
+  --chart-line-secondary: var(--chart-line-secondary);
+  --color-chart-crosshair: var(--chart-crosshair);
+  --color-chart-grid: var(--chart-grid);
+  --chart-brush-border: var(--chart-brush-border);
+  --color-chart-tooltip-background: var(--chart-tooltip-background);
+  --color-chart-tooltip-foreground: var(--chart-tooltip-foreground);
+  --color-chart-tooltip-muted: var(--chart-tooltip-muted);
+  --color-chart-marker-background: var(--chart-marker-background);
+  --color-chart-marker-border: var(--chart-marker-border);
+  --color-chart-marker-foreground: var(--chart-marker-foreground);
+  --color-chart-label: var(--chart-label);
+  --color-chart-scale-01: var(--chart-scale-01);
+  --color-chart-scale-02: var(--chart-scale-02);
+  --color-chart-scale-03: var(--chart-scale-03);
+  --color-chart-scale-04: var(--chart-scale-04);
+  --color-chart-scale-05: var(--chart-scale-05);
+  --color-chart-scale-pattern-color: var(--chart-scale-pattern-color);
+}
+
+/* ============================================================
+   Drawer lateral (PortalDrawer) — formulários nunca à mostra:
+   painel à direita sobre scrim, fecha com ✕, Esc ou clique fora.
+   ============================================================ */
+.portal-drawer {
+  position: fixed;
+  inset: 0;
+  z-index: 90;
+  display: flex;
+  justify-content: flex-end;
+}
+
+.portal-drawer-scrim {
+  position: absolute;
+  inset: 0;
+  background: rgb(1 36 25 / 0.45);
+  animation: portal-drawer-fade 0.2s ease;
+}
+
+.portal-drawer-card {
+  position: relative;
+  display: flex;
+  flex-direction: column;
+  width: min(27rem, 100%);
+  height: 100%;
+  background: var(--color-brand-card);
+  border-left: 1px solid var(--color-brand-divider);
+  box-shadow: -18px 0 48px rgb(9 30 20 / 0.18);
+  animation: portal-drawer-in 0.26s cubic-bezier(0.3, 0.9, 0.3, 1);
+}
+
+.portal-drawer-head {
+  display: flex;
+  align-items: flex-start;
+  justify-content: space-between;
+  gap: 1rem;
+  padding: 1.25rem 1.375rem 1rem;
+  border-bottom: 1px solid var(--color-brand-divider);
+}
+
+.portal-drawer-head h3 {
+  margin: 0;
+  font-family: var(--font-display), Georgia, serif;
+  font-weight: 600;
+  font-size: 1.1875rem;
+  color: var(--color-brand-deep);
+}
+
+.portal-drawer-head-txt p {
+  margin: 0.25rem 0 0;
+  font-size: 0.75rem;
+  color: var(--ink-60v);
+}
+
+.portal-drawer-x {
+  width: 2rem;
+  height: 2rem;
+  flex-shrink: 0;
+  border: 1px solid var(--color-brand-divider);
+  border-radius: 999px;
+  background: transparent;
+  color: var(--ink-60v);
+  cursor: pointer;
+  display: grid;
+  place-items: center;
+  transition: background 0.15s ease;
+}
+
+.portal-drawer-x:hover {
+  background: var(--color-brand-bg-alt);
+}
+
+.portal-drawer-body {
+  flex: 1;
+  overflow: auto;
+  padding: 1.25rem 1.375rem;
+}
+
+.portal-drawer-body > * + * {
+  margin-top: 0.875rem;
+}
+
+.portal-drawer-foot {
+  display: flex;
+  justify-content: flex-end;
+  gap: 0.625rem;
+  padding: 1rem 1.375rem;
+  border-top: 1px solid var(--color-brand-divider);
+}
+
+@keyframes portal-drawer-fade {
+  from {
+    opacity: 0;
+  }
+}
+
+@keyframes portal-drawer-in {
+  from {
+    transform: translateX(2rem);
+    opacity: 0;
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .portal-drawer-scrim,
+  .portal-drawer-card {
+    animation: none;
+  }
+}
+
+/* Botões na cabeça da página (ex.: Stock com 2 acções). */
+.portal-page-head-acts {
+  display: flex;
+  align-items: center;
+  gap: 0.625rem;
+  flex-wrap: wrap;
+}
+
+/* Lista de escolha dentro do drawer (RestockDrawer). */
+.portal-drw-list {
+  display: flex;
+  flex-direction: column;
+  border-top: 1px solid var(--color-brand-divider);
+}
+
+.portal-drw-item {
+  display: flex;
+  align-items: center;
+  gap: 0.75rem;
+  width: 100%;
+  text-align: left;
+  padding: 0.75rem 0.25rem;
+  border: 0;
+  border-bottom: 1px solid var(--color-brand-divider);
+  background: transparent;
+  font: inherit;
+  color: inherit;
+  cursor: pointer;
+  transition: background 0.15s ease;
+}
+
+.portal-drw-item:hover {
+  background: rgb(10 132 79 / 0.04);
+}
+
+.portal-drw-who {
+  flex: 1;
+  min-width: 0;
+}
+
+.portal-drw-who b {
+  display: block;
+  font-size: 0.8438rem;
+  font-weight: 600;
+  color: var(--color-brand-deep);
+}
+
+.portal-drw-who .sub {
+  display: block;
+  font-size: 0.7188rem;
+  color: var(--ink-60v);
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.portal-drw-bal {
+  text-align: right;
+  flex-shrink: 0;
+}
+
+.portal-drw-bal b {
+  display: block;
+  font-size: 0.875rem;
+  font-variant-numeric: tabular-nums;
+  color: var(--color-brand-deep);
+}
+
+.portal-drw-bal span {
+  font-size: 0.6563rem;
+  color: var(--ink-45v);
+}
+
+/* Medicamento escolhido no topo do form do drawer. */
+.portal-drw-sel {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 0.75rem;
+  padding: 0.625rem 0.75rem;
+  background: var(--color-brand-bg-alt);
+  border-radius: 0.75rem;
+}
+
+.portal-drw-sel b {
+  display: block;
+  font-size: 0.875rem;
+  color: var(--color-brand-deep);
+}
+
+.portal-drw-sel span span {
+  font-size: 0.7188rem;
+  color: var(--ink-60v);
+}
+
+/* ============================================================
+   /sessão — modelo editorial (variação A): o protagonista é um
+   cartão VERDE ESCURO com eyebrow mint, nome serif grande e chip de
+   papel; o PIN vive em drawer, nunca na página.
+   ============================================================ */
+.portal-id-card--dark {
+  position: relative;
+  overflow: hidden;
+  border: 0;
+  background: linear-gradient(160deg, #00493a 0%, #013d31 60%, #012b22 100%);
+  color: #eef3ef;
+  box-shadow: 0 12px 32px rgb(1 45 38 / 0.25);
+}
+
+/* Anel decorativo do canto (assinatura da variação A). */
+.portal-id-card--dark::after {
+  content: '';
+  position: absolute;
+  right: -4.5rem;
+  top: -4.5rem;
+  width: 14rem;
+  height: 14rem;
+  border-radius: 50%;
+  border: 1px solid rgb(255 255 255 / 0.14);
+  pointer-events: none;
+}
+
+html.dark .portal-id-card--dark {
+  background: linear-gradient(160deg, #013a2d 0%, #012419 100%);
+}
+
+.portal-id-card--dark .portal-id-av {
+  background: #fff;
+  color: #00493a;
+}
+
+.portal-id-eb {
+  font-size: 0.625rem;
+  font-weight: 700;
+  letter-spacing: 0.18em;
+  text-transform: uppercase;
+  color: #9fd8bf;
+}
+
+.portal-id-card--dark .portal-id-role {
+  background: rgb(255 255 255 / 0.12);
+  color: #9fd8bf;
+  align-self: start;
+  justify-self: start;
+}
+
+.portal-id-card--dark .portal-id-name {
+  color: #fff;
+  font-size: 1.75rem;
+}
+
+.portal-id-card--dark .portal-id-note {
+  color: #b7d6c8;
+}
+
+.portal-id-card--dark .portal-id-acts {
+  border-color: rgb(255 255 255 / 0.16);
+}
+
+.portal-id-card--dark .btn-primary {
+  background: #fff;
+  border-color: #fff;
+  color: #00493a;
+}
+
+.portal-id-card--dark .btn-primary:hover {
+  background: #eef3ef;
+}
+
+.portal-id-card--dark .btn-secondary {
+  background: transparent;
+  border-color: rgb(255 255 255 / 0.3);
+  color: #fff;
+}
+
+.portal-id-card--dark .btn-secondary:hover {
+  background: rgb(255 255 255 / 0.1);
+}
+
+/* Grelha de baixo (ref. imagem 9): duas cartões brancas lado a lado
+   por baixo do hero escuro. */
+.sess-grid {
+  display: grid;
+  gap: 0.875rem;
+  margin-top: 0.875rem;
+}
+
+@media (min-width: 48rem) {
+  .sess-grid {
+    grid-template-columns: 1fr 1fr;
+  }
+}
+
+/* Linha da caixa «Segurança»: texto + botão que abre o drawer do PIN. */
+.portal-sess-sec {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 1rem;
+  flex-wrap: wrap;
+}
+
+.portal-sess-sec .portal-hint {
+  margin: 0;
+  flex: 1;
+  min-width: 14rem;
+}
+
+/* ============================================================
+   /portal/sessão — ritmo uniforme dos cards e as três secções
+   (Informações · Segurança · Conta) com a mesma gramática.
+   ============================================================ */
+
+/* Um só espaçamento entre TODOS os cards: o hero nasce colado ao
+   cartão seguinte (a margem do .portal-box--pad só existe depois de
+   outro .portal-box) e a grelha de baixo somava o seu gap à margem. */
+.portal-page > .portal-id-card + .portal-box,
+.portal-page > .portal-id-card + .portal-box--pad {
+  margin-top: 0.875rem;
+}
+
+.sess-grid > .portal-box,
+.sess-grid > .portal-box--pad {
+  margin-top: 0;
+}
+
+/* ---- Informações: linhas alinhadas (rótulo à esquerda, valor à
+        direita) — o <dl> nasce sem CSS nenhum. ------------------ */
+.sess-info {
+  margin: 0;
+  padding-top: 0.875rem;
+}
+
+.sess-info-row {
+  display: grid;
+  grid-template-columns: 6.5rem minmax(0, 1fr);
+  align-items: baseline;
+  gap: 0.25rem 1.25rem;
+  padding: 0.6875rem 0;
+  border-bottom: 1px solid var(--color-brand-divider);
+}
+
+.sess-info-row:last-child {
+  border-bottom: 0;
+}
+
+.sess-info dt {
+  margin: 0;
+  font-size: 0.6875rem;
+  font-weight: 700;
+  letter-spacing: 0.09em;
+  text-transform: uppercase;
+  line-height: 1.4;
+  color: var(--ink-45v);
+}
+
+.sess-info dd {
+  margin: 0;
+  font-size: 0.875rem;
+  font-weight: 600;
+  line-height: 1.5;
+  color: var(--color-brand-deep);
+  overflow-wrap: anywhere;
+}
+
+/* Chip do papel (Gerente/Balcão) e ponto de estado — os dois sinais
+   do hero, repetidos com a mesma linguagem na lista. */
+.sess-info-chip {
+  display: inline-flex;
+  align-items: center;
+  padding: 0.125rem 0.5rem;
+  border-radius: 999px;
+  background: rgb(10 132 79 / 0.1);
+  color: var(--color-brand-accent);
+  font-size: 0.6875rem;
+  font-weight: 700;
+  letter-spacing: 0.06em;
+  text-transform: uppercase;
+}
+
+html.dark .sess-info-chip {
+  background: rgb(10 132 79 / 0.22);
+}
+
+.sess-info-on {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.375rem;
+  color: var(--color-brand-accent);
+}
+
+.sess-info-on i {
+  width: 0.4375rem;
+  height: 0.4375rem;
+  border-radius: 50%;
+  background: currentColor;
+}
+
+/* Nota de rodapé do cartão: liga ao /perfil, onde vivem os dados da
+   farmácia — evita duplicar o que já lá está. */
+.sess-info-note {
+  margin: 0;
+  padding-top: 0.875rem;
+  border-top: 1px solid var(--color-brand-divider);
+  font-size: 0.75rem;
+  line-height: 1.6;
+  color: var(--ink-60v);
+  text-wrap: pretty;
+}
+
+.sess-info-note a {
+  color: var(--color-brand-accent);
+  font-weight: 700;
+  text-decoration: underline;
+  text-underline-offset: 2px;
+}
+
+/* ---- Segurança · Conta: o mesmo cartão (grelha estica as duas à
+        mesma altura) com a acção assente no fundo. -------------- */
+.sess-card {
+  display: flex;
+  flex-direction: column;
+}
+
+.sess-card-body {
+  flex: 1;
+  display: flex;
+  flex-direction: column;
+  gap: 0.875rem;
+  padding-top: 1rem;
+}
+
+.sess-card-text {
+  margin: 0;
+  max-width: 46ch;
+  font-size: 0.8125rem;
+  line-height: 1.65;
+  color: var(--ink-60v);
+  text-wrap: pretty;
+}
+
+.sess-card-act {
+  margin-top: auto;
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.5rem;
 }

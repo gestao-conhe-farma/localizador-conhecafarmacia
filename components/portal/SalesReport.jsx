@@ -4,13 +4,16 @@ import { useEffect, useMemo, useState } from 'react'
 import { getSalesReport } from '@/lib/actions/pharmacy-portal'
 import { logWarn } from '@/lib/log'
 import { fmtKz } from '@/lib/reservation-format'
+import { AreaChart, Area } from '@/components/charts/area-chart'
+import { Grid } from '@/components/charts/grid'
+import { XAxis } from '@/components/charts/x-axis'
+import { ChartTooltip } from '@/components/charts/tooltip'
 
 /**
  * Mini-relatório de vendas — total estimado por dia a partir das
- * reservas concluídas. Gráfico de LINHA em SVG puro (o projecto não
- * usa lib de charts): área verde suave + ponto no pico, com os dias
- * em baixo — o «spark» do mock modelo-a-v2. KPIs em cartões do v2
- * (kicker + ícone + delta com ponto).
+ * reservas concluídas. O gráfico é um AreaChart do @bklit (0018+):
+ * área verde da marca + tooltip com crosshair e date pill.
+ * KPIs em cartões do v2 (kicker + ícone + delta com ponto).
  *
  * Requisito de pureza dos hooks (react-hooks): "hoje" vive em estado
  * montado uma vez, nunca Date.now() directo no render — os dias sem
@@ -21,6 +24,13 @@ const WINDOWS = [
   { id: 7, label: '7 dias' },
   { id: 30, label: '30 dias' },
   { id: 90, label: '90 dias' },
+]
+
+// Âmbito do relatório — «Todas» = farmácia inteira; «As minhas» = só as
+// reservas concluídas pelo perfil activo (decidido no servidor).
+const ESCOPOS = [
+  { id: 'all', label: 'Todas' },
+  { id: 'mine', label: 'As minhas' },
 ]
 
 const ERRORES = {
@@ -40,6 +50,7 @@ function labelDia(iso) {
 export default function SalesReport() {
   const [report, setReport] = useState(null)
   const [days, setDays] = useState(30)
+  const [scope, setScope] = useState('all')
   const [loading, setLoading] = useState(true)
   // Resolvido após montar (evita Date.now() impuro no render).
   const [today, setToday] = useState(null)
@@ -48,9 +59,9 @@ export default function SalesReport() {
     setToday(new Date().toISOString().slice(0, 10))
   }, [])
 
-  const load = async (d) => {
+  const load = async (d, sc) => {
     setLoading(true)
-    const res = await getSalesReport({ days: d })
+    const res = await getSalesReport({ days: d, mine: sc === 'mine' })
     setLoading(false)
     if (res.ok) setReport(res)
     else {
@@ -60,9 +71,9 @@ export default function SalesReport() {
   }
 
   useEffect(() => {
-    load(days)
+    load(days, scope)
     // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [days])
+  }, [days, scope])
 
   /**
    * Série contínua: os dias da janela sem vendas entram com zero —
@@ -86,27 +97,19 @@ export default function SalesReport() {
   const bestDay = series.reduce((acc, s) => (s.value > (acc?.value ?? -1) ? s : acc), null)
 
   /**
-   * Pontos do gráfico de linha — viewBox 520×150 como no mock; o y
-   * escala do valor máximo para o chão (com folga) e os dias sem
-   * vendas ficam no fundo (buracos honestos, sem colapsar o eixo).
+   * Dados para o AreaChart — `date` é um Date real (o eixo x usa a
+   * escala temporal do visx e alinha o crosshair com os pontos);
+   * `valor` segue a convenção de chaves minúsculas do resto da página.
    */
-  const spark = (() => {
-    if (series.length === 0 || maxValue <= 0) return null
-    const W = 520
-    const H = 150
-    const n = series.length
-    const pt = (s, i) => {
-      const x = n === 1 ? W / 2 : (i / (n - 1)) * W
-      const y = H - 10 - (s.value / maxValue) * (H - 30)
-      return [Math.round(x * 10) / 10, Math.round(y * 10) / 10]
-    }
-    const pts = series.map(pt)
-    const line = pts.map(([x, y], i) => `${i === 0 ? 'M' : 'L'}${x},${y}`).join(' ')
-    const area = `${line} L${W},${H} L0,${H} Z`
-    const peakIdx = series.findIndex((s) => s.value === maxValue)
-    const [px, py] = pts[peakIdx === -1 ? n - 1 : peakIdx]
-    return { line, area, px, py }
-  })()
+  const chartData = useMemo(
+    () =>
+      series.map((s) => ({
+        date: new Date(`${s.day}T00:00:00Z`),
+        valor: s.value,
+        dia: s.day,
+      })),
+    [series],
+  )
 
   /**
    * Tendência vs. período anterior (mesmo tamanho da janela):
@@ -129,13 +132,28 @@ export default function SalesReport() {
         <div>
           <h1 className="portal-page-title">Vendas</h1>
           <p className="portal-page-sub">
-            Valor estimado por dia — reservas concluídas (levantadas no balcão).
+            {scope === 'mine'
+              ? 'Valor estimado por dia — só as reservas que você concluiu.'
+              : 'Valor estimado por dia — reservas concluídas (levantadas no balcão).'}
           </p>
         </div>
       </div>
 
       {/* Toolbar única — janela numa linha, à esquerda. */}
       <div className="portal-toolbar portal-toolbar--left">
+        <div className="portal-chips" role="group" aria-label="Escolher âmbito das vendas">
+          {ESCOPOS.map((e) => (
+            <button
+              key={e.id}
+              type="button"
+              className={`portal-chip${scope === e.id ? ' portal-chip--active' : ''}`}
+              aria-pressed={scope === e.id}
+              onClick={() => setScope(e.id)}
+            >
+              {e.label}
+            </button>
+          ))}
+        </div>
         <div className="portal-chips" role="group" aria-label="Escolher janela do relatório">
           {WINDOWS.map((w) => (
             <button
@@ -250,9 +268,10 @@ export default function SalesReport() {
             </div>
           </div>
 
-          {/* Gráfico de linha (spark do mock) — área verde suave, pico
-              marcado com ponto; dias sem venda ficam no fundo. */}
-          {spark ? (
+          {/* Gráfico de área (@bklit AreaChart) — verde da marca,
+              tooltip com crosshair, dots e date pill; os dias sem
+              venda ficam no fundo (buracos honestos). */}
+          {chartData.length > 0 && maxValue > 0 ? (
             <div className="portal-box">
               <div className="portal-card-head">
                 <h2>Vendas por dia</h2>
@@ -260,41 +279,34 @@ export default function SalesReport() {
               </div>
               <div className="portal-card-body">
                 <div
-                  className="portal-spark"
+                  className="portal-spark portal-spark--area"
                   role="img"
                   aria-label={`Valor estimado por dia nos últimos ${report.window} dias; total ${fmtKz(report.totalValue)}`}
                 >
-                  <svg viewBox="0 0 520 150" preserveAspectRatio="none">
-                    <defs>
-                      <linearGradient id="sparkGfx" x1="0" y1="0" x2="0" y2="1">
-                        <stop offset="0" stopColor="#0a844f" stopOpacity=".26" />
-                        <stop offset="1" stopColor="#0a844f" stopOpacity="0" />
-                      </linearGradient>
-                    </defs>
-                    <path d={spark.area} fill="url(#sparkGfx)" />
-                    <path
-                      d={spark.line}
-                      fill="none"
-                      stroke="#0a844f"
-                      strokeWidth="2.5"
-                      strokeLinecap="round"
-                      strokeLinejoin="round"
-                      vectorEffect="non-scaling-stroke"
+                  <AreaChart
+                    data={chartData}
+                    xDataKey="date"
+                    aspectRatio="3 / 1"
+                    margin={{ top: 24, right: 16, bottom: 8, left: 8 }}
+                  >
+                    <Grid horizontal />
+                    <Area dataKey="valor" fillOpacity={0.26} strokeWidth={2.5} />
+                    <XAxis numTicks={series.length > 40 ? 6 : 5} />
+                    <ChartTooltip
+                      rows={(point) => [
+                        {
+                          color: 'var(--chart-line-primary)',
+                          label: 'Vendas estimadas',
+                          value: fmtKz(point.valor),
+                        },
+                        {
+                          color: 'var(--chart-line-secondary)',
+                          label: 'Reservas',
+                          value: String(series.find((s) => s.day === point.dia)?.count ?? 0),
+                        },
+                      ]}
                     />
-                    <circle cx={spark.px} cy={spark.py} r="4" fill="#0a844f" />
-                    <circle cx={spark.px} cy={spark.py} r="8" fill="#0a844f" opacity=".16" />
-                  </svg>
-                </div>
-                <div className="portal-spark-days">
-                  {series.map((s, i) => (
-                    <span
-                      key={s.day}
-                      title={`${labelDia(s.day)} — ${fmtKz(s.value)} · ${s.count} reserva${s.count !== 1 ? 's' : ''}`}
-                      style={{ display: series.length > 10 && i % 2 === 1 ? 'none' : undefined }}
-                    >
-                      {labelDia(s.day)}
-                    </span>
-                  ))}
+                  </AreaChart>
                 </div>
               </div>
             </div>

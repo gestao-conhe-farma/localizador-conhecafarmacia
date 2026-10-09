@@ -1,6 +1,7 @@
 import Link from 'next/link'
 import { redirect } from 'next/navigation'
 import { getPharmacySessionVerbose } from '@/lib/pharmacy-session'
+import { getActiveStaff } from '@/lib/staff-session'
 import { openStatus } from '@/lib/opening-hours'
 import {
   getMyAttentionFeed,
@@ -187,7 +188,11 @@ export default async function PortalOverviewPage() {
   }
   const { pharmacy } = session
   const status = openStatus(pharmacy.opening_hours)
-  const nome = String(session.profile?.display_name || '')
+  // Saudação ao farmacêutico ACTIVO neste dispositivo (0018) — cai para
+  // o nome da conta só quando não há perfil escolhido (não acontece no
+  // dashboard: o layout já obrigou a um perfil antes de chegar aqui).
+  const staff = await getActiveStaff(session)
+  const nome = String(staff?.name || session.profile?.display_name || '')
     .trim()
     .split(/\s+/)[0]
 

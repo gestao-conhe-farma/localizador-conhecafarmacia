@@ -29,8 +29,10 @@ function timeAgo(iso, now) {
 
 const PAGE_SIZE = 40
 
-/** Plural da unidade — rótulos da entrada ("3 caixas", "10 lâminas"). */
-const PLURALS = {
+/** Plural da unidade — rótulos da entrada ("3 caixas", "10 lâminas").
+ *  Exportado: o drawer rápido de /stock (RestockDrawer) parte destas
+ *  MESMAS regras — uma só fonte para «em que unidade chegou». */
+export const PLURALS = {
   comprimido: 'Comprimidos',
   lamina: 'Lâminas',
   caixa: 'Caixas',
@@ -40,7 +42,7 @@ const PLURALS = {
 }
 
 /** Formas sólidas (comprimido/cápsula) — as que têm lâminas e caixas. */
-const isSolid = (form) => /comprimido|c[aá]psula/i.test(form || '')
+export const isSolid = (form) => /comprimido|c[aá]psula/i.test(form || '')
 
 /**
  * Unidades em que esta farmácia pode dizer o que chegou (0016).
@@ -48,7 +50,7 @@ const isSolid = (form) => /comprimido|c[aá]psula/i.test(form || '')
  * chegada: quem vende só por lâmina AINDA RECEBE caixas — vender e
  * chegar são decisões diferentes.
  */
-function unitOptions(it) {
+export function unitOptions(it) {
   const set = new Set((it.sale_options || []).filter((o) => o.active !== false).map((o) => o.unit))
   if (isSolid(it.form)) {
     set.add('caixa')
@@ -65,7 +67,7 @@ function unitOptions(it) {
 /** Unidade seleccionada por omissão: a do saldo (padrão); sem opções
  *  registadas, as sólidas começam em «caixas» — é como chega a
  *  mercadoria. */
-function defaultUnit(it) {
+export function defaultUnit(it) {
   const def = (it.sale_options || []).find((o) => o.is_default && o.active !== false)
   if (def) return def.unit
   return unitOptions(it)[0]
@@ -109,7 +111,7 @@ function suggestOptionsLocal(form) {
  * o factor de conversão coincidir com a leitura física; preços
  * escritos entram por cima (preencher preço = oferecer a forma).
  */
-function buildOptions(it, { unit, pack, priceMap }) {
+export function buildOptions(it, { unit, pack, priceMap }) {
   let list = (it.sale_options || []).map((o) => ({
     unit: o.unit,
     packSize: String(o.pack_size ?? 1),
@@ -167,7 +169,7 @@ function buildOptions(it, { unit, pack, priceMap }) {
 }
 
 /** Leitura física do que chegou — «3 caixas · 30 lâminas · 300 comp.». */
-function physicalParts(qty, unit, lam, comp, solid) {
+export function physicalParts(qty, unit, lam, comp, solid) {
   if (!solid) return []
   if (unit === 'comprimido') return [`${qty} comprimidos`]
   if (unit === 'lamina') {

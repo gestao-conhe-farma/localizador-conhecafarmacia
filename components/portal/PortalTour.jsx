@@ -8,10 +8,16 @@ import { useRouter } from 'next/navigation'
  * 3 passos destacado sobre as páginas REAIS: o spotlight recorta o
  * elemento-alvo (data-attribute) e a carta explica o que fazer ali.
  *
- * Passos:
+ * Passos (5):
  *   1. /portal            → sino de reservas na sidebar (data-tour="bell")
- *   2. /portal/atencao    → chips de filtro (data-tour="chips")
- *   3. /portal/entrada    → campo «Chegaram» (data-tour="restock-input")
+ *   2. /portal            → menu do perfil na top-bar (data-tour="staff-menu")
+ *   3. /portal/atencao    → chips de filtro (data-tour="chips")
+ *   4. /portal/stock      → submenu «Entrada de stock» (data-tour="stock-sub")
+ *   5. /portal/stock      → botão «+ Nova entrada» (data-tour="nova-entrada")
+ *
+ * Alvos SEMPRE presentes no DOM (item de nav, pill, botão): antes o
+ * passo 1 mirava só o badge do sino, que só existe com reservas
+ * pendentes — sem ele o tour ficava 3s no escuro e saltava passos.
  *
  * Estado: localStorage por utilizador (`portal-onboard:<sub>`) — quem
  * já fez não vê de novo; sessão nova do mesmo user também não. O ESC
@@ -30,8 +36,15 @@ const STEPS = [
     href: '/portal',
     target: '[data-tour="bell"]',
     title: 'Novas reservas chegam aqui',
-    body: 'Este sino mostra as reservas por atender, em tempo real. Quando tocar, fica amarelo e pulsa. As reservas esperam resposta até 72 horas — o «Reservas» ao lado é onde responde.',
+    body: 'Este sino, no item Reservas da sidebar, mostra as reservas por atender em tempo real — quando há novas, acende em âmbar e pulsa. As reservas esperam resposta até 72 horas.',
     placement: 'right',
+  },
+  {
+    href: '/portal',
+    target: '[data-tour="staff-menu"]',
+    title: 'Quem está ao balcão',
+    body: 'No canto superior direito está o perfil activo — tudo o que registar fica em nome dele. Tocar no nome abre o menu: «Trocar perfil» (cartões + PIN), «Sessão e PIN» e «Sair do perfil».',
+    placement: 'bottom',
   },
   {
     href: '/portal/atencao',
@@ -50,6 +63,13 @@ const STEPS = [
     body: 'Dentro do menu Stock fica a Entrada de stock — toque na seta para abrir. Chegou mercadoria? Escolha o medicamento, escreva quantas unidades chegaram e toque «Somar»: o produto volta a aparecer no Localizador.',
     placement: 'right',
     openSubmenu: true,
+  },
+  {
+    href: '/portal/stock',
+    target: '[data-tour="nova-entrada"]',
+    title: 'Registo rápido, em painel lateral',
+    body: 'O botão «+ Nova entrada» abre um painel lateral: pesquisa o medicamento, escreve a quantidade, escolhe a unidade e «Somar» — sem sair do Stock. Para detalhes (preços, estrutura da caixa), use a página completa no submenu.',
+    placement: 'bottom',
   },
 ]
 
@@ -156,10 +176,10 @@ export default function PortalTour({ userSub }) {
       window.dispatchEvent(new CustomEvent('portal-tour:open-submenu'))
     }
     // Tenta medir várias vezes: a navegação é client-side e o alvo
-    // só existe depois de a página do portal carregar. Se 3 segundos
-    // não chegarem (ex.: o sino não existe porque não há reservas
-    // pendentes), SALTA o passo automaticamente — o tour nunca fica
-    // preso à espera de um elemento que não vai nascer.
+    // só existe depois de a página do portal carregar. Se 5 segundos
+    // não chegarem (ex.: o alvo não existe porque a página demorou),
+    // SALTA o passo automaticamente — o tour nunca fica preso à
+    // espera de um elemento que não vai nascer.
     const skip = setTimeout(() => {
       // Último passo: termina (grava como feito); senão avança.
       if (stepIdx === STEPS.length - 1) {
@@ -167,7 +187,7 @@ export default function PortalTour({ userSub }) {
       } else {
         setStepIdx((i) => i + 1)
       }
-    }, 3000)
+    }, 5000)
     let tries = 0
     let raf = 0
     const attempt = () => {
@@ -185,7 +205,9 @@ export default function PortalTour({ userSub }) {
         // o componente montar o listener).
         window.dispatchEvent(new CustomEvent('portal-tour:open-submenu'))
       }
-      if (tries < 180) {
+      // ~16,7 ms por frame → 300 tentativas ≈ os mesmos 5 s do skip:
+      // a janela de procura e a de skip correm juntas.
+      if (tries < 300) {
         tries += 1
         raf = requestAnimationFrame(attempt)
       }

@@ -3,12 +3,12 @@
 import Link from 'next/link'
 import Image from 'next/image'
 import { usePathname } from 'next/navigation'
-import { useCallback, useEffect, useState } from 'react'
+import { useCallback, useEffect, useRef, useState } from 'react'
 import { getPendingReservationsCount, getAttentionCount } from '@/lib/actions/pharmacy-portal'
+import { leaveStaffProfile } from '@/lib/actions/pharmacy-staff'
 import { createClient } from '@/lib/supabase/client'
 import { getRestockAck } from '@/lib/restock'
 import { logWarn } from '@/lib/log'
-import PortalLogout from '@/components/portal/PortalLogout'
 import { ChevronIcon, CloseIcon, NavIcon } from '@/components/ui/Icon'
 
 const NAV = [
@@ -37,12 +37,16 @@ const NAV = [
         bell: true,
       },
       { href: '/portal/vendas', label: 'Vendas', icon: 'vendas' },
+      // Visível a todos (0018): o gerente vê a equipa, o balcão vê a
+      // versão pessoal — o escopo é imposto no servidor.
+      { href: '/portal/desempenho', label: 'Desempenho', icon: 'desempenho' },
     ],
   },
   {
     group: 'Farmácia',
     items: [
       { href: '/portal/perfil', label: 'Perfil', icon: 'perfil' },
+      { href: '/portal/equipa', label: 'Equipa', icon: 'equipa', gerente: true },
       { href: '/portal/ajuda', label: 'Ajuda', icon: 'ajuda' },
     ],
   },
@@ -71,13 +75,20 @@ function iniciais(nome) {
  *
  * Contagens: realtime de `reservations` + refetch ao navegar;
  * atenção desconta as reposições dispensadas neste browser.
+ *
+ * `staff` (0018): perfil activo do dispositivo — alimenta o fundo
+ * (avatar/nome → MENU DIRECTO com trocar/sair/PIN) e esconde
+ * Desempenho/Equipa a quem não é gerente.
  */
-export default function PortalSidebar({ pharmacyId, userName, navOpen, onClose }) {
+export default function PortalSidebar({ pharmacyId, userName, staff, navOpen, onClose }) {
   const pathname = usePathname()
   const [pending, setPending] = useState(0)
   const [pulse, setPulse] = useState(false)
   const [attention, setAttention] = useState(null)
   const [expiry, setExpiry] = useState(0)
+  // Menu directo do rodapé (trocar perfil / sair / sessão).
+  const [menuAberto, setMenuAberto] = useState(false)
+  const menuRef = useRef(null)
 
   const refreshCount = useCallback(async () => {
     const res = await getPendingReservationsCount()
@@ -108,11 +119,30 @@ export default function PortalSidebar({ pharmacyId, userName, navOpen, onClose }
     refreshAttention()
   }, [pathname, refreshCount, refreshAttention, pharmacyId])
 
-  // Fecha o drawer sempre que a rota muda
+  // Fecha o drawer sempre que a rota muda — e também o menu do fundo
+  // (trocar de perfil é uma navegação: o menu não pode seguir o clique).
   useEffect(() => {
     onClose?.()
+    setMenuAberto(false)
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [pathname])
+
+  // Fecha o menu ao clicar fora dele ou premir Escape.
+  useEffect(() => {
+    if (!menuAberto) return undefined
+    const fora = (e) => {
+      if (menuRef.current && !menuRef.current.contains(e.target)) setMenuAberto(false)
+    }
+    const esc = (e) => {
+      if (e.key === 'Escape') setMenuAberto(false)
+    }
+    document.addEventListener('mousedown', fora)
+    document.addEventListener('keydown', esc)
+    return () => {
+      document.removeEventListener('mousedown', fora)
+      document.removeEventListener('keydown', esc)
+    }
+  }, [menuAberto])
 
   // Realtime: qualquer movimento em reservas refresca o sino
   useEffect(() => {
@@ -135,8 +165,13 @@ export default function PortalSidebar({ pharmacyId, userName, navOpen, onClose }
     }
   }, [refreshCount, refreshAttention])
 
+  // Navegação filtrada: Equipa só existe para gerentes.
+  const grupos = NAV.map((g) => ({
+    ...g,
+    items: g.items.filter((t) => !t.gerente || staff?.role === 'gerente'),
+  }))
   // Numeração estrutural (01, 02, …) — a mesma do NavLateral do gestão.
-  const flat = NAV.flatMap((g) => g.items)
+  const flat = grupos.flatMap((g) => g.items)
 
   return (
     <>
@@ -149,7 +184,9 @@ export default function PortalSidebar({ pharmacyId, userName, navOpen, onClose }
       <aside
         className={`portal-sidebar portal-sidebar-v2${navOpen ? ' portal-sidebar--open' : ''}`}
       >
-        {/* Logo branco do site público + eyebrow, como no gestão. */}
+        {/* Logo branco do site público + eyebrow, como no gestão. O
+            eyebrow passa para a MESMA linha do logo (0018+): o bloco
+            encolhe e a navegação sobe. */}
         <div className="portal-side-brand">
           <div className="portal-side-brand-main">
             <Link href="/portal" className="portal-side-logo-link" aria-label="Portal — início">
@@ -188,7 +225,7 @@ export default function PortalSidebar({ pharmacyId, userName, navOpen, onClose }
         </div>
 
         <nav className="portal-nav" aria-label="Secções do portal">
-          {NAV.map((group) => (
+          {grupos.map((group) => (
             <div key={group.group} className="portal-nav-group">
               <span className="portal-nav-label">{group.group}</span>
               {group.items.map((t) => {
@@ -222,13 +259,47 @@ export default function PortalSidebar({ pharmacyId, userName, navOpen, onClose }
           ))}
         </nav>
 
-        {/* Utilizador + sair no fundo da sidebar, como no gestão. */}
-        <div className="portal-sidebar-foot">
-          <span className="portal-foot-avatar" aria-hidden="true">
-            {iniciais(userName)}
-          </span>
-          <span className="portal-foot-meta">{userName || 'Utilizador'}</span>
-          <PortalLogout />
+        {/* Perfil activo no fundo — o clique abre um MENU DIRECTO com
+            «Trocar perfil», «Sair do perfil» e «Sessão/PIN» (0018+): o
+            balcão escolhe sem sair da página que está a ver. */}
+        <div className="portal-sidebar-foot portal-foot-wrap" ref={menuRef}>
+          <button
+            type="button"
+            className={`portal-foot-link${menuAberto ? ' is-open' : ''}`}
+            aria-haspopup="menu"
+            aria-expanded={menuAberto}
+            onClick={() => setMenuAberto((a) => !a)}
+            title="Opções do perfil — trocar ou sair"
+          >
+            <span className="portal-foot-avatar" aria-hidden="true">
+              {iniciais(staff?.name || userName)}
+            </span>
+            <span className="portal-foot-meta">
+              <span className="portal-foot-name">{staff?.name || userName || 'Utilizador'}</span>
+              <span className="portal-foot-sub">
+                {(staff?.role === 'gerente' ? 'Gerente' : staff ? 'Balcão' : 'Perfil') +
+                  ' · trocar ou sair'}
+              </span>
+            </span>
+            <ChevronIcon size={13} dir={menuAberto ? 'down' : 'right'} />
+          </button>
+
+          {menuAberto && (
+            <div className="portal-foot-menu" role="menu">
+              <span className="portal-foot-menu-h">Sessão do perfil</span>
+              <Link href="/portal/perfis" className="portal-foot-menu-i" role="menuitem">
+                Trocar perfil
+              </Link>
+              <Link href="/portal/sessao" className="portal-foot-menu-i" role="menuitem">
+                Sessão e PIN
+              </Link>
+              <form action={leaveStaffProfile} className="portal-foot-menu-form">
+                <button type="submit" className="portal-foot-menu-i" role="menuitem">
+                  Sair do perfil
+                </button>
+              </form>
+            </div>
+          )}
         </div>
       </aside>
     </>
@@ -247,6 +318,10 @@ function NavSimples({ item, num, pending, pulse, attention, expiry, onClose }) {
       className={`portal-nav-item${active ? ' portal-nav-item--active' : ''}`}
       aria-current={active ? 'page' : undefined}
       onClick={onClose}
+      // Alvo do tour no ITEM (sempre existe); o badge animado é o detalhe
+      // que o passo descreve — antes vivia só no badge e, sem reservas
+      // pendentes, o alvo não nascia e o tour saltava o passo 1.
+      {...(item.bell ? { 'data-tour': 'bell' } : {})}
     >
       <span className="portal-nav-num">{num}</span>
       <NavIcon name={item.icon} />

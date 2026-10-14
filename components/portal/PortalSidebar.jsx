@@ -31,6 +31,14 @@ const NAV = [
         filhos: [{ href: '/portal/entrada', label: 'Entrada de stock' }],
       },
       {
+        // O livro-razão do stock (0020) fica ao lado do stock: é o que
+        // se abre quando há uma dúvida sobre o saldo («porque é que
+        // este número está assim?»).
+        href: '/portal/movimentos',
+        label: 'Movimentos',
+        icon: 'movimentos',
+      },
+      {
         href: '/portal/reservas',
         label: 'Reservas',
         icon: 'reservas',
@@ -43,10 +51,17 @@ const NAV = [
     ],
   },
   {
+    // O Perfil (dados da FARMÁCIA) saiu daqui para a top-bar — o nome da
+    // farmácia é a sua entrada. No lugar dele fica a Sessão: os dados do
+    // FARMACÊUTICO com sessão iniciada (PIN, perfil activo, trocar/sair).
     group: 'Farmácia',
     items: [
-      { href: '/portal/perfil', label: 'Perfil', icon: 'perfil' },
+      { href: '/portal/sessao', label: 'Sessão', icon: 'perfil' },
       { href: '/portal/equipa', label: 'Equipa', icon: 'equipa', gerente: true },
+      // Integração (0023/0024): chaves de API, importação CSV e webhooks.
+      // Visível a todos — criar/revogar chaves é que exige perfil gerente
+      // (a página diz isso e desactiva o que não for permitido).
+      { href: '/portal/integracao', label: 'Integração', icon: 'integracao' },
       { href: '/portal/ajuda', label: 'Ajuda', icon: 'ajuda' },
     ],
   },
@@ -76,9 +91,9 @@ function iniciais(nome) {
  * Contagens: realtime de `reservations` + refetch ao navegar;
  * atenção desconta as reposições dispensadas neste browser.
  *
- * `staff` (0018): perfil activo do dispositivo — alimenta o fundo
- * (avatar/nome → MENU DIRECTO com trocar/sair/PIN) e esconde
- * Desempenho/Equipa a quem não é gerente.
+ * `staff` (0018): perfil activo do dispositivo — é o ÚNICO lugar com o
+ * nome do farmacêutico (menu directo com trocar/sair; a página Sessão
+ * tem o PIN e os seus dados) e esconde Equipa a quem não é gerente.
  */
 export default function PortalSidebar({ pharmacyId, userName, staff, navOpen, onClose }) {
   const pathname = usePathname()
@@ -259,9 +274,10 @@ export default function PortalSidebar({ pharmacyId, userName, staff, navOpen, on
           ))}
         </nav>
 
-        {/* Perfil activo no fundo — o clique abre um MENU DIRECTO com
-            «Trocar perfil», «Sair do perfil» e «Sessão/PIN» (0018+): o
-            balcão escolhe sem sair da página que está a ver. */}
+        {/* Perfil activo no fundo — o clique abre um MENU DIRECTO com as
+            DUAS opções do turno: «Trocar perfil» e «Sair do perfil»
+            (0018+). O PIN e os dados do farmacêutico vivem na página
+            Sessão, na navegação. */}
         <div className="portal-sidebar-foot portal-foot-wrap" ref={menuRef}>
           <button
             type="button"
@@ -270,6 +286,7 @@ export default function PortalSidebar({ pharmacyId, userName, staff, navOpen, on
             aria-expanded={menuAberto}
             onClick={() => setMenuAberto((a) => !a)}
             title="Opções do perfil — trocar ou sair"
+            data-tour="staff-menu"
           >
             <span className="portal-foot-avatar" aria-hidden="true">
               {iniciais(staff?.name || userName)}
@@ -286,12 +303,9 @@ export default function PortalSidebar({ pharmacyId, userName, staff, navOpen, on
 
           {menuAberto && (
             <div className="portal-foot-menu" role="menu">
-              <span className="portal-foot-menu-h">Sessão do perfil</span>
+              <span className="portal-foot-menu-h">Perfil activo</span>
               <Link href="/portal/perfis" className="portal-foot-menu-i" role="menuitem">
                 Trocar perfil
-              </Link>
-              <Link href="/portal/sessao" className="portal-foot-menu-i" role="menuitem">
-                Sessão e PIN
               </Link>
               <form action={leaveStaffProfile} className="portal-foot-menu-form">
                 <button type="submit" className="portal-foot-menu-i" role="menuitem">
@@ -381,10 +395,18 @@ function NavGrupo({ item, num, pathname, onClose }) {
   return (
     <div>
       <div className={`portal-nav-item${active || grupoAtivo ? ' portal-nav-item--active' : ''}`}>
-        <span className="portal-nav-num">{num}</span>
-        <NavIcon name={item.icon} />
-        <Link href={item.href} className="portal-nav-text" onClick={onClose}>
-          {item.label}
+        {/* A linha inteira é o link (antes só o texto de 4 letras era
+            clicável — quem carregava no ícone ou no número não ia a lado
+            nenhum). A seta continua a ser um botão só para o submenu. */}
+        <Link
+          href={item.href}
+          className="portal-nav-main"
+          onClick={onClose}
+          aria-current={active ? 'page' : undefined}
+        >
+          <span className="portal-nav-num">{num}</span>
+          <NavIcon name={item.icon} />
+          <span className="portal-nav-text">{item.label}</span>
         </Link>
         <button
           type="button"

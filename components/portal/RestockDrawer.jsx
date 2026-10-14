@@ -37,6 +37,7 @@ const ERRORES = {
   UNIDADE_INVALIDA: 'Unidade de entrada inválida.',
   PRECO_INVALIDO: 'Preço inválido numa das formas de venda.',
   DEFAULT_MULTIPLO: 'Só uma forma de venda pode ser a padrão.',
+  DATA_INVALIDA: 'Validade inválida — use o calendário (AAAA-MM-DD).',
 }
 
 function estadoDe(it) {
@@ -55,6 +56,10 @@ export default function RestockDrawer({ open, onClose }) {
   const [qty, setQty] = useState('')
   const [unitSel, setUnitSel] = useState({})
   const [packs, setPacks] = useState({})
+  // 0021 — lote + validade do que chegou (opcionais): é o que permite ao
+  // stock saber o que expira primeiro (FEFO). Mesmas regras do painel
+  // completo — o drawer é o caminho rápido, não um caminho diferente.
+  const [lotInput, setLotInput] = useState({}) // drug_id -> { num, exp }
   const [msg, setMsg] = useState(null) // { type: 'ok' | 'err', text }
   const [pending, startTransition] = useTransition()
 
@@ -81,6 +86,7 @@ export default function RestockDrawer({ open, onClose }) {
     setQ('')
     setSel(null)
     setQty('')
+    setLotInput({})
     setMsg(null)
   }, [open])
 
@@ -126,12 +132,17 @@ export default function RestockDrawer({ open, onClose }) {
     const options = buildOptions(sel, { unit, pack, priceMap: {} })
     const baseUnit = (options.find((o) => o.isDefault && o.active) || options[0]).unit
     const parts = physicalParts(n, unit, lam, comp, solid)
+    const lot = lotInput[id] || {}
+    const lotNumber = String(lot.num || '').trim()
+    const lotExpires = String(lot.exp || '').trim()
 
     startTransition(async () => {
       const res = await addStockUnits({
         drugId: id,
         units: n,
         unit,
+        lotNumber,
+        lotExpires,
         ...(solid && {
           packLaminas: pack.lam ?? sel.pack_laminas ?? '',
           packComprimidos: pack.comp ?? sel.pack_comprimidos ?? '',
@@ -146,10 +157,11 @@ export default function RestockDrawer({ open, onClose }) {
         )
         setSel((s) => (s ? { ...s, in_stock: true, quantity: res.total } : s))
         setQty('')
+        setLotInput((l) => ({ ...l, [id]: { num: '', exp: '' } }))
         const desc = parts.length ? parts.join(' · ') : `${n} ${PLURALS[unit].toLowerCase()}`
         setMsg({
           type: 'ok',
-          text: `+${desc} de ${sel.name} — saldo agora em ${res.total} ${PLURALS[baseUnit].toLowerCase()}.`,
+          text: `+${desc} de ${sel.name}${lotNumber ? ` (lote ${lotNumber})` : ''} — saldo agora em ${res.total} ${PLURALS[baseUnit].toLowerCase()}.`,
         })
       } else {
         setMsg({ type: 'err', text: ERRORES[res.error] || ERRORES.FALHA_GUARDAR })
@@ -327,6 +339,61 @@ export default function RestockDrawer({ open, onClose }) {
                 disabled={pending}
               />
               comprimidos/lâmina
+            </span>
+          )}
+
+          {/* 0021 — lote + validade: a mercadoria datada entra na sua
+              camada; sem lote vai para a camada «por identificar». */}
+          {qty !== '' && (
+            <span className="restock-pack">
+              Lote
+              <input
+                type="text"
+                maxLength={40}
+                className="portal-input portal-input--lot"
+                value={(lotInput[sel.drug_id] || {}).num ?? ''}
+                onChange={(e) =>
+                  setLotInput((l) => ({
+                    ...l,
+                    [sel.drug_id]: { ...l[sel.drug_id], num: e.target.value },
+                  }))
+                }
+                placeholder="opcional"
+                aria-label={`Lote recebido de ${sel.name}`}
+                disabled={pending}
+              />
+              Validade
+              <input
+                type="date"
+                className="portal-input portal-input--date"
+                value={(lotInput[sel.drug_id] || {}).exp ?? ''}
+                onChange={(e) =>
+                  setLotInput((l) => ({
+                    ...l,
+                    [sel.drug_id]: { ...l[sel.drug_id], exp: e.target.value },
+                  }))
+                }
+                aria-label={`Validade do lote recebido de ${sel.name}`}
+                disabled={pending}
+              />
+            </span>
+          )}
+
+          {/* Camadas já em stock (0021) — o lote que expira primeiro vem
+              à frente: é o próximo a sair no balcão. */}
+          {(sel.lots || []).length > 0 && (
+            <span className="restock-lotlist">
+              <span className="restock-prices-k">Em stock:</span>
+              {(sel.lots || []).slice(0, 3).map((l, i) => (
+                <span
+                  key={`${l.lot_number || 'sem'}-${l.expires_at || 'sem'}-${i}`}
+                  className="restock-lot"
+                >
+                  {l.lot_number || 'sem nº'}
+                  {l.expires_at ? ` · ${monthYear(l.expires_at)}` : ' · s/ validade'}
+                  {` · ${l.quantity} un.`}
+                </span>
+              ))}
             </span>
           )}
 

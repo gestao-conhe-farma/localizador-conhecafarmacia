@@ -148,6 +148,22 @@ const NAV_PATHS = {
       <path d="M15 7h6v6" />
     </>
   ),
+  // Movimentos — o livro-razão (páginas/linhas de um livro).
+  movimentos: (
+    <>
+      <path d="M5 4h13a1 1 0 0 1 1 1v15H6a1 1 0 0 1-1-1V4z" />
+      <path d="M9 4v16" />
+      <path d="M12.5 9h3.5" />
+      <path d="M12.5 13h3.5" />
+    </>
+  ),
+  // Integração — ligação entre sistemas (duas peças a encaixar).
+  integracao: (
+    <>
+      <path d="M10.5 13.5a4 4 0 0 0 5.7 0l2.1-2.1a4 4 0 0 0-5.7-5.7l-1.1 1.1" />
+      <path d="M13.5 10.5a4 4 0 0 0-5.7 0l-2.1 2.1a4 4 0 0 0 5.7 5.7l1.1-1.1" />
+    </>
+  ),
   // Equipa (só gerente) — dois perfis lado a lado.
   equipa: (
     <>

@@ -23,8 +23,18 @@ const PAGES = [
   { label: 'Precisa de atenção', sub: 'Avisos e fila de hoje', href: '/portal/atencao' },
   { label: 'Stock', sub: 'Medicamentos, preços e validade', href: '/portal/stock' },
   { label: 'Entrada de stock', sub: 'Repor mercadoria recebida', href: '/portal/entrada' },
+  {
+    label: 'Movimentos',
+    sub: 'Histórico de entradas e saídas de stock',
+    href: '/portal/movimentos',
+  },
   { label: 'Reservas', sub: 'Atender pedidos dos clientes', href: '/portal/reservas' },
   { label: 'Vendas', sub: 'Relatório por dia', href: '/portal/vendas' },
+  {
+    label: 'Integração',
+    sub: 'Chaves de API e importação do sistema da farmácia',
+    href: '/portal/integracao',
+  },
   { label: 'Perfil da farmácia', sub: 'Contacto, morada e horário', href: '/portal/perfil' },
   { label: 'Ajuda', sub: 'Guias do atendente', href: '/portal/ajuda' },
 ]
@@ -33,7 +43,7 @@ const PAGES = [
 const RES_ST = {
   pendente: 'Por atender',
   confirmada: 'Confirmada',
-  pronta: 'Pronta · aguarda levantamento',
+  pronta: 'Pronta · aguarda…',
   concluida: 'Concluída',
   recusada: 'Recusada',
   expirada: 'Expirada',

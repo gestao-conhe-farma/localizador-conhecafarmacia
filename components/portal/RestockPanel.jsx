@@ -2,7 +2,7 @@
 
 import { useEffect, useMemo, useState } from 'react'
 import { useSearchParams } from 'next/navigation'
-import { getMyStockSnapshot, addStockUnits } from '@/lib/actions/pharmacy-portal'
+import { getMyStockSnapshot, addStockUnits, getItemLots } from '@/lib/actions/pharmacy-portal'
 import { expiryStatus, monthYear } from '@/lib/expiry'
 import StateLabel from '@/components/portal/StateLabel'
 
@@ -17,6 +17,7 @@ const ERRORES = {
   UNIDADE_INVALIDA: 'Unidade de entrada inválida.',
   PRECO_INVALIDO: 'Preço inválido numa das formas de venda.',
   DEFAULT_MULTIPLO: 'Só uma forma de venda pode ser a padrão.',
+  DATA_INVALIDA: 'Validade inválida — use o calendário (AAAA-MM-DD).',
 }
 
 function timeAgo(iso, now) {
@@ -225,6 +226,14 @@ export default function RestockPanel() {
   const [unitSel, setUnitSel] = useState({}) // drug_id -> unit id
   const [packs, setPacks] = useState({}) // drug_id -> { lam, comp }
   const [prices, setPrices] = useState({}) // drug_id -> { caixa, lamina, … }
+  // 0021 — LOTE + VALIDADE de cada entrada: é o que faz o stock saber o
+  // que expira primeiro (FEFO). Opcionais: mercadoria sem lote
+  // identificado entra na camada «por identificar» (nunca se mistura em
+  // silêncio com um lote datado).
+  const [lotInput, setLotInput] = useState({}) // drug_id -> { num, exp }
+  // Lotes já em stock, por item — releitura pontual depois de somar um
+  // lote novo (o snapshot traz a lista inicial; FEFO precisa da nova).
+  const [lotsFresh, setLotsFresh] = useState({}) // drug_id -> lista
   const [savingId, setSavingId] = useState(null)
   const [toast, setToast] = useState('')
   const [log, setLog] = useState([]) // entradas desta sessão (confirmação)
@@ -364,12 +373,17 @@ export default function RestockPanel() {
     const comp = Number(pack.comp ?? it.pack_comprimidos ?? '') || null
     const parts = physicalParts(n, unit, lam, comp, solid)
     const baseUnit = (options.find((o) => o.isDefault && o.active) || options[0]).unit
+    const lot = lotInput[id] || {}
+    const lotNumber = String(lot.num || '').trim()
+    const lotExpires = String(lot.exp || '').trim()
 
     setSavingId(id)
     const res = await addStockUnits({
       drugId: id,
       units: n,
       unit,
+      lotNumber,
+      lotExpires,
       // A estrutura só existe nas formas sólidas — nos outros casos os
       // campos nem aparecem (undefined = não tocar nas colunas).
       ...(solid && {
@@ -417,13 +431,21 @@ export default function RestockPanel() {
         ),
       )
       setUnits((u) => ({ ...u, [id]: '' }))
+      setLotInput((l) => ({ ...l, [id]: { num: '', exp: '' } }))
+      // Lote indicado = o item ganhou uma camada nova: releio os lotes do
+      // servidor para a lista (e o FEFO) ficar a contar com ela.
+      if (lotNumber || lotExpires) {
+        getItemLots({ drugId: id }).then((r) => {
+          if (r.ok) setLotsFresh((s) => ({ ...s, [id]: r.lots }))
+        })
+      }
       const desc = parts.length ? parts.join(' · ') : `${n} ${PLURALS[unit].toLowerCase()}`
       setLog((l) => [
         { name: it.name, added: res.added, unit: baseUnit, total: res.total, at: Date.now() },
         ...l,
       ])
       flash(
-        `+${desc} de ${it.name} — saldo agora em ${res.total} ${PLURALS[baseUnit].toLowerCase()}.`,
+        `+${desc} de ${it.name}${lotNumber ? ` (lote ${lotNumber})` : ''} — saldo agora em ${res.total} ${PLURALS[baseUnit].toLowerCase()}.`,
       )
     } else {
       flash(ERRORES[res.error] || ERRORES.FALHA_GUARDAR)
@@ -460,7 +482,8 @@ export default function RestockPanel() {
       )}
 
       {/* KPIs de resumo — contagens REAIS do snapshot + entradas da
-          sessão; ícone à esquerda, estado = ponto + palavra. */}
+          sessão; ícone no canto superior direito (como em /vendas),
+          texto a fluir, estado = ponto + palavra. */}
       <div className="portal-kpi4-grid">
         <div className="portal-kpi4">
           <span className="portal-kpi4-ic portal-kpi4-ic--amber" aria-hidden="true">
@@ -636,196 +659,251 @@ export default function RestockPanel() {
           </div>
         )}
 
-        {/* Cabeçalho das colunas — rótulos micro sobre as linhas. */}
-        {filtered.length > 0 && (
-          <div className="portal-rowhead portal-cols-entrada" aria-hidden="true">
-            <span>Medicamento</span>
-            <span>Estado</span>
-            <span>Saldo</span>
-            <span>Registar entrada</span>
-          </div>
-        )}
+        <div className="portal-table-scroll">
+          {/* Cabeçalho das colunas — rótulos micro sobre as linhas. */}
+          {filtered.length > 0 && (
+            <div className="portal-rowhead portal-cols-entrada" aria-hidden="true">
+              <span>Medicamento</span>
+              <span>Estado</span>
+              <span>Saldo</span>
+              <span>Registar entrada</span>
+            </div>
+          )}
 
-        <div className="restock-list">
-          {filtered.slice(0, visibleCount).map((it) => {
-            const expiry = expiryStatus(it.expires_at)
-            const busy = savingId === it.drug_id
-            const out = !it.in_stock || (it.quantity ?? 0) === 0
-            // Estado da linha (disciplina v2): ponto + palavra — o mesmo
-            // vocabulário do Stock, aqui com o caso «chegou lote novo».
-            const st = out
-              ? { cls: 'mut', txt: 'Sem stock' }
-              : expiry && expiry.level === 'expired'
-                ? { cls: 'bad', txt: 'Expirado' }
-                : expiry && expiry.level !== 'ok'
-                  ? { cls: 'warn', txt: expiry.label }
-                  : { cls: 'ok', txt: 'Disponível' }
-            // 0016 — detalhe da entrada (unidade, estrutura, preços,
-            // prévia de conversão). O detalhe só abre com quantidade
-            // escrita: a lista mantém-se varrível, os campos aparecem
-            // exactamente quando o atendente vai registar.
-            const id = it.drug_id
-            const solid = isSolid(it.form)
-            const selUnit = unitSel[id] || defaultUnit(it)
-            const pack = packs[id] || {}
-            const lam = Number(pack.lam ?? it.pack_laminas ?? '') || null
-            const comp = Number(pack.comp ?? it.pack_comprimidos ?? '') || null
-            const qtyN = Number.parseInt((units[id] || '').trim(), 10)
-            const detailsOn = (units[id] || '').trim() !== ''
-            const optList = buildOptions(it, { unit: selUnit, pack, priceMap: {} })
-            const chosen = optList.find((o) => o.unit === selUnit)
-            const factor = chosen ? Number(chosen.packSize) || 1 : 1
-            const baseUnit = (optList.find((o) => o.isDefault && o.active) || optList[0]).unit
-            const parts = qtyN >= 1 ? physicalParts(qtyN, selUnit, lam, comp, solid) : []
-            const preview =
-              qtyN >= 1
-                ? parts.length
-                  ? `${parts.join(' · ')} · +${qtyN * factor} no saldo`
-                  : `+${qtyN * factor} ${PLURALS[baseUnit].toLowerCase()}`
-                : ''
-            return (
-              <div
-                key={it.drug_id}
-                className={`portal-rowline portal-cols-entrada portal-rowline--static${
-                  out ? ' restock-row--out' : ''
-                }${highlightId === it.drug_id ? ' restock-row--focus' : ''}`}
-              >
-                <div className="portal-cell">
-                  <b>
-                    {it.name}
-                    {it.requires_rx && <span className="rx-badge rx-badge--inline"> Receita</span>}
-                  </b>
-                  <span className="sub">
-                    {[it.form, it.dosage].filter(Boolean).join(' · ')}
-                    {it.expires_at && expiry && expiry.level !== 'ok'
-                      ? ` · validade ${monthYear(it.expires_at)} (${expiry.label})`
-                      : it.expires_at
-                        ? ` · validade ${monthYear(it.expires_at)}`
-                        : ''}
-                  </span>
-                </div>
+          <div className="restock-list">
+            {filtered.slice(0, visibleCount).map((it) => {
+              const expiry = expiryStatus(it.expires_at)
+              const busy = savingId === it.drug_id
+              const out = !it.in_stock || (it.quantity ?? 0) === 0
+              // Estado da linha (disciplina v2): ponto + palavra — o mesmo
+              // vocabulário do Stock, aqui com o caso «chegou lote novo».
+              const st = out
+                ? { cls: 'mut', txt: 'Sem stock' }
+                : expiry && expiry.level === 'expired'
+                  ? { cls: 'bad', txt: 'Expirado' }
+                  : expiry && expiry.level !== 'ok'
+                    ? { cls: 'warn', txt: expiry.label }
+                    : { cls: 'ok', txt: 'Disponível' }
+              // 0016 — detalhe da entrada (unidade, estrutura, preços,
+              // prévia de conversão). O detalhe só abre com quantidade
+              // escrita: a lista mantém-se varrível, os campos aparecem
+              // exactamente quando o atendente vai registar.
+              const id = it.drug_id
+              const solid = isSolid(it.form)
+              const selUnit = unitSel[id] || defaultUnit(it)
+              const pack = packs[id] || {}
+              const lam = Number(pack.lam ?? it.pack_laminas ?? '') || null
+              const comp = Number(pack.comp ?? it.pack_comprimidos ?? '') || null
+              const qtyN = Number.parseInt((units[id] || '').trim(), 10)
+              const detailsOn = (units[id] || '').trim() !== ''
+              const optList = buildOptions(it, { unit: selUnit, pack, priceMap: {} })
+              const chosen = optList.find((o) => o.unit === selUnit)
+              const factor = chosen ? Number(chosen.packSize) || 1 : 1
+              const baseUnit = (optList.find((o) => o.isDefault && o.active) || optList[0]).unit
+              const parts = qtyN >= 1 ? physicalParts(qtyN, selUnit, lam, comp, solid) : []
+              const preview =
+                qtyN >= 1
+                  ? parts.length
+                    ? `${parts.join(' · ')} · +${qtyN * factor} no saldo`
+                    : `+${qtyN * factor} ${PLURALS[baseUnit].toLowerCase()}`
+                  : ''
+              return (
+                <div
+                  key={it.drug_id}
+                  className={`portal-rowline portal-cols-entrada portal-rowline--static${
+                    out ? ' restock-row--out' : ''
+                  }${highlightId === it.drug_id ? ' restock-row--focus' : ''}`}
+                >
+                  <div className="portal-cell">
+                    <b>
+                      {it.name}
+                      {it.requires_rx && (
+                        <span className="rx-badge rx-badge--inline"> Receita</span>
+                      )}
+                    </b>
+                    <span className="sub">
+                      {[it.form, it.dosage].filter(Boolean).join(' · ')}
+                      {it.expires_at && expiry && expiry.level !== 'ok'
+                        ? ` · validade ${monthYear(it.expires_at)} (${expiry.label})`
+                        : it.expires_at
+                          ? ` · validade ${monthYear(it.expires_at)}`
+                          : ''}
+                    </span>
+                  </div>
 
-                <div className="portal-cell">
-                  <StateLabel st={st.cls} label={st.txt} />
-                </div>
+                  <div className="portal-cell">
+                    <StateLabel st={st.cls} label={st.txt} />
+                  </div>
 
-                <div className="portal-cell restock-balance" title="Saldo actual em stock">
-                  <span className="strong">{it.in_stock ? (it.quantity ?? 0) : 0}</span>
-                  <span className="sub">em stock</span>
-                </div>
+                  <div className="portal-cell restock-balance" title="Saldo actual em stock">
+                    <span className="strong">{it.in_stock ? (it.quantity ?? 0) : 0}</span>
+                    <span className="sub">em stock</span>
+                  </div>
 
-                <div className="portal-cell restock-form" data-tour="restock-input">
-                  <label className="restock-field">
-                    <span className="restock-field-k">Chegaram</span>
-                    <div className="restock-qty">
-                      <input
-                        type="number"
-                        min="1"
-                        step="1"
-                        inputMode="numeric"
-                        className="portal-input restock-input"
-                        placeholder="0"
-                        value={units[id] || ''}
-                        onChange={(e) => setUnits((u) => ({ ...u, [id]: e.target.value }))}
-                        onKeyDown={(e) => {
-                          if (e.key === 'Enter' && !busy) save(it)
-                        }}
-                        aria-label={`Unidades recebidas de ${it.name}`}
-                        disabled={busy}
-                      />
-                      {/* 0016 — EM QUE unidade chegou (caixas, lâminas,
+                  <div className="portal-cell restock-form" data-tour="restock-input">
+                    <label className="restock-field">
+                      <span className="restock-field-k">Chegaram</span>
+                      <div className="restock-qty">
+                        <input
+                          type="number"
+                          min="1"
+                          step="1"
+                          inputMode="numeric"
+                          className="portal-input restock-input"
+                          placeholder="0"
+                          value={units[id] || ''}
+                          onChange={(e) => setUnits((u) => ({ ...u, [id]: e.target.value }))}
+                          onKeyDown={(e) => {
+                            if (e.key === 'Enter' && !busy) save(it)
+                          }}
+                          aria-label={`Unidades recebidas de ${it.name}`}
+                          disabled={busy}
+                        />
+                        {/* 0016 — EM QUE unidade chegou (caixas, lâminas,
                         frascos…): o saldo converte-se sozinho. */}
-                      <select
-                        className="portal-input restock-unit"
-                        value={selUnit}
-                        onChange={(e) => setUnitSel((u) => ({ ...u, [id]: e.target.value }))}
-                        aria-label={`Unidade em que chegou ${it.name}`}
-                        disabled={busy}
-                      >
-                        {unitOptions(it).map((u) => (
-                          <option key={u} value={u}>
-                            {PLURALS[u]}
-                          </option>
-                        ))}
-                      </select>
-                    </div>
-                  </label>
-                  <button
-                    type="button"
-                    className="btn btn-primary restock-save"
-                    onClick={() => save(it)}
-                    disabled={busy}
-                  >
-                    {busy ? 'A guardar…' : 'Somar'}
-                  </button>
-                </div>
+                        <select
+                          className="portal-input restock-unit"
+                          value={selUnit}
+                          onChange={(e) => setUnitSel((u) => ({ ...u, [id]: e.target.value }))}
+                          aria-label={`Unidade em que chegou ${it.name}`}
+                          disabled={busy}
+                        >
+                          {unitOptions(it).map((u) => (
+                            <option key={u} value={u}>
+                              {PLURALS[u]}
+                            </option>
+                          ))}
+                        </select>
+                      </div>
+                    </label>
+                    <button
+                      type="button"
+                      className="btn btn-primary restock-save"
+                      onClick={() => save(it)}
+                      disabled={busy}
+                    >
+                      {busy ? 'A guardar…' : 'Somar'}
+                    </button>
+                  </div>
 
-                {/* 0016 — detalhe da entrada: estrutura da caixa, preços
+                  {/* 0016 — detalhe da entrada: estrutura da caixa, preços
                   por forma de venda e prévia do que vai entrar. Só
                   visível com quantidade escrita. */}
-                {detailsOn && (
-                  <div className="restock-details">
-                    {solid && (
-                      <span className="restock-pack">
-                        Caixa com
-                        <input
-                          type="number"
-                          min="1"
-                          max="999"
-                          inputMode="numeric"
-                          className="portal-input portal-input--price"
-                          value={pack.lam ?? it.pack_laminas ?? ''}
-                          onChange={(e) =>
-                            setPacks((p) => ({ ...p, [id]: { ...p[id], lam: e.target.value } }))
-                          }
-                          aria-label={`Lâminas por caixa de ${it.name}`}
-                          disabled={busy}
-                        />
-                        lâminas ·
-                        <input
-                          type="number"
-                          min="1"
-                          max="999"
-                          inputMode="numeric"
-                          className="portal-input portal-input--price"
-                          value={pack.comp ?? it.pack_comprimidos ?? ''}
-                          onChange={(e) =>
-                            setPacks((p) => ({ ...p, [id]: { ...p[id], comp: e.target.value } }))
-                          }
-                          aria-label={`Comprimidos por lâmina de ${it.name}`}
-                          disabled={busy}
-                        />
-                        comprimidos/lâmina
-                      </span>
-                    )}
-                    <span className="restock-prices">
-                      <span className="restock-prices-k">Preços:</span>
-                      {priceUnits(it).map((u) => (
-                        <label key={u} className="restock-price">
-                          {PLURALS[u].toLowerCase()}
+                  {detailsOn && (
+                    <div className="restock-details">
+                      {solid && (
+                        <span className="restock-pack">
+                          Caixa com
                           <input
                             type="number"
-                            min="0"
-                            step="0.01"
-                            inputMode="decimal"
+                            min="1"
+                            max="999"
+                            inputMode="numeric"
                             className="portal-input portal-input--price"
-                            value={(prices[id] || {})[u] ?? priceOf(it, u)}
+                            value={pack.lam ?? it.pack_laminas ?? ''}
                             onChange={(e) =>
-                              setPrices((p) => ({ ...p, [id]: { ...p[id], [u]: e.target.value } }))
+                              setPacks((p) => ({ ...p, [id]: { ...p[id], lam: e.target.value } }))
                             }
-                            aria-label={`Preço de ${PLURALS[u].toLowerCase()} de ${it.name}`}
+                            aria-label={`Lâminas por caixa de ${it.name}`}
                             disabled={busy}
                           />
-                          Kz
-                        </label>
-                      ))}
-                    </span>
-                    {preview && <span className="restock-preview">{preview}</span>}
-                  </div>
-                )}
-              </div>
-            )
-          })}
+                          lâminas ·
+                          <input
+                            type="number"
+                            min="1"
+                            max="999"
+                            inputMode="numeric"
+                            className="portal-input portal-input--price"
+                            value={pack.comp ?? it.pack_comprimidos ?? ''}
+                            onChange={(e) =>
+                              setPacks((p) => ({ ...p, [id]: { ...p[id], comp: e.target.value } }))
+                            }
+                            aria-label={`Comprimidos por lâmina de ${it.name}`}
+                            disabled={busy}
+                          />
+                          comprimidos/lâmina
+                        </span>
+                      )}
+                      <span className="restock-prices">
+                        <span className="restock-prices-k">Preços:</span>
+                        {priceUnits(it).map((u) => (
+                          <label key={u} className="restock-price">
+                            {PLURALS[u].toLowerCase()}
+                            <input
+                              type="number"
+                              min="0"
+                              step="0.01"
+                              inputMode="decimal"
+                              className="portal-input portal-input--price"
+                              value={(prices[id] || {})[u] ?? priceOf(it, u)}
+                              onChange={(e) =>
+                                setPrices((p) => ({
+                                  ...p,
+                                  [id]: { ...p[id], [u]: e.target.value },
+                                }))
+                              }
+                              aria-label={`Preço de ${PLURALS[u].toLowerCase()} de ${it.name}`}
+                              disabled={busy}
+                            />
+                            Kz
+                          </label>
+                        ))}
+                      </span>
+                      {/* 0021 — LOTE e VALIDADE do que chegou. Sem isto o
+                          stock só sabe a validade global do item; com
+                          isto sabe o que expira primeiro (FEFO) e a baixa
+                          de uma venda sai da camada certa. */}
+                      <span className="restock-pack">
+                        Lote
+                        <input
+                          type="text"
+                          maxLength={40}
+                          className="portal-input portal-input--lot"
+                          value={(lotInput[id] || {}).num ?? ''}
+                          onChange={(e) =>
+                            setLotInput((l) => ({ ...l, [id]: { ...l[id], num: e.target.value } }))
+                          }
+                          placeholder="opcional"
+                          aria-label={`Lote recebido de ${it.name}`}
+                          disabled={busy}
+                        />
+                        Validade
+                        <input
+                          type="date"
+                          className="portal-input portal-input--date"
+                          value={(lotInput[id] || {}).exp ?? ''}
+                          onChange={(e) =>
+                            setLotInput((l) => ({ ...l, [id]: { ...l[id], exp: e.target.value } }))
+                          }
+                          aria-label={`Validade do lote recebido de ${it.name}`}
+                          disabled={busy}
+                        />
+                      </span>
+
+                      {/* Camadas em stock (0021): o lote que expira
+                          primeiro vem à frente — é o que sai primeiro. */}
+                      {(lotsFresh[id] ?? it.lots ?? []).length > 0 && (
+                        <span className="restock-lotlist">
+                          <span className="restock-prices-k">Em stock:</span>
+                          {(lotsFresh[id] ?? it.lots).slice(0, 3).map((l) => (
+                            <span
+                              key={l.id || `${l.lot_number || 'sem'}-${l.expires_at || 'sem'}`}
+                              className="restock-lot"
+                            >
+                              {l.lot_number || 'sem nº'}
+                              {l.expires_at ? ` · ${monthYear(l.expires_at)}` : ' · s/ validade'}
+                              {` · ${l.quantity} un.`}
+                            </span>
+                          ))}
+                        </span>
+                      )}
+                      {preview && <span className="restock-preview">{preview}</span>}
+                    </div>
+                  )}
+                </div>
+              )
+            })}
+          </div>
         </div>
 
         {filtered.length > visibleCount && (

@@ -23,6 +23,12 @@
 
   /* Superfícies inversas (tooltips/toasts) — SEMPRE escuras, mesmo em dark */
   --color-tooltip-bg: #002a32;
+
+  /* Texto secundário do portal no tema CLARO: sem esta linha, tudo o que
+     usa var(--color-brand-deep-60, …) caía no fallback de 0,6 (3,5:1
+     sobre o fundo claro — abaixo do mínimo de 4,5:1 para texto pequeno).
+     0,72 dá ~4,8:1 e mantém a hierarquia face a --color-brand-deep. */
+  --color-brand-deep-60: rgb(0 73 58 / 0.72);
 }
 
 /* Dark Mode Theme Overrides — idênticos ao principal */
@@ -36,6 +42,10 @@ html.dark {
   --color-brand-primary: #005c4a;
   --color-brand-accent: #0d995f;
   --color-tooltip-bg: #0f1a14;
+  /* Texto secundário do portal: sem esta linha, tudo o que usa
+     var(--color-brand-deep-60) caía no fallback verde-escuro
+     (rgb(0 73 58 / 0.6)) — ilegível sobre o fundo escuro. */
+  --color-brand-deep-60: rgb(229 231 235 / 0.78);
 }
 
 /* Dark mode body background */
@@ -1225,8 +1235,11 @@ html.dark .form-note {
     /* Fosco real: tinta semi-opaca + blur. (O @apply com /92 não compila
        em Tailwind v4 e matava o fundo E o blur de uma vez.) */
     background: color-mix(in srgb, var(--color-brand-bg) 86%, transparent);
+    /* Só a propriedade STANDARD: declarar também o -webkit- fazia o
+       Lightning CSS emitir apenas o prefixado, e o Chromium (que só
+       aceita o standard) ficava com backdrop-filter: none — sem blur.
+       Os prefixos para Safari são adicionados pelo build (browserslist). */
     backdrop-filter: blur(14px) saturate(1.5);
-    -webkit-backdrop-filter: blur(14px) saturate(1.5);
   }
 
   html.dark .app-header {
@@ -2109,8 +2122,10 @@ html.dark .form-note {
     padding: 0 1.5rem;
     border-bottom: 1px solid var(--color-brand-divider);
     background: color-mix(in srgb, var(--color-brand-bg-alt) 80%, transparent);
+    /* Propriedade standard apenas — ver a nota em .app-header: com o
+       -webkit- explícito, o build emitia só o prefixado e a top-bar do
+       portal ficava SEM o fosco que as páginas públicas têm. */
     backdrop-filter: blur(14px) saturate(1.5);
-    -webkit-backdrop-filter: blur(14px) saturate(1.5);
   }
 
   html.dark .portal-topbar {
@@ -2194,110 +2209,70 @@ html.dark .form-note {
     background: rgb(255 255 255 / 0.08);
   }
 
-  /* Nome da farmácia na top-bar, no lugar do utilizador. */
+  /* Nome da farmácia na top-bar — é a ENTRADA de /portal/perfil. O nome
+     do farmacêutico vive só no rodapé da sidebar; a top-bar guarda a
+     identidade da farmácia e o chevron diz que é clicável. */
   .portal-topbar-name {
+    display: inline-flex;
+    align-items: center;
+    gap: 0.375rem;
+    padding: 0.375rem 0.625rem;
+    border-radius: 999px;
     font-size: 0.8125rem;
     font-weight: 600;
     color: var(--color-brand-deep);
+    text-decoration: none;
     white-space: nowrap;
     overflow: hidden;
     text-overflow: ellipsis;
     max-width: 22rem;
+    transition:
+      background 0.15s ease,
+      color 0.15s ease;
   }
 
+  .portal-topbar-name svg {
+    flex-shrink: 0;
+    opacity: 0.55;
+  }
+
+  .portal-topbar-name:hover,
+  .portal-topbar-name:focus-visible {
+    background: var(--color-brand-bg-alt);
+    color: var(--color-brand-accent);
+  }
+
+  html.dark .portal-topbar-name:hover,
+  html.dark .portal-topbar-name:focus-visible {
+    background: var(--color-brand-card);
+  }
+
+  /* Bloco da direita (farmácia + tema): NÃO encolhe — se encolher, os
+     filhos saem fora do ecrã e a top-bar ganha scroll horizontal em
+     mobile. Quem cede é o nome da farmácia (min-width: 0 abaixo). */
   .portal-topbar-right {
     margin-left: auto;
     display: flex;
     align-items: center;
-    gap: 0.875rem;
-  }
-
-  /* Perfil activo do balcão na top-bar (0018) — avatar + nome + papel;
-     o clique leva a /portal/sessao (trocar perfil, sair, PIN). */
-  /* Pill do perfil na top-bar — hoje é um BOTÃO que abre o menu
-     directo (trocar/sair/sessão); /sessão só daí, nunca directo. */
-  .portal-topbar-staff {
-    display: inline-flex;
-    align-items: center;
     gap: 0.5rem;
-    padding: 0.25rem 0.625rem 0.25rem 0.25rem;
-    border: 1px solid var(--color-brand-divider);
-    border-radius: 999px;
-    text-decoration: none;
-    color: var(--color-brand-deep);
-    transition: background 0.15s ease;
-    max-width: 14rem;
-    background: transparent;
-    font: inherit;
-    cursor: pointer;
-    text-align: left;
-  }
-
-  /* Wrapper relativo para o menu abrir por baixo da pill. */
-  .portal-topbar-staff-wrap {
-    position: relative;
-  }
-
-  /* O mesmo menu do rodapé, ancorado à direita da pill da top-bar. */
-  .portal-foot-menu--top {
-    bottom: auto;
-    top: calc(100% + 0.375rem);
-    left: auto;
-    right: 0;
-    min-width: 12rem;
-  }
-
-  .portal-topbar-staff:hover {
-    background: var(--color-brand-bg-alt);
-  }
-
-  .portal-topbar-staff-av {
-    width: 1.75rem;
-    height: 1.75rem;
-    border-radius: 50%;
-    background: rgb(10 132 79 / 0.1);
-    color: var(--color-brand-primary);
-    font-size: 0.625rem;
-    font-weight: 700;
-    display: grid;
-    place-items: center;
+    min-width: 0;
     flex-shrink: 0;
   }
 
-  html.dark .portal-topbar-staff-av {
-    color: #7fd4ab;
-  }
-
-  .portal-topbar-staff-meta {
-    display: flex;
-    flex-direction: column;
-    line-height: 1.15;
+  /* O texto do nome é que trunca com reticências (com o texto solto num
+     contentor flex, o text-overflow não se aplica). */
+  .portal-topbar-name-txt {
     min-width: 0;
-  }
-
-  .portal-topbar-staff-meta b {
-    font-size: 0.75rem;
-    font-weight: 600;
-    white-space: nowrap;
     overflow: hidden;
     text-overflow: ellipsis;
+    white-space: nowrap;
   }
 
-  .portal-topbar-staff-meta span {
-    font-size: 0.625rem;
-    color: var(--ink-45v);
-    text-transform: uppercase;
-    letter-spacing: 0.06em;
-  }
-
-  @media (max-width: 64rem) {
-    .portal-topbar-staff-meta {
-      display: none;
-    }
-
-    .portal-topbar-staff {
-      padding: 0.25rem;
-      border: 0;
+  @media (max-width: 40rem) {
+    .portal-topbar-name {
+      /* Cede espaço à pesquisa: o nome trunca com reticências (o bloco da
+         direita não encolhe, senão sai do ecrã). */
+      max-width: 7rem;
     }
   }
 
@@ -2398,6 +2373,19 @@ html.dark .form-note {
     overflow: hidden;
     text-overflow: ellipsis;
     white-space: nowrap;
+    color: inherit;
+    text-decoration: none;
+  }
+
+  /* Item de grupo (Stock): a linha inteira navega — número, ícone e
+     rótulo vivem dentro deste link, para o clique não se limitar ao
+     texto. A seta do submenu continua a ser um botão separado. */
+  .portal-nav-main {
+    display: flex;
+    align-items: center;
+    gap: 0.625rem;
+    flex: 1;
+    min-width: 0;
     color: inherit;
     text-decoration: none;
   }
@@ -2660,9 +2648,18 @@ html.dark .form-note {
     color: var(--color-brand-deep);
   }
 
+  /* O destaque dentro do sub-cabeçalho usa o acento (legível em dia e em
+     noite); --color-brand-primary é verde escuro e desaparecia no escuro. */
   .portal-page-sub b {
-    color: var(--color-brand-primary);
+    color: var(--color-brand-accent);
     font-weight: 700;
+  }
+
+  .portal-page-sub a {
+    color: var(--color-brand-accent);
+    font-weight: 600;
+    text-decoration: underline;
+    text-underline-offset: 2px;
   }
 
   .btn {
@@ -2674,6 +2671,15 @@ html.dark .form-note {
       filter 0.2s ease,
       background 0.2s ease,
       border-color 0.2s ease;
+  }
+
+  /* Em noite o verde escuro da marca (--color-brand-primary = #005c4a)
+     não se lê sobre os cartões escuros (2,2:1): o texto dos botões
+     secundários passa ao mint da paleta nocturna. O hero verde de
+     /portal/sessão mantém o branco — a regra dele é mais abaixo e sem
+     layer, por isso ganha a esta. */
+  .dark .btn-secondary {
+    color: #7fd4ab;
   }
 
   .btn-primary {
@@ -3911,6 +3917,26 @@ html.dark .form-note {
     color: var(--color-brand-deep);
   }
 
+  /* Lote + validade da entrada (0021) — campos curtos no detalhe e a
+     lista das camadas em stock (o que expira primeiro vem à frente). */
+  .portal-input--lot {
+    @apply w-28 px-2 py-1.5 text-xs;
+  }
+
+  .portal-input--date {
+    @apply w-36 px-2 py-1.5 text-xs;
+  }
+
+  .restock-lotlist {
+    @apply flex flex-wrap items-center gap-2;
+  }
+
+  .restock-lot {
+    @apply rounded-full px-2 py-0.5 text-[11px] font-semibold;
+    border: 1px solid var(--color-brand-line);
+    color: color-mix(in srgb, var(--color-brand-deep) 75%, transparent);
+  }
+
   .restock-save {
     @apply px-4 py-2 text-xs;
   }
@@ -4091,8 +4117,22 @@ html.dark .form-note {
       0 4px 14px rgb(0 42 50 / 0.05);
   }
 
+  .help-table-scroll {
+    overflow-x: auto;
+    overflow-y: hidden;
+    overscroll-behavior-x: contain;
+  }
+
   .help-table {
     @apply w-full mt-3 text-sm border-collapse;
+  }
+
+  @media (max-width: 60rem) {
+    /* Tabela de ajuda: no telemóvel desliza na lateral em vez de
+       comprimir as duas colunas de texto. */
+    .help-table {
+      min-width: 34rem;
+    }
   }
 
   .help-table th {
@@ -4393,7 +4433,6 @@ html.dark .form-note {
     inset: 0;
     background: rgb(0 30 24 / 0.62);
     backdrop-filter: blur(4px);
-    -webkit-backdrop-filter: blur(4px);
   }
 
   .stock-modal-card {
@@ -4588,8 +4627,12 @@ html.dark .form-note {
     --portal-red: #b23a2e;
     --portal-warn: #a4670f;
     --portal-ok: #1f7a43;
-    --ink-60v: rgb(0 73 58 / 0.6);
-    --ink-45v: rgb(0 73 58 / 0.47);
+    /* Medido no claro (fundo da página #fffdf9 e cartão branco): 0,60 e
+       0,47 davam 3,5:1 e 2,5:1 — abaixo do mínimo de 4,5:1 para texto
+       pequeno. 0,82 dá 6,2:1 e 0,72 dá 4,8:1, mantendo a hierarquia
+       dos níveis de tinta (o nível 30v é decorativo: pontos e réguas). */
+    --ink-60v: rgb(0 73 58 / 0.82);
+    --ink-45v: rgb(0 73 58 / 0.72);
     --ink-30v: rgb(0 73 58 / 0.3);
   }
 
@@ -4597,13 +4640,20 @@ html.dark .form-note {
     --portal-red: #e07b6f;
     --portal-warn: #e0b46a;
     --portal-ok: #5fc48e;
-    --ink-60v: rgb(229 231 235 / 0.62);
-    --ink-45v: rgb(229 231 235 / 0.45);
-    --ink-30v: rgb(229 231 235 / 0.3);
+    /* 0,45 e 0,62 davam 3,5:1 e 4,4:1 sobre os cartões escuros (abaixo
+       do mínimo de 4,5:1 para texto pequeno) — subiram para 0,58 e
+       0,72, mantendo a hierarquia dos três níveis de tinta. */
+    --ink-60v: rgb(229 231 235 / 0.72);
+    --ink-45v: rgb(229 231 235 / 0.58);
+    --ink-30v: rgb(229 231 235 / 0.34);
   }
 
-  /* Cartões KPI (4 colunas): ícone à esquerda + número + delta,
-     como nas refs 4/6. Hover levanta o cartão 2px. */
+  /* Cartões KPI (4 colunas) com a mesma composição dos cartões de
+     /vendas e /desempenho (.portal-kpi): o ÍCONE vive no canto
+     superior direito e o texto — rótulo, número e detalhe — flui
+     pela largura do cartão, sem uma coluna de ícone a roubar espaço
+     (antes o rótulo/detalhe ficavam espremidos entre ícone e
+     estado). Hover levanta o cartão 2px. */
   .portal-kpi4-grid {
     @apply grid gap-3.5 mb-4;
     grid-template-columns: repeat(4, minmax(0, 1fr));
@@ -4611,9 +4661,14 @@ html.dark .form-note {
 
   .portal-kpi4 {
     display: grid;
-    grid-template-columns: auto 1fr;
-    gap: 0.75rem;
-    align-items: center;
+    /* 1ª coluna = texto (elástica), 2ª = ícone (largura própria).
+       Linhas no tamanho natural (a folga fica no fundo), para o
+       rótulo se centrar sempre no ícone em todos os cartões. */
+    grid-template-columns: minmax(0, 1fr) auto;
+    align-items: start;
+    align-content: start;
+    column-gap: 0.625rem;
+    row-gap: 1px;
     padding: 0.875rem 1rem;
     border: 1px solid var(--color-brand-divider);
     border-radius: 1rem;
@@ -4648,18 +4703,22 @@ html.dark .form-note {
     border-color: var(--color-brand-divider);
   }
 
+  /* Canto superior direito, do tamanho do ícone dos cartões de
+     /vendas (.portal-kpi-ic) para a família ser uma só. */
   .portal-kpi4-ic {
-    width: 2.625rem;
-    height: 2.625rem;
-    border-radius: 0.75rem;
+    width: 2.375rem;
+    height: 2.375rem;
+    border-radius: 0.6875rem;
     display: grid;
     place-items: center;
-    flex-shrink: 0;
+    grid-area: 1 / 2 / 2 / 3;
+    justify-self: end;
+    align-self: start;
   }
 
   .portal-kpi4-ic svg {
-    width: 1.2rem;
-    height: 1.2rem;
+    width: 1.1875rem;
+    height: 1.1875rem;
   }
 
   /* Tonalidades do ícone: verde da marca para o normal; âmbar e o
@@ -4713,20 +4772,32 @@ html.dark .form-note {
     color: rgb(229 231 235 / 0.5);
   }
 
+  /* O wrapper do texto dissolve-se: os três filhos passam a ser
+     linhas do próprio cartão, cada uma com a largura toda. */
   .portal-kpi4-txt {
-    display: flex;
-    flex-direction: column;
-    gap: 1px;
-    min-width: 0;
+    display: contents;
   }
 
-  .portal-kpi4-k {
+  /* Com estado, a última linha (o estado) absorve a folga que vem de
+     o cartão acompanhar o mais alto do grupo e o estado encosta ao
+     fundo: os quatro estados ficam na mesma linha, sem mexer no
+     ritmo do rótulo/número/detalhe. */
+  .portal-kpi4:has(> .portal-st) {
+    grid-template-rows: auto auto auto 1fr;
+  }
+
+  /* Rótulo: linha 1, alinhado ao centro do ícone (a linha é alta
+     por causa dele) — como o .portal-kpi-top de /vendas. */
+  .portal-kpi4 > .portal-kpi4-txt > .portal-kpi4-k {
+    grid-area: 1 / 1 / 2 / 2;
+    align-self: center;
     font-size: 0.75rem;
     font-weight: 600;
     color: var(--ink-45v);
   }
 
-  .portal-kpi4-n {
+  .portal-kpi4 > .portal-kpi4-txt > .portal-kpi4-n {
+    grid-area: 2 / 1 / 3 / -1;
     font-size: 1.375rem;
     font-weight: 700;
     font-variant-numeric: tabular-nums;
@@ -4735,7 +4806,8 @@ html.dark .form-note {
     color: var(--color-brand-deep);
   }
 
-  .portal-kpi4-d {
+  .portal-kpi4 > .portal-kpi4-txt > .portal-kpi4-d {
+    grid-area: 3 / 1 / 4 / -1;
     font-size: 0.6875rem;
     font-variant-numeric: tabular-nums;
     color: var(--ink-45v);
@@ -4756,11 +4828,9 @@ html.dark .form-note {
     }
   }
 
-  @media (max-width: 30rem) {
-    .portal-kpi4-grid {
-      grid-template-columns: 1fr;
-    }
-  }
+  /* Telemóvel: os cartões continuam DOIS POR FILA (as regras do bloco
+     no fundo encolhem o cartão para caberem — antes ficava um por
+     fila). */
 
   /* Estados: PONTO pequeno + palavra neutra (nunca chip preenchido). */
   .portal-st {
@@ -4928,6 +4998,10 @@ html.dark .form-note {
   .portal-topsearch {
     position: relative;
     flex: 1;
+    /* min-width: 0 é o que deixa a pill encolher: sem isto o seu mínimo
+       automático é a largura do <input> (≈20 caracteres), e a top-bar
+       transbordava em mobile empurrando o nome e o tema para fora. */
+    min-width: 0;
     max-width: 26rem;
     margin: 0 auto;
     display: flex;
@@ -5129,6 +5203,40 @@ html.dark .form-note {
     background: rgb(255 255 255 / 0.03);
   }
 
+  /* Mobile: a top-bar encaixa sem scroll horizontal — menos respiro nas
+     margens, pill de pesquisa mais estreita (o atalho «/» não faz
+     sentido em ecrã táctil) e o botão de tema um pouco menor. */
+  @media (max-width: 40rem) {
+    .portal-topbar {
+      gap: 0.5rem;
+      padding: 0 1rem;
+    }
+
+    .portal-topsearch {
+      padding: 0.4375rem 0.75rem;
+    }
+
+    .portal-topsearch kbd {
+      display: none;
+    }
+
+    .theme-toggle--circ {
+      width: 2rem;
+      height: 2rem;
+    }
+
+    /* A pill encolhe em mobile: pendurado nela, o painel de resultados
+       teria 65px de largura. Passa a ocupar a largura do ecrã, logo
+       abaixo da top-bar (3,5rem) — que é sticky no topo. */
+    .portal-search-pop {
+      position: fixed;
+      top: 3.75rem;
+      left: 0.75rem;
+      right: 0.75rem;
+      max-height: min(24rem, calc(100dvh - 5rem));
+    }
+  }
+
   /* ============================================================
      PORTAL v2 — SIDEBAR CLARA (o mockup aprovado): painel branco com
      hairline à direita; itens em tinta esbatida; activo com tint verde
@@ -5210,13 +5318,20 @@ html.dark .form-note {
     opacity: 1;
   }
 
-  /* Numeração estrutural (01, 02…): esbatida sobre fundo claro. */
+  /* Numeração estrutural (01, 02…): esbatida sobre fundo claro, mas com
+     tinta suficiente para ser legível (30v dava 1,75:1 — abaixo de AA). */
   .portal-sidebar-v2 .portal-nav-num {
-    color: var(--ink-30v);
+    color: var(--ink-45v);
   }
 
+  /* No item activo o número herda o verde da marca: sobre o tinte do
+     item dava 4,21:1. O verde escuro passa AA e reforça o activo. */
   .portal-sidebar-v2 .portal-nav-item--active .portal-nav-num {
-    color: var(--color-brand-accent);
+    color: var(--color-brand-primary);
+  }
+
+  html.dark .portal-sidebar-v2 .portal-nav-item--active .portal-nav-num {
+    color: #7fd4ab;
   }
 
   .portal-sidebar-v2 .portal-nav-toggle {
@@ -5301,14 +5416,15 @@ html.dark .form-note {
      arejadas ordenadas por urgência, UM botão sólido por linha.
      ============================================================ */
 
-  /* KPI com estado à direita (ponto + palavra) — só quando o filho
-     existe: as 3 colunas evitam gap fantasma nos KPIs sem estado. */
-  .portal-kpi4:has(> .portal-st) {
-    grid-template-columns: auto 1fr auto;
-  }
-
+  /* KPI com estado: o ponto + palavra continua a ser a peça de baixo,
+     agora ALINHADO À ESQUERDA com o rótulo/número/detalhe e em linha
+     própria — sozinho não aperta a linha do detalhe (era ele que a
+     espremia a 3 colunas). Cartões sem estado não têm 4ª linha. */
   .portal-kpi4 > .portal-st {
-    align-self: center;
+    grid-area: 4 / 1 / 5 / -1;
+    justify-self: start;
+    align-self: end;
+    margin-top: 0.25rem;
   }
 
   /* A caixa da lista — o .box do mockup. */
@@ -5500,11 +5616,7 @@ html.dark .form-note {
     }
   }
 
-  @media (max-width: 30rem) {
-    .portal-kpis {
-      grid-template-columns: 1fr;
-    }
-  }
+  /* Telemóvel: dois por fila (ver o bloco no fundo do ficheiro). */
 
   .portal-kpi {
     display: flex;
@@ -6066,6 +6178,16 @@ html.dark .form-note {
     flex-wrap: wrap;
   }
 
+  /* Na tabela a coluna das acções é fixa (13rem): o conteúdo encosta à
+     direita, para o kebab continuar no fim da linha como sempre. Só no
+     desktop — em mobile a linha tem 3 colunas e a acção continua
+     como estava. */
+  @media (min-width: 60.0625rem) {
+    .portal-cols-res > .portal-res-actions {
+      justify-content: flex-end;
+    }
+  }
+
   /* Tags dos cartões (qtd/preço/cliente) → pill neutra sem sombra. */
   .stock-tag {
     background: var(--color-brand-bg-alt);
@@ -6192,22 +6314,35 @@ html.dark .form-note {
     grid-template-columns: 2.2fr 1fr 0.6fr 1fr 0.9fr 36px;
   }
 
+  /* A coluna das acções é FIXA (13rem = sólido + kebab, o caso maior é
+     «Confirmar + Recusar + kebab»). Com «auto», cada linha dimensionava
+     a sua própria coluna — as linhas «Pronta» têm botão e as concluídas
+     não — e as colunas do meio (Valor/Pedido) desalinhavam-se entre
+     linhas. Com a largura reservada, todas as linhas partilham a mesma
+     grelha e os valores ficam sempre debaixo do seu cabeçalho. */
   .portal-cols-res {
-    grid-template-columns: 2.4fr 1.6fr 1fr 0.7fr auto;
+    grid-template-columns: 2.4fr 1.6fr 1fr 0.7fr minmax(13rem, auto);
   }
 
   @media (max-width: 60rem) {
-    .portal-cols-stock,
-    .portal-cols-res {
-      grid-template-columns: 1.6fr 1fr 36px;
+    /* Ecrã estreito: em vez de esconder colunas (a informação
+       desaparecia) ou de as empilhar, a lista guarda a grelha completa
+       e ganha SCROLL LATERAL dentro do invólucro .portal-table-scroll.
+       A largura mínima é a que os conteúdos da tabela pedem — e é
+       igual para o cabeçalho e para todas as linhas, para as colunas
+       continuarem alinhadas ao rolar. */
+    .portal-table-scroll {
+      overflow-x: auto;
+      overflow-y: hidden;
+      overscroll-behavior-x: contain;
     }
 
-    .portal-cols-stock > :nth-child(3),
-    .portal-cols-stock > :nth-child(4),
-    .portal-cols-stock > :nth-child(5),
-    .portal-cols-res > :nth-child(3),
-    .portal-cols-res > :nth-child(4) {
-      display: none;
+    .portal-cols-stock {
+      min-width: 44rem;
+    }
+
+    .portal-cols-res {
+      min-width: 54rem;
     }
   }
 
@@ -6344,13 +6479,7 @@ html.dark .form-note {
 
   @media (max-width: 60rem) {
     .portal-cols-entrada {
-      grid-template-columns: 1fr auto;
-    }
-
-    .portal-cols-entrada > :nth-child(3),
-    .portal-cols-entrada > :nth-child(4),
-    .portal-cols-entrada > :nth-child(5) {
-      grid-column: 1 / -1;
+      min-width: 46rem;
     }
   }
 
@@ -6948,6 +7077,30 @@ html.dark .form-note {
     font-variant-numeric: tabular-nums;
   }
 
+  /* Cada legenda do donut é um caminho para o stock já filtrado pelo
+     estado que a cor representa — a linha toda é o alvo. */
+  .portal-donut-legend a {
+    display: flex;
+    align-items: center;
+    gap: 0.5rem;
+    width: 100%;
+    border-radius: 0.375rem;
+    color: inherit;
+    text-decoration: none;
+    transition: color 0.15s ease;
+  }
+
+  .portal-donut-legend a:hover {
+    color: var(--color-brand-deep);
+    text-decoration: underline;
+    text-underline-offset: 2px;
+  }
+
+  .portal-donut-legend a:focus-visible {
+    outline: 2px solid var(--color-brand-accent);
+    outline-offset: 2px;
+  }
+
   .portal-lg-green {
     background: var(--color-brand-accent);
   }
@@ -6963,6 +7116,29 @@ html.dark .form-note {
   /* Mini-calendário «Hoje na farmácia». */
   .portal-cal {
     width: 100%;
+  }
+
+  /* Grelha + painel do dia LADO A LADO (a composição do calendário de
+     /reservas): com um dia escolhido o painel ocupa a coluna da
+     direita; sem escolha não há painel e a grelha fica com o cartão
+     todo. Ecrã estreito: volta a empilhar, painel por baixo. */
+  .portal-cal-cols--split {
+    display: grid;
+    grid-template-columns: minmax(0, 1.6fr) minmax(0, 1fr);
+    gap: 0.875rem;
+    align-items: start;
+  }
+
+  @media (max-width: 62.5rem) {
+    .portal-cal-cols--split {
+      grid-template-columns: 1fr;
+    }
+  }
+
+  /* No painel lateral o bloco não leva margem de cima (a do modo
+     empilhado). */
+  .portal-cal-cols--split > .portal-cal-day {
+    margin-top: 0;
   }
 
   .portal-cal-head {
@@ -6992,17 +7168,199 @@ html.dark .form-note {
     padding: 0.25rem 0;
   }
 
+  /* Dia do calendário — botão (clicar abre o detalhe do dia). */
   .portal-cal-d {
     aspect-ratio: 1;
+    width: 100%;
     display: grid;
     place-items: center;
+    border: 0;
+    background: transparent;
+    font: inherit;
     font-size: 0.75rem;
     border-radius: 0.5625rem;
     color: var(--ink-60v);
+    cursor: pointer;
+    transition:
+      background 0.15s ease,
+      box-shadow 0.15s ease;
   }
 
+  .portal-cal-d:hover {
+    background: var(--color-brand-bg-alt);
+  }
+
+  .portal-cal-d--today:hover {
+    background: var(--color-brand-primary);
+  }
+
+  html.dark .portal-cal-d--today:hover {
+    background: #7fd4ab;
+  }
+
+  .portal-cal-d:focus-visible {
+    outline: 2px solid var(--color-brand-accent);
+    outline-offset: 1px;
+  }
+
+  /* Dia escolhido: anel da marca (o fundo pode já ser do evento/hoje). */
+  .portal-cal-d--sel {
+    box-shadow: inset 0 0 0 2px var(--color-brand-accent);
+  }
+
+  html.dark .portal-cal-d--sel {
+    box-shadow: inset 0 0 0 2px #7fd4ab;
+  }
+
+  /* «Hoje» que é também o dia escolhido (o estado com que o calendário
+     abre): o anel da marca desaparecia sobre o fundo cheio — em escuro
+     era a MESMA cor (#7fd4ab sobre #7fd4ab) e em claro ficava em ~2,9:1.
+     O anel passa a usar a tinta do próprio dia (branca em claro, verde
+     escura em escuro), sempre legível sobre o preenchimento. */
+  .portal-cal-d--today.portal-cal-d--sel {
+    box-shadow: inset 0 0 0 2px currentColor;
+  }
+
+  html.dark .portal-cal-d--today.portal-cal-d--sel {
+    box-shadow: inset 0 0 0 2px currentColor;
+  }
+
+  /* Dias de outro mês: decorativos (span, não clicáveis). */
   .portal-cal-d--mut {
     opacity: 0.3;
+    cursor: default;
+  }
+
+  .portal-cal-d--mut:hover {
+    background: transparent;
+  }
+
+  /* Resumo do dia na célula — só aparece no cartão de largura toda
+     (grelha quadrada no telemóvel não tem espaço). */
+  .portal-cal-dlbl {
+    display: none;
+  }
+
+  /* Desktop: a grelha estica até à largura do cartão. Com 7 colunas
+     num cartão de largura toda, aspect-ratio: 1 daria células de ~12rem
+     de altura — altura fixa e o resumo do dia por baixo do número. */
+  @media (min-width: 67.5625rem) {
+    .portal-grid2-wide .portal-cal-d {
+      aspect-ratio: auto;
+      min-height: 3.25rem;
+    }
+
+    .portal-grid2-wide .portal-cal-dlbl {
+      display: block;
+      max-width: 100%;
+      overflow: hidden;
+      text-overflow: ellipsis;
+      white-space: nowrap;
+      font-size: 0.625rem;
+      font-weight: 500;
+      color: inherit;
+      opacity: 0.85;
+    }
+
+    /* Com o painel do dia ao lado a célula é mais estreita: o resumo do
+       dia passa a duas linhas em vez de reticências (não perde
+       informação). Vem depois da regra da linha única para ganhar. */
+    .portal-grid2-wide .portal-cal-cols--split .portal-cal-dlbl {
+      white-space: normal;
+      line-height: 1.15;
+    }
+  }
+
+  /* Detalhe do dia escolhido (por baixo da grelha do calendário). */
+  .portal-cal-day {
+    margin-top: 0.75rem;
+    padding: 0.625rem 0.75rem;
+    border: 1px solid var(--color-brand-divider);
+    border-radius: 0.625rem;
+    background: var(--color-brand-bg-alt);
+    font-size: 0.75rem;
+    line-height: 1.5;
+    color: var(--ink-60v);
+  }
+
+  .portal-cal-day b {
+    display: block;
+    margin-bottom: 0.25rem;
+    font-size: 0.8125rem;
+    color: var(--color-brand-deep);
+  }
+
+  .portal-cal-day ul {
+    list-style: none;
+    margin: 0;
+    padding: 0;
+    display: grid;
+    gap: 0.25rem;
+  }
+
+  .portal-cal-day li {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 0.75rem;
+  }
+
+  /* Verde da marca escuro no claro: o accent (#0a844f) dava 4,36:1
+     sobre o fundo do painel — abaixo de AA para 12px. */
+  .portal-cal-day a {
+    color: var(--color-brand-primary);
+    font-weight: 600;
+    text-decoration: none;
+    white-space: nowrap;
+  }
+
+  html.dark .portal-cal-day a {
+    color: #7fd4ab;
+  }
+
+  .portal-cal-day a:hover {
+    text-decoration: underline;
+  }
+
+  /* Vendas do dia — o número que o calendário conta ao relatório, em
+     destaque; a contagem fica ao lado, discreta. */
+  .portal-cal-day-sales {
+    display: flex;
+    align-items: baseline;
+    flex-wrap: wrap;
+    gap: 0.3125rem;
+    margin: 0 0 0.375rem;
+  }
+
+  .portal-cal-day-sales b {
+    display: inline;
+    margin: 0;
+    font-size: 0.9375rem;
+    color: var(--color-brand-deep);
+    font-variant-numeric: tabular-nums;
+  }
+
+  /* Lista do que saiu nesse dia: nome × quantidade. */
+  .portal-cal-day-items {
+    margin-bottom: 0.4375rem;
+  }
+
+  .portal-cal-day-items .qtd {
+    color: var(--color-brand-deep);
+    opacity: 0.75;
+    font-variant-numeric: tabular-nums;
+  }
+
+  .portal-cal-day-items .mais {
+    color: var(--color-brand-deep);
+    opacity: 0.7;
+  }
+
+  /* Caminhos do dia — separados da lista por uma hairline. */
+  .portal-cal-day-links {
+    margin-top: 0.4375rem;
+    padding-top: 0.4375rem;
+    border-top: 1px solid var(--color-brand-divider);
   }
 
   .portal-cal-d--today {
@@ -7011,8 +7369,22 @@ html.dark .form-note {
     font-weight: 700;
   }
 
+  /* No escuro o verde da marca (#0d995f) com tinta escura dava 3,84:1;
+     o verde claro da paleta nocturna sobe para ~7:1. */
   html.dark .portal-cal-d--today {
-    background: var(--color-brand-accent);
+    background: #7fd4ab;
+    color: #06331a;
+  }
+
+  /* «Hoje» que também é dia de evento: a tinta do dia de hoje manda. A
+     regra do evento vem depois neste ficheiro e, com a mesma
+     especificidade, ganhava — verde sobre verde (1,9:1). O ponto do
+     evento passa a herdar a tinta (ver .portal-cal-d--today::after). */
+  .portal-cal-grid .portal-cal-d--today {
+    color: #fff;
+  }
+
+  html.dark .portal-cal-grid .portal-cal-d--today {
     color: #06331a;
   }
 
@@ -7036,6 +7408,12 @@ html.dark .form-note {
     height: 0.25rem;
     border-radius: 50%;
     background: var(--color-brand-accent);
+  }
+
+  /* O «hoje» tem fundo cheio: o ponto do evento em verde da marca
+     desaparecia sobre ele (contraste 1,9:1). Herda a tinta da célula. */
+  .portal-cal-d--today::after {
+    background: currentColor;
   }
 
   /* Feed «Hoje na farmácia». */
@@ -7080,6 +7458,43 @@ html.dark .form-note {
     white-space: nowrap;
   }
 
+  /* Cada linha do feed é um CAMINHO (link): clicar leva à acção —
+     Repor (entrada de stock pré-filtrada), Validade ou Reconfirmar
+     (fila da atenção). A linha toda é o alvo; o chip diz para onde vai. */
+  a.portal-feed-item {
+    text-decoration: none;
+    border-radius: 0.5rem;
+    padding: 0.625rem 0.5rem;
+    margin: 0 -0.5rem;
+    transition: background 0.15s ease;
+  }
+
+  a.portal-feed-item:hover {
+    background: var(--color-brand-bg-alt);
+  }
+
+  a.portal-feed-item:focus-visible {
+    outline: 2px solid var(--color-brand-accent);
+    outline-offset: -2px;
+  }
+
+  a.portal-feed-item:hover .portal-feed-cta {
+    border-color: var(--color-brand-accent);
+  }
+
+  .portal-feed-item .portal-feed-cta {
+    margin-left: 0.5rem;
+    align-self: center;
+    flex-shrink: 0;
+    padding: 0.1875rem 0.5rem;
+    border: 1px solid var(--color-brand-divider);
+    border-radius: 999px;
+    font-size: 0.6875rem;
+    font-weight: 600;
+    color: var(--color-brand-deep);
+    white-space: nowrap;
+  }
+
   /* Grelha 2 colunas da dashboard (1.6fr / 1fr). */
   .portal-grid2 {
     display: grid;
@@ -7095,10 +7510,11 @@ html.dark .form-note {
     }
   }
 
-  .portal-grid2-col {
-    display: flex;
-    flex-direction: column;
-    gap: 0.875rem;
+  /* «Hoje na farmácia» ocupa a linha inteira da grelha: no desktop o
+     calendário fica com a largura toda (não tem nada à sua esquerda) e
+     as células mostram o resumo do dia, como as da fila de reservas. */
+  .portal-grid2-wide {
+    grid-column: 1 / -1;
   }
 
   /* Cabeçalho de cartão (card-head do mock): título serif + link. */
@@ -7180,9 +7596,54 @@ html.dark .form-note {
     grid-template-columns: repeat(3, minmax(0, 1fr));
   }
 
+  /* A partir do tablet os KPIs passam a dois por fila — o mesmo
+     critério dos cartões de 4 colunas (antes a fila de 3 caía para um
+     cartão por linha, que num ecrã de 700px ficava enorme). */
   @media (max-width: 56.25rem) {
     .portal-kpis--3 {
-      grid-template-columns: 1fr;
+      grid-template-columns: 1fr 1fr;
+    }
+  }
+
+  /* ============================================================
+     KPIs NO TELEMÓVEL — sempre DOIS POR FILA (≤30rem). O cartão
+     encolhe para dois caberem na largura sem apertar o texto: menos
+     respiro, ícone mais pequeno e número de um passo abaixo. Vale
+     para as duas famílias (portal-kpi4, do stock/reservas/entrada/
+     atenção, e portal-kpi, da visão geral/vendas/desempenho).
+     ============================================================ */
+  @media (max-width: 30rem) {
+    .portal-kpi4-grid,
+    .portal-kpis {
+      grid-template-columns: 1fr 1fr;
+      gap: 0.625rem;
+    }
+
+    .portal-kpis--3 {
+      grid-template-columns: 1fr 1fr;
+    }
+
+    .portal-kpi4,
+    .portal-kpi {
+      padding: 0.75rem 0.8125rem;
+    }
+
+    .portal-kpi4-ic,
+    .portal-kpi-ic {
+      width: 2rem;
+      height: 2rem;
+      border-radius: 0.5rem;
+    }
+
+    .portal-kpi4-ic svg,
+    .portal-kpi-ic svg {
+      width: 1rem;
+      height: 1rem;
+    }
+
+    .portal-kpi4 > .portal-kpi4-txt > .portal-kpi4-n,
+    .portal-kpi-n {
+      font-size: 1.25rem;
     }
   }
 
@@ -7248,23 +7709,26 @@ html.dark .form-note {
    PIN, sessão do perfil, equipa e desempenho.
    ============================================================ */
 @layer components {
-  /* ---- /portal/perfis — ecrã de escolha de perfil ---------
-     Hierarquia nova: o assunto da página é a ESCOLHA, não o
-     formulário. Título serif em cima, grelha de cartões com avatar,
-     e o PIN abre-se sobre o cartão escolhido (sem empurrar nada). */
+  /* ---- /portal/perfis — ecrã de escolha de perfil (modelo A) ---
+     Estilos do mockup _design/portal-reimaginado/A-editorial.html:
+     cabeçalho editorial (eyebrow + serif grande + lead), grelha de
+     cartões brancos de 13,5rem com avatar/nome serif/papel/chip e o
+     PIN num painel centrado com pontos e teclado numérico. */
   .portal-staff-screen {
-    min-height: 100dvh;
+    /* O ecrã (100dvh, centrado) é o wrapper da PÁGINA /perfis: aqui fica
+       só a coluna de conteúdo, senão somavam-se dois 100dvh e a marca
+       saía do centro. */
+    width: 100%;
     display: flex;
     flex-direction: column;
-    justify-content: center;
-    align-items: center;
-    padding: 2rem 1.25rem;
     gap: 1.5rem;
   }
 
+  /* Largura do modelo: a grelha de perfis lê-se em 2–3 colunas. */
   .portal-staff-screen > * {
     width: 100%;
-    max-width: 26rem;
+    max-width: 46rem;
+    margin-inline: auto;
   }
 
   .portal-staff-head {
@@ -7272,28 +7736,36 @@ html.dark .form-note {
   }
 
   .portal-staff-eyebrow {
-    font-size: 0.625rem;
-    font-weight: 700;
+    font-size: 0.6875rem;
+    font-weight: 600;
     text-transform: uppercase;
-    letter-spacing: 0.2em;
+    letter-spacing: 0.18em;
     color: var(--color-brand-accent);
   }
 
   .portal-staff-title {
     font-family: var(--font-display);
-    font-size: 1.75rem;
-    font-weight: 600;
-    letter-spacing: -0.01em;
+    font-size: 2.375rem;
+    font-weight: 500;
+    line-height: 1.1;
+    letter-spacing: -0.015em;
     color: var(--color-brand-deep);
-    margin-top: 0.375rem;
+    margin-top: 0.625rem;
     text-wrap: balance;
   }
 
+  @media (max-width: 40rem) {
+    .portal-staff-title {
+      font-size: 1.875rem;
+    }
+  }
+
   .portal-staff-lead {
-    font-size: 0.8125rem;
+    font-size: 0.9375rem;
     line-height: 1.55;
     color: var(--ink-60v);
-    margin-top: 0.5rem;
+    margin: 0.5rem auto 0;
+    max-width: 56ch;
     text-wrap: pretty;
   }
 
@@ -7347,18 +7819,17 @@ html.dark .form-note {
 
   .portal-staff-grid--pick {
     display: grid;
-    grid-template-columns: repeat(auto-fit, minmax(7.5rem, 1fr));
-    gap: 0.625rem;
+    gap: 0.875rem;
   }
 
-  /* Cartão de perfil — avatar grande + nome + papel. Escolhe-se de
-     relance, de pé, sem ler: o avatar é o identificador real. */
+  /* Cartão de perfil (modelo A) — avatar em disco claro, nome serif e
+     o chip de estado. Escolhe-se de relance, sem ler. */
   .portal-staff-card {
     display: flex;
     flex-direction: column;
     align-items: center;
     gap: 0.375rem;
-    padding: 1.125rem 0.75rem 1rem;
+    padding: 1.375rem 1.125rem 1.125rem;
     border: 1px solid var(--color-brand-divider);
     border-radius: 1rem;
     background: var(--color-brand-card);
@@ -7367,66 +7838,97 @@ html.dark .form-note {
     cursor: pointer;
     text-align: center;
     transition:
-      border-color 0.15s ease,
+      border-color 0.18s ease,
       background 0.15s ease,
-      transform 0.15s ease,
+      transform 0.18s ease,
       opacity 0.15s ease;
   }
 
   .portal-staff-card:hover {
-    border-color: var(--color-brand-primary);
+    border-color: var(--color-brand-accent);
     transform: translateY(-2px);
+  }
+
+  html.dark .portal-staff-card:hover {
+    border-color: #7fd4ab;
   }
 
   .portal-staff-card.is-sel {
     border-color: var(--color-brand-primary);
-    background: rgb(10 132 79 / 0.05);
-    box-shadow:
-      0 0 0 1px var(--color-brand-primary),
-      0 0 0 4px rgb(10 132 79 / 0.12);
+    box-shadow: 0 0 0 3px rgb(0 73 58 / 0.08);
+  }
+
+  html.dark .portal-staff-card.is-sel {
+    border-color: #7fd4ab;
+    box-shadow: 0 0 0 3px rgb(127 212 171 / 0.16);
   }
 
   .portal-staff-card.is-dim {
     opacity: 0.5;
   }
 
-  html.dark .portal-staff-card.is-sel {
-    background: rgb(10 132 79 / 0.16);
-  }
-
   .portal-staff-card-name {
-    font-size: 0.8438rem;
+    font-family: var(--font-display);
+    font-size: 1rem;
     font-weight: 600;
+    line-height: 1.25;
     color: var(--color-brand-deep);
-    max-width: 100%;
-    overflow: hidden;
-    text-overflow: ellipsis;
-    white-space: nowrap;
+    overflow-wrap: anywhere;
   }
 
   .portal-staff-card-role {
-    display: flex;
-    justify-content: center;
+    font-size: 0.78125rem;
+    line-height: 1.4;
+    color: var(--ink-60v);
+    margin-bottom: 0.75rem;
+  }
+
+  /* Chip do modelo A: pílula com ponto — «Em uso» verde, «Activo» neutro. */
+  .portal-chip {
+    display: inline-flex;
+    align-items: center;
     gap: 0.375rem;
-    flex-wrap: wrap;
-    font-size: 0.6875rem;
-    color: var(--ink-45v);
+    padding: 0.25rem 0.6875rem;
+    border-radius: 999px;
+    background: color-mix(in srgb, var(--color-brand-accent) 8%, transparent);
+    color: var(--color-brand-primary);
+    font-size: 0.75rem;
+    font-weight: 600;
+    line-height: 1.5;
+    white-space: nowrap;
   }
 
-  /* Chips dentro do cartão de perfil — sem a margem da pill em linha. */
-  .portal-staff-card-role .portal-pill {
-    margin-right: 0;
+  .portal-chip::before {
+    content: '';
+    width: 0.375rem;
+    height: 0.375rem;
+    border-radius: 50%;
+    background: currentColor;
+    opacity: 0.7;
+    flex-shrink: 0;
   }
 
-  /* Chip verde do perfil já activo neste dispositivo («Em uso»). */
-  .portal-pill--ok {
-    background: rgb(10 132 79 / 0.1);
-    color: var(--color-brand-deep);
+  .portal-chip--nodot::before {
+    display: none;
   }
 
-  html.dark .portal-pill--ok {
-    background: rgb(10 132 79 / 0.22);
+  .portal-chip--ok {
+    background: rgb(10 132 79 / 0.12);
+    color: var(--color-brand-primary);
+  }
+
+  .portal-chip--mute {
+    background: color-mix(in srgb, var(--color-brand-deep) 6%, transparent);
+    color: var(--ink-60v);
+  }
+
+  html.dark .portal-chip--ok {
+    background: rgb(127 212 171 / 0.16);
     color: #baf0d5;
+  }
+
+  html.dark .portal-chip--mute {
+    background: rgb(255 255 255 / 0.06);
   }
 
   /* ---- /portal/equipa — criação colapsada ----------------- */
@@ -7476,38 +7978,27 @@ html.dark .form-note {
     min-width: 0;
   }
 
-  @media (max-width: 60rem) {
-    .portal-cols-equipa > :nth-child(3),
-    .portal-cols-equipa > :nth-child(4) {
-      display: none;
-    }
-  }
-
   .portal-staff-hint {
     margin-bottom: 0.75rem;
   }
 
-  .portal-staff-grid {
-    display: grid;
-    grid-template-columns: repeat(2, minmax(0, 1fr));
-    gap: 0.875rem;
+  /* Grelha de perfis do modelo A: cartões de 13,5rem, até 3 por fila
+     (1 no telemóvel). `auto-fit` + `justify-content: center` em vez do
+     `auto-fill` do mock: com 1 ou 2 perfis reais (o caso normal numa
+     farmácia), os cartões ficam centrados na coluna em vez de encostados
+     à esquerda. */
+  .portal-staff-grid--pick {
+    grid-template-columns: repeat(auto-fit, minmax(13.5rem, 13.5rem));
+    justify-content: center;
   }
 
-  @media (max-width: 30rem) {
-    .portal-staff-grid {
-      grid-template-columns: 1fr;
+  @media (max-width: 40rem) {
+    .portal-staff-pin-card {
+      padding: 1.25rem;
     }
 
-    .portal-staff-grid--pick {
-      grid-template-columns: repeat(2, minmax(0, 1fr));
-    }
-  }
-
-  /* Ecrã de escolha (página alargada): 3 cartões por fila — os perfis
-     lêem-se de relance, como uma equipa, não como uma lista. */
-  @media (min-width: 36rem) {
-    .portal-staff-grid--pick {
-      grid-template-columns: repeat(3, minmax(0, 1fr));
+    .portal-staff-key {
+      height: 3rem;
     }
   }
 
@@ -7522,6 +8013,25 @@ html.dark .form-note {
     display: grid;
     place-items: center;
     flex-shrink: 0;
+  }
+
+  /* Avatar do cartão no modelo A: disco claro com hairline (o verde
+     cheio fica para o «Continuar» e para o painel do PIN). */
+  .portal-staff-card .portal-staff-av {
+    width: 3.25rem;
+    height: 3.25rem;
+    margin: 0 auto 0.75rem;
+    background: color-mix(in srgb, var(--color-brand-accent) 10%, transparent);
+    border: 1px solid var(--color-brand-divider);
+    color: var(--color-brand-primary);
+    font-family: var(--font-display);
+    font-size: 1rem;
+    font-weight: 600;
+  }
+
+  html.dark .portal-staff-card .portal-staff-av {
+    background: rgb(127 212 171 / 0.14);
+    color: #baf0d5;
   }
 
   .portal-staff-av--lg {
@@ -7552,21 +8062,34 @@ html.dark .form-note {
     color: var(--ink-45v);
   }
 
-  /* Painel do PIN — abre sob a grelha com o rosto de quem entra. */
+  /* Painel do PIN (modelo A): cartão centrado de 460px — quem entra em
+     cima, o rótulo, os pontos, o teclado numérico e «Entrar». */
   .portal-staff-pin-card {
+    position: relative;
     display: grid;
-    gap: 0.875rem;
-    padding: 1rem;
+    justify-items: center;
+    gap: 1rem;
+    /* width:100% porque as margens auto impedem o stretch da grelha: sem
+       isto o cartão encolhia ao conteúdo em vez dos 460px do modelo. */
+    width: 100%;
+    max-width: 28.75rem;
+    margin: 0 auto;
+    padding: 1.875rem;
     border: 1px solid var(--color-brand-divider);
     border-radius: 1rem;
     background: var(--color-brand-card);
     box-shadow: var(--shadow-soft);
+    text-align: center;
   }
 
   .portal-staff-pin-who {
     display: flex;
     align-items: center;
-    gap: 0.75rem;
+    gap: 0.875rem;
+    width: 100%;
+    padding-bottom: 1.125rem;
+    border-bottom: 1px solid var(--color-brand-divider);
+    text-align: left;
   }
 
   .portal-staff-pin-who-meta {
@@ -7577,7 +8100,10 @@ html.dark .form-note {
   }
 
   .portal-staff-pin-who-meta b {
-    font-size: 0.9375rem;
+    display: block;
+    font-family: var(--font-display);
+    font-size: 1rem;
+    font-weight: 600;
     color: var(--color-brand-deep);
     overflow: hidden;
     text-overflow: ellipsis;
@@ -7585,19 +8111,128 @@ html.dark .form-note {
   }
 
   .portal-staff-pin-who-meta span {
-    font-size: 0.6875rem;
-    color: var(--ink-45v);
+    font-size: 0.78125rem;
+    color: var(--ink-60v);
   }
 
+  /* O ✕ do modelo A: círculo com hairline à direita de quem entra. */
   .portal-staff-pin-back {
+    margin-left: auto;
+    width: 2rem;
+    height: 2rem;
+    border: 1px solid var(--color-brand-divider);
+    border-radius: 50%;
+    background: var(--color-brand-card);
+    color: var(--ink-60v);
+    font-size: 0.9375rem;
+    line-height: 1;
+    cursor: pointer;
+    flex-shrink: 0;
+    transition:
+      background 0.15s ease,
+      color 0.15s ease;
+  }
+
+  .portal-staff-pin-back:hover {
+    background: color-mix(in srgb, var(--color-brand-accent) 10%, transparent);
+    color: var(--color-brand-deep);
+  }
+
+  .portal-staff-pin-label {
+    font-size: 0.6875rem;
+    font-weight: 600;
+    letter-spacing: 0.15em;
+    text-transform: uppercase;
+    color: var(--ink-60v);
+    margin: 0;
+  }
+
+  /* Pontos do PIN: 13px, contorno da marca, cheios à medida que se digita. */
+  .portal-staff-pin-dots {
+    display: flex;
+    justify-content: center;
+    gap: 0.875rem;
+  }
+
+  .portal-staff-pin-dots i {
+    width: 0.8125rem;
+    height: 0.8125rem;
+    border-radius: 50%;
+    border: 1.5px solid var(--color-brand-primary);
+    transition: background 0.15s ease;
+  }
+
+  html.dark .portal-staff-pin-dots i {
+    border-color: #7fd4ab;
+  }
+
+  .portal-staff-pin-dots i.is-on {
+    background: var(--color-brand-primary);
+  }
+
+  html.dark .portal-staff-pin-dots i.is-on {
+    background: #7fd4ab;
+  }
+
+  /* Campo real do PIN: invisível, mas com o foco — o teclado físico e os
+     leitores do balcão escrevem nele (o teclado em ecrã é o principal). */
+  .portal-input--pin-ghost {
+    position: absolute;
+    width: 1px;
+    height: 1px;
+    margin: 0;
+    padding: 0;
     border: 0;
-    background: none;
-    font: inherit;
+    opacity: 0;
+    pointer-events: none;
+  }
+
+  /* Teclado numérico do modelo A: 3×4, teclas de 52px. */
+  .portal-staff-keys {
+    display: grid;
+    grid-template-columns: repeat(3, minmax(0, 1fr));
+    gap: 0.625rem;
+    width: 100%;
+    max-width: 17.5rem;
+    margin: 0 auto;
+  }
+
+  .portal-staff-key {
+    height: 3.25rem;
+    border: 1px solid var(--color-brand-divider);
+    border-radius: 0.75rem;
+    background: var(--color-brand-bg-alt);
+    color: var(--color-brand-deep);
+    font-family: var(--font-display);
+    font-size: 1.1875rem;
+    font-weight: 500;
+    cursor: pointer;
+    transition:
+      background 0.15s ease,
+      border-color 0.15s ease;
+  }
+
+  .portal-staff-key:hover {
+    background: var(--color-brand-card);
+    border-color: var(--color-brand-accent);
+  }
+
+  html.dark .portal-staff-key:hover {
+    border-color: #7fd4ab;
+  }
+
+  .portal-staff-key--fn {
+    font-family: var(--font-sans);
     font-size: 0.75rem;
     font-weight: 600;
-    color: var(--color-brand-accent);
-    cursor: pointer;
-    white-space: nowrap;
+    letter-spacing: 0.08em;
+    color: var(--ink-60v);
+  }
+
+  .portal-staff-pin-note {
+    font-size: 0.75rem;
+    color: var(--ink-60v);
+    margin: 0;
   }
 
   .portal-input--pin {
@@ -7608,29 +8243,28 @@ html.dark .form-note {
     text-align: center;
   }
 
-  .portal-input--pin-lg {
-    max-width: none;
-    width: 100%;
-    font-size: 1.375rem;
-    letter-spacing: 0.5em;
-    text-indent: 0.5em;
-    padding-block: 0.75rem;
-  }
-
   .portal-staff-pin-go {
     width: 100%;
   }
 
-  .portal-staff-bootstrap {
-    display: grid;
-    gap: 0.625rem;
+  /* Painel do «primeiro perfil» (farmácia sem equipa): mesma largura do
+     painel do PIN, alinhado à esquerda como os formulários do portal. */
+  .portal-staff-panel {
+    width: 100%;
+    max-width: 28.75rem;
+    margin: 0 auto;
+    text-align: left;
   }
 
+  /* Rodapé do modelo A (.foot-note): 12px, com hairline tracejada. */
   .portal-staff-screen-foot {
-    font-size: 0.6875rem;
+    font-size: 0.75rem;
+    line-height: 1.5;
     color: var(--ink-45v);
     text-align: center;
     text-wrap: balance;
+    border-top: 1px dashed var(--color-brand-divider);
+    padding-top: 0.875rem;
   }
 
   .portal-staff-screen-foot b {
@@ -8001,8 +8635,12 @@ html.dark .form-note {
   }
 
   @media (max-width: 60rem) {
-    .portal-cols-equipa {
-      grid-template-columns: auto 1fr auto;
+    /* Cabeçalho E linhas: a linha da equipa usa .portal-eq-row (avatar +
+       nome + papel + estado + editar), por isso a largura mínima tem de
+       valer para os dois — senão o cabeçalho rolava e as linhas não. */
+    .portal-cols-equipa,
+    .portal-eq-row {
+      min-width: 44rem;
     }
   }
 
@@ -8011,12 +8649,6 @@ html.dark .form-note {
     font-size: 0.7188rem;
     color: var(--ink-60v);
     margin-top: 1px;
-  }
-
-  @media (max-width: 60rem) {
-    .portal-cell .portal-cell-mob {
-      display: block;
-    }
   }
 
   /* Chip de estado redondo (editorial) — ponto + palavra com fundo
@@ -8173,11 +8805,7 @@ html.dark .form-note {
 
   @media (max-width: 60rem) {
     .portal-cols-desempenho {
-      grid-template-columns: 1.4fr 1fr;
-    }
-
-    .portal-cols-desempenho > :nth-child(n + 3) {
-      display: none;
+      min-width: 58rem;
     }
   }
 
@@ -8936,15 +9564,19 @@ html.dark .portal-id-card--dark {
   padding: 0.125rem 0.5rem;
   border-radius: 999px;
   background: rgb(10 132 79 / 0.1);
-  color: var(--color-brand-accent);
+  color: var(--color-brand-primary);
   font-size: 0.6875rem;
   font-weight: 700;
   letter-spacing: 0.06em;
   text-transform: uppercase;
 }
 
+/* O acento puro (#0a844f) dava 4,3:1 em dia e 3,8:1 em noite a 11px —
+   ambos abaixo do mínimo; o chip usa o verde profundo de dia e o mint
+   de noite (o mesmo par do ponto de estado). */
 html.dark .sess-info-chip {
   background: rgb(10 132 79 / 0.22);
+  color: #7fd4ab;
 }
 
 .sess-info-on {
@@ -8952,6 +9584,10 @@ html.dark .sess-info-chip {
   align-items: center;
   gap: 0.375rem;
   color: var(--color-brand-accent);
+}
+
+html.dark .sess-info-on {
+  color: #7fd4ab;
 }
 
 .sess-info-on i {

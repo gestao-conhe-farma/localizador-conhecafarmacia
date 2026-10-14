@@ -49,6 +49,16 @@ function dataLonga() {
   return partes.map((p, i) => (i === 0 ? p.charAt(0).toUpperCase() + p.slice(1) : p)).join(', ')
 }
 
+/**
+ * Dia de hoje 'YYYY-MM-DD' (UTC) — a MESMA chave com que os eventos do
+ * calendário são guardados (resolved_at / expires_at vêm em UTC). Calcular
+ * isto no servidor deixa o mini-calendário abrir já com o dia escolhido e
+ * o painel preenchido, sem esperar por um efeito no cliente.
+ */
+function hojeIso() {
+  return new Date().toISOString().slice(0, 10)
+}
+
 /** Valor em Kwanzas no formato do mock: "37 500 Kz" (pt-PT, sem decimais). */
 function kz(v) {
   return `${new Intl.NumberFormat('pt-PT', { maximumFractionDigits: 0 }).format(
@@ -111,6 +121,13 @@ async function countCatalog(pharmacyId) {
  * reservas concluídas (ponto verde) e validades a vencer (ponto
  * âmbar). Uma janela em vez de mês fixo para os ‹ › do calendário
  * mostrarem eventos também nos meses vizinhos.
+ *
+ * Cada dia leva o que o painel do dia mostra ao clicar (ou ao andar
+ * com as setas): as RESERVAS desse dia (nome × quantidade, teto de 6)
+ * e as VENDAS do dia — o mesmo valor do relatório (quantidade
+ * confirmada × preço da opção de venda), para o número do calendário
+ * e o do relatório nunca divergirem. Sem preço registado conta-se
+ * «sem preço» em vez de zero (não se inventa valor).
  */
 async function dashboardEvents(pharmacyId) {
   try {
@@ -120,7 +137,7 @@ async function dashboardEvents(pharmacyId) {
     const [res, stock] = await Promise.all([
       supabase
         .from('reservations')
-        .select('resolved_at')
+        .select('resolved_at, quantity, confirmed_quantity, stock_sale_options(price), drugs(name)')
         .eq('pharmacy_id', pharmacyId)
         .eq('status', 'concluida')
         .gte('resolved_at', from)
@@ -135,15 +152,36 @@ async function dashboardEvents(pharmacyId) {
         .gte('expires_at', from.slice(0, 10))
         .lte('expires_at', to.slice(0, 10)),
     ])
+    // Por dia guarda-se o NÍVEL (que define o ponto), as contagens, a
+    // lista de vendas e o valor — o painel do dia mostra tudo isto.
     const events = {}
+    const dia = (d) => {
+      if (!events[d]) {
+        events[d] = { level: 'ok', reservations: 0, expiries: 0, value: 0, semPreco: 0, items: [] }
+      }
+      return events[d]
+    }
+    const TETO_NOMES = 6
     for (const r of res.data || []) {
       const d = String(r.resolved_at || '').slice(0, 10)
-      if (d) events[d] = 'ok'
+      if (!d) continue
+      const e = dia(d)
+      e.reservations += 1
+      e.level = 'ok'
+      const qty = r.confirmed_quantity ?? r.quantity ?? 0
+      const price = r.stock_sale_options?.price
+      if (price != null) e.value += Math.round(qty * Number(price) * 100) / 100
+      else e.semPreco += 1
+      const nome = r.drugs?.name
+      if (nome && e.items.length < TETO_NOMES) e.items.push({ name: nome, qty })
     }
     // A validade ganha o ponto (urgência maior quando coincidem).
     for (const s of stock.data || []) {
       const d = String(s.expires_at || '').slice(0, 10)
-      if (d) events[d] = 'warn'
+      if (!d) continue
+      const e = dia(d)
+      e.expiries += 1
+      e.level = 'warn'
     }
     return events
   } catch {
@@ -195,6 +233,8 @@ export default async function PortalOverviewPage() {
   const nome = String(staff?.name || session.profile?.display_name || '')
     .trim()
     .split(/\s+/)[0]
+  // Dia de hoje para o mini-calendário (abre no dia, painel preenchido).
+  const hoje = hojeIso()
 
   const [att, pend, sales, stockCount, catalog, events] = await Promise.all([
     getMyAttentionFeed(),
@@ -322,33 +362,45 @@ export default async function PortalOverviewPage() {
    * «Hoje na farmácia» — itens de atenção REAIS, mais urgentes ao
    * topo: reposição (vermelho) · validade (âmbar) · desactualizado
    * (neutro). Máximo de 4 — o resto vive em /portal/atencao.
+   *
+   * Cada linha é um CAMINHO para resolver o assunto (o produto à frente
+   * e a acção no chip): repor leva à Entrada de stock com o medicamento
+   * já filtrado (`?q=`, o mesmo deep-link da página de atenção) e os
+   * outros dois abrem a fila no filtro certo (`?tipo=`, que a
+   * AttentionPanel já lê do URL).
    */
   const feedTop = [
     ...feedRestock.map((r) => ({
       key: `r-${r.drug_id}`,
       cls: 'bad',
-      title: `Repor ${r.name}`,
+      title: r.name,
       sub: `vendeu ${timeAgoRel(r.when)}${
         r.stockQuantity != null ? ` · restam ${r.stockQuantity}` : ''
       }`,
       when: timeAgoRel(r.when),
+      cta: 'Repor',
+      href: `/portal/entrada?q=${encodeURIComponent(r.name)}`,
     })),
     ...feedExpiry.map((e) => ({
       key: `e-${e.drug_id}`,
       cls: e.level === 'expired' || e.level === '30' ? 'bad' : 'warn',
-      title: `Validade ${e.name}`,
+      title: e.name,
       sub:
         e.days < 0
           ? `expirou há ${Math.abs(e.days)} dias`
           : `expira em ${e.days} dia${e.days !== 1 ? 's' : ''}`,
       when: dataCurta(e.expires_at),
+      cta: 'Validade',
+      href: '/portal/atencao?tipo=expiry',
     })),
     ...feedStale.map((s) => ({
       key: `s-${s.drug_id}`,
       cls: 'mut',
-      title: `Reconfirmar ${s.name}`,
+      title: s.name,
       sub: `confirmado ${timeAgoRel(s.confirmed_at)}`,
       when: dataCurta(s.confirmed_at),
+      cta: 'Reconfirmar',
+      href: '/portal/atencao?tipo=stale',
     })),
   ].slice(0, 4)
 
@@ -389,9 +441,12 @@ export default async function PortalOverviewPage() {
         ))}
       </div>
 
-      {/* Painel inferior do mock — grelha 2 colunas: reservas com
-          acções reais à esquerda; donut de stock + calendário do dia
-          com feed à direita. Tudo com dados do servidor. */}
+      {/* Painel inferior: reservas com acções reais e donut de stock na
+          linha de cima; «Hoje na farmácia» ocupa a LARGURA TODA por
+          baixo — o calendário não tem nada à esquerda e fica do tamanho
+          da fila de reservas (as células ganham o resumo do dia). Cada
+          linha do feed é um caminho clicável com a acção à vista
+          (Repor · Validade · Reconfirmar). Tudo com dados do servidor. */}
       <div className="portal-grid2">
         <div className="portal-box">
           <div className="portal-card-head">
@@ -405,58 +460,66 @@ export default async function PortalOverviewPage() {
           </div>
         </div>
 
-        <div className="portal-grid2-col">
-          <div className="portal-box">
-            <div className="portal-card-head">
-              <h2>Stock no Localizador</h2>
-            </div>
-            <div className="portal-card-body portal-donut-wrap">
-              <div
-                className="portal-donut"
-                style={{
-                  '--p': catalog.total > 0 ? Math.round((stockCount / catalog.total) * 100) : 0,
-                }}
-              >
-                <b>{catalog.total > 0 ? Math.round((stockCount / catalog.total) * 100) : 0}%</b>
-              </div>
-              <ul className="portal-donut-legend">
-                <li>
-                  <i className="portal-lg-green" /> Disponível <b>{stockCount}</b>
-                </li>
-                <li>
-                  <i className="portal-lg-dark" /> Catálogo visível <b>{catalog.total}</b>
-                </li>
-                <li>
-                  <i className="portal-lg-gray" /> Pendentes validação <b>{catalog.pending}</b>
-                </li>
-              </ul>
-            </div>
+        <div className="portal-box">
+          <div className="portal-card-head">
+            <h2>Stock no Localizador</h2>
           </div>
+          <div className="portal-card-body portal-donut-wrap">
+            <div
+              className="portal-donut"
+              style={{
+                '--p': catalog.total > 0 ? Math.round((stockCount / catalog.total) * 100) : 0,
+              }}
+            >
+              <b>{catalog.total > 0 ? Math.round((stockCount / catalog.total) * 100) : 0}%</b>
+            </div>
+            {/* Cada legenda é um CAMINHO para onde o assunto se
+                resolve: clicar abre o stock já filtrado pelo estado
+                que a cor representa (o `?f=` que o painel lê do URL). */}
+            <ul className="portal-donut-legend">
+              <li>
+                <Link href="/portal/stock?f=in" title="Abrir o stock em «Disponível»">
+                  <i className="portal-lg-green" /> Disponível <b>{stockCount}</b>
+                </Link>
+              </li>
+              <li>
+                <Link href="/portal/stock" title="Abrir o catálogo no stock">
+                  <i className="portal-lg-dark" /> Catálogo visível <b>{catalog.total}</b>
+                </Link>
+              </li>
+              <li>
+                <Link href="/portal/stock?f=pending" title="Abrir o stock em «Aguarda validação»">
+                  <i className="portal-lg-gray" /> Pendentes validação <b>{catalog.pending}</b>
+                </Link>
+              </li>
+            </ul>
+          </div>
+        </div>
 
-          <div className="portal-box">
-            <div className="portal-card-head">
-              <h2>Hoje na farmácia</h2>
-              <span className="portal-card-hint">ponto = evento</span>
-            </div>
-            <div className="portal-card-body">
-              <MiniMonthCalendar events={events} />
-              {feedTop.length > 0 && (
-                <div className="portal-feed" style={{ marginTop: 12 }}>
-                  {feedTop.map((f) => (
-                    <div key={f.key} className="portal-feed-item">
-                      <span className={`portal-st portal-st--${f.cls}`} aria-hidden="true">
-                        <i />
-                      </span>
-                      <div style={{ minWidth: 0 }}>
-                        <b>{f.title}</b>
-                        <span>{f.sub}</span>
-                      </div>
-                      <span className="when">{f.when}</span>
+        <div className="portal-box portal-grid2-wide">
+          <div className="portal-card-head">
+            <h2>Hoje na farmácia</h2>
+            <span className="portal-card-hint">ponto = evento · clique ou setas no dia</span>
+          </div>
+          <div className="portal-card-body">
+            <MiniMonthCalendar events={events} today={hoje} />
+            {feedTop.length > 0 && (
+              <div className="portal-feed" style={{ marginTop: 12 }}>
+                {feedTop.map((f) => (
+                  <Link key={f.key} href={f.href} className="portal-feed-item">
+                    <span className={`portal-st portal-st--${f.cls}`} aria-hidden="true">
+                      <i />
+                    </span>
+                    <div style={{ minWidth: 0 }}>
+                      <b>{f.title}</b>
+                      <span>{f.sub}</span>
                     </div>
-                  ))}
-                </div>
-              )}
-            </div>
+                    <span className="when">{f.when}</span>
+                    <span className="portal-feed-cta">{f.cta}</span>
+                  </Link>
+                ))}
+              </div>
+            )}
           </div>
         </div>
       </div>

@@ -403,24 +403,26 @@ export default function HelpPanel() {
       {/* Resumo de 30 segundos — sempre visível no fundo. */}
       <div className="help-cheatsheet">
         <h2 className="portal-h2">Resumo de 30 segundos</h2>
-        <table className="help-table">
-          <thead>
-            <tr>
-              <th>O que aconteceu</th>
-              <th>Onde vais</th>
-              <th>O que fazes</th>
-            </tr>
-          </thead>
-          <tbody>
-            {CHEATSHEET.map(([what, where, whatDo]) => (
-              <tr key={what}>
-                <td>{what}</td>
-                <td>{where}</td>
-                <td>{whatDo}</td>
+        <div className="help-table-scroll">
+          <table className="help-table">
+            <thead>
+              <tr>
+                <th>O que aconteceu</th>
+                <th>Onde vais</th>
+                <th>O que fazes</th>
               </tr>
-            ))}
-          </tbody>
-        </table>
+            </thead>
+            <tbody>
+              {CHEATSHEET.map(([what, where, whatDo]) => (
+                <tr key={what}>
+                  <td>{what}</td>
+                  <td>{where}</td>
+                  <td>{whatDo}</td>
+                </tr>
+              ))}
+            </tbody>
+          </table>
+        </div>
         <div className="help-rule help-rule--ok">
           <b>Duas regras que valem ouro:</b> 1. Responde às reservas em menos de 72 horas. · 2.
           Registra toda a mercadoria que chega.

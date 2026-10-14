@@ -1,6 +1,6 @@
 'use client'
 
-import { useEffect, useState, useTransition } from 'react'
+import { useEffect, useRef, useState, useTransition } from 'react'
 import Link from 'next/link'
 import {
   bootstrapFirstProfile,
@@ -12,14 +12,20 @@ import { logWarn } from '@/lib/log'
 /**
  * Escolha de perfil de farmacêutico (PIN) — o «quem está ao balcão».
  *
- * Lista os perfis activos da farmácia (Server Action), escolhe-se um e
- * introduz-se o PIN de 4 dígitos; o servidor valida o scrypt e assina o
- * cookie do dispositivo (24 h). Vários dispositivos podem ficar em
- * perfis diferentes ao mesmo tempo — cada um tem o seu cookie.
+ * Modelo editorial A (_design/portal-reimaginado/A-editorial.html):
+ * eyebrow + título serif grande + lead; grelha de cartões brancos
+ * (avatar, nome serif, papel e chip de estado) e o PIN revelado SOBRE o
+ * perfil escolhido, num painel centrado com pontos de PIN e teclado
+ * numérico — nenhum campo à mostra até ser preciso. «Em uso» marca o
+ * perfil que já está activo neste dispositivo.
  *
- * Ecrã de abertura do turno: por isso a hierarquia é a escolha, não o
- * formulário — os perfis são cartões com avatar e o PIN abre-se SOBRE
- * o perfil escolhido, sem empurrar a grelha.
+ * O <input> real continua lá (invisível mas focado): quem escreve no
+ * teclado físico ou no leitor do balcão digita directamente; o teclado
+ * em ecrã é o caminho principal em tablet.
+ *
+ * Vários dispositivos podem ficar em perfis diferentes ao mesmo tempo —
+ * cada um tem o seu cookie (24 h), assinado pelo servidor depois de o
+ * scrypt validar o PIN.
  */
 
 const ERRORES = {
@@ -34,6 +40,8 @@ const ERRORES = {
   FALHA_CRIAR: 'Não foi possível criar o perfil. Tente novamente.',
   FALHA_LISTAR: 'Não foi possível carregar os perfis.',
 }
+
+const TECLAS = ['1', '2', '3', '4', '5', '6', '7', '8', '9']
 
 function iniciais(nome) {
   const parts = String(nome || '')
@@ -57,6 +65,9 @@ export default function StaffPicker({ pharmacyName, accountName }) {
   const [pending, startTransition] = useTransition()
   // Primeira arranque: farmácia sem nenhum perfil → criar gerente aqui.
   const [primeiro, setPrimeiro] = useState({ name: '', pin: '', confirm: '' })
+  // O campo real do PIN: invisível, mas com o foco — o teclado físico
+  // (e os leitores do balcão) escrevem directamente nele.
+  const pinRef = useRef(null)
 
   useEffect(() => {
     let alive = true
@@ -77,10 +88,30 @@ export default function StaffPicker({ pharmacyName, accountName }) {
     }
   }, [])
 
+  // Painel do PIN aberto: devolve o foco ao campo real, para quem
+  // escreve no teclado físico (o teclado em ecrã devolve-o a seguir a
+  // cada toque, via focar()).
+  useEffect(() => {
+    if (selected) pinRef.current?.focus()
+  }, [selected])
+
+  const focar = () => pinRef.current?.focus()
+
   const escolher = (s) => {
     setSelected(s)
     setPin('')
     setError(null)
+    if (!s) pinRef.current?.blur()
+  }
+
+  const digitar = (d) => {
+    setPin((p) => (p.length < 4 ? p + d : p))
+    focar()
+  }
+
+  const apagar = () => {
+    setPin((p) => p.slice(0, -1))
+    focar()
   }
 
   const submeter = (e) => {
@@ -122,13 +153,14 @@ export default function StaffPicker({ pharmacyName, accountName }) {
 
   return (
     <div className="portal-staff-screen">
-      {/* Cabeçalho — a escolha é o assunto da página, não um detalhe
-          dentro de uma caixa: título serif + quem está logado. */}
+      {/* Cabeçalho editorial (modelo A): eyebrow, título serif grande e
+          uma linha que explica o gesto — tocar no perfil revela o PIN. */}
       <header className="portal-staff-head">
-        <p className="portal-staff-eyebrow">{pharmacyName}</p>
+        <p className="portal-staff-eyebrow">Acesso ao balcão</p>
         <h1 className="portal-staff-title">Quem está ao balcão?</h1>
         <p className="portal-staff-lead">
-          Escolha o seu perfil — tudo o que registar a partir daqui fica em seu nome.
+          Toque num perfil para revelar o PIN — as vendas, reservas e entradas deste dispositivo
+          ficam em seu nome.
         </p>
       </header>
 
@@ -154,10 +186,7 @@ export default function StaffPicker({ pharmacyName, accountName }) {
 
       {/* Primeira arranque — a farmácia cria aqui o seu gerente. */}
       {list !== null && list.length === 0 && total === 0 && (
-        <form
-          className="portal-box portal-box--pad portal-staff-bootstrap"
-          onSubmit={criarPrimeiro}
-        >
+        <form className="portal-staff-panel" onSubmit={criarPrimeiro}>
           <div className="portal-sec-head">
             <h2>Criar o primeiro perfil</h2>
             <span className="portal-sec-head-b">gerente</span>
@@ -166,54 +195,59 @@ export default function StaffPicker({ pharmacyName, accountName }) {
             Ainda não há perfis nesta farmácia — crie o perfil de gerente para começar a gerir a
             equipa.
           </p>
-          <label className="portal-label" htmlFor="primeiro-nome">
-            Nome do gerente
-          </label>
-          <input
-            id="primeiro-nome"
-            className="portal-input"
-            type="text"
-            minLength={2}
-            maxLength={80}
-            placeholder="Ex.: Rosa Manuel"
-            value={primeiro.name}
-            onChange={(e) => setPrimeiro((p) => ({ ...p, name: e.target.value }))}
-            required
-          />
-          <label className="portal-label" htmlFor="primeiro-pin">
-            PIN (4 dígitos)
-          </label>
-          <input
-            id="primeiro-pin"
-            className="portal-input portal-input--pin"
-            type="password"
-            inputMode="numeric"
-            maxLength={4}
-            pattern="\d{4}"
-            placeholder="••••"
-            value={primeiro.pin}
-            onChange={(e) =>
-              setPrimeiro((p) => ({ ...p, pin: e.target.value.replace(/\D/g, '').slice(0, 4) }))
-            }
-            required
-          />
-          <label className="portal-label" htmlFor="primeiro-confirm">
-            Confirmar PIN
-          </label>
-          <input
-            id="primeiro-confirm"
-            className="portal-input portal-input--pin"
-            type="password"
-            inputMode="numeric"
-            maxLength={4}
-            pattern="\d{4}"
-            placeholder="••••"
-            value={primeiro.confirm}
-            onChange={(e) =>
-              setPrimeiro((p) => ({ ...p, confirm: e.target.value.replace(/\D/g, '').slice(0, 4) }))
-            }
-            required
-          />
+          <div className="portal-form-grid">
+            <label className="portal-label" htmlFor="primeiro-nome">
+              Nome do gerente
+              <input
+                id="primeiro-nome"
+                className="portal-input"
+                type="text"
+                minLength={2}
+                maxLength={80}
+                placeholder="Ex.: Rosa Manuel"
+                value={primeiro.name}
+                onChange={(e) => setPrimeiro((p) => ({ ...p, name: e.target.value }))}
+                required
+              />
+            </label>
+            <label className="portal-label" htmlFor="primeiro-pin">
+              PIN (4 dígitos)
+              <input
+                id="primeiro-pin"
+                className="portal-input portal-input--pin"
+                type="password"
+                inputMode="numeric"
+                maxLength={4}
+                pattern="\d{4}"
+                placeholder="••••"
+                value={primeiro.pin}
+                onChange={(e) =>
+                  setPrimeiro((p) => ({ ...p, pin: e.target.value.replace(/\D/g, '').slice(0, 4) }))
+                }
+                required
+              />
+            </label>
+            <label className="portal-label" htmlFor="primeiro-confirm">
+              Confirmar PIN
+              <input
+                id="primeiro-confirm"
+                className="portal-input portal-input--pin"
+                type="password"
+                inputMode="numeric"
+                maxLength={4}
+                pattern="\d{4}"
+                placeholder="••••"
+                value={primeiro.confirm}
+                onChange={(e) =>
+                  setPrimeiro((p) => ({
+                    ...p,
+                    confirm: e.target.value.replace(/\D/g, '').slice(0, 4),
+                  }))
+                }
+                required
+              />
+            </label>
+          </div>
           {error && (
             <p className="portal-error" role="alert">
               {ERRORES[error] || 'Erro inesperado.'}
@@ -240,8 +274,9 @@ export default function StaffPicker({ pharmacyName, accountName }) {
         </div>
       )}
 
-      {/* Grelha de perfis — cartões com avatar, não botões de lista:
-          o balcão escolhe de relance, de pé, sem ler. */}
+      {/* Grelha de perfis — cartões como no modelo A: avatar, nome serif,
+          papel e o chip de estado; o cartão escolhido ganha o anel da
+          marca e os outros esbatem-se. */}
       {list !== null && list.length > 0 && (
         <div className="portal-staff-screen-body">
           <div className="portal-staff-grid portal-staff-grid--pick">
@@ -263,54 +298,111 @@ export default function StaffPicker({ pharmacyName, accountName }) {
                   </span>
                   <span className="portal-staff-card-name">{s.name}</span>
                   <span className="portal-staff-card-role">
-                    {/* Papel como chip redondo (novo modelo); o perfil
-                        já activo neste dispositivo ganha o chip verde
-                        «Em uso» — gestão fica em /equipa. */}
-                    <span className="portal-pill">
-                      {s.role === 'gerente' ? 'Gerente' : 'Balcão'}
-                    </span>
-                    {isCurrent && <span className="portal-pill portal-pill--ok">Em uso</span>}
+                    {s.role === 'gerente' ? 'Gerente' : 'Balcão'}
+                  </span>
+                  <span
+                    className={`portal-chip ${
+                      isCurrent ? 'portal-chip--ok' : 'portal-chip--mute portal-chip--nodot'
+                    }`}
+                  >
+                    {isCurrent ? 'Em uso' : 'Activo'}
                   </span>
                 </button>
               )
             })}
           </div>
 
-          {/* PIN — abre sobre a grelha, com o rosto de quem entra. */}
+          {/* PIN — painel centrado do modelo: quem entra, pontos, teclado
+              numérico e «Entrar»; o campo real fica escondido mas com o
+              foco (teclado físico e leitores continuam a funcionar). */}
           {selected && (
             <form className="portal-staff-pin-card" onSubmit={submeter}>
               <div className="portal-staff-pin-who">
                 <span className="portal-staff-av portal-staff-av--lg" aria-hidden="true">
                   {iniciais(selected.name)}
                 </span>
-                <div className="portal-staff-pin-who-meta">
+                <span className="portal-staff-pin-who-meta">
                   <b>{selected.name}</b>
-                  <span>
-                    {selected.role === 'gerente' ? 'Gerente' : 'Balcão'} · PIN de 4 dígitos
-                  </span>
-                </div>
+                  <span>{selected.role === 'gerente' ? 'Gerente' : 'Balcão'}</span>
+                </span>
                 <button
                   type="button"
                   className="portal-staff-pin-back"
+                  aria-label="Fechar e escolher outro perfil"
                   onClick={() => escolher(null)}
                 >
-                  Trocar
+                  ✕
                 </button>
               </div>
 
+              <p className="portal-staff-pin-label" id="pin-label">
+                Introduza o PIN
+              </p>
+              <span className="portal-staff-pin-dots" aria-hidden="true">
+                <i className={pin.length > 0 ? 'is-on' : undefined} />
+                <i className={pin.length > 1 ? 'is-on' : undefined} />
+                <i className={pin.length > 2 ? 'is-on' : undefined} />
+                <i className={pin.length > 3 ? 'is-on' : undefined} />
+              </span>
+              <p className="sr-only" aria-live="polite">
+                {pin.length} de 4 dígitos introduzidos
+              </p>
+
               <input
-                className="portal-input portal-input--pin portal-input--pin-lg"
+                ref={pinRef}
+                className="portal-input--pin-ghost"
                 type="password"
                 inputMode="numeric"
                 autoComplete="off"
                 maxLength={4}
                 pattern="\d{4}"
-                placeholder="••••"
-                aria-label={`PIN de ${selected.name}`}
+                aria-labelledby="pin-label"
                 value={pin}
                 onChange={(e) => setPin(e.target.value.replace(/\D/g, '').slice(0, 4))}
-                autoFocus
               />
+
+              <div className="portal-staff-keys">
+                {TECLAS.map((d) => (
+                  <button
+                    key={d}
+                    type="button"
+                    className="portal-staff-key"
+                    // Sem o preventDefault o botão rouba o foco ao campo
+                    // do PIN e o teclado físico deixaria de escrever.
+                    onMouseDown={(e) => e.preventDefault()}
+                    onClick={() => digitar(d)}
+                  >
+                    {d}
+                  </button>
+                ))}
+                <button
+                  type="button"
+                  className="portal-staff-key portal-staff-key--fn"
+                  onMouseDown={(e) => e.preventDefault()}
+                  onClick={() => {
+                    setPin('')
+                    focar()
+                  }}
+                >
+                  Limpar
+                </button>
+                <button
+                  type="button"
+                  className="portal-staff-key"
+                  onMouseDown={(e) => e.preventDefault()}
+                  onClick={() => digitar('0')}
+                >
+                  0
+                </button>
+                <button
+                  type="button"
+                  className="portal-staff-key portal-staff-key--fn"
+                  onMouseDown={(e) => e.preventDefault()}
+                  onClick={apagar}
+                >
+                  Apagar
+                </button>
+              </div>
 
               {error && (
                 <p className="portal-error" role="alert">
@@ -323,15 +415,12 @@ export default function StaffPicker({ pharmacyName, accountName }) {
                 className="btn btn-primary portal-staff-pin-go"
                 disabled={pending || pin.length !== 4}
               >
-                {pending ? 'A entrar…' : 'Entrar no perfil'}
+                {pending ? 'A entrar…' : 'Entrar'}
               </button>
+              <p className="portal-staff-pin-note">
+                PIN errado é registado em log, sem bloqueio de conta.
+              </p>
             </form>
-          )}
-
-          {selected && error && (
-            <p className="portal-error" role="alert">
-              {ERRORES[error] || 'Erro inesperado.'}
-            </p>
           )}
 
           {!selected && error && (
@@ -343,7 +432,8 @@ export default function StaffPicker({ pharmacyName, accountName }) {
       )}
 
       <footer className="portal-staff-screen-foot">
-        Sessão iniciada como <b>{accountName}</b> · cada dispositivo guarda o seu perfil por 24 h.
+        {pharmacyName} · sessão iniciada como <b>{accountName}</b> — cada dispositivo guarda o seu
+        perfil por 24 h.
       </footer>
     </div>
   )

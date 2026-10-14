@@ -26,11 +26,14 @@ export default async function StaffProfilesPage() {
   if (!session) redirect('/portal/login')
 
   return (
-    <div className="min-h-dvh flex flex-col items-center justify-center px-6 py-12 bg-brand-bg">
-      {/* Container alargado (novo modelo): a grelha de cartões passa a
-          ler-se em 3 colunas — a escolha é o assunto da página. */}
-      <div className="w-full max-w-2xl">
-        <div className="flex flex-col items-center mb-8 text-center">
+    <div className="min-h-dvh flex flex-col items-center justify-center gap-7 px-5 py-12 bg-brand-bg">
+      {/* Ecrã centrado (modelo A). A marca fica acima do bloco editorial;
+          a largura (46rem) é imposta pelo próprio StaffPicker, que também
+          traz o eyebrow «Acesso ao balcão» e o título serifado. */}
+      <div className="w-full">
+        <div className="flex flex-col items-center text-center">
+          {/* Logo com as duas versões (padrão do portal): no escuro o
+              verde desaparece sobre o fundo escuro — troca para o branco. */}
           <Link href="/" aria-label="Conheça Farmácia">
             <Image
               src="/logo/logo-principal-verde.png"
@@ -38,11 +41,18 @@ export default async function StaffProfilesPage() {
               width={110}
               height={38}
               priority
+              className="portal-logo-green"
+            />
+            <Image
+              src="/logo/logo-principal-branco.png"
+              alt=""
+              width={110}
+              height={38}
+              priority
+              aria-hidden="true"
+              className="portal-logo-white"
             />
           </Link>
-          <p className="mt-3 text-[10px] font-bold uppercase tracking-[0.22em] text-brand-accent">
-            Portal da farmácia
-          </p>
         </div>
 
         <StaffPicker

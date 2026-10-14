@@ -245,7 +245,8 @@ export default function AttentionPanel({ pharmacyId }) {
     )
   }
 
-  /** KPI do dia — ícone à esquerda, número, delta neutro, estado à direita. */
+  /** KPI do dia — rótulo, número e detalhe a fluir, ícone no canto
+      superior direito, estado em baixo à direita. */
   const kpis = [
     {
       k: 'Reservas por atender',
@@ -507,8 +508,10 @@ export default function AttentionPanel({ pharmacyId }) {
         </div>
       </div>
 
-      {/* KPIs do dia (padrão refs 4/6): ícone à esquerda + estado à
-          direita — só pontos e palavras, nunca chips coloridos. */}
+      {/* KPIs do dia (padrão refs 4/6): ícone no canto superior
+          direito (como em /vendas) e o texto a fluir na largura do
+          cartão; estado à direita — só pontos e palavras, nunca
+          chips coloridos. */}
       <div className="portal-kpi4-grid">
         {kpis.map((c) => (
           <div key={c.k} className="portal-kpi4">

@@ -169,7 +169,7 @@ export default function EquipaManager({ rows, currentId, error }) {
             Crie o primeiro perfil de farmacêutico acima.
           </div>
         ) : (
-          <>
+          <div className="portal-table-scroll">
             <div className="portal-rowhead portal-cols-equipa" aria-hidden="true">
               <span />
               <span>Nome</span>
@@ -213,7 +213,7 @@ export default function EquipaManager({ rows, currentId, error }) {
                 </div>
               </div>
             ))}
-          </>
+          </div>
         )}
       </div>
 

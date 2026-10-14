@@ -10,7 +10,7 @@ import { useRouter } from 'next/navigation'
  *
  * Passos (5):
  *   1. /portal            → sino de reservas na sidebar (data-tour="bell")
- *   2. /portal            → menu do perfil na top-bar (data-tour="staff-menu")
+ *   2. /portal            → perfil activo no RODAPÉ da sidebar (data-tour="staff-menu")
  *   3. /portal/atencao    → chips de filtro (data-tour="chips")
  *   4. /portal/stock      → submenu «Entrada de stock» (data-tour="stock-sub")
  *   5. /portal/stock      → botão «+ Nova entrada» (data-tour="nova-entrada")
@@ -43,8 +43,8 @@ const STEPS = [
     href: '/portal',
     target: '[data-tour="staff-menu"]',
     title: 'Quem está ao balcão',
-    body: 'No canto superior direito está o perfil activo — tudo o que registar fica em nome dele. Tocar no nome abre o menu: «Trocar perfil» (cartões + PIN), «Sessão e PIN» e «Sair do perfil».',
-    placement: 'bottom',
+    body: 'No fundo da sidebar está o perfil activo — tudo o que registar fica em nome dele. Tocar no nome abre o menu com «Trocar perfil» (escolha + PIN) e «Sair do perfil». O PIN e os seus dados vivem na página Sessão, na navegação.',
+    placement: 'top',
   },
   {
     href: '/portal/atencao',

@@ -76,6 +76,15 @@ function ttlLabel(iso) {
   return `responde em até ${Math.max(1, Math.round(ms / 60000))} min`
 }
 
+/** «7 out» — rótulo curto do dia no filtro `?dia=`. */
+function diaLabel(iso) {
+  return new Date(`${iso}T00:00:00Z`).toLocaleDateString('pt-PT', {
+    day: 'numeric',
+    month: 'short',
+    timeZone: 'UTC',
+  })
+}
+
 /**
  * O que dizer à farmácia depois de concluir: concluir baixa o stock
  * (trigger da migração 0006), por isso vale a pena mostrar o resultado.
@@ -167,6 +176,15 @@ export default function ReservationsQueue() {
   useEffect(() => {
     if (urlQ) setQ(urlQ)
   }, [urlQ])
+  // Deep-link do calendário do dashboard (`?dia=YYYY-MM-DD`): a fila
+  // abre filtrada ao movimento desse dia — reservas PEDIDAS ou
+  // CONCLUÍDAS nele (a vista de calendário daqui agrupa por criação; o
+  // painel do dashboard conta as concluídas — o filtro cobre as duas).
+  const urlDia = searchParams.get('dia')
+  const [dia, setDia] = useState(null)
+  useEffect(() => {
+    setDia(/^\d{4}-\d{2}-\d{2}$/.test(urlDia || '') ? urlDia : null)
+  }, [urlDia])
   // Menu kebab aberto (id da linha).
   const [kebabId, setKebabId] = useState(null)
   // Calendário: mês/selector resolvidos depois de montar — Date.now()
@@ -181,6 +199,14 @@ export default function ReservationsQueue() {
       sel: `${d.getFullYear()}-${p(d.getMonth() + 1)}-${p(d.getDate())}`,
     })
   }, [])
+  // `?dia=` também selecciona o dia na vista de calendário (e o mês
+  // passa a ser o do dia) — o deep-link abre o dia certo, não «hoje».
+  useEffect(() => {
+    if (!dia) return
+    const d = new Date(`${dia}T00:00:00`)
+    setCal({ y: d.getFullYear(), m: d.getMonth(), sel: dia })
+  }, [dia])
+
   // Links wa.me por reserva (montados no cliente a partir dos dados).
   const pharmacyNameRef = useRef('')
 
@@ -331,6 +357,14 @@ export default function ReservationsQueue() {
     return c
   }, [rows])
 
+  /** Limpa o filtro do dia — URL e estado, sem navegar. */
+  const clearDia = () => {
+    setDia(null)
+    const url = new URL(window.location.href)
+    url.searchParams.delete('dia')
+    window.history.replaceState(null, '', url)
+  }
+
   const filtered = useMemo(() => {
     if (!rows) return []
     const match = {
@@ -341,9 +375,15 @@ export default function ReservationsQueue() {
         r.status === 'concluida' || r.status === 'recusada' || r.status === 'expirada',
     }[filter]
     const needle = q.trim().toLowerCase()
+    // Filtro do dia (?dia=): pedidas OU concluídas nesse dia.
+    const noDia = (r) =>
+      !dia ||
+      String(r.created_at || '').slice(0, 10) === dia ||
+      String(r.resolved_at || '').slice(0, 10) === dia
     // Mais recentes primeiro dentro de cada filtro.
     return rows
       .filter(match)
+      .filter(noDia)
       .filter((r) => {
         if (!needle) return true
         const d = r.drugs || {}
@@ -354,7 +394,7 @@ export default function ReservationsQueue() {
         )
       })
       .sort((a, b) => new Date(b.created_at) - new Date(a.created_at))
-  }, [rows, filter, q])
+  }, [rows, filter, q, dia])
 
   /** Painel inline de confirmação (quantidade) — usado na linha e no dia. */
   const confirmPanel = (r) =>
@@ -651,11 +691,15 @@ export default function ReservationsQueue() {
     const estadoTxt = {
       pendente: ttlLabel(r.expires_at) || 'Pendente',
       confirmada: r.client_contacted_at ? 'Confirmada · cliente avisado' : 'Confirmada',
-      pronta: 'Pronta · aguarda levantamento',
+      pronta: 'Pronta · aguarda…',
       concluida: 'Concluída',
       recusada: `Recusada${reasonLabel(r.reason) ? ` · ${reasonLabel(r.reason)}` : ''}`,
       expirada: 'Expirada',
     }[r.status]
+    /* O texto completo do estado «Pronta» não cabe na coluna: o chip
+       mostra a versão curta e o resto vive no title (rato) e no
+       desdobrar (toque) — nenhum estado alarga a coluna. */
+    const estadoFull = r.status === 'pronta' ? 'Pronta · aguarda levantamento' : null
     const kebabOpen = kebabId === r.id
 
     return (
@@ -684,7 +728,7 @@ export default function ReservationsQueue() {
         </div>
 
         <div className="portal-cell">
-          <StateLabel st={st} label={estadoTxt} />
+          <StateLabel st={st} label={estadoTxt} full={estadoFull} />
         </div>
 
         <div className="portal-cell">
@@ -841,7 +885,9 @@ export default function ReservationsQueue() {
         </div>
       </div>
 
-      {/* KPIs do dia (padrão refs 4/6): ícone à esquerda + estado. */}
+      {/* KPIs do dia (padrão refs 4/6): ícone no canto superior
+          direito (como em /vendas) e o texto a fluir na largura do
+          cartão + estado. */}
       <div className="portal-kpi4-grid">
         {kpis.map((c) => (
           <div key={c.k} className="portal-kpi4">
@@ -887,6 +933,16 @@ export default function ReservationsQueue() {
                   aria-label="Pesquisar reservas"
                 />
               </label>
+              {dia && (
+                <button
+                  type="button"
+                  className="portal-chip portal-chip--active"
+                  onClick={clearDia}
+                  title="Limpar o filtro do dia"
+                >
+                  Dia {diaLabel(dia)} ✕
+                </button>
+              )}
               {viewToggle}
             </div>
           </div>
@@ -908,13 +964,15 @@ export default function ReservationsQueue() {
 
           {filtered.length === 0 ? (
             <div className="portal-rows-empty">
-              <b>Nenhuma reserva neste estado</b>
-              {q
-                ? `Nada para “${q}” — experimente outro nome ou cliente.`
-                : 'Mude de tab para ver as outras reservas.'}
+              <b>{dia ? `Sem reservas em ${diaLabel(dia)}` : 'Nenhuma reserva neste estado'}</b>
+              {dia
+                ? 'Nesse dia não houve reservas pedidas nem concluídas — limpe o filtro para ver a fila toda.'
+                : q
+                  ? `Nada para “${q}” — experimente outro nome ou cliente.`
+                  : 'Mude de tab para ver as outras reservas.'}
             </div>
           ) : (
-            <>
+            <div className="portal-table-scroll">
               {/* Cabeçalho das colunas — rótulos micro sobre as linhas. */}
               <div className="portal-rowhead portal-cols-res" aria-hidden="true">
                 <span>Medicamento · cliente</span>
@@ -924,13 +982,14 @@ export default function ReservationsQueue() {
                 <span />
               </div>
               {filtered.map(renderRow)}
-            </>
+            </div>
           )}
 
           {filtered.length > 0 && (
             <div className="portal-pgbar">
               <span className="portal-pginfo">
                 A mostrar {filtered.length} de {counts.all} reservas · mais recentes no topo
+                {dia ? ` · dia ${diaLabel(dia)}` : ''}
               </span>
             </div>
           )}
@@ -1041,7 +1100,9 @@ export default function ReservationsQueue() {
                   <div className="portal-cal-empty">
                     Sem reservas neste dia.
                     <br />
-                    Os pedidos aparecem aqui quando os clientes reservarem.
+                    {dia && cal?.sel === dia
+                      ? 'O calendário agrupa pelo dia do pedido; o filtro do dia (na lista) inclui também as concluídas nesse dia.'
+                      : 'Os pedidos aparecem aqui quando os clientes reservarem.'}
                   </div>
                 )}
                 {dayItems.map((r) => {

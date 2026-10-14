@@ -31,15 +31,17 @@ function desde(iso) {
 }
 
 /**
- * Sessão do perfil activo — acessível SÓ pelo menu do nome (top-bar ou
- * rodapé da sidebar), nunca por item de navegação.
+ * Sessão do FARMACÊUTICO que está ao balcão — o par de /portal/perfil:
+ * aqui é a PESSOA com sessão iniciada neste dispositivo (perfil activo,
+ * PIN, conta); lá é a FARMÁCIA (nome público, contacto, morada, horário).
+ * Chega-se por «Sessão» na navegação e pelo nome da farmácia na top-bar
+ * (que abre o perfil).
  *
  * Modelo editorial (ref. imagem 9): hero VERDE ESCURO em cima (eyebrow
  * mint + nome serif grande + chip de papel + acções); a seguir o cartão
- * INFORMAÇÕES com os dados do FARMACÊUTICO do perfil activo — os dados
- * da farmácia vivem em /portal/perfil; por baixo DUAS cartões brancas
- * lado a lado (Segurança · Conta), com a mesma altura e a acção no
- * fundo. O PIN abre em drawer, nunca à mostra na página.
+ * INFORMAÇÕES com os dados do farmacêutico; por baixo DUAS cartões
+ * brancas lado a lado (Segurança · Conta), com a mesma altura e a acção
+ * no fundo. O PIN abre em drawer, nunca à mostra na página.
  */
 export default async function StaffSessionPage() {
   const staff = await requireActiveStaff()
@@ -53,8 +55,9 @@ export default async function StaffSessionPage() {
         <div>
           <h1 className="portal-page-title">Sessão</h1>
           <p className="portal-page-sub">
-            Quem está a trabalhar neste dispositivo — troque de perfil, altere o PIN ou feche o
-            turno.
+            Dados do <b>farmacêutico com sessão iniciada</b> neste dispositivo — troque de perfil,
+            altere o PIN ou feche o turno. Os dados da <b>farmácia</b> estão em{' '}
+            <Link href="/portal/perfil">Perfil</Link>.
           </p>
         </div>
       </div>
@@ -96,7 +99,7 @@ export default async function StaffSessionPage() {
       <div className="portal-box portal-box--pad">
         <div className="portal-sec-head">
           <h2>Informações</h2>
-          <span className="portal-sec-head-b">perfil do farmacêutico</span>
+          <span className="portal-sec-head-b">farmacêutico com sessão iniciada</span>
         </div>
         <dl className="sess-info">
           <div className="sess-info-row">
@@ -128,8 +131,10 @@ export default async function StaffSessionPage() {
           </div>
         </dl>
         <p className="sess-info-note">
-          Nome e papel do perfil são geridos pela farmácia — os dados da farmácia (telefone, email e
-          WhatsApp) editam-se em <Link href="/portal/perfil">Perfil</Link>.
+          Nome e papel do perfil são geridos pela farmácia em «Equipa». Os dados da farmácia (nome
+          público, telefone, email e WhatsApp) editam-se em{' '}
+          <Link href="/portal/perfil">Perfil</Link> — o mesmo link do nome da farmácia na barra de
+          cima.
         </p>
       </div>
 

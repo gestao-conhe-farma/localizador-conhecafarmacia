@@ -299,73 +299,75 @@ export default async function DesempenhoPage({ searchParams }) {
             <h2>Tabela avançada</h2>
             <span className="portal-sec-head-b">actual vs. anterior</span>
           </div>
-          <div className="portal-rowhead portal-cols-desempenho" aria-hidden="true">
-            <span>Farmacêutico</span>
-            <span>Vendas</span>
-            <span>Nº</span>
-            <span>Ticket médio</span>
-            <span>Unidades</span>
-            <span>Entradas</span>
-            <span>Tratadas</span>
-            <span>Recusas</span>
-            <span>Período ant.</span>
-          </div>
-          {rows.length === 0 ? (
-            <div className="portal-rows-empty">
-              <b>Nada a comparar</b>
-              Não houve actividade registada nos últimos {report.window * 2} dias.
+          <div className="portal-table-scroll">
+            <div className="portal-rowhead portal-cols-desempenho" aria-hidden="true">
+              <span>Farmacêutico</span>
+              <span>Vendas</span>
+              <span>Nº</span>
+              <span>Ticket médio</span>
+              <span>Unidades</span>
+              <span>Entradas</span>
+              <span>Tratadas</span>
+              <span>Recusas</span>
+              <span>Período ant.</span>
             </div>
-          ) : (
-            rows.map((r, i) => (
-              <div
-                key={r.id || `anon-${i}`}
-                className="portal-rowline portal-rowline--static portal-cols-desempenho"
-              >
-                <div className="portal-cell">
-                  <b>{r.name}</b>
-                  <span className="sub portal-cell-mob">
-                    {r.role === 'gerente' ? 'Gerente' : r.role ? 'Balcão' : '—'} ·{' '}
-                    {r.active === false ? 'inactivo' : 'activo'}
-                  </span>
-                </div>
-                <div className="portal-cell">
-                  <span className="strong">{fmtKz(r.value)}</span>
-                  <span className="tiny">{r.unpriced > 0 ? `${r.unpriced} s/ preço` : ''}</span>
-                </div>
-                <div className="portal-cell">
-                  <span className="strong">{r.count}</span>
-                </div>
-                <div className="portal-cell">
-                  <span className="strong">{fmtKz(r.ticket)}</span>
-                </div>
-                <div className="portal-cell">
-                  <span className="strong">{r.units}</span>
-                </div>
-                <div className="portal-cell">
-                  <span className="strong">{r.entries}</span>
-                  <span className="tiny">{r.entryUnits > 0 ? `${r.entryUnits} un.` : ''}</span>
-                </div>
-                <div className="portal-cell">
-                  <span className="strong">{r.treated}</span>
-                  <span className="tiny">{r.count > 0 ? `${r.count} vend.` : 's/ venda'}</span>
-                </div>
-                <div className="portal-cell">
-                  <span className={`strong${r.refused + r.expired > 0 ? ' is-warn' : ''}`}>
-                    {r.refused + r.expired}
-                  </span>
-                  <span className="tiny">
-                    {r.refused > 0 ? `${r.refused} rec.` : ''}
-                    {r.refused > 0 && r.expired > 0 ? ' · ' : ''}
-                    {r.expired > 0 ? `${r.expired} exp.` : ''}
-                  </span>
-                </div>
-                <div className="portal-cell">
-                  <span className={`portal-trend ${pctClasse(r.pct)}`}>{pctTexto(r.pct)}</span>
-                  <span className="tiny">{fmtKz(r.prevValue)}</span>
-                </div>
+            {rows.length === 0 ? (
+              <div className="portal-rows-empty">
+                <b>Nada a comparar</b>
+                Não houve actividade registada nos últimos {report.window * 2} dias.
               </div>
-            ))
-          )}
+            ) : (
+              rows.map((r, i) => (
+                <div
+                  key={r.id || `anon-${i}`}
+                  className="portal-rowline portal-rowline--static portal-cols-desempenho"
+                >
+                  <div className="portal-cell">
+                    <b>{r.name}</b>
+                    <span className="sub portal-cell-mob">
+                      {r.role === 'gerente' ? 'Gerente' : r.role ? 'Balcão' : '—'} ·{' '}
+                      {r.active === false ? 'inactivo' : 'activo'}
+                    </span>
+                  </div>
+                  <div className="portal-cell">
+                    <span className="strong">{fmtKz(r.value)}</span>
+                    <span className="tiny">{r.unpriced > 0 ? `${r.unpriced} s/ preço` : ''}</span>
+                  </div>
+                  <div className="portal-cell">
+                    <span className="strong">{r.count}</span>
+                  </div>
+                  <div className="portal-cell">
+                    <span className="strong">{fmtKz(r.ticket)}</span>
+                  </div>
+                  <div className="portal-cell">
+                    <span className="strong">{r.units}</span>
+                  </div>
+                  <div className="portal-cell">
+                    <span className="strong">{r.entries}</span>
+                    <span className="tiny">{r.entryUnits > 0 ? `${r.entryUnits} un.` : ''}</span>
+                  </div>
+                  <div className="portal-cell">
+                    <span className="strong">{r.treated}</span>
+                    <span className="tiny">{r.count > 0 ? `${r.count} vend.` : 's/ venda'}</span>
+                  </div>
+                  <div className="portal-cell">
+                    <span className={`strong${r.refused + r.expired > 0 ? ' is-warn' : ''}`}>
+                      {r.refused + r.expired}
+                    </span>
+                    <span className="tiny">
+                      {r.refused > 0 ? `${r.refused} rec.` : ''}
+                      {r.refused > 0 && r.expired > 0 ? ' · ' : ''}
+                      {r.expired > 0 ? `${r.expired} exp.` : ''}
+                    </span>
+                  </div>
+                  <div className="portal-cell">
+                    <span className={`portal-trend ${pctClasse(r.pct)}`}>{pctTexto(r.pct)}</span>
+                    <span className="tiny">{fmtKz(r.prevValue)}</span>
+                  </div>
+                </div>
+              ))
+            )}
+          </div>
         </div>
       )}
 

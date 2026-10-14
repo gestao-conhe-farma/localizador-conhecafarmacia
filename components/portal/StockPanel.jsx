@@ -107,9 +107,13 @@ const FILTERS = [
   { id: 'all', label: 'Todos' },
   { id: 'in', label: 'Disponível' },
   { id: 'out', label: 'Não disponível' },
+  { id: 'pending', label: 'Aguarda validação' },
   { id: 'exp', label: 'Validade a vencer' },
   { id: 'retired', label: 'Lixeira' },
 ]
+
+/** Ids válidos do chip — usado pelo deep-link do URL (?f=). */
+const FILTER_IDS = FILTERS.map((f) => f.id)
 
 /** Critérios de ordenação — ids curtos, como os sci-sort-btn do principal. */
 const SORTS = [
@@ -720,6 +724,13 @@ export default function StockPanel({ compact = false }) {
     if (urlQ) setQuery(urlQ)
   }, [urlQ])
   const [filter, setFilter] = useState('all')
+  // Deep-link do chip (`?f=in|pending|…`) — as legendas do donut
+  // «Stock no Localizador» do dashboard abrem o stock já filtrado pelo
+  // estado que a cor representa.
+  const urlF = searchParams.get('f')
+  useEffect(() => {
+    if (urlF) setFilter(FILTER_IDS.includes(urlF) ? urlF : 'all')
+  }, [urlF])
   // Ordenação do grid — 'recent' é a de sempre: disponíveis primeiro.
   const [sort, setSort] = useState('recent')
   const [savingId, setSavingId] = useState(null)
@@ -794,6 +805,9 @@ export default function StockPanel({ compact = false }) {
       }
       if (filter === 'in') return it.in_stock
       if (filter === 'out') return !it.in_stock
+      // «Aguarda validação»: criado por esta farmácia, ainda não visível
+      // ao público (o mesmo estado da etiqueta da linha e do donut).
+      if (filter === 'pending') return Boolean(it.pending)
       if (filter === 'exp') {
         // Mesma fonte das tags de validade — inclui expirados e as janelas 90/60/30.
         const s = it.in_stock ? expiryStatus(it.expires_at) : null
@@ -825,13 +839,14 @@ export default function StockPanel({ compact = false }) {
   // Contagens dos chips — sobre a lista COMPLETA (não a filtrada), para
   // funcionarem como atalhos de "quantos há em cada estado".
   const counts = useMemo(() => {
-    const c = { all: 0, in: 0, out: 0, exp: 0, retired: 0 }
+    const c = { all: 0, in: 0, out: 0, pending: 0, exp: 0, retired: 0 }
     for (const it of items || []) {
       if (it.retired_at) {
         c.retired += 1
         continue // retirados não contam nos chips do catálogo
       }
       c.all += 1
+      if (it.pending) c.pending += 1
       if (it.in_stock) {
         c.in += 1
         const s = expiryStatus(it.expires_at)
@@ -1156,7 +1171,8 @@ export default function StockPanel({ compact = false }) {
       )}
 
       {/* KPIs de resumo (refs 4/6): contagens REAIS do snapshot —
-          ícone à esquerda, estado = ponto + palavra à direita. */}
+          ícone no canto superior direito (como em /vendas) e o texto
+          a fluir na largura do cartão; estado = ponto + palavra. */}
       {!compact && (
         <div className="portal-kpi4-grid">
           <div className="portal-kpi4">
@@ -1315,7 +1331,6 @@ export default function StockPanel({ compact = false }) {
               </div>
             </div>
           </div>
-
           {/* Tabs sublinhadas no lugar dos chips — contagem neutra ao
               lado do rótulo (disciplina do v2: sem chip colorido). */}
           <div
@@ -1329,19 +1344,26 @@ export default function StockPanel({ compact = false }) {
                 type="button"
                 className={filter === f.id ? 'active' : ''}
                 aria-pressed={filter === f.id}
-                onClick={() => setFilter(f.id)}
+                onClick={() => {
+                  setFilter(f.id)
+                  // Sincroniza o URL sem navegar (como a página de
+                  // atenção): o filtro sobrevive ao recarregar e pode
+                  // ser partilhado/ligado a partir do dashboard.
+                  const url = new URL(window.location.href)
+                  if (f.id === 'all') url.searchParams.delete('f')
+                  else url.searchParams.set('f', f.id)
+                  window.history.replaceState(null, '', url)
+                }}
               >
                 {f.label} <span className="portal-cnt">{counts[f.id]}</span>
               </button>
             ))}
           </div>
-
           {items === null && (
             <div className="empty-state" role="status">
               <div className="spinner" />
             </div>
           )}
-
           {items !== null && filtered.length === 0 && (
             <div className="portal-rows-empty">
               <b>{query ? 'Nada encontrado' : 'Sem medicamentos'}</b>
@@ -1349,16 +1371,15 @@ export default function StockPanel({ compact = false }) {
                 ? `Nada encontrado para “${query}” — experimente outro nome ou forma farmacêutica.`
                 : 'Sem medicamentos no catálogo. Use «+ Adicionar medicamento» para criar o primeiro.'}
             </div>
-          )}
-
+          )}{' '}
           {!compact && pageItems.length > 0 && (
-            <>
+            <div className="portal-table-scroll">
               {/* Cabeçalho das colunas — rótulos micro sobre as linhas. */}
               <div className="portal-rowhead portal-cols-stock" aria-hidden="true">
                 <span>Medicamento</span>
                 <span>Estado</span>
                 <span>Qtd.</span>
-                <span>Formas de venda</span>
+                <span>Preço</span>
                 <span>Validade</span>
                 <span />
               </div>
@@ -1542,15 +1563,15 @@ export default function StockPanel({ compact = false }) {
                       </span>
                     </div>
 
-                    {/* Formas de venda em pills neutras + preço quando há. */}
+                    {/* Preço em pills neutras: o valor em Kz de cada forma
+                        de venda (a forma fica como legenda da pill). */}
                     <div className="portal-cell">
                       {(it.sale_options || [])
                         .filter((o) => o.active !== false)
                         .slice(0, 3)
                         .map((o) => (
-                          <span key={o.id} className="portal-pill">
-                            {unitLabel(o.unit)}
-                            {o.price != null ? ` ${o.price}` : ''}
+                          <span key={o.id} className="portal-pill" title={unitLabel(o.unit)}>
+                            {o.price != null ? `${o.price} Kz` : unitLabel(o.unit)}
                           </span>
                         ))}
                       {(it.sale_options || []).filter((o) => o.active !== false).length === 0 &&
@@ -1574,9 +1595,8 @@ export default function StockPanel({ compact = false }) {
                   </div>
                 )
               })}
-            </>
+            </div>
           )}
-
           {/* Paginação (refs 4/6): contagem à esquerda, ‹ › à direita. */}
           {!compact && filtered.length > 0 && (
             <div className="portal-pgbar">

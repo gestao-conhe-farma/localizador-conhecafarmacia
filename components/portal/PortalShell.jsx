@@ -1,68 +1,30 @@
 'use client'
 
 import Link from 'next/link'
-import { usePathname } from 'next/navigation'
-import { useEffect, useRef, useState } from 'react'
+import { useState } from 'react'
 import PortalSidebar from '@/components/portal/PortalSidebar'
 import PortalSearch from '@/components/portal/PortalSearch'
 import PortalTour from '@/components/portal/PortalTour'
 import ThemeToggle from '@/components/ui/ThemeToggle'
-import { leaveStaffProfile } from '@/lib/actions/pharmacy-staff'
 
 /**
  * Shell do portal (padrão da plataforma de gestão): sidebar verde de
  * altura total à esquerda com o logo branco do site no topo e o
- * utilizador no fundo; top-bar dentro da coluna de conteúdo ao lado,
- * com o nome da farmácia (onde antes estava o utilizador).
+ * utilizador no fundo; top-bar dentro da coluna de conteúdo ao lado.
  * Fundo e conteúdo partilham a mesma cor (bg-alt); mobile: drawer.
+ *
+ * O nome do FARMACÊUTICO vive só na sidebar (rodapé) — a top-bar fica
+ * com a identidade da farmácia: o nome é a ENTRADA de /portal/perfil
+ * (dados da farmácia), separando de vez as duas fichas: farmácia no
+ * perfil, farmacêutico com sessão iniciada em /portal/sessao.
  *
  * O tour de onboarding vive aqui — dentro do shell, por cima de tudo,
  * porque navega entre as páginas reais do portal.
  *
- * `staff` (0018): o perfil activo aparece na top-bar (avatar + nome +
- * papel) em TODAS as páginas — o clique leva à sessão (trocar/sair).
+ * `staff` (0018) segue para a sidebar, que mostra o perfil activo.
  */
-function iniciais(nome) {
-  const parts = String(nome || '')
-    .trim()
-    .split(/\s+/)
-    .filter(Boolean)
-  if (parts.length === 0) return 'F'
-  return parts
-    .slice(0, 2)
-    .map((p) => p[0].toUpperCase())
-    .join('')
-}
-
 export default function PortalShell({ pharmacy, userName, userSub, staff, children }) {
   const [navOpen, setNavOpen] = useState(false)
-  // Menu directo do perfil na top-bar — /sessão só se chega daqui (ou
-  // pelo menu do rodapé da sidebar), nunca por navegação directa.
-  const [staffMenu, setStaffMenu] = useState(false)
-  const staffMenuRef = useRef(null)
-  const pathname = usePathname()
-
-  // Fecha ao clicar fora, premir Esc ou navegar de rota (mesmo
-  // contrato do menu do rodapé da sidebar).
-  useEffect(() => {
-    if (!staffMenu) return undefined
-    const fora = (e) => {
-      if (staffMenuRef.current && !staffMenuRef.current.contains(e.target)) setStaffMenu(false)
-    }
-    const esc = (e) => {
-      if (e.key === 'Escape') setStaffMenu(false)
-    }
-    document.addEventListener('mousedown', fora)
-    document.addEventListener('keydown', esc)
-    return () => {
-      document.removeEventListener('mousedown', fora)
-      document.removeEventListener('keydown', esc)
-    }
-  }, [staffMenu])
-
-  useEffect(() => {
-    setStaffMenu(false)
-  }, [pathname])
 
   return (
     <div className="portal-shell">
@@ -135,49 +97,31 @@ export default function PortalShell({ pharmacy, userName, userSub, staff, childr
           <PortalSearch />
 
           <div className="portal-topbar-right">
-            {/* Perfil activo do balcão — visível em todas as páginas.
-                O clique abre o MENU DIRECTO (trocar / sessão / sair):
-                /sessão deixa de ser destino directo da pill. */}
-            {staff && (
-              <div className="portal-topbar-staff-wrap" ref={staffMenuRef}>
-                <button
-                  type="button"
-                  className="portal-topbar-staff"
-                  aria-haspopup="menu"
-                  aria-expanded={staffMenu}
-                  title="Opções do perfil — trocar ou sair"
-                  data-tour="staff-menu"
-                  onClick={() => setStaffMenu((a) => !a)}
-                >
-                  <span className="portal-topbar-staff-av" aria-hidden="true">
-                    {iniciais(staff.name)}
-                  </span>
-                  <span className="portal-topbar-staff-meta">
-                    <b>{staff.name}</b>
-                    <span>{staff.role === 'gerente' ? 'Gerente' : 'Balcão'}</span>
-                  </span>
-                </button>
-
-                {staffMenu && (
-                  <div className="portal-foot-menu portal-foot-menu--top" role="menu">
-                    <span className="portal-foot-menu-h">Sessão do perfil</span>
-                    <Link href="/portal/perfis" className="portal-foot-menu-i" role="menuitem">
-                      Trocar perfil
-                    </Link>
-                    <Link href="/portal/sessao" className="portal-foot-menu-i" role="menuitem">
-                      Sessão e PIN
-                    </Link>
-                    <form action={leaveStaffProfile} className="portal-foot-menu-form">
-                      <button type="submit" className="portal-foot-menu-i" role="menuitem">
-                        Sair do perfil
-                      </button>
-                    </form>
-                  </div>
-                )}
-              </div>
-            )}
-            {/* O nome da farmácia ocupa o lugar do utilizador na top-bar. */}
-            <span className="portal-topbar-name">{pharmacy.name}</span>
+            {/* O nome da farmácia é a ENTRADA de /portal/perfil: aqui
+                vivem os dados da farmácia (morada, contacto, horário).
+                O nome do farmacêutico com sessão iniciada não aparece
+                na top-bar — vive no rodapé da sidebar. */}
+            <Link
+              href="/portal/perfil"
+              className="portal-topbar-name"
+              title="Dados da farmácia — perfil público, contacto e horário"
+              data-tour="pharmacy-profile"
+            >
+              <span className="portal-topbar-name-txt">{pharmacy.name}</span>
+              <svg
+                width="11"
+                height="11"
+                viewBox="0 0 24 24"
+                fill="none"
+                stroke="currentColor"
+                strokeWidth="2.5"
+                strokeLinecap="round"
+                strokeLinejoin="round"
+                aria-hidden="true"
+              >
+                <path d="m9 6 6 6-6 6" />
+              </svg>
+            </Link>
             {/* v2 «Premium Calmo»: tema do portal alternável na top-bar
                 (mesmo provider do site público; noite/dia num clique). */}
             <ThemeToggle className="theme-toggle--circ" />

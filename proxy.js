@@ -35,7 +35,10 @@ export async function proxy(request) {
     `img-src 'self' data: blob: https://*.supabase.co https://vercel.live`,
     `media-src 'self' blob: https://*.supabase.co`,
     `font-src 'self'`,
-    `connect-src 'self' https://*.supabase.co https://vercel.live`,
+    // `wss://*.supabase.co` é obrigatório: o cliente Realtime (sino de
+    // reservas da sidebar) abre um WebSocket — sem ele na lista, a CSP
+    // recusava a ligação e o sino nunca recebia eventos em tempo real.
+    `connect-src 'self' https://*.supabase.co wss://*.supabase.co https://vercel.live`,
     `frame-ancestors 'none'`,
     `object-src 'none'`,
     `base-uri 'self'`,

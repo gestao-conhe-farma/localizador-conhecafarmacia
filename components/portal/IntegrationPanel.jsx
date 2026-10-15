@@ -8,9 +8,13 @@ import {
   finishStockImport,
   getIntegrationOverview,
   previewStockImport,
+  replayDelivery,
   revokeApiKey,
+  rotateWebhookSecret,
   saveWebhook,
+  setWebhookActive,
   startStockImport,
+  testWebhook,
 } from '@/lib/actions/integration'
 import { IMPORT_CHUNK } from '@/lib/csv'
 
@@ -23,7 +27,8 @@ import { IMPORT_CHUNK } from '@/lib/csv'
  *   2. Importar stock — CSV exportado do sistema que a farmácia já tem:
  *      mapeamento de colunas, pré-visualização, aplicação por lotes e
  *      relatório de linhas rejeitadas.
- *   3. Webhooks — registo do destino (a entrega vem na fase seguinte).
+ *   3. Webhooks — destino, segredo de assinatura e entrega (0025):
+ *      saúde do endpoint, teste imediato e registo das tentativas.
  *   4. Chamadas — as últimas entradas por API, para ver se o parceiro
  *      está a sincronizar.
  */
@@ -40,7 +45,15 @@ const ERROS = {
   PRAZO_INVALIDO: 'Prazo inválido.',
   FALHA_CRIAR: 'Não foi possível criar a chave.',
   FALHA_REVOGAR: 'Não foi possível revogar a chave.',
-  URL_INVALIDA: 'O endereço tem de começar por https://',
+  URL_INVALIDA: 'O endereço tem de ser https:// e apontar para a internet (sem redirects).',
+  URL_PRIVADA:
+    'Esse endereço é de uma rede privada (ou de dentro do nosso servidor) — não é entregável.',
+  DNS_NAO_RESOLVE: 'Não foi possível resolver o domínio desse endereço.',
+  NAO_EXISTE: 'Este destino já não existe. Recarregue a página.',
+  SEM_SEGREDO: 'Gere primeiro um segredo para este destino.',
+  LIMITE_DESTINOS: 'Já tem 5 destinos registados — remova um antes de acrescentar outro.',
+  FALHA_ENVIAR: 'Não foi possível enviar o teste. Veja as tentativas em baixo.',
+  FALHA_REENVIAR: 'Não foi possível reenviar a entrega.',
   FALHA_GUARDAR: 'Não foi possível guardar.',
   FALHA_REMOVER: 'Não foi possível remover.',
   FICHEIRO_VAZIO: 'O ficheiro está vazio.',
@@ -84,6 +97,15 @@ const CAMPOS = [
 const SCOPES = [
   { id: 'stock:write', label: 'stock:write', hint: 'escrever stock (o caso normal)' },
   { id: 'stock:read', label: 'stock:read', hint: 'ler o stock actual (reconciliação)' },
+]
+
+// Só 'stock.updated' é emitido nesta fase (0025): os outros nomes que a
+// 0023 já permite na coluna ficam para quando houver mesmo quem os envie.
+const EVENTOS = [
+  {
+    id: 'stock.updated',
+    hint: 'cada movimento de stock: entrada, venda, ajuste, saída, importação',
+  },
 ]
 
 function quando(iso) {
@@ -381,8 +403,9 @@ function Chaves({ data, onChanged }) {
     ]
   }'`}</pre>
           <p className="portal-card-hint">
-            Lote e validade são opcionais — quando vêm, o stock passa a saber o que expira primeiro
-            (FEFO) e o Localizador mostra a validade real.
+            Lote e validade só se aplicam às entradas: quando o saldo sobe, o stock passa a saber o
+            que expira primeiro. Numa baixa, a saída segue o FEFO e o lote enviado é ignorado, com
+            um aviso <code>LOTE_IGNORADO</code> por linha na resposta.
           </p>
         </div>
       </div>
@@ -729,18 +752,23 @@ function Importar({ onChanged }) {
 function Webhooks({ data, onChanged }) {
   const [url, setUrl] = useState('')
   const [desc, setDesc] = useState('')
+  const [eventos, setEventos] = useState(EVENTOS.map((e) => e.id))
+  const [novo, setNovo] = useState(null) // segredo mostrado uma vez
   const [msg, setMsg] = useState(null)
+  const [aviso, setAviso] = useState(null)
   const [pending, startTransition] = useTransition()
 
   const guardar = (e) => {
     e.preventDefault()
     if (pending) return
+    setMsg(null)
     startTransition(async () => {
-      const res = await saveWebhook({ url, description: desc })
+      const res = await saveWebhook({ url, description: desc, events: eventos })
       if (res.ok) {
+        setNovo({ secret: res.secret, url: res.webhook?.url })
         setUrl('')
         setDesc('')
-        setMsg(null)
+        setAviso(null)
         await onChanged()
       } else {
         setMsg({ type: 'err', text: ERROS[res.error] || ERROS.FALHA_GUARDAR })
@@ -748,18 +776,61 @@ function Webhooks({ data, onChanged }) {
     })
   }
 
+  /** Acções do destino e das entregas: sempre com resultado visível. */
+  const correr = (fn, aoSucesso) => {
+    if (pending) return
+    setMsg(null)
+    startTransition(async () => {
+      const res = await fn()
+      if (res?.ok) {
+        if (aoSucesso) setAviso(aoSucesso(res))
+        await onChanged()
+      } else {
+        setAviso(null)
+        setMsg({ type: 'err', text: ERROS[res?.error] || ERROS.FALHA_GUARDAR })
+      }
+    })
+  }
+
   return (
     <>
+      {novo && (
+        <div className="portal-box portal-box--pad">
+          <div className="portal-card-head">
+            <h2>Guarde o segredo agora</h2>
+            <span className="portal-card-hint">só é mostrado uma vez</span>
+          </div>
+          <div className="portal-card-body">
+            <p className="portal-card-sub">
+              É este segredo que assina cada entrega para{' '}
+              <b style={{ wordBreak: 'break-all' }}>{novo.url}</b>. Guarde-o no sistema da farmácia
+              (ou onde guarda credenciais): por segurança não voltamos a mostrá-lo — se se perder,
+              gera-se outro.
+            </p>
+            <TokenBox token={novo.secret} />
+            <ExemploWebhook segredo={novo.secret} />
+            <div className="portal-form-stack">
+              <button type="button" className="btn btn-secondary" onClick={() => setNovo(null)}>
+                Já guardei o segredo
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
+
       <div className="portal-box portal-box--pad">
         <div className="portal-card-head">
           <h2>Destinos registados</h2>
-          <span className="portal-card-hint">a entrega liga-se numa fase seguinte</span>
+          <span className="portal-card-hint">
+            entrega assinada · tentativas automáticas até 3 dias
+          </span>
         </div>
         <div className="portal-card-body">
           <p className="portal-card-sub">
-            Aqui fica registado para onde queremos avisar o sistema da farmácia quando o stock
-            mudar. O envio (com assinatura e repetição automática) será ligado a seguir — este
-            registo guarda a intenção e o endereço, sem prometer entrega que ainda não existe.
+            Cada mudança de stock sai daqui já assinada (HMAC-SHA256) para o endereço da farmácia.
+            Quem recebe confirma a assinatura e usa o <code>webhook-id</code> para não contar duas
+            vezes. Uma resposta falhada é repetida com espera crescente — se o servidor estiver em
+            baixo ao fim de semana, recebe o histórico quando voltar.
           </p>
           {data.webhooks.length === 0 ? (
             <div className="portal-rows-empty">
@@ -774,9 +845,22 @@ function Webhooks({ data, onChanged }) {
                     <b className="portal-citem-name" style={{ wordBreak: 'break-all' }}>
                       {w.url}
                     </b>
-                    <span className="portal-citem-time">{quando(w.created_at)}</span>
+                    <span className="portal-citem-time">
+                      {w.disabled_at
+                        ? 'desligado pelo sistema deles'
+                        : w.active
+                          ? `a entregar desde ${quando(w.created_at)}`
+                          : 'pausado'}
+                    </span>
                   </div>
                   <div className="portal-citem-meta">
+                    <span
+                      className={`portal-badge ${
+                        w.active && !w.disabled_at ? 'portal-badge--ok' : 'portal-badge--warn'
+                      }`}
+                    >
+                      {w.disabled_at ? 'parado' : w.active ? 'activo' : 'pausado'}
+                    </span>
                     {(w.events || []).map((ev) => (
                       <span key={ev} className="portal-badge portal-badge--info">
                         {ev}
@@ -784,20 +868,119 @@ function Webhooks({ data, onChanged }) {
                     ))}
                     {w.description && <span className="sub">{w.description}</span>}
                   </div>
+                  <div className="portal-citem-meta">
+                    {w.secret_last4 ? (
+                      <span className="sub">segredo …{w.secret_last4}</span>
+                    ) : (
+                      <span className="portal-badge portal-badge--warn">sem segredo</span>
+                    )}
+                    <span className="sub">
+                      último sucesso {quando(w.last_success_at)} · última falha{' '}
+                      {quando(w.last_failure_at)}
+                    </span>
+                    {w.failure_count > 0 && (
+                      <span className="portal-badge portal-badge--warn">
+                        {w.failure_count} falhas seguidas
+                      </span>
+                    )}
+                  </div>
+                  {w.disabled_reason && (
+                    <p className="portal-card-hint" style={{ wordBreak: 'break-all' }}>
+                      Desligado: {w.disabled_reason}
+                    </p>
+                  )}
                   {data.canManage && (
                     <div className="portal-citem-foot">
+                      {w.secret_last4 ? (
+                        <button
+                          type="button"
+                          className="portal-act portal-act--primary"
+                          disabled={pending}
+                          onClick={() =>
+                            correr(
+                              () => testWebhook({ id: w.id }),
+                              (res) =>
+                                res.delivered
+                                  ? {
+                                      type: 'ok',
+                                      text: `Respondeu ${res.status} em ${res.durationMs} ms — a entrega está ligada.`,
+                                    }
+                                  : {
+                                      type: 'err',
+                                      text: `O sistema deles respondeu: ${res.error || res.status || 'sem resposta'}`,
+                                    },
+                            )
+                          }
+                        >
+                          Enviar teste
+                        </button>
+                      ) : (
+                        <button
+                          type="button"
+                          className="portal-act portal-act--primary"
+                          disabled={pending}
+                          onClick={() =>
+                            correr(
+                              () => rotateWebhookSecret({ id: w.id }),
+                              (res) => setNovo({ secret: res.secret, url: res.url }),
+                            )
+                          }
+                        >
+                          Gerar segredo
+                        </button>
+                      )}
+                      {!(w.active && !w.disabled_at) && (
+                        <button
+                          type="button"
+                          className="portal-act"
+                          disabled={pending}
+                          onClick={() => correr(() => setWebhookActive({ id: w.id, active: true }))}
+                        >
+                          Activar
+                        </button>
+                      )}
+                      {w.active && !w.disabled_at && (
+                        <button
+                          type="button"
+                          className="portal-act"
+                          disabled={pending}
+                          onClick={() =>
+                            correr(() => setWebhookActive({ id: w.id, active: false }))
+                          }
+                        >
+                          Pausar
+                        </button>
+                      )}
+                      {w.secret_last4 && (
+                        <button
+                          type="button"
+                          className="portal-act"
+                          disabled={pending}
+                          onClick={() =>
+                            correr(
+                              () => rotateWebhookSecret({ id: w.id }),
+                              (res) => setNovo({ secret: res.secret, url: res.url }),
+                            )
+                          }
+                        >
+                          Novo segredo
+                        </button>
+                      )}
                       <button
                         type="button"
                         className="portal-act"
                         disabled={pending}
-                        onClick={() =>
-                          startTransition(async () => {
-                            const res = await deleteWebhook({ id: w.id })
-                            if (res.ok) await onChanged()
-                            else
-                              setMsg({ type: 'err', text: ERROS[res.error] || ERROS.FALHA_REMOVER })
-                          })
-                        }
+                        onClick={() => {
+                          if (
+                            typeof window !== 'undefined' &&
+                            !window.confirm(
+                              `Remover o destino ${w.url}? As entregas pendentes desaparecem com ele.`,
+                            )
+                          ) {
+                            return
+                          }
+                          correr(() => deleteWebhook({ id: w.id }))
+                        }}
                       >
                         Remover
                       </button>
@@ -807,8 +990,13 @@ function Webhooks({ data, onChanged }) {
               ))}
             </div>
           )}
+          {aviso && (
+            <p className={aviso.type === 'ok' ? 'portal-hint' : 'portal-error'}>{aviso.text}</p>
+          )}
         </div>
       </div>
+
+      <Entregas data={data} pending={pending} correr={correr} />
 
       {data.canManage && (
         <div className="portal-box portal-box--pad">
@@ -837,6 +1025,33 @@ function Webhooks({ data, onChanged }) {
                 maxLength={120}
               />
             </label>
+            <fieldset className="portal-label">
+              Eventos
+              <div className="portal-chips">
+                {EVENTOS.map((ev) => {
+                  const on = eventos.includes(ev.id)
+                  return (
+                    <button
+                      key={ev.id}
+                      type="button"
+                      aria-pressed={on}
+                      className={`portal-chip${on ? ' portal-chip--active' : ''}`}
+                      onClick={() =>
+                        setEventos((prev) =>
+                          prev.includes(ev.id) ? prev.filter((x) => x !== ev.id) : [...prev, ev.id],
+                        )
+                      }
+                      title={ev.hint}
+                    >
+                      {ev.id}
+                    </button>
+                  )
+                })}
+              </div>
+              <span className="portal-card-hint">
+                Avisos de reservas e de importação entram numa fase seguinte.
+              </span>
+            </fieldset>
             <div className="portal-form-stack">
               <button className="btn btn-primary" type="submit" disabled={pending}>
                 {pending ? 'A guardar…' : 'Registar'}
@@ -847,6 +1062,191 @@ function Webhooks({ data, onChanged }) {
         </div>
       )}
     </>
+  )
+}
+
+/*
+ * Últimas entregas: o que saiu, o que o servidor deles respondeu e o que
+ * se segue. É o «registo das tentativas» a que a farmácia tem direito —
+ * sem isto, «não recebemos nada» era impossível de responder.
+ */
+function Entregas({ data, pending, correr }) {
+  const entregas = data.deliveries || []
+  const tentativasPorEntrega = useMemo(() => {
+    const mapa = new Map()
+    for (const t of data.attempts || []) {
+      const lista = mapa.get(t.delivery_id) || []
+      lista.push(t)
+      mapa.set(t.delivery_id, lista)
+    }
+    for (const lista of mapa.values()) lista.sort((a, b) => b.attempt - a.attempt)
+    return mapa
+  }, [data.attempts])
+
+  const pendentes = entregas.filter((d) => d.status === 'pendente').length
+  const falhadas = entregas.filter((d) => d.status === 'falhado').length
+
+  return (
+    <div className="portal-box portal-box--pad">
+      <div className="portal-card-head">
+        <h2>Últimas entregas</h2>
+        <span className="portal-card-hint">
+          {entregas.length} recentes · {pendentes} à espera · {falhadas} falhadas
+        </span>
+      </div>
+      <div className="portal-card-body">
+        {entregas.length === 0 ? (
+          <div className="portal-rows-empty">
+            <b>Ainda não saiu nada</b>
+            Assim que o stock mudar (portal, CSV ou API), o evento entra aqui com hora, estado e
+            resposta.
+          </div>
+        ) : (
+          <div className="portal-feed">
+            {entregas.slice(0, 12).map((d) => (
+              <Entrega
+                key={d.id}
+                entrega={d}
+                tentativas={tentativasPorEntrega.get(d.id) || []}
+                podeGerir={data.canManage}
+                pending={pending}
+                correr={correr}
+              />
+            ))}
+          </div>
+        )}
+      </div>
+    </div>
+  )
+}
+
+function Entrega({ entrega: d, tentativas, podeGerir, pending, correr }) {
+  const dados = d.payload?.data || {}
+  const resumo =
+    d.event === 'webhook.test'
+      ? dados.message || 'teste do portal'
+      : `${dados.drug || 'medicamento'}${dados.movement_type ? ` · ${dados.movement_type}` : ''}${
+          dados.delta != null && dados.delta !== 0
+            ? ` ${dados.delta > 0 ? '+' : ''}${dados.delta}`
+            : ''
+        }`
+  const ultima = tentativas[0]
+  const resultado =
+    d.status === 'entregue'
+      ? `entregue ${quando(d.delivered_at || d.created_at)}`
+      : d.status === 'falhado'
+        ? 'sem mais tentativas'
+        : `próxima ${quando(d.next_attempt_at)}`
+
+  return (
+    <div className="portal-citem">
+      <div className="portal-citem-top">
+        <b className="portal-citem-name">{resumo}</b>
+        <span className="portal-citem-time">{quando(d.created_at)}</span>
+      </div>
+      <div className="portal-citem-meta">
+        <span
+          className={`portal-badge ${
+            d.status === 'entregue'
+              ? 'portal-badge--ok'
+              : d.status === 'falhado'
+                ? 'portal-badge--warn'
+                : 'portal-badge--info'
+          }`}
+        >
+          {d.status}
+        </span>
+        <span className="sub">
+          {d.attempts}/{d.max_attempts} tentativas · {resultado}
+        </span>
+        {d.response_status != null && <span className="sub">HTTP {d.response_status}</span>}
+        {ultima?.duration_ms != null && <span className="sub">{ultima.duration_ms} ms</span>}
+        {d.event === 'webhook.test' && (
+          <span className="portal-badge portal-badge--info">teste</span>
+        )}
+      </div>
+      {d.last_error && (
+        <p className="portal-card-hint" style={{ wordBreak: 'break-word' }}>
+          {d.last_error}
+        </p>
+      )}
+      {tentativas.length > 0 && (
+        <details className="portal-note">
+          <summary>Ver as {tentativas.length} tentativas</summary>
+          <div className="portal-feed">
+            {tentativas.map((t) => (
+              <div key={t.id} className="portal-citem-meta">
+                <span className="sub">#{t.attempt}</span>
+                <span className="sub">
+                  {t.status_code != null ? `HTTP ${t.status_code}` : 'sem resposta'}
+                </span>
+                {t.duration_ms != null && <span className="sub">{t.duration_ms} ms</span>}
+                <span className="sub">{quando(t.created_at)}</span>
+                {t.error && <span className="sub">{t.error}</span>}
+              </div>
+            ))}
+          </div>
+        </details>
+      )}
+      {podeGerir && (d.status === 'falhado' || d.status === 'entregue') && (
+        <div className="portal-citem-foot">
+          <button
+            type="button"
+            className="portal-act"
+            disabled={pending}
+            onClick={() =>
+              correr(
+                () => replayDelivery({ id: d.id }),
+                (res) => {
+                  if (res.delivered === true)
+                    return { type: 'ok', text: 'Reenviado — o destino aceitou.' }
+                  if (res.delivered === false)
+                    return {
+                      type: 'err',
+                      text: `Continua a falhar: ${res.error || 'sem resposta'}`,
+                    }
+                  // Na fila, mas ainda não tentada (a drenagem apanha só as primeiras):
+                  // não afirmamos nem sucesso nem falha.
+                  return { type: 'ok', text: 'Reenvio na fila — o resultado aparece nas entregas.' }
+                },
+              )
+            }
+          >
+            Reenviar
+          </button>
+        </div>
+      )}
+    </div>
+  )
+}
+
+/*
+ * Como o sistema da farmácia confirma que o pedido é nosso. O código
+ * aparece no portal porque é isto que o programador deles vai colar —
+ * poupa uma ida e volta por email e evita «não sabemos verificar».
+ */
+function ExemploWebhook({ segredo }) {
+  const exemplo = `const crypto = require('node:crypto')
+
+const chave = Buffer.from('${segredo || 'whsec_…'}'.replace('whsec_', ''), 'base64')
+const assinado =
+  req.headers['webhook-id'] + '.' +
+  req.headers['webhook-timestamp'] + '.' +
+  corpoCru            // o corpo tal como chegou, sem reserializar
+
+const esperado = 'v1,' + crypto.createHmac('sha256', chave).update(assinado).digest('base64')
+
+if (esperado !== req.headers['webhook-signature']) return res.status(401).end()
+
+// 1) recusar timestamps com mais de 5 minutos
+// 2) guardar o webhook-id e ignorar repetidos (a entrega é at-least-once)
+res.status(200).end()`
+
+  return (
+    <details className="portal-note">
+      <summary>Como o sistema da farmácia confirma a assinatura</summary>
+      <pre className="portal-pre">{exemplo}</pre>
+    </details>
   )
 }
 

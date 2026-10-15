@@ -14,7 +14,7 @@ import { createClient } from '@/lib/supabase/client'
 import { compressDrugImage } from '@/lib/image-compress'
 import { countExpiryBuckets, expiryStatus, expirySummary, monthYear } from '@/lib/expiry'
 import DrugCreateForm from '@/components/portal/DrugCreateForm'
-import { setSaleOptions } from '@/lib/actions/pharmacy-portal'
+import { setSaleOptions, validatePendingDrug } from '@/lib/actions/pharmacy-portal'
 import { unitLabel } from '@/lib/sale-options'
 import { CloseIcon } from '@/components/ui/Icon'
 import StateLabel from '@/components/portal/StateLabel'
@@ -85,6 +85,10 @@ const ERRORES = {
   PRECO_INVALIDO: 'Preço inválido.',
   DATA_INVALIDA: 'Data inválida — use o calendário.',
   MEDICAMENTO_INEXISTENTE: 'Medicamento não disponível no catálogo.',
+  SEM_PERMISSAO: 'Só o gerente da farmácia pode validar medicamentos.',
+  JA_VALIDADO: 'Este medicamento já foi validado.',
+  TEM_REFERENCIAS: 'Tem stock ou reservas associados — retire o item do stock em vez de recusar.',
+  FALHA_VALIDAR: 'Não foi possível validar. Tente novamente.',
   FALHA_GUARDAR: 'Não foi possível guardar. Tente novamente.',
   FALHA_CARREGAR: 'Não foi possível carregar o stock.',
   ITEM_INEXISTENTE: 'Item não encontrado no seu stock.',
@@ -713,7 +717,7 @@ function ConfirmRetire({ item, busy, onCancel, onConfirm }) {
  * Redesign: toolbar centrada (pesquisa + chips + botão de novo fármaco)
  * e edição concentrada num popup que ofusca a página ao alternar o estado.
  */
-export default function StockPanel({ compact = false }) {
+export default function StockPanel({ compact = false, isManager = false }) {
   const [items, setItems] = useState(null)
   const [query, setQuery] = useState('')
   // Deep-link da pesquisa global da top-bar (`?q=Paracetamol`) — o
@@ -758,6 +762,9 @@ export default function StockPanel({ compact = false }) {
   const [page, setPage] = useState(0)
   // Menu kebab aberto (id do item) — fecha com o backdrop ou outra escolha.
   const [kebabId, setKebabId] = useState(null)
+  // Recusa de um fármaco pendente pede confirmação: o 1.º clique arma,
+  // o 2.º recusa (o menu fecha-se com o toggle ou outra escolha).
+  const [recusaId, setRecusaId] = useState(null)
   // Reset da página em microtask — setState síncrono no corpo do
   // effect é sinalizado pelo react-hooks/set-state-in-effect.
   useEffect(() => {
@@ -1050,6 +1057,30 @@ export default function StockPanel({ compact = false }) {
       )
       setToast(`"${it.name}" restaurado — religue no modal quando quiser.`)
       setTimeout(() => setToast(''), 3000)
+    } else {
+      setToast(ERRORES[res.error] || 'Erro inesperado.')
+    }
+  }
+
+  /** VALIDAR ou RECUSAR um fármaco pendente criado pela farmácia (só gerente). */
+  const validatePending = async (it, decision) => {
+    setSavingId(it.drug_id)
+    setToast('')
+    const res = await validatePendingDrug({ drugId: it.drug_id, decision })
+    setSavingId(null)
+    setRecusaId(null)
+    if (res.ok) {
+      setItems((list) =>
+        decision === 'aprovar'
+          ? list.map((row) => (row.drug_id === it.drug_id ? { ...row, pending: false } : row))
+          : list.filter((row) => row.drug_id !== it.drug_id),
+      )
+      setToast(
+        decision === 'aprovar'
+          ? `"${it.name}" validado — já está visível aos clientes.`
+          : `"${it.name}" recusado e retirado do catálogo.`,
+      )
+      setTimeout(() => setToast(''), 3500)
     } else {
       setToast(ERRORES[res.error] || 'Erro inesperado.')
     }
@@ -1398,6 +1429,7 @@ export default function StockPanel({ compact = false }) {
                       aria-expanded={kebabOpen}
                       onClick={(e) => {
                         e.stopPropagation()
+                        setRecusaId(null)
                         setKebabId(kebabOpen ? null : it.drug_id)
                       }}
                     >
@@ -1420,6 +1452,47 @@ export default function StockPanel({ compact = false }) {
                           </button>
                         ) : (
                           <>
+                            {it.pending && isManager && (
+                              <>
+                                <button
+                                  type="button"
+                                  role="menuitem"
+                                  disabled={savingId === it.drug_id}
+                                  onClick={(e) => {
+                                    e.stopPropagation()
+                                    setKebabId(null)
+                                    validatePending(it, 'aprovar')
+                                  }}
+                                >
+                                  Validar e publicar
+                                </button>
+                                <button
+                                  type="button"
+                                  role="menuitem"
+                                  className="portal-kebab-danger"
+                                  disabled={savingId === it.drug_id}
+                                  onClick={(e) => {
+                                    e.stopPropagation()
+                                    if (recusaId !== it.drug_id) {
+                                      setRecusaId(it.drug_id)
+                                      return
+                                    }
+                                    setKebabId(null)
+                                    validatePending(it, 'recusar')
+                                  }}
+                                >
+                                  {recusaId === it.drug_id ? 'Confirmar recusa' : 'Recusar fármaco'}
+                                </button>
+                              </>
+                            )}
+                            {it.pending && !isManager && (
+                              <span
+                                className="sub"
+                                style={{ display: 'block', padding: '0.5rem 0.75rem' }}
+                              >
+                                Aguarda validação do gerente
+                              </span>
+                            )}
                             <button
                               type="button"
                               role="menuitem"
@@ -1536,7 +1609,7 @@ export default function StockPanel({ compact = false }) {
                         {it.pending && (
                           <span
                             className="pending-badge"
-                            title="Criado por esta farmácia — visível aos clientes após validação da equipa Conheça Farmácia."
+                            title="Criado por esta farmácia — visível aos clientes depois de o gerente validar."
                           >
                             {' '}
                             Aguarda validação

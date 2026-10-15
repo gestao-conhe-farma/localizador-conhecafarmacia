@@ -117,9 +117,26 @@ async function countCatalog(pharmacyId) {
 }
 
 /**
+ * Movimentos do livro-razão que entram no calendário, por categoria. As
+ * VENDAS não vêm daqui: contam-se pelas reservas concluídas (uma só fonte,
+ * para o número do calendário e o do relatório nunca divergirem). A reserva
+ * e o saldo inicial não são acções da farmácia, por isso ficam de fora.
+ */
+const MOVIMENTO_CATEGORIA = {
+  entrada: 'entrada',
+  importacao: 'entrada',
+  saida: 'saida',
+  expiracao: 'saida',
+  devolucao: 'saida',
+  ajuste: 'ajuste',
+  retirada: 'ajuste',
+  restauro: 'ajuste',
+}
+
+/**
  * Dias com eventos para o mini-calendário — janela −60/+90 dias:
- * reservas concluídas (ponto verde) e validades a vencer (ponto
- * âmbar). Uma janela em vez de mês fixo para os ‹ › do calendário
+ * vendas (reservas concluídas), entradas, saídas e ajustes do stock (do
+ * livro-razão) e validades a vencer. Uma janela em vez de mês fixo para os ‹ › do calendário
  * mostrarem eventos também nos meses vizinhos.
  *
  * Cada dia leva o que o painel do dia mostra ao clicar (ou ao andar
@@ -134,7 +151,7 @@ async function dashboardEvents(pharmacyId) {
     const supabase = await createServerComponentClient()
     const from = new Date(Date.now() - 60 * 24 * 3600 * 1000).toISOString()
     const to = new Date(Date.now() + 90 * 24 * 3600 * 1000).toISOString()
-    const [res, stock] = await Promise.all([
+    const [res, stock, movs] = await Promise.all([
       supabase
         .from('reservations')
         .select('resolved_at, quantity, confirmed_quantity, stock_sale_options(price), drugs(name)')
@@ -151,23 +168,41 @@ async function dashboardEvents(pharmacyId) {
         .not('expires_at', 'is', null)
         .gte('expires_at', from.slice(0, 10))
         .lte('expires_at', to.slice(0, 10)),
+      supabase
+        .from('stock_movements')
+        .select('created_at, movement_type, drug_label, quantity_delta')
+        .eq('pharmacy_id', pharmacyId)
+        .in('movement_type', Object.keys(MOVIMENTO_CATEGORIA))
+        .gte('created_at', from)
+        .lte('created_at', to)
+        .limit(1000),
     ])
-    // Por dia guarda-se o NÍVEL (que define o ponto), as contagens, a
-    // lista de vendas e o valor — o painel do dia mostra tudo isto.
+    // Por dia guardam-se as contagens de cada categoria, a lista de vendas
+    // e o valor, e a lista de movimentos — o painel do dia mostra tudo isto.
     const events = {}
     const dia = (d) => {
       if (!events[d]) {
-        events[d] = { level: 'ok', reservations: 0, expiries: 0, value: 0, semPreco: 0, items: [] }
+        events[d] = {
+          reservations: 0,
+          expiries: 0,
+          entradas: 0,
+          saidas: 0,
+          ajustes: 0,
+          value: 0,
+          semPreco: 0,
+          items: [],
+          movimentos: [],
+        }
       }
       return events[d]
     }
     const TETO_NOMES = 6
+    const TETO_MOVIMENTOS = 8
     for (const r of res.data || []) {
       const d = String(r.resolved_at || '').slice(0, 10)
       if (!d) continue
       const e = dia(d)
       e.reservations += 1
-      e.level = 'ok'
       const qty = r.confirmed_quantity ?? r.quantity ?? 0
       const price = r.stock_sale_options?.price
       if (price != null) e.value += Math.round(qty * Number(price) * 100) / 100
@@ -175,13 +210,32 @@ async function dashboardEvents(pharmacyId) {
       const nome = r.drugs?.name
       if (nome && e.items.length < TETO_NOMES) e.items.push({ name: nome, qty })
     }
-    // A validade ganha o ponto (urgência maior quando coincidem).
+    // Validades a vencer (dia de expiração do lote em stock).
     for (const s of stock.data || []) {
       const d = String(s.expires_at || '').slice(0, 10)
       if (!d) continue
+      dia(d).expiries += 1
+    }
+    // Movimentos do livro-razão: entradas, saídas e ajustes do dia.
+    for (const m of movs.data || []) {
+      const d = String(m.created_at || '').slice(0, 10)
+      // Uma importação que baixa o saldo é correcção, não entrada.
+      const cat =
+        m.movement_type === 'importacao' && Number(m.quantity_delta) < 0
+          ? 'ajuste'
+          : MOVIMENTO_CATEGORIA[m.movement_type]
+      if (!d || !cat) continue
       const e = dia(d)
-      e.expiries += 1
-      e.level = 'warn'
+      if (cat === 'entrada') e.entradas += 1
+      else if (cat === 'saida') e.saidas += 1
+      else e.ajustes += 1
+      if (e.movimentos.length < TETO_MOVIMENTOS) {
+        e.movimentos.push({
+          tipo: m.movement_type,
+          name: m.drug_label || 'Medicamento',
+          delta: Number(m.quantity_delta) || 0,
+        })
+      }
     }
     return events
   } catch {

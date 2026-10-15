@@ -36,7 +36,9 @@ export default function PortalShell({ pharmacy, userName, userSub, staff, childr
         onClose={() => setNavOpen(false)}
       />
 
-      <div className="portal-main">
+      {/* Com o drawer aberto o conteúdo fica inerte: sem cliques, sem foco
+          por Tab (o véu por cima já bloqueia o rato). */}
+      <div className="portal-main" inert={navOpen}>
         <header className="portal-topbar">
           <button
             type="button"
@@ -122,9 +124,9 @@ export default function PortalShell({ pharmacy, userName, userSub, staff, childr
                 <path d="m9 6 6 6-6 6" />
               </svg>
             </Link>
-            {/* v2 «Premium Calmo»: tema do portal alternável na top-bar
-                (mesmo provider do site público; noite/dia num clique). */}
-            <ThemeToggle className="theme-toggle--circ" />
+            {/* Tema do portal na top-bar (desktop). No mobile fica na sidebar
+                (ver PortalSidebar): a classe esconde este em ecrã estreito. */}
+            <ThemeToggle className="theme-toggle--circ portal-topbar-theme" />
           </div>
         </header>
 

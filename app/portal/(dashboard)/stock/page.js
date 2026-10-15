@@ -1,5 +1,6 @@
 import { Suspense } from 'react'
 import StockPanel from '@/components/portal/StockPanel'
+import { getActiveStaff } from '@/lib/staff-session'
 
 export const metadata = {
   title: 'Portal da farmácia — stock',
@@ -16,7 +17,10 @@ export const metadata = {
  * global da top-bar) com useSearchParams — sem boundary, o Next
  * desactiva a renderização estática da shell.
  */
-export default function PortalStockPage() {
+export default async function PortalStockPage() {
+  // Só o gerente valida os medicamentos criados pela farmácia (0015).
+  const staff = await getActiveStaff()
+  const isManager = staff?.role === 'gerente'
   return (
     <div className="portal-page">
       <Suspense
@@ -26,7 +30,7 @@ export default function PortalStockPage() {
           </div>
         }
       >
-        <StockPanel />
+        <StockPanel isManager={isManager} />
       </Suspense>
     </div>
   )

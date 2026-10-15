@@ -1,6 +1,7 @@
-import { NextResponse } from 'next/server'
+import { NextResponse, after } from 'next/server'
 import { createAdminClient } from '@/lib/supabase/admin'
 import { hasScope, keyFromRequest, parseApiKey, verifyApiKeyHash } from '@/lib/api-keys'
+import { drainDue } from '@/lib/webhooks'
 import { logError, logWarn } from '@/lib/log'
 
 /**
@@ -19,12 +20,19 @@ import { logError, logWarn } from '@/lib/log'
  *   • estado por REPOSIÇÃO (mode `set`) como caminho preferido — é o que
  *     sobrevive a retries sem inventar deltas; `delta` existe para quem
  *     só sabe enviar movimento;
+ *   • lote e validade só se aplicam a ENTRADAS (saldo que sobe): numa baixa
+ *     a saída segue o FEFO e o lote enviado não é gravado. Nesse caso a
+ *     linha devolve `warning: LOTE_IGNORADO`, para não ser um erro silencioso;
  *   • rate-limit por chave (janela fixa, atómico na BD) com Retry-After;
  *   • auditoria sem payload e sem dados pessoais (rota, estado, contagens,
  *     duração) — em `api_request_log`;
  *   • o movimento do livro-razão é escrito pela MESMA porta do portal
  *     (`post_stock_change`, 0020), por isso o histórico fica completo e
- *     a baixa respeita lotes/FEFO (0021).
+ *     a baixa respeita lotes/FEFO (0021);
+ *   • os movimentos entram na fila de webhooks (0025) pelo trigger do
+ *     livro-razão, e no fim do pedido a entrega é acelerada aqui mesmo
+ *     (`after()`): o parceiro que acabou de enviar stock recebe o
+ *     evento em segundos, sem esperar pelo ciclo do cron.
  *
  * Corpo (JSON):
  * {
@@ -38,7 +46,7 @@ import { logError, logWarn } from '@/lib/log'
  *       "quantity": 12,                          // unidades-base
  *       "in_stock": true,                        // alternativo à quantidade
  *       "price": 1500,                           // opcional
- *       "lot_number": "L2401",                   // opcional (FEFO)
+ *       "lot_number": "L2401",                   // opcional; só em entradas (FEFO)
  *       "expires_at": "2027-03-31"               // opcional (FEFO)
  *     }
  *   ]
@@ -329,6 +337,13 @@ async function applyItem(admin, ctx, item, index) {
     }
   }
 
+  // Lote/validade só entram em ENTRADAS (0021). Numa baixa o FEFO decide
+  // de que camadas sai e o lote enviado não é gravado: avisamos NA LINHA
+  // em vez de ignorar em silêncio. A linha continua «ok» — o stock foi
+  // reposto; o aviso só diz o que não foi usado.
+  const baixou = !data.duplicate && data.after < data.before
+  const loteIgnorado = baixou && (lot !== null || expiresAt !== null)
+
   return {
     index,
     drug_id: drug.id,
@@ -337,6 +352,10 @@ async function applyItem(admin, ctx, item, index) {
     quantity: data.quantity,
     before: data.before,
     after: data.after,
+    warning: loteIgnorado ? 'LOTE_IGNORADO' : null,
+    warning_message: loteIgnorado
+      ? 'Lote e validade só se aplicam a entradas: esta reposição baixou o saldo, pelo que a saída segue o FEFO e o lote enviado não foi gravado.'
+      : null,
   }
 }
 
@@ -424,6 +443,7 @@ export async function POST(request) {
     const applied = results.filter((r) => r.status === 'ok').length
     const duplicates = results.filter((r) => r.status === 'duplicado').length
     const failed = results.filter((r) => r.status === 'erro').length
+    const warnings = results.filter((r) => r.warning).length
     const status = failed === 0 ? 200 : applied + duplicates > 0 ? 207 : 422
 
     audit(admin, {
@@ -438,12 +458,26 @@ export async function POST(request) {
       ms: Date.now() - started,
     })
 
+    // Caminho quente: quem acabou de escrever stock é quem tem um
+    // webhook à espera. Corre DEPOIS da resposta (after) para não atrasar
+    // o ERP, e nunca falha o pedido por causa disto.
+    if (applied > 0) {
+      after(async () => {
+        try {
+          await drainDue({ limit: 10, worker: 'ingest' })
+        } catch (e) {
+          logWarn('ingest-stock', 'Drenagem de webhooks falhou', { message: e?.message })
+        }
+      })
+    }
+
     return json(
       {
         ok: failed === 0,
         applied,
         duplicates,
         failed,
+        warnings,
         results: results.slice(0, MAX_REPORT_ROWS),
       },
       status,

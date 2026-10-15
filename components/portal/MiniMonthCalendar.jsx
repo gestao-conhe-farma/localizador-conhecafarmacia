@@ -19,41 +19,87 @@ const MESES = [
   'Dezembro',
 ]
 
-/** S T Q Q S S D — Segunda a Domingo (mesmo alfabeto do mock). */
+/** S T Q Q S S D — Segunda a Domingo (a mesma linha do calendário de /reservas). */
 const DOW = ['S', 'T', 'Q', 'Q', 'S', 'S', 'D']
 
-/** Cor do ponto por tipo de evento (o mesmo trio da fila). */
-const LEVEL_COLOR = {
-  bad: 'var(--portal-red)',
-  warn: '#d99a1e',
-  ok: 'var(--portal-ok)',
-}
-
 /**
- * O servidor pode mandar só o nível do dia ('ok' | 'warn', como nas
- * primeiras versões) ou o detalhe completo ({ level, reservations,
- * expiries, items, value, semPreco }). Aceitar os dois evita quebrar se
- * um dia voltar à forma antiga.
+ * Categorias de acontecimento do dia — uma cor cada, a mesma legenda para
+ * a grelha e para o painel. `chave` é o campo que o servidor manda com a
+ * contagem do dia.
  */
+const CATEGORIAS = [
+  {
+    id: 'venda',
+    chave: 'reservations',
+    singular: 'venda',
+    plural: 'vendas',
+    cor: 'var(--portal-ok)',
+  },
+  {
+    id: 'entrada',
+    chave: 'entradas',
+    singular: 'entrada',
+    plural: 'entradas',
+    cor: 'var(--portal-teal)',
+  },
+  {
+    id: 'validade',
+    chave: 'expiries',
+    singular: 'validade a vencer',
+    plural: 'validades a vencer',
+    cor: 'var(--portal-warn)',
+  },
+  { id: 'saida', chave: 'saidas', singular: 'saída', plural: 'saídas', cor: 'var(--portal-red)' },
+  { id: 'ajuste', chave: 'ajustes', singular: 'ajuste', plural: 'ajustes', cor: 'var(--ink-45v)' },
+]
+
+/** Rótulo de cada tipo de movimento do livro-razão (na lista do painel). */
+const TIPO_MOVIMENTO = {
+  entrada: 'entrada',
+  importacao: 'importação',
+  saida: 'saída',
+  expiracao: 'baixa por validade',
+  devolucao: 'devolução',
+  ajuste: 'ajuste',
+  retirada: 'retirada',
+  restauro: 'restauro',
+}
+
+/** Forma vazia de um dia — o servidor só manda dias com algum evento. */
 function normalizar(v) {
-  if (!v) return null
-  if (typeof v === 'string') {
-    return { level: v, reservations: 0, expiries: 0, items: [], value: 0, semPreco: 0 }
-  }
+  const e = v || {}
   return {
-    level: v.level || 'ok',
-    reservations: Number(v.reservations) || 0,
-    expiries: Number(v.expiries) || 0,
-    items: Array.isArray(v.items) ? v.items : [],
-    value: Number(v.value) || 0,
-    semPreco: Number(v.semPreco) || 0,
+    reservations: Number(e.reservations) || 0,
+    entradas: Number(e.entradas) || 0,
+    expiries: Number(e.expiries) || 0,
+    saidas: Number(e.saidas) || 0,
+    ajustes: Number(e.ajustes) || 0,
+    items: Array.isArray(e.items) ? e.items : [],
+    movimentos: Array.isArray(e.movimentos) ? e.movimentos : [],
+    value: Number(e.value) || 0,
+    semPreco: Number(e.semPreco) || 0,
   }
 }
 
-/** «12 de outubro de 2026» — data longa do painel do dia escolhido. */
+/** Quantas vezes aconteceu cada categoria no dia. */
+function contagem(e, cat) {
+  return e[cat.chave] || 0
+}
+
+/** «12 de outubro de 2026» — data longa para o rótulo da célula. */
 function dataLonga(iso) {
   const [y, m, d] = iso.split('-').map(Number)
   return `${d} de ${MESES[m - 1].toLowerCase()} de ${y}`
+}
+
+/** «quinta-feira, 15 de Outubro» — título do painel do dia (como /reservas). */
+function tituloDia(iso) {
+  const [y, m, d] = iso.split('-').map(Number)
+  const semana = new Date(Date.UTC(y, m - 1, d)).toLocaleDateString('pt-PT', {
+    weekday: 'long',
+    timeZone: 'UTC',
+  })
+  return `${semana}, ${d} de ${MESES[m - 1]}`
 }
 
 /** { y, m } de um dia 'YYYY-MM-DD' — mês com que o calendário abre. */
@@ -63,46 +109,35 @@ function mesDe(iso) {
   return { y, m: m - 1 }
 }
 
-/** «2 reservas · 1 validade» — resumo do dia mostrado na célula larga
- * (só no cartão de largura toda; no telemóvel a célula mostra só o
- * número e o ponto). */
+/** «2 vendas · 3 entradas · 1 ajuste» — resumo do dia no subtítulo do painel. */
 function resumoDia(e) {
-  const partes = []
-  if (e.reservations) {
-    partes.push(`${e.reservations} ${e.reservations === 1 ? 'reserva' : 'reservas'}`)
-  }
-  if (e.expiries) partes.push(`${e.expiries} ${e.expiries === 1 ? 'validade' : 'validades'}`)
-  return partes.join(' · ')
+  return CATEGORIAS.filter((c) => contagem(e, c) > 0)
+    .map((c) => {
+      const n = contagem(e, c)
+      return `${n} ${n === 1 ? c.singular : c.plural}`
+    })
+    .join(' · ')
 }
 
 /**
- * Mini-calendário «Hoje na farmácia» (mock modelo-a-v2): mês corrente
- * com ponto nos dias que têm eventos reais (reservas concluídas e
- * validades a vencer) e o dia de hoje preenchido.
+ * Calendário «Hoje na farmácia» do dashboard — um calendário geral das
+ * acções do dia no portal (vendas, entradas, saídas, ajustes e validades).
+ * Usa a mesma composição e as mesmas classes do «Calendário de reservas»
+ * (/reservas), que é a referência visual do portal: cabeçalho com mês e
+ * ‹ ›, legenda, grelha com um ponto por categoria e, à direita, o painel
+ * do dia escolhido.
  *
- * Chega com o dia de HOJE já escolhido (`today`): o painel do dia vem
- * preenchido na primeira pintura — sem esperar por um efeito e sem a
- * largura do cartão mudar à chegada (o `today` é calculado no servidor,
- * pelo mesmo relógio que gerou os eventos).
+ * Chega com o dia de HOJE já escolhido (`today`, calculado no servidor): o
+ * painel do dia vem preenchido na primeira pintura. Sem `today` o calendário
+ * resolve-o depois de montar.
  *
- * Escolher um dia — com o rato ou com o TECLADO — abre o painel desse
- * dia AO LADO da grelha, à direita (a mesma composição do calendário de
- * /reservas; por baixo dela só em ecrã estreito): as vendas (valor e nº
- * de reservas, com a mesma conta do relatório), a lista do que saiu
- * (nome × quantidade) e os caminhos para o resolver (fila da atenção e
- * fila de reservas filtrada ao dia). Escape ou um segundo clique no dia
- * fecham o painel e a grelha volta à largura toda do cartão.
+ * `events` = mapa { 'YYYY-MM-DD': { reservations, entradas, expiries, saidas,
+ * ajustes, items: [{name, qty}], movimentos: [{tipo, name, delta}], value,
+ * semPreco } }.
  *
- * Teclado: setas andam um dia (±1) e uma semana (±7),
- * Home/End vão às pontas da semana, PageUp/PageDown mudam de mês,
- * Enter/Espaço escolhem (o mesmo que clicar), Escape fecha. O foco é
- * único na grelha (roving tabindex) e atravessa meses nas bordas.
- *
- * `events` = mapa { 'YYYY-MM-DD': 'ok' | 'warn' | { level, reservations,
- * expiries, items: [{name, qty}], value, semPreco } }.
- * `today` = dia de hoje 'YYYY-MM-DD' calculado pelo servidor (opcional;
- * sem ele o calendário resolve-o depois de montar, e a primeira pintura
- * sai com a grelha à largura toda).
+ * Teclado (roving tabindex, um só dia no Tab): setas andam um dia (±1) e uma
+ * semana (±7), Home/End vão às pontas da semana, PageUp/PageDown mudam de
+ * mês. Enter/Espaço escolhem (o mesmo que clicar).
  */
 export default function MiniMonthCalendar({ events = {}, hint = '', today: hojeProp = '' }) {
   // "Hoje": entra no render (por isso vem por prop ou por efeito) —
@@ -110,12 +145,10 @@ export default function MiniMonthCalendar({ events = {}, hint = '', today: hojeP
   const [today, setToday] = useState(hojeProp)
   // Mês em visualização: ano+mês em estado (o ‹ › navega).
   const [cursor, setCursor] = useState(() => mesDe(hojeProp))
-  // Dia escolhido ('YYYY-MM-DD') — o painel do dia vive ao lado. Abre no
-  // dia de hoje; fechá-lo (Escape, ou clicar no dia outra vez) volta a
-  // deixar a grelha com a largura toda.
+  // Dia escolhido ('YYYY-MM-DD') — o painel do dia está sempre visível, como
+  // em /reservas. Abre no dia de hoje.
   const [escolhido, setEscolhido] = useState(hojeProp || null)
-  // Dia com o foco do teclado (roving tabindex): 35 botões tabuláveis
-  // eram uma armadilha; só um dia está no percurso do Tab.
+  // Dia com o foco do teclado (roving tabindex).
   const [foco, setFoco] = useState(null)
   const gridRef = useRef(null)
 
@@ -128,8 +161,8 @@ export default function MiniMonthCalendar({ events = {}, hint = '', today: hojeP
     setEscolhido((s) => s || iso)
   }, [hojeProp])
 
-  // Andar com as setas pode mudar de mês (borda da semana/mês): o
-  // render seguinte traz a célula do dia novo e o foco vai atrás dela.
+  // Andar com as setas pode mudar de mês (borda da semana/mês): o render
+  // seguinte traz a célula do dia novo e o foco vai atrás dela.
   useEffect(() => {
     if (!foco || !gridRef.current) return
     const el = gridRef.current.querySelector(`[data-iso="${foco}"]`)
@@ -138,13 +171,13 @@ export default function MiniMonthCalendar({ events = {}, hint = '', today: hojeP
 
   if (!cursor) {
     return (
-      <div className="portal-cal" role="status" aria-hidden="true">
-        <div className="portal-cal-grid">
-          {DOW.map((w, i) => (
-            <span key={i} className="dow">
-              {w}
-            </span>
-          ))}
+      <div className="portal-rescal" role="status" aria-hidden="true">
+        <div className="portal-rescal-left">
+          <div className="portal-calwk">
+            {DOW.map((w, i) => (
+              <span key={i}>{w}</span>
+            ))}
+          </div>
         </div>
       </div>
     )
@@ -162,7 +195,12 @@ export default function MiniMonthCalendar({ events = {}, hint = '', today: hojeP
   }
   for (let d = 1; d <= daysIn; d += 1) {
     const iso = `${y}-${String(m + 1).padStart(2, '0')}-${String(d).padStart(2, '0')}`
-    cells.push({ d, iso, today: iso === today, evt: normalizar(events[iso]), isoRaw: iso })
+    cells.push({
+      d,
+      isoRaw: iso,
+      today: iso === today,
+      evt: events[iso] ? normalizar(events[iso]) : null,
+    })
   }
   let next = 1
   while (cells.length % 7 !== 0) {
@@ -173,10 +211,10 @@ export default function MiniMonthCalendar({ events = {}, hint = '', today: hojeP
   const shift = (delta) => {
     const d = new Date(Date.UTC(y, m + delta, 1))
     setCursor({ y: d.getUTCFullYear(), m: d.getUTCMonth() })
-    setEscolhido(null)
   }
 
   const selEvt = escolhido ? normalizar(events[escolhido]) : null
+  const temEvento = CATEGORIAS.some((c) => contagem(selEvt || {}, c) > 0)
   const selPassado = escolhido ? escolhido < today : false
   const baseDia = foco || escolhido || today
   // Um só dia no percurso do Tab: o focado; sem foco, o de hoje.
@@ -224,22 +262,21 @@ export default function MiniMonthCalendar({ events = {}, hint = '', today: hojeP
     else if (k === 'End') semana(true)
     else if (k === 'PageUp') mes(-1)
     else if (k === 'PageDown') mes(1)
-    else if (k === 'Escape') setEscolhido(null)
     else return
     e.preventDefault()
   }
 
+  const movimentosTotal = selEvt ? selEvt.entradas + selEvt.saidas + selEvt.ajustes : 0
+
   return (
-    <div className="portal-cal">
-      {/* Com um dia escolhido a grelha e o painel dividem a largura
-          (.portal-cal-cols--split); sem escolha fica só a grelha. */}
-      <div className={`portal-cal-cols${escolhido ? ' portal-cal-cols--split' : ''}`}>
-        <div className="portal-cal-main">
-          <div className="portal-cal-head">
+    <>
+      <div className="portal-rescal">
+        <div className="portal-rescal-left">
+          <div className="portal-calhead">
             <b>
               {MESES[m]} {y}
             </b>
-            <div className="portal-cal-nav" style={{ display: 'flex', gap: 6 }}>
+            <div className="portal-calnav">
               <button type="button" onClick={() => shift(-1)} aria-label="Mês anterior">
                 ‹
               </button>
@@ -247,133 +284,182 @@ export default function MiniMonthCalendar({ events = {}, hint = '', today: hojeP
                 ›
               </button>
             </div>
+            <div className="portal-cal-legend">
+              {CATEGORIAS.map((c) => (
+                <span key={c.id}>
+                  <i style={{ background: c.cor }} /> {c.singular}
+                </span>
+              ))}
+            </div>
           </div>
-          {/* As setas são tratadas aqui (o evento sobe dos botões) — um só
-          handler para a grelha inteira. */}
-          <div className="portal-cal-grid" ref={gridRef} onKeyDown={onKeyDown}>
+
+          <div className="portal-calwk">
             {DOW.map((w, i) => (
-              <span key={i} className="dow">
-                {w}
-              </span>
+              <span key={i}>{w}</span>
             ))}
-            {/* O dia de hoje tem fundo cheio: a tinta do evento (verde) ficava
-            sobre verde — ilegível. Como o ponto já marca o evento, o
-            «hoje» mantém a tinta do seu estado (branco/accent). */}
+          </div>
+
+          {/* As setas são tratadas aqui (o evento sobe dos botões) — um só
+              handler para a grelha inteira. */}
+          <div className="portal-calgrid" ref={gridRef} onKeyDown={onKeyDown}>
             {cells.map((c, i) => {
               if (c.mut) {
                 return (
-                  <span key={i} className="portal-cal-d portal-cal-d--mut" aria-hidden="true">
-                    {c.d}
-                  </span>
+                  <button key={i} type="button" className="portal-cald portal-cald--mut" disabled>
+                    <span className="cdn">{c.d}</span>
+                  </button>
                 )
               }
+              const doDia = c.evt || normalizar(null)
+              const presentes = CATEGORIAS.filter((cat) => contagem(doDia, cat) > 0)
               const rotulo = [
                 dataLonga(c.isoRaw),
-                c.evt?.reservations ? `${c.evt.reservations} reserva(s) concluída(s)` : null,
-                c.evt?.expiries ? `${c.evt.expiries} validade(s)` : null,
-                c.evt ? null : 'sem eventos',
-              ]
-                .filter(Boolean)
-                .join(' · ')
+                ...presentes.map((cat) => {
+                  const n = contagem(doDia, cat)
+                  return `${n} ${n === 1 ? cat.singular : cat.plural}`
+                }),
+              ].join(' · ')
+              const classes = ['portal-cald']
+              if (c.today) classes.push('portal-cald--today')
+              if (escolhido === c.isoRaw) classes.push('portal-cald--sel')
               return (
                 <button
                   key={i}
                   type="button"
                   data-iso={c.isoRaw}
                   tabIndex={c.isoRaw === tabIso ? 0 : -1}
-                  className={[
-                    'portal-cal-d',
-                    c.today ? 'portal-cal-d--today' : '',
-                    c.evt ? 'portal-cal-d--evt' : '',
-                    escolhido === c.isoRaw ? 'portal-cal-d--sel' : '',
-                  ]
-                    .filter(Boolean)
-                    .join(' ')}
-                  style={
-                    c.evt && !c.today ? { color: LEVEL_COLOR[c.evt.level] || undefined } : undefined
-                  }
+                  className={classes.join(' ')}
                   aria-pressed={escolhido === c.isoRaw}
                   aria-label={rotulo}
                   onFocus={() => setFoco(c.isoRaw)}
-                  onClick={() => setEscolhido((s) => (s === c.isoRaw ? null : c.isoRaw))}
+                  onClick={() => setEscolhido(c.isoRaw)}
                 >
-                  {c.d}
-                  {c.evt && (c.evt.reservations > 0 || c.evt.expiries > 0) ? (
-                    <span className="portal-cal-dlbl" aria-hidden="true">
-                      {resumoDia(c.evt)}
+                  <span className="cdn">{c.d}</span>
+                  {presentes.length > 0 && (
+                    <span className="portal-caldots" aria-hidden="true">
+                      {presentes.map((cat) => (
+                        <i key={cat.id} style={{ background: cat.cor }} />
+                      ))}
                     </span>
-                  ) : null}
+                  )}
                 </button>
               )
             })}
           </div>
         </div>
 
-        {/* Painel do dia escolhido: vendas, lista do que saiu e caminhos
-          — na coluna da direita. */}
-        {escolhido && (
-          <div className="portal-cal-day" role="status">
-            <b>
-              {dataLonga(escolhido)}
-              {escolhido === today ? ' · hoje' : ''}
-            </b>
+        {/* Painel do dia escolhido — à direita, como em /reservas. */}
+        <div className="portal-rescal-right">
+          <div className="portal-calside-title">
+            {escolhido ? `${tituloDia(escolhido)}${escolhido === today ? ' · hoje' : ''}` : ' '}
+          </div>
+          <div className="portal-calside-sub">
+            {temEvento ? resumoDia(selEvt) : escolhido ? 'Sem acções neste dia' : ' '}
+          </div>
+
+          <div className="portal-cal-daylist" key={escolhido || 'sem-dia'} role="status">
+            {escolhido && !temEvento && (
+              <div className="portal-cal-empty">
+                Sem acções neste dia.
+                <br />
+                {selPassado
+                  ? 'As vendas, entradas e saídas deste dia já passaram.'
+                  : 'As vendas, entradas e saídas aparecem aqui quando acontecerem.'}
+              </div>
+            )}
 
             {selEvt?.reservations > 0 && (
-              <p className="portal-cal-day-sales">
-                <span>Vendas do dia</span>
-                {/* Sem preço registado não se inventa 0 Kz: um traço. */}
-                <b>{selEvt.value > 0 ? fmtKz(selEvt.value) : '—'}</b>
-                <span>
-                  {selEvt.reservations === 1 ? '1 reserva' : `${selEvt.reservations} reservas`}
-                  {selEvt.semPreco > 0 ? ' · sem preço registado' : ''}
-                </span>
-              </p>
-            )}
-
-            {selEvt?.items?.length > 0 && (
-              <ul className="portal-cal-day-items">
-                {selEvt.items.map((it, i) => (
-                  <li key={`${it.name}-${i}`}>
-                    <span>{it.name}</span>
-                    {it.qty ? <span className="qtd">×{it.qty}</span> : null}
-                  </li>
-                ))}
-                {selEvt.reservations > selEvt.items.length && (
-                  <li className="mais">
-                    +{selEvt.reservations - selEvt.items.length} reservas neste dia
-                  </li>
+              <div className="portal-citem">
+                <div className="portal-citem-top">
+                  <b className="portal-citem-name">Vendas do dia</b>
+                  {/* Sem preço registado não se inventa 0 Kz: um traço. */}
+                  <span className="portal-citem-time">
+                    {selEvt.value > 0 ? fmtKz(selEvt.value) : '—'}
+                  </span>
+                </div>
+                <div className="portal-citem-meta">
+                  <span className="sub">
+                    {selEvt.reservations === 1 ? '1 reserva' : `${selEvt.reservations} reservas`}
+                    {selEvt.semPreco > 0 ? ' · sem preço registado' : ''}
+                  </span>
+                </div>
+                {selEvt.items.length > 0 && (
+                  <div className="portal-citem-meta">
+                    {selEvt.items.map((it, i) => (
+                      <span key={`${it.name}-${i}`}>
+                        {it.name}
+                        {it.qty ? ` ×${it.qty}` : ''}
+                      </span>
+                    ))}
+                    {selEvt.reservations > selEvt.items.length && (
+                      <span className="sub">
+                        +{selEvt.reservations - selEvt.items.length} reservas neste dia
+                      </span>
+                    )}
+                  </div>
                 )}
-              </ul>
-            )}
-
-            <ul className="portal-cal-day-links">
-              {selEvt?.reservations > 0 && (
-                <li>
-                  <span>Reservas do dia</span>
+                <div className="portal-citem-foot">
                   <Link
+                    className="btn-mini"
                     href={`/portal/reservas?dia=${escolhido}`}
                     title="Abrir a fila filtrada a este dia"
                   >
-                    Abrir na fila →
+                    Reservas do dia →
                   </Link>
-                </li>
-              )}
-              {selEvt?.expiries > 0 && (
-                <li>
-                  <span>
-                    {selEvt.expiries === 1 ? '1 validade' : `${selEvt.expiries} validades`}
-                    {selPassado ? ' chegou ao fim' : ' a vencer'}
-                  </span>
-                  <Link href="/portal/atencao?tipo=expiry">Ver na fila →</Link>
-                </li>
-              )}
-            </ul>
+                </div>
+              </div>
+            )}
 
-            {!selEvt?.reservations && !selEvt?.expiries ? (
-              <span>Sem eventos neste dia.</span>
-            ) : null}
+            {movimentosTotal > 0 && (
+              <div className="portal-citem">
+                <div className="portal-citem-top">
+                  <b className="portal-citem-name">Movimentos de stock</b>
+                  <span className="portal-citem-time">
+                    {movimentosTotal === 1 ? '1 movimento' : `${movimentosTotal} movimentos`}
+                  </span>
+                </div>
+                {selEvt.movimentos.map((mv, i) => (
+                  <div key={`${mv.name}-${i}`} className="portal-citem-meta">
+                    <span>{mv.name}</span>
+                    <span className="sub">{TIPO_MOVIMENTO[mv.tipo] || mv.tipo}</span>
+                    {mv.delta !== 0 && (
+                      <span
+                        className={`portal-st ${mv.delta > 0 ? 'portal-st--ok' : 'portal-st--mut'}`}
+                      >
+                        {mv.delta > 0 ? `+${mv.delta}` : `−${Math.abs(mv.delta)}`}
+                      </span>
+                    )}
+                  </div>
+                ))}
+                {movimentosTotal > selEvt.movimentos.length && (
+                  <div className="portal-citem-meta">
+                    <span className="sub">
+                      +{movimentosTotal - selEvt.movimentos.length} movimentos neste dia
+                    </span>
+                  </div>
+                )}
+              </div>
+            )}
+
+            {selEvt?.expiries > 0 && (
+              <div className="portal-citem">
+                <div className="portal-citem-top">
+                  <b className="portal-citem-name">
+                    {selEvt.expiries === 1 ? '1 validade' : `${selEvt.expiries} validades`}
+                  </b>
+                  <span className="portal-citem-time">
+                    {selPassado ? 'chegou ao fim' : 'a vencer'}
+                  </span>
+                </div>
+                <div className="portal-citem-foot">
+                  <Link className="btn-mini" href="/portal/atencao?tipo=expiry">
+                    Ver na fila →
+                  </Link>
+                </div>
+              </div>
+            )}
           </div>
-        )}
+        </div>
       </div>
 
       {hint && (
@@ -381,6 +467,6 @@ export default function MiniMonthCalendar({ events = {}, hint = '', today: hojeP
           {hint}
         </p>
       )}
-    </div>
+    </>
   )
 }

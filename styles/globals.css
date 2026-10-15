@@ -2209,6 +2209,12 @@ html.dark .form-note {
     background: rgb(255 255 255 / 0.08);
   }
 
+  /* Tema na sidebar: só no mobile (ver a media query abaixo). No desktop
+     o botão fica na top-bar. */
+  .portal-side-theme {
+    display: none;
+  }
+
   /* Nome da farmácia na top-bar — é a ENTRADA de /portal/perfil. O nome
      do farmacêutico vive só no rodapé da sidebar; a top-bar guarda a
      identidade da farmácia e o chevron diz que é clicável. */
@@ -2732,6 +2738,42 @@ html.dark .form-note {
 
     .portal-side-close {
       display: grid;
+    }
+
+    /* Mobile: o tema sai da top-bar e passa para o rodapé do drawer,
+       ao lado do perfil activo. */
+    .portal-topbar-theme {
+      display: none;
+    }
+
+    .portal-side-theme {
+      display: inline-flex;
+      flex-shrink: 0;
+    }
+
+    /* Drawer mais largo (cabe o nome e o tema sem apertar). */
+    .portal-sidebar {
+      width: min(19.5rem, 86vw);
+    }
+
+    /* «Portal da farmácia» desce para baixo do logo, no drawer. */
+    .portal-side-brand-main {
+      flex-direction: column;
+      align-items: flex-start;
+      gap: 0.25rem;
+    }
+
+    /* O botão do perfil cede espaço ao tema, sem empurrar a linha. */
+    .portal-sidebar-foot .portal-foot-link {
+      flex: 1;
+      min-width: 0;
+      width: auto;
+    }
+
+    /* Com o drawer aberto, o conteúdo atrás fica desfocado. */
+    .portal-scrim {
+      -webkit-backdrop-filter: blur(3px);
+      backdrop-filter: blur(3px);
     }
 
     .portal-sidebar--open {
@@ -4627,6 +4669,7 @@ html.dark .form-note {
     --portal-red: #b23a2e;
     --portal-warn: #a4670f;
     --portal-ok: #1f7a43;
+    --portal-teal: #0d6e8b;
     /* Medido no claro (fundo da página #fffdf9 e cartão branco): 0,60 e
        0,47 davam 3,5:1 e 2,5:1 — abaixo do mínimo de 4,5:1 para texto
        pequeno. 0,82 dá 6,2:1 e 0,72 dá 4,8:1, mantendo a hierarquia
@@ -4640,6 +4683,7 @@ html.dark .form-note {
     --portal-red: #e07b6f;
     --portal-warn: #e0b46a;
     --portal-ok: #5fc48e;
+    --portal-teal: #5ab8d6;
     /* 0,45 e 0,62 davam 3,5:1 e 4,4:1 sobre os cartões escuros (abaixo
        do mínimo de 4,5:1 para texto pequeno) — subiram para 0,58 e
        0,72, mantendo a hierarquia dos três níveis de tinta. */
@@ -6937,7 +6981,43 @@ html.dark .form-note {
     min-width: 0;
   }
 
+  /* Texto secundário (<span class="sub">) nas listas do portal. Não tinha
+     regra global: só existia dentro de contextos específicos, e o resto
+     saía com o tamanho e a cor por defeito, parecendo palavras soltas. */
+  .sub {
+    font-size: 0.7188rem;
+    color: var(--ink-60v);
+  }
+
+  /* Bloco de código de exemplo (curl, verificação de assinatura) na Integração. */
+  .portal-pre {
+    margin: 0.5rem 0 0;
+    padding: 0.75rem 0.875rem;
+    background: var(--color-brand-bg-alt);
+    border: 1px solid var(--color-brand-divider);
+    border-radius: 0.625rem;
+    font-family: ui-monospace, SFMono-Regular, Menlo, Consolas, monospace;
+    font-size: 0.75rem;
+    line-height: 1.5;
+    color: var(--color-brand-deep);
+    white-space: pre-wrap;
+    word-break: break-all;
+    overflow-x: auto;
+  }
+
+  /* Linha de etiquetas (estado, escopos, saldo, fonte): flex com espaço,
+     em vez de elementos inline colados uns aos outros. */
   .portal-citem-meta {
+    display: flex;
+    flex-wrap: wrap;
+    align-items: center;
+    gap: 0.375rem 0.5rem;
+    font-size: 0.75rem;
+    color: var(--ink-60v);
+  }
+
+  /* Texto solto no rodapé (motivo, «por ...») sem classe própria. */
+  .portal-citem-foot > span {
     font-size: 0.75rem;
     color: var(--ink-60v);
   }
@@ -7111,309 +7191,6 @@ html.dark .form-note {
 
   .portal-lg-gray {
     background: var(--color-brand-divider);
-  }
-
-  /* Mini-calendário «Hoje na farmácia». */
-  .portal-cal {
-    width: 100%;
-  }
-
-  /* Grelha + painel do dia LADO A LADO (a composição do calendário de
-     /reservas): com um dia escolhido o painel ocupa a coluna da
-     direita; sem escolha não há painel e a grelha fica com o cartão
-     todo. Ecrã estreito: volta a empilhar, painel por baixo. */
-  .portal-cal-cols--split {
-    display: grid;
-    grid-template-columns: minmax(0, 1.6fr) minmax(0, 1fr);
-    gap: 0.875rem;
-    align-items: start;
-  }
-
-  @media (max-width: 62.5rem) {
-    .portal-cal-cols--split {
-      grid-template-columns: 1fr;
-    }
-  }
-
-  /* No painel lateral o bloco não leva margem de cima (a do modo
-     empilhado). */
-  .portal-cal-cols--split > .portal-cal-day {
-    margin-top: 0;
-  }
-
-  .portal-cal-head {
-    display: flex;
-    align-items: center;
-    justify-content: space-between;
-    margin-bottom: 0.625rem;
-  }
-
-  .portal-cal-head b {
-    font-size: 0.8125rem;
-    font-weight: 600;
-    color: var(--color-brand-deep);
-  }
-
-  .portal-cal-grid {
-    display: grid;
-    grid-template-columns: repeat(7, 1fr);
-    gap: 0.125rem;
-    text-align: center;
-  }
-
-  .portal-cal-grid .dow {
-    font-size: 0.625rem;
-    font-weight: 700;
-    color: var(--ink-45v);
-    padding: 0.25rem 0;
-  }
-
-  /* Dia do calendário — botão (clicar abre o detalhe do dia). */
-  .portal-cal-d {
-    aspect-ratio: 1;
-    width: 100%;
-    display: grid;
-    place-items: center;
-    border: 0;
-    background: transparent;
-    font: inherit;
-    font-size: 0.75rem;
-    border-radius: 0.5625rem;
-    color: var(--ink-60v);
-    cursor: pointer;
-    transition:
-      background 0.15s ease,
-      box-shadow 0.15s ease;
-  }
-
-  .portal-cal-d:hover {
-    background: var(--color-brand-bg-alt);
-  }
-
-  .portal-cal-d--today:hover {
-    background: var(--color-brand-primary);
-  }
-
-  html.dark .portal-cal-d--today:hover {
-    background: #7fd4ab;
-  }
-
-  .portal-cal-d:focus-visible {
-    outline: 2px solid var(--color-brand-accent);
-    outline-offset: 1px;
-  }
-
-  /* Dia escolhido: anel da marca (o fundo pode já ser do evento/hoje). */
-  .portal-cal-d--sel {
-    box-shadow: inset 0 0 0 2px var(--color-brand-accent);
-  }
-
-  html.dark .portal-cal-d--sel {
-    box-shadow: inset 0 0 0 2px #7fd4ab;
-  }
-
-  /* «Hoje» que é também o dia escolhido (o estado com que o calendário
-     abre): o anel da marca desaparecia sobre o fundo cheio — em escuro
-     era a MESMA cor (#7fd4ab sobre #7fd4ab) e em claro ficava em ~2,9:1.
-     O anel passa a usar a tinta do próprio dia (branca em claro, verde
-     escura em escuro), sempre legível sobre o preenchimento. */
-  .portal-cal-d--today.portal-cal-d--sel {
-    box-shadow: inset 0 0 0 2px currentColor;
-  }
-
-  html.dark .portal-cal-d--today.portal-cal-d--sel {
-    box-shadow: inset 0 0 0 2px currentColor;
-  }
-
-  /* Dias de outro mês: decorativos (span, não clicáveis). */
-  .portal-cal-d--mut {
-    opacity: 0.3;
-    cursor: default;
-  }
-
-  .portal-cal-d--mut:hover {
-    background: transparent;
-  }
-
-  /* Resumo do dia na célula — só aparece no cartão de largura toda
-     (grelha quadrada no telemóvel não tem espaço). */
-  .portal-cal-dlbl {
-    display: none;
-  }
-
-  /* Desktop: a grelha estica até à largura do cartão. Com 7 colunas
-     num cartão de largura toda, aspect-ratio: 1 daria células de ~12rem
-     de altura — altura fixa e o resumo do dia por baixo do número. */
-  @media (min-width: 67.5625rem) {
-    .portal-grid2-wide .portal-cal-d {
-      aspect-ratio: auto;
-      min-height: 3.25rem;
-    }
-
-    .portal-grid2-wide .portal-cal-dlbl {
-      display: block;
-      max-width: 100%;
-      overflow: hidden;
-      text-overflow: ellipsis;
-      white-space: nowrap;
-      font-size: 0.625rem;
-      font-weight: 500;
-      color: inherit;
-      opacity: 0.85;
-    }
-
-    /* Com o painel do dia ao lado a célula é mais estreita: o resumo do
-       dia passa a duas linhas em vez de reticências (não perde
-       informação). Vem depois da regra da linha única para ganhar. */
-    .portal-grid2-wide .portal-cal-cols--split .portal-cal-dlbl {
-      white-space: normal;
-      line-height: 1.15;
-    }
-  }
-
-  /* Detalhe do dia escolhido (por baixo da grelha do calendário). */
-  .portal-cal-day {
-    margin-top: 0.75rem;
-    padding: 0.625rem 0.75rem;
-    border: 1px solid var(--color-brand-divider);
-    border-radius: 0.625rem;
-    background: var(--color-brand-bg-alt);
-    font-size: 0.75rem;
-    line-height: 1.5;
-    color: var(--ink-60v);
-  }
-
-  .portal-cal-day b {
-    display: block;
-    margin-bottom: 0.25rem;
-    font-size: 0.8125rem;
-    color: var(--color-brand-deep);
-  }
-
-  .portal-cal-day ul {
-    list-style: none;
-    margin: 0;
-    padding: 0;
-    display: grid;
-    gap: 0.25rem;
-  }
-
-  .portal-cal-day li {
-    display: flex;
-    align-items: center;
-    justify-content: space-between;
-    gap: 0.75rem;
-  }
-
-  /* Verde da marca escuro no claro: o accent (#0a844f) dava 4,36:1
-     sobre o fundo do painel — abaixo de AA para 12px. */
-  .portal-cal-day a {
-    color: var(--color-brand-primary);
-    font-weight: 600;
-    text-decoration: none;
-    white-space: nowrap;
-  }
-
-  html.dark .portal-cal-day a {
-    color: #7fd4ab;
-  }
-
-  .portal-cal-day a:hover {
-    text-decoration: underline;
-  }
-
-  /* Vendas do dia — o número que o calendário conta ao relatório, em
-     destaque; a contagem fica ao lado, discreta. */
-  .portal-cal-day-sales {
-    display: flex;
-    align-items: baseline;
-    flex-wrap: wrap;
-    gap: 0.3125rem;
-    margin: 0 0 0.375rem;
-  }
-
-  .portal-cal-day-sales b {
-    display: inline;
-    margin: 0;
-    font-size: 0.9375rem;
-    color: var(--color-brand-deep);
-    font-variant-numeric: tabular-nums;
-  }
-
-  /* Lista do que saiu nesse dia: nome × quantidade. */
-  .portal-cal-day-items {
-    margin-bottom: 0.4375rem;
-  }
-
-  .portal-cal-day-items .qtd {
-    color: var(--color-brand-deep);
-    opacity: 0.75;
-    font-variant-numeric: tabular-nums;
-  }
-
-  .portal-cal-day-items .mais {
-    color: var(--color-brand-deep);
-    opacity: 0.7;
-  }
-
-  /* Caminhos do dia — separados da lista por uma hairline. */
-  .portal-cal-day-links {
-    margin-top: 0.4375rem;
-    padding-top: 0.4375rem;
-    border-top: 1px solid var(--color-brand-divider);
-  }
-
-  .portal-cal-d--today {
-    background: var(--color-brand-primary);
-    color: #fff;
-    font-weight: 700;
-  }
-
-  /* No escuro o verde da marca (#0d995f) com tinta escura dava 3,84:1;
-     o verde claro da paleta nocturna sobe para ~7:1. */
-  html.dark .portal-cal-d--today {
-    background: #7fd4ab;
-    color: #06331a;
-  }
-
-  /* «Hoje» que também é dia de evento: a tinta do dia de hoje manda. A
-     regra do evento vem depois neste ficheiro e, com a mesma
-     especificidade, ganhava — verde sobre verde (1,9:1). O ponto do
-     evento passa a herdar a tinta (ver .portal-cal-d--today::after). */
-  .portal-cal-grid .portal-cal-d--today {
-    color: #fff;
-  }
-
-  html.dark .portal-cal-grid .portal-cal-d--today {
-    color: #06331a;
-  }
-
-  .portal-cal-d--evt {
-    position: relative;
-    font-weight: 600;
-    color: var(--color-brand-primary);
-  }
-
-  html.dark .portal-cal-d--evt {
-    color: #7fd4ab;
-  }
-
-  .portal-cal-d--evt::after {
-    content: '';
-    position: absolute;
-    bottom: 0.25rem;
-    left: 50%;
-    transform: translateX(-50%);
-    width: 0.25rem;
-    height: 0.25rem;
-    border-radius: 50%;
-    background: var(--color-brand-accent);
-  }
-
-  /* O «hoje» tem fundo cheio: o ponto do evento em verde da marca
-     desaparecia sobre ele (contraste 1,9:1). Herda a tinta da célula. */
-  .portal-cal-d--today::after {
-    background: currentColor;
   }
 
   /* Feed «Hoje na farmácia». */

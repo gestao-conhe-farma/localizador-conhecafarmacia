@@ -13,9 +13,9 @@ const ERRORES = {
  * Criação de fármacos (ponto 1): nome, molécula (DCI), forma
  * farmacêutica, gramagem/dosagem e se exige receita médica.
  *
- * O fármaco entra INACTIVO no catálogo — a equipa Conheça Farmácia
- * valida antes de ficar visível ao público (evita duplicados e erros
- * de ortografia no catálogo partilhado por todas as farmácias).
+ * O fármaco entra INACTIVO no catálogo — o gerente da farmácia valida
+ * antes de ficar visível ao público (evita duplicados e erros de
+ * ortografia no catálogo partilhado por todas as farmácias).
  * A farmácia pode, isso sim, marcar o stock dele logo após criar.
  *
  * Dois modos: autónomo (botão que abre o formulário na própria secção)
@@ -48,7 +48,7 @@ export default function DrugCreateForm({ embedded = false, onCreated } = {}) {
         type: 'ok',
         text: res.existed
           ? 'Este medicamento já existe no catálogo — procure-o na lista de stock.'
-          : 'Adicionado ao catálogo — já aparece na lista de stock com a marca «Aguarda validação»; pode marcar o stock dele já. Fica visível aos clientes após validação da equipa.',
+          : 'Adicionado ao catálogo — já aparece na lista de stock com a marca «Aguarda validação»; pode marcar o stock dele já. Fica visível aos clientes depois de o gerente validar.',
       })
       e.target.reset()
       // No modal do stock, sucesso fecha o popup (a mensagem ia ficar

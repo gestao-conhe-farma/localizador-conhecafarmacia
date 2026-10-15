@@ -10,6 +10,7 @@ import { createClient } from '@/lib/supabase/client'
 import { getRestockAck } from '@/lib/restock'
 import { logWarn } from '@/lib/log'
 import { ChevronIcon, CloseIcon, NavIcon } from '@/components/ui/Icon'
+import ThemeToggle from '@/components/ui/ThemeToggle'
 
 const NAV = [
   {
@@ -300,6 +301,11 @@ export default function PortalSidebar({ pharmacyId, userName, staff, navOpen, on
             </span>
             <ChevronIcon size={13} dir={menuAberto ? 'down' : 'right'} />
           </button>
+
+          {/* Tema no mobile: a top-bar não o mostra em ecrã estreito, por isso
+              fica ao lado do perfil, no rodapé do drawer. Só aparece no mobile
+              (CSS .portal-side-theme). */}
+          <ThemeToggle className="theme-toggle--circ portal-side-theme" />
 
           {menuAberto && (
             <div className="portal-foot-menu" role="menu">

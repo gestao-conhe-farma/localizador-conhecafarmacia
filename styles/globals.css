@@ -1491,20 +1491,21 @@ html.dark .form-note {
     border-color: rgba(0, 42, 50, 0.3);
   }
 
-  /* Críticos — painel verde-água suave com borda esquerda (meio-termo A×D) */
+  /* Críticos — painel verde-água suave, com contorno e canto normal
+     (a barra à esquerda e o raio só à direita saíram). */
   .crit-section {
     @apply mb-10;
   }
 
   .crit-panel {
-    background: rgba(10, 132, 79, 0.06);
-    border-left: 3px solid var(--color-brand-accent);
-    border-radius: 0 12px 12px 0;
+    background: color-mix(in srgb, var(--color-brand-accent) 7%, var(--color-brand-card));
+    border: 1px solid color-mix(in srgb, var(--color-brand-accent) 22%, transparent);
+    border-radius: 12px;
     padding: 1.3rem 1.8rem 0.8rem;
   }
 
   html.dark .crit-panel {
-    background: rgba(13, 153, 95, 0.1);
+    background: color-mix(in srgb, var(--color-brand-accent) 12%, var(--color-brand-card));
   }
 
   .crit-k {
@@ -4128,12 +4129,15 @@ html.dark .form-note {
     border: 1px solid color-mix(in srgb, var(--color-brand-accent) 25%, transparent);
   }
 
-  /* Regra destacada → nota neutra v2: cor SÓ na borda esquerda. */
+  /* Regra destacada — tinta suave semântica + hairline do mesmo tom e a
+     banda EM BAIXO (2px). A barra à esquerda saiu: o padrão actual dos
+     avisos inline é a superfície tintada com contorno, e quando precisa de
+     âncora visual a linha vai na base, não na lateral. */
   .help-rule {
-    @apply mb-3 px-3.5 py-2.5 rounded-lg text-[13px] font-medium;
-    background: var(--color-brand-card);
-    border: 1px solid var(--color-brand-divider);
-    border-left: 3px solid var(--portal-warn);
+    @apply mb-3 px-3.5 py-2.5 rounded-xl text-[13px] font-medium;
+    background: color-mix(in srgb, var(--portal-warn) 8%, var(--color-brand-card));
+    border: 1px solid color-mix(in srgb, var(--portal-warn) 24%, transparent);
+    border-bottom: 3px solid color-mix(in srgb, var(--portal-warn) 75%, transparent);
     color: var(--ink-60v);
   }
 
@@ -4143,9 +4147,9 @@ html.dark .form-note {
 
   .help-rule--ok {
     @apply mt-4 mb-0;
-    background: var(--color-brand-card);
-    border: 1px solid var(--color-brand-divider);
-    border-left: 3px solid var(--color-brand-accent);
+    background: color-mix(in srgb, var(--color-brand-accent) 8%, var(--color-brand-card));
+    border: 1px solid color-mix(in srgb, var(--color-brand-accent) 24%, transparent);
+    border-bottom: 3px solid color-mix(in srgb, var(--color-brand-accent) 75%, transparent);
     color: var(--ink-60v);
   }
 
@@ -5016,15 +5020,14 @@ html.dark .form-note {
     background: var(--color-brand-accent);
   }
 
-  /* Nota de aviso neutra (antes banner com fundo de acento): a cor
-     vive só na borda esquerda de 3px. DANGER = vermelho suave. */
+  /* Nota de aviso — tinta suave semântica + contorno do mesmo tom, sem
+     barra lateral. DANGER = vermelho suave (muda a tinta, não a forma). */
   .portal-note {
     display: flex;
     gap: 0.625rem;
     align-items: flex-start;
-    background: var(--color-brand-card);
-    border: 1px solid var(--color-brand-divider);
-    border-left: 3px solid var(--portal-warn);
+    background: color-mix(in srgb, var(--portal-warn) 8%, var(--color-brand-card));
+    border: 1px solid color-mix(in srgb, var(--portal-warn) 24%, transparent);
     border-radius: 0.625rem;
     padding: 0.6875rem 0.875rem;
     font-size: 0.8125rem;
@@ -5036,8 +5039,18 @@ html.dark .form-note {
     color: var(--color-brand-deep);
   }
 
+  /* Perigo: tinta mais densa que a do aviso — a 8% o vermelho lia-se como
+     o âmbar e as duas notas ficavam indistinguíveis. */
   .portal-note--danger {
-    border-left-color: var(--portal-red);
+    background: color-mix(in srgb, var(--portal-red) 13%, var(--color-brand-card));
+    border-color: color-mix(in srgb, var(--portal-red) 40%, transparent);
+  }
+
+  /* Notas que são <details> (exemplos de envio, na Integração): o texto
+     segue o <summary> em coluna — o flex punha o exemplo ao lado do
+     título, em vez de por baixo. */
+  details.portal-note {
+    display: block;
   }
 
   /* Pesquisa global da top-bar (v2): pill com campo real e painel de
@@ -5944,14 +5957,14 @@ html.dark .form-note {
     color: #7fd4ab;
   }
 
-  /* Banners → nota neutra (a .note do mock): cor SÓ na borda esquerda. */
+  /* Banners de stock/progresso — mesma nota suave do resto do portal
+     (tinta semântica + contorno), sem barra na lateral. */
   .portal-banner {
     display: flex;
     align-items: flex-start;
     gap: 0.75rem;
-    background: var(--color-brand-card);
-    border: 1px solid var(--color-brand-divider);
-    border-left: 3px solid var(--portal-warn);
+    background: color-mix(in srgb, var(--portal-warn) 8%, var(--color-brand-card));
+    border: 1px solid color-mix(in srgb, var(--portal-warn) 24%, transparent);
     border-radius: 0.625rem;
     padding: 0.6875rem 0.875rem;
     margin-bottom: 0.875rem;
@@ -5960,8 +5973,13 @@ html.dark .form-note {
     box-shadow: none;
   }
 
+  .portal-banner b {
+    color: var(--color-brand-deep);
+  }
+
   .portal-banner--danger {
-    border-left-color: var(--portal-red);
+    background: color-mix(in srgb, var(--portal-red) 13%, var(--color-brand-card));
+    border-color: color-mix(in srgb, var(--portal-red) 40%, transparent);
   }
 
   .portal-banner-close {

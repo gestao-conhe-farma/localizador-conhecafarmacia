@@ -38,6 +38,10 @@ const ERRORES = {
   FALHA_CRIAR: 'Não foi possível criar o perfil.',
   FALHA_GUARDAR: 'Não foi possível guardar as alterações.',
   FALHA_LISTAR: 'Não foi possível carregar a equipa.',
+  // O plano pode mudar com a página já aberta (o servidor recusa sempre):
+  // sem esta linha, a farmácia via «Erro inesperado» a recusar o servidor.
+  PLANO_INSUFICIENTE:
+    'Esta função faz parte de um plano superior ao da farmácia. Fale com a equipa da Conheça Farmácia para tratar do plano — o que já está configurado continua a funcionar.',
 }
 
 const PAPEIS = [

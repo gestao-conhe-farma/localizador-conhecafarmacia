@@ -1,4 +1,5 @@
 import IntegrationPanel from '@/components/portal/IntegrationPanel'
+import PlanGate from '@/components/portal/PlanGate'
 
 export const metadata = {
   title: 'Portal da farmácia — integração',
@@ -16,8 +17,10 @@ export const metadata = {
  */
 export default function PortalIntegrationPage() {
   return (
-    <div className="portal-page">
-      <IntegrationPanel />
-    </div>
+    <PlanGate feature="integracao">
+      <div className="portal-page">
+        <IntegrationPanel />
+      </div>
+    </PlanGate>
   )
 }

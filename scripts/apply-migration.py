@@ -9,6 +9,12 @@ import re
 import sys
 import urllib.request
 
+# Consola do Windows (cp1252) não sabe imprimir o ✅ nem os acentos do
+# relatório: sem isto o script rebentava DEPOIS de aplicar a migração e
+# saía com código 1, fazendo parecer que falhou.
+if hasattr(sys.stdout, 'reconfigure'):
+    sys.stdout.reconfigure(encoding='utf-8', errors='replace')
+
 MIGRATION_FILE = sys.argv[1] if len(sys.argv) > 1 else 'supabase/migrations/0001_initial_schema.sql'
 
 # Ler credenciais do ficheiro local (fora do git)

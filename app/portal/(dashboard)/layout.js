@@ -2,6 +2,8 @@ import { redirect } from 'next/navigation'
 import PortalShell from '@/components/portal/PortalShell'
 import { getPharmacySessionVerbose } from '@/lib/pharmacy-session'
 import { getActiveStaff } from '@/lib/staff-session'
+import { STATUS_LABELS, getSubscription } from '@/lib/platform/subscriptions'
+import { PLANS_ENFORCED } from '@/lib/plans'
 
 // Sessão sempre fresca: nada disto pode ser estático.
 export const dynamic = 'force-dynamic'
@@ -31,12 +33,27 @@ export default async function PortalLayout({ children }) {
   const staff = await getActiveStaff(session)
   if (!staff) redirect('/portal/perfis')
 
+  // Plano da farmácia (0028): lido UMA vez aqui e passado ao shell, que o
+  // mostra no chip da sidebar e marca com cadeado os itens fora do plano.
+  // Só dados serializáveis seguem para os componentes cliente — e
+  // `PLANS_ENFORCED` tem de vir do servidor (não é NEXT_PUBLIC_*, um
+  // cliente leria `undefined`).
+  const sub = await getSubscription(pharmacy.id)
+  const plan = {
+    nome: sub.plan.nome,
+    status: sub.status,
+    estadoLabel: sub.status === 'activo' ? null : STATUS_LABELS[sub.status] || null,
+    features: sub.entitlements.features,
+    enforced: PLANS_ENFORCED,
+  }
+
   return (
     <PortalShell
       pharmacy={pharmacy}
       userName={profile.display_name}
       userSub={profile.user_id}
       staff={staff}
+      plan={plan}
     >
       {children}
     </PortalShell>

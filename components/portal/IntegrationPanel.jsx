@@ -17,6 +17,7 @@ import {
   testWebhook,
 } from '@/lib/actions/integration'
 import { IMPORT_CHUNK } from '@/lib/csv'
+import Notice from '@/components/ui/Notice'
 
 /**
  * Integração — a página /portal/integracao (plano 2026-10-12, ideia 1).
@@ -52,6 +53,8 @@ const ERROS = {
   NAO_EXISTE: 'Este destino já não existe. Recarregue a página.',
   SEM_SEGREDO: 'Gere primeiro um segredo para este destino.',
   LIMITE_DESTINOS: 'Já tem 5 destinos registados — remova um antes de acrescentar outro.',
+  PLANO_INSUFICIENTE:
+    'Esta função faz parte de um plano superior ao da farmácia. Fale com a equipa da Conheça Farmácia para tratar do plano — o que já está configurado continua a funcionar.',
   FALHA_ENVIAR: 'Não foi possível enviar o teste. Veja as tentativas em baixo.',
   FALHA_REENVIAR: 'Não foi possível reenviar a entrega.',
   FALHA_GUARDAR: 'Não foi possível guardar.',
@@ -166,9 +169,9 @@ export default function IntegrationPanel() {
       </div>
 
       {erro && (
-        <div className="portal-banner portal-banner--danger" role="alert">
+        <Notice tone="danger" role="alert">
           {ERROS[erro] || ERROS.FALHA_CARREGAR}
-        </div>
+        </Notice>
       )}
 
       {!data && !erro && (
@@ -441,13 +444,12 @@ function TokenBox({ token }) {
 
 function ExemploChave({ token, nome }) {
   return (
-    <details className="portal-note">
-      <summary>Ver exemplo de envio para «{nome || 'a chave'}»</summary>
+    <Notice as="details" summary={`Ver exemplo de envio para «${nome || 'a chave'}»`}>
       <pre className="portal-pre">{`curl -X POST /api/ingest/stock \\
   -H "Authorization: Bearer ${token}" \\
   -H "Content-Type: application/json" \\
   -d '{"items":[{"drug":"Paracetamol","quantity":24}]}'`}</pre>
-    </details>
+    </Notice>
   )
 }
 
@@ -1171,8 +1173,7 @@ function Entrega({ entrega: d, tentativas, podeGerir, pending, correr }) {
         </p>
       )}
       {tentativas.length > 0 && (
-        <details className="portal-note">
-          <summary>Ver as {tentativas.length} tentativas</summary>
+        <Notice as="details" summary={`Ver as ${tentativas.length} tentativas`}>
           <div className="portal-feed">
             {tentativas.map((t) => (
               <div key={t.id} className="portal-citem-meta">
@@ -1186,7 +1187,7 @@ function Entrega({ entrega: d, tentativas, podeGerir, pending, correr }) {
               </div>
             ))}
           </div>
-        </details>
+        </Notice>
       )}
       {podeGerir && (d.status === 'falhado' || d.status === 'entregue') && (
         <div className="portal-citem-foot">
@@ -1243,10 +1244,9 @@ if (esperado !== req.headers['webhook-signature']) return res.status(401).end()
 res.status(200).end()`
 
   return (
-    <details className="portal-note">
-      <summary>Como o sistema da farmácia confirma a assinatura</summary>
+    <Notice as="details" summary="Como o sistema da farmácia confirma a assinatura">
       <pre className="portal-pre">{exemplo}</pre>
-    </details>
+    </Notice>
   )
 }
 

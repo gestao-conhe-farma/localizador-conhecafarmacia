@@ -1006,22 +1006,6 @@ html.dark .form-note {
     text-decoration-color: color-mix(in srgb, #c0392b 55%, transparent);
   }
 
-  /* Botão de dispensar (X) dos banners — usado no StockPanel. */
-  .portal-banner-close {
-    @apply grid place-items-center flex-shrink-0 cursor-pointer rounded-full;
-    width: 1.375rem;
-    height: 1.375rem;
-    border: 0;
-    background: transparent;
-    color: inherit;
-    opacity: 0.65;
-    margin: -0.125rem -0.25rem 0 0;
-  }
-  .portal-banner-close:hover {
-    opacity: 1;
-    background: rgb(0 0 0 / 0.08);
-  }
-
   /* Cabeçalho do acompanhamento: foto à esquerda, texto à direita. */
   .res-track-head {
     @apply flex items-start gap-4;
@@ -1491,25 +1475,10 @@ html.dark .form-note {
     border-color: rgba(0, 42, 50, 0.3);
   }
 
-  /* Críticos — painel verde-água suave, com contorno e canto normal
-     (a barra à esquerda e o raio só à direita saíram). */
+  /* Críticos — o painel é agora um aviso .notice (tone="ok", large) de
+     components/ui/Notice.jsx; aqui fica só o espaçamento da secção. */
   .crit-section {
     @apply mb-10;
-  }
-
-  .crit-panel {
-    background: color-mix(in srgb, var(--color-brand-accent) 7%, var(--color-brand-card));
-    border: 1px solid color-mix(in srgb, var(--color-brand-accent) 22%, transparent);
-    border-radius: 12px;
-    padding: 1.3rem 1.8rem 0.8rem;
-  }
-
-  html.dark .crit-panel {
-    background: color-mix(in srgb, var(--color-brand-accent) 12%, var(--color-brand-card));
-  }
-
-  .crit-k {
-    @apply text-[11px] font-bold uppercase tracking-[0.2em] text-brand-accent mb-2;
   }
 
   .crit-item {
@@ -2190,6 +2159,34 @@ html.dark .form-note {
     color: rgb(255 255 255 / 0.45);
   }
 
+  /* Chip do plano da farmácia (0028) — debaixo do eyebrow. Não é um
+     botão: o caminho para mudar de plano está nas páginas fechadas, onde
+     se explica o que falta e a quem se dirige. */
+  .portal-side-plan {
+    margin-top: 0.25rem;
+    font-size: 0.5625rem;
+    line-height: 1.25;
+    font-weight: 700;
+    letter-spacing: 0.12em;
+    text-transform: uppercase;
+    color: rgb(255 255 255 / 0.45);
+  }
+
+  /* Item fora do plano: continua a levar à página que explica (nunca
+     escondido), mas lê-se mais baixo e leva cadeado. A tinta fica em
+     0.45 — a mesma do eyebrow, legível — e não em 0.3, que em dia
+     falharia o contraste mínimo. */
+  .portal-nav-item--locked {
+    color: rgb(255 255 255 / 0.45);
+  }
+
+  .portal-nav-lock {
+    display: inline-flex;
+    align-items: center;
+    flex-shrink: 0;
+    opacity: 0.75;
+  }
+
   /* Fechar o drawer — só existe no mobile (o ☰ da top-bar fica coberto). */
   .portal-side-close {
     display: none;
@@ -2851,20 +2848,6 @@ html.dark .form-note {
 
   .portal-count {
     @apply text-sm text-brand-deep/60;
-  }
-
-  .portal-banner {
-    @apply mb-4 px-4 py-3 rounded-lg text-sm font-medium;
-    background: color-mix(in srgb, var(--color-brand-accent) 12%, var(--color-brand-bg-alt));
-    border: 1px solid color-mix(in srgb, var(--color-brand-accent) 35%, transparent);
-    color: var(--color-brand-deep);
-    /* Com botão X (StockPanel): texto à esquerda, X à direita. */
-    display: flex;
-    align-items: flex-start;
-    gap: 0.75rem;
-  }
-  .portal-banner > span {
-    flex: 1;
   }
 
   .portal-search {
@@ -3703,12 +3686,6 @@ html.dark .form-note {
     background: color-mix(in srgb, #c47f17 6%, transparent);
   }
 
-  /* Banner de validade — variante de alerta do .portal-banner */
-  .portal-banner--danger {
-    background: color-mix(in srgb, #c0392b 10%, var(--color-brand-card));
-    border-color: color-mix(in srgb, #c0392b 35%, transparent);
-  }
-
   /* Cartões dentro do shell partilham a cor do fundo (pedido: fundo e
      conteúdo na mesma cor da top-bar) — o cartão branco fica só para
      a página de login, fora do shell. */
@@ -4127,34 +4104,6 @@ html.dark .form-note {
     @apply mt-3 px-3.5 py-2.5 rounded-lg text-[13px];
     background: color-mix(in srgb, var(--color-brand-accent) 8%, transparent);
     border: 1px solid color-mix(in srgb, var(--color-brand-accent) 25%, transparent);
-  }
-
-  /* Regra destacada — tinta suave semântica + hairline do mesmo tom e a
-     banda EM BAIXO (2px). A barra à esquerda saiu: o padrão actual dos
-     avisos inline é a superfície tintada com contorno, e quando precisa de
-     âncora visual a linha vai na base, não na lateral. */
-  .help-rule {
-    @apply mb-3 px-3.5 py-2.5 rounded-xl text-[13px] font-medium;
-    background: color-mix(in srgb, var(--portal-warn) 8%, var(--color-brand-card));
-    border: 1px solid color-mix(in srgb, var(--portal-warn) 24%, transparent);
-    border-bottom: 3px solid color-mix(in srgb, var(--portal-warn) 75%, transparent);
-    color: var(--ink-60v);
-  }
-
-  .help-rule b {
-    color: var(--color-brand-deep);
-  }
-
-  .help-rule--ok {
-    @apply mt-4 mb-0;
-    background: color-mix(in srgb, var(--color-brand-accent) 8%, var(--color-brand-card));
-    border: 1px solid color-mix(in srgb, var(--color-brand-accent) 24%, transparent);
-    border-bottom: 3px solid color-mix(in srgb, var(--color-brand-accent) 75%, transparent);
-    color: var(--ink-60v);
-  }
-
-  .help-rule--ok b {
-    color: var(--color-brand-deep);
   }
 
   .help-cheatsheet {
@@ -5020,37 +4969,122 @@ html.dark .form-note {
     background: var(--color-brand-accent);
   }
 
-  /* Nota de aviso — tinta suave semântica + contorno do mesmo tom, sem
-     barra lateral. DANGER = vermelho suave (muda a tinta, não a forma). */
-  .portal-note {
+  /* ── Avisos — UMA receita (components/ui/Notice.jsx) ───────────────
+     Superfície com a tinta semântica do tom + contorno do mesmo tom +
+     ícone + texto de alto contraste, em todos os avisos do sistema
+     (dicas da Ajuda, notas da Atenção, banners do Stock, painel de
+     críticos do Localizador). Sem barras laterais: o padrão actual dos
+     avisos inline é a superfície tintada.
+
+     O tom (warn/danger/ok) muda a tinta, nunca a forma — e a cor não é
+     o único sinal: cada tom tem ícone de forma diferente e o texto diz o
+     que se passa (WCAG 1.4.1).
+
+     Modificadores: --lg (aviso com conteúdo próprio), --band (linha de
+     3px na base, só para os avisos-regra da Ajuda). */
+  .notice {
+    --notice-ink: var(--portal-warn);
+    --notice-tint: 8%;
+    --notice-line: 24%;
     display: flex;
-    gap: 0.625rem;
     align-items: flex-start;
-    background: color-mix(in srgb, var(--portal-warn) 8%, var(--color-brand-card));
-    border: 1px solid color-mix(in srgb, var(--portal-warn) 24%, transparent);
+    gap: 0.625rem;
+    background: color-mix(in srgb, var(--notice-ink) var(--notice-tint), var(--color-brand-card));
+    border: 1px solid color-mix(in srgb, var(--notice-ink) var(--notice-line), transparent);
     border-radius: 0.625rem;
     padding: 0.6875rem 0.875rem;
-    font-size: 0.8125rem;
-    color: var(--ink-60v);
     margin-bottom: 0.875rem;
+    font-size: 0.8125rem;
+    font-weight: 500;
+    line-height: 1.5;
+    color: var(--ink-60v);
   }
 
-  .portal-note b {
+  /* Perigo: tinta mais densa e contorno mais forte que o aviso — a 8% o
+     vermelho lia-se como o âmbar e os dois tons ficavam indistinguíveis. */
+  .notice--danger {
+    --notice-ink: var(--portal-red);
+    --notice-tint: 13%;
+    --notice-line: 40%;
+  }
+
+  .notice--ok {
+    --notice-ink: var(--color-brand-accent);
+  }
+
+  /* No escuro as tintas semânticas são mais claras: o mesmo 8% lia-se
+     mais forte que no claro, mas o cartão escuro pede mais mistura para
+     o aviso não desaparecer. */
+  html.dark .notice {
+    --notice-tint: 12%;
+  }
+
+  html.dark .notice--danger {
+    --notice-tint: 16%;
+  }
+
+  /* Aviso com conteúdo próprio (listas, tabelas): respira mais. */
+  .notice--lg {
+    padding: 1.3rem 1.8rem 0.8rem;
+    border-radius: 12px;
+  }
+
+  /* Âncora visual dos avisos-regra: a linha vai na base, não na lateral. */
+  .notice--band {
+    border-bottom: 3px solid color-mix(in srgb, var(--notice-ink) 75%, transparent);
+  }
+
+  .notice-ic {
+    display: inline-flex;
+    flex-shrink: 0;
+    color: var(--notice-ink);
+    margin-top: 0.0625rem;
+  }
+
+  .notice-body {
+    flex: 1;
+    min-width: 0;
+  }
+
+  .notice-title {
+    @apply text-[11px] font-bold uppercase tracking-[0.2em] mb-2;
+    color: var(--notice-ink);
+  }
+
+  .notice b {
     color: var(--color-brand-deep);
   }
 
-  /* Perigo: tinta mais densa que a do aviso — a 8% o vermelho lia-se como
-     o âmbar e as duas notas ficavam indistinguíveis. */
-  .portal-note--danger {
-    background: color-mix(in srgb, var(--portal-red) 13%, var(--color-brand-card));
-    border-color: color-mix(in srgb, var(--portal-red) 40%, transparent);
+  .notice-close {
+    @apply grid place-items-center flex-shrink-0 cursor-pointer rounded-full;
+    width: 1.375rem;
+    height: 1.375rem;
+    border: 0;
+    background: transparent;
+    color: var(--ink-45v);
+    opacity: 0.65;
+    margin: -0.125rem -0.25rem 0 0;
   }
 
-  /* Notas que são <details> (exemplos de envio, na Integração): o texto
-     segue o <summary> em coluna — o flex punha o exemplo ao lado do
-     título, em vez de por baixo. */
-  details.portal-note {
+  .notice-close:hover {
+    opacity: 1;
+    background: rgb(0 0 0 / 0.08);
+  }
+
+  /* Aviso que abre/fecha (<details>): o <summary> é a linha clicável e o
+     conteúdo segue por baixo, em bloco — o flex do .notice punha o
+     exemplo ao lado do título em vez de por baixo. */
+  .notice--details {
     display: block;
+  }
+
+  .notice-sum {
+    cursor: pointer;
+  }
+
+  .notice--details .notice-ic {
+    vertical-align: -0.15em;
+    margin: 0 0.25rem 0 0;
   }
 
   /* Pesquisa global da top-bar (v2): pill com campo real e painel de
@@ -5378,6 +5412,22 @@ html.dark .form-note {
     opacity: 1;
   }
 
+  /* Chip do plano em v2 (sidebar clara). */
+  .portal-sidebar-v2 .portal-side-plan {
+    color: var(--ink-45v);
+  }
+
+  /* Item fora do plano: 45v em vez dos 60v normais — distingue-se sem
+     ficar ilegível, e o cadeado é o sinal que não depende da cor. */
+  .portal-sidebar-v2 .portal-nav-item--locked {
+    color: var(--ink-45v);
+  }
+
+  .portal-sidebar-v2 .portal-nav-item--locked:hover {
+    background: var(--color-brand-bg-alt);
+    color: var(--color-brand-primary);
+  }
+
   /* Numeração estrutural (01, 02…): esbatida sobre fundo claro, mas com
      tinta suficiente para ser legível (30v dava 1,75:1 — abaixo de AA). */
   .portal-sidebar-v2 .portal-nav-num {
@@ -5513,7 +5563,7 @@ html.dark .form-note {
     padding: 0.875rem 1.125rem;
   }
 
-  .portal-box-note .portal-note {
+  .portal-box-note .notice {
     margin-bottom: 0;
   }
 
@@ -5955,43 +6005,6 @@ html.dark .form-note {
 
   html.dark .stock-sort-btn.active {
     color: #7fd4ab;
-  }
-
-  /* Banners de stock/progresso — mesma nota suave do resto do portal
-     (tinta semântica + contorno), sem barra na lateral. */
-  .portal-banner {
-    display: flex;
-    align-items: flex-start;
-    gap: 0.75rem;
-    background: color-mix(in srgb, var(--portal-warn) 8%, var(--color-brand-card));
-    border: 1px solid color-mix(in srgb, var(--portal-warn) 24%, transparent);
-    border-radius: 0.625rem;
-    padding: 0.6875rem 0.875rem;
-    margin-bottom: 0.875rem;
-    font-size: 0.8125rem;
-    color: var(--ink-60v);
-    box-shadow: none;
-  }
-
-  .portal-banner b {
-    color: var(--color-brand-deep);
-  }
-
-  .portal-banner--danger {
-    background: color-mix(in srgb, var(--portal-red) 13%, var(--color-brand-card));
-    border-color: color-mix(in srgb, var(--portal-red) 40%, transparent);
-  }
-
-  .portal-banner-close {
-    color: var(--ink-45v);
-    background: transparent;
-    border: 0;
-    cursor: pointer;
-    flex-shrink: 0;
-  }
-
-  .portal-banner-close:hover {
-    color: var(--color-brand-deep);
   }
 
   /* Estados nas listas (badges de reserva) → ponto + palavra, nunca

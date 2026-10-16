@@ -22,8 +22,11 @@ import ThemeToggle from '@/components/ui/ThemeToggle'
  * porque navega entre as páginas reais do portal.
  *
  * `staff` (0018) segue para a sidebar, que mostra o perfil activo.
+ *
+ * `plan` (0028) — plano da farmácia, lido no layout: mostra o chip do
+ * plano e marca com cadeado o que não está incluído.
  */
-export default function PortalShell({ pharmacy, userName, userSub, staff, children }) {
+export default function PortalShell({ pharmacy, userName, userSub, staff, plan, children }) {
   const [navOpen, setNavOpen] = useState(false)
 
   // Com o drawer aberto o toque na página NÃO navega: os pedidos de fecho
@@ -78,6 +81,7 @@ export default function PortalShell({ pharmacy, userName, userSub, staff, childr
         pharmacyId={pharmacy.id}
         userName={userName}
         staff={staff}
+        plan={plan}
         navOpen={navOpen}
         onClose={closeNav}
       />

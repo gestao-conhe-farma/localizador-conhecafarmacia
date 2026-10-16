@@ -1,4 +1,5 @@
 import MovementsPanel from '@/components/portal/MovementsPanel'
+import PlanGate from '@/components/portal/PlanGate'
 
 export const metadata = {
   title: 'Portal da farmácia — movimentos',
@@ -12,8 +13,10 @@ export const metadata = {
  */
 export default function PortalMovementsPage() {
   return (
-    <div className="portal-page">
-      <MovementsPanel />
-    </div>
+    <PlanGate feature="movimentos">
+      <div className="portal-page">
+        <MovementsPanel />
+      </div>
+    </PlanGate>
   )
 }

@@ -137,6 +137,28 @@ async function ensurePharmacy() {
   return created.id
 }
 
+/**
+ * Plano inicial (0028): toda a farmácia tem de sair daqui com uma linha
+ * de subscrição — senão a área interna mostra «sem plano» em vez do plano
+ * de entrada, e quem lê isso não sabe se é o gratuito ou um erro.
+ * `on conflict do nothing`: nunca reescreve um plano atribuído à mão.
+ */
+async function ensureSubscription(pharmacyId) {
+  const { error } = await admin
+    .from('pharmacy_subscriptions')
+    .upsert(
+      { pharmacy_id: pharmacyId, plan_code: 'localizador', status: 'activo' },
+      { onConflict: 'pharmacy_id', ignoreDuplicates: true },
+    )
+  if (error) {
+    // Migração 0028 por aplicar: avisar sem rebentar o provisionamento
+    // (o portal assume o plano de entrada quando não encontra a linha).
+    console.log(`  ⚠ subscrição não garantida: ${error.message}`)
+    return
+  }
+  console.log('✔ Plano de entrada garantido: localizador')
+}
+
 // ------------------------------------------------------------
 // 2. User de auth (Admin API — NUNCA INSERT em auth.users)
 // ------------------------------------------------------------
@@ -200,6 +222,7 @@ async function ensureAdminUser(userId, pharmacyId) {
 ;(async () => {
   try {
     const pharmacyId = await ensurePharmacy()
+    await ensureSubscription(pharmacyId)
     const userId = await ensureAuthUser()
     await ensureAdminUser(userId, pharmacyId)
 

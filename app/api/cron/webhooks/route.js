@@ -12,11 +12,17 @@ import { drainDue, pruneDeliveries } from '@/lib/webhooks'
  * tentativa (`webhook_record_attempt`) e marca a próxima com backoff +
  * jitter. No fim, limpa entregas com mais de 30 dias.
  *
- * QUEM CHAMA ISTO (uma das duas, conforme o plano de alojamento):
- *   1. Vercel Cron (`"crons"` no vercel.json) — planos pagos permitem
- *      de minuto a minuto; o plano gratuito só diário.
- *   2. Um agendador externo (cron-job.org, GitHub Actions, pg_cron com
- *      pg_net) que faça GET a este endereço com o cabeçalho acima.
+ * QUEM CHAMA ISTO: o pg_cron do próprio Supabase (migração 0026) — um
+ * GET por minuto através do `pg_net`, com o segredo lido do Vault. O
+ * agendamento não vive no `vercel.json` porque o plano Hobby só aceita
+ * cron diário («Hobby accounts are limited to daily cron jobs») e recusa
+ * o deploy de `"* * * * *"` — e a fila da 0025 precisa do minuto, já que
+ * o backoff começa nos 5 segundos.
+ *
+ * Qualquer outro agendador que faça GET a este endereço com o cabeçalho
+ * acima (cron-job.org, GitHub Actions, ou o Vercel Cron num plano pago)
+ * serve igual — a rota não sabe quem a chamou; o `?worker=` existe só
+ * para os registos dizerem de onde veio.
  *
  * SEM CRON_SECRET o endereço responde 401 sempre: sem segredo definido
  * não há forma de distinguir o agendador de um estranho, e um worker

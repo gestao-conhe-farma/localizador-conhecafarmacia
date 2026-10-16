@@ -52,6 +52,21 @@ export function ChevronIcon({ size = 12, dir = 'down' }) {
   )
 }
 
+/**
+ * Cadeado — item de navegação que existe mas está no plano de cima.
+ * O item NÃO desaparece: fica com o cadeado e explica-se ao passar o
+ * rato; esconder sem dizer porquê deixa a farmácia a procurar uma função
+ * que continua lá (PlanoGate).
+ */
+export function LockIcon({ size = 12 }) {
+  return (
+    <svg {...BASE} width={size} height={size}>
+      <rect x="4.5" y="10.5" width="15" height="9.5" rx="2" />
+      <path d="M8 10.5V7.5a4 4 0 0 1 8 0v3" />
+    </svg>
+  )
+}
+
 export function MenuIcon({ size = 18 }) {
   return (
     <svg {...BASE} width={size} height={size}>
@@ -190,6 +205,40 @@ export function NavIcon({ name, size }) {
   return (
     <svg {...NAV_BASE} {...(size ? { width: size, height: size } : {})}>
       {NAV_PATHS[name] || NAV_PATHS.inicio}
+    </svg>
+  )
+}
+
+/* ── Ícones dos avisos (components/ui/Notice.jsx) ─────────────────────
+   Um ícone por tom — e a FORMA muda com o tom, não só a cor: triângulo
+   para atenção, círculo para erro, certo para ok. Assim o aviso lê-se
+   sem depender da cor (WCAG 1.4.1). «prioridade» é o ícone do painel de
+   críticos do Localizador, que não é um estado mas uma prioridade. */
+
+const NOTICE_PATHS = {
+  alerta: (
+    <>
+      <path d="M12 3 2.5 20h19L12 3z" />
+      <path d="M12 10v4" />
+      <path d="M12 17.5h.01" />
+    </>
+  ),
+  erro: (
+    <>
+      <circle cx="12" cy="12" r="9" />
+      <path d="M12 7v5.5" />
+      <path d="M12 16.5h.01" />
+    </>
+  ),
+  ok: <path d="m5 13 4 4L19 7" />,
+  prioridade: <path d="M13 2 4.5 13.5H11l-1 8.5L19.5 10H13l0-8z" />,
+}
+
+/** Ícone de tom do aviso — 2.4 de traço (o mesmo dos ícones utilitários). */
+export function NoticeIcon({ name = 'alerta', size = 15 }) {
+  return (
+    <svg {...BASE} width={size} height={size}>
+      {NOTICE_PATHS[name] || NOTICE_PATHS.alerta}
     </svg>
   )
 }

@@ -1,6 +1,8 @@
 import { requireManagerStaff } from '@/lib/staff-session'
 import { listTeam } from '@/lib/actions/pharmacy-staff'
 import EquipaManager from '@/components/portal/EquipaManager'
+import { PlanBlocked } from '@/components/portal/PlanGate'
+import { allow, getSubscription } from '@/lib/platform/subscriptions'
 
 export const metadata = {
   title: 'Portal da farmácia — equipa',
@@ -14,7 +16,12 @@ export const metadata = {
  * lista devolvida pela acção `listTeam`.
  */
 export default async function EquipaPage() {
-  await requireManagerStaff()
+  const mgr = await requireManagerStaff()
+  // O plano decide ANTES dos dados: não vale a pena ir buscar a equipa
+  // para a esconder a seguir (e a acção também recusa, no servidor).
+  const sub = await getSubscription(mgr.pharmacy_id)
+  if (!allow(sub, 'equipa')) return <PlanBlocked feature="equipa" sub={sub} />
+
   const team = await listTeam()
 
   return (

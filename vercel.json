@@ -2,12 +2,6 @@
   "framework": "nextjs",
   "buildCommand": "npm run build",
   "outputDirectory": ".next",
-  "crons": [
-    {
-      "path": "/api/cron/webhooks",
-      "schedule": "* * * * *"
-    }
-  ],
   "headers": [
     {
       "source": "/(.*)",

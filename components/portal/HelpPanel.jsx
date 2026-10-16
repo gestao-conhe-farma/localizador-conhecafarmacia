@@ -13,6 +13,7 @@ import { useMemo, useState } from 'react'
  */
 
 import { ChevronIcon, NavIcon } from '@/components/ui/Icon'
+import Notice from '@/components/ui/Notice'
 
 const TOPICS = [
   {
@@ -124,10 +125,10 @@ const TOPICS = [
     badge: 'O mais urgente do dia',
     body: (
       <>
-        <div className="help-rule">
+        <Notice band>
           <b>Regra de ouro:</b> responde em menos de <b>72 horas</b> — passado esse prazo, a reserva
           expira sozinha e o cliente é avisado.
-        </div>
+        </Notice>
         <h4 className="help-h4">Confirmar uma reserva (temos o medicamento)</h4>
         <ol className="help-ol">
           <li>Abre Reservas no menu.</li>
@@ -323,13 +324,13 @@ const TOPICS = [
           <b>Stock</b>, botão <b>+ Adicionar medicamento</b>. Escreve o nome como aparece na caixa,
           a molécula (DCI), a forma, a dosagem e se exige <b>receita médica</b>.
         </p>
-        <div className="help-rule">
+        <Notice band>
           <b>Fluxo de validação:</b> o medicamento criado entra com a marca{' '}
           <b>«Aguarda validação»</b> — só a tua farmácia o vê. O <b>gerente</b> abre o filtro{' '}
           <b>Aguarda validação</b> no Stock e, no menu <b>⋯</b> da linha, escolhe{' '}
           <b>Validar e publicar</b> (fica visível aos clientes) ou <b>Recusar fármaco</b> (só é
           possível enquanto não tiver stock nem reservas). Só o gerente pode validar.
-        </div>
+        </Notice>
         <p className="help-tip">
           Enquanto está pendente, já podes marcar o stock dele — quando o gerente publica, o produto
           aparece logo no Localizador com o stock registado.
@@ -677,10 +678,10 @@ export default function HelpPanel() {
             </tbody>
           </table>
         </div>
-        <div className="help-rule help-rule--ok">
+        <Notice tone="ok" band className="mt-4 mb-0">
           <b>Duas regras que valem ouro:</b> 1. Responde às reservas em menos de 72 horas. · 2.
           Registra toda a mercadoria que chega.
-        </div>
+        </Notice>
       </div>
 
       {/* Rever o tour de boas-vindas — para quem fechou à pressa ou

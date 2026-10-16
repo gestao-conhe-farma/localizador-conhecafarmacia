@@ -1,4 +1,5 @@
 import SalesReport from '@/components/portal/SalesReport'
+import PlanGate from '@/components/portal/PlanGate'
 
 export const metadata = {
   title: 'Portal da farmácia — vendas',
@@ -11,8 +12,10 @@ export const metadata = {
  */
 export default function PortalSalesPage() {
   return (
-    <div className="portal-page">
-      <SalesReport />
-    </div>
+    <PlanGate feature="vendas">
+      <div className="portal-page">
+        <SalesReport />
+      </div>
+    </PlanGate>
   )
 }

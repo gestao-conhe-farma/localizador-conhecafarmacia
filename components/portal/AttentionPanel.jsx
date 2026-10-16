@@ -20,6 +20,7 @@ import {
 } from '@/lib/actions/pharmacy-portal'
 import { getRestockAck, setRestockAck } from '@/lib/restock'
 import { expiryStatus, monthYear } from '@/lib/expiry'
+import Notice from '@/components/ui/Notice'
 
 const ERRORES = {
   SESSAO_EXPIRADA: 'Sessão expirada — recarregue a página.',
@@ -572,9 +573,9 @@ export default function AttentionPanel({ pharmacyId }) {
 
         {nota && total > 0 && (
           <div className="portal-box-note">
-            <p className="portal-note">
+            <Notice>
               <b>{nota.b}</b> {nota.t}
-            </p>
+            </Notice>
           </div>
         )}
 

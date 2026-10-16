@@ -1,0 +1,975 @@
+# Gestor da Equipa Conheça Farmácia — farmácias, contas, níveis e planos
+
+> **Como executar:** plano por passos, com checkbox (`- [ ]`). Cada Phase tem tarefas, os ficheiros que toca e a verificação própria. Não avançar de Phase sem a anterior verde. Verificação alinhada com o resto do projecto: `npm run build` + `npm run format` + smoke test manual (não há framework de testes neste repo).
+
+**Goal:** dar à equipa da Conheça Farmácia uma área interna onde (1) se gerem as farmácias (ficha, estado, verificação), (2) se criam as contas das farmácias por **convite** em vez de um script CLI corrido à mão, (3) se atribuem **planos** com limites e funcionalidades por nível, (4) se separam **níveis internos** por menor privilégio, e (5) **tudo o que a equipa faz fica registado** numa trilha de auditoria append-only. Hoje a equipa CF tem **zero contas** na plataforma: criação de farmácias e contas é um `node scripts/create-pharmacy-user.js` com a chave service-role de um portátil.
+
+**Architecture:**
+- **Área interna nova e separada** — `app/interno/**`, gate no layout (`getPlatformSession`) + guard em cada Server Action, no mesmo desenho do portal da farmácia (`app/portal/(dashboard)/layout.js` valida a sessão e as acções revalidam). Nunca partilha shell nem rotas com `/portal`.
+- **Níveis internos em `admin_users.role`** — alargar o CHECK existente (`admin` | `farmacia`) com `superadmin`, `onboarding`, `suporte`, `faturacao`, `auditoria`. A autorização vive num módulo único (`lib/platform/permissions.js`) chamado pelas Server Actions, e **a RLS não é alargada** por causa disto: só `admin`/`superadmin` mantêm o acesso amplo da 0001, e a área interna lê e escreve por service-role (é a matriz, não a policy, que decide o que um `suporte` vê). É o mesmo espírito das validações de papel da farmácia, que vivem em `lib/actions/pharmacy-staff.js` e não em policies.
+- **Planos em duas metades** — o **catálogo e os entitlements vivem em código** (`lib/plans.js`: limites, funcionalidades, preços), porque mudam mais depressa que o schema e são a fonte de verdade da autorização; o **estado por farmácia vive na base de dados** (`pharmacy_subscriptions`: plano, estado, trial, graça, notas). Não há gateway de pagamento nesta fase — o plano é atribuído à mão por `faturacao`/`superadmin` e toda a mudança é auditada.
+- **Auditoria append-only** (`platform_audit_log`) desenhada com o vocabulário do projecto irmão (`action`, `table_name`, `record_id`, `user_email`, `created_at` — o mesmo que `docs/2026-06-15-admin-role-ui.md` assume), mais `actor_role`, `actor_user_id`, `pharmacy_id`, `before`/`after` jsonb, `reason` e `request_id`.
+- **Nada se apaga** — farmácia, conta e perfil saem de circulação por estado (`pharmacies.active = false`, ban do user Auth, `pharmacy_staff.active = false`), nunca por `delete`.
+
+**Tech Stack:** Next.js 16 (App Router, RSC, Server Actions `'use server'`), React 19, Supabase (PostgreSQL + RLS + Auth Admin API + MFA/TOTP), Tailwind v4 (tokens em `styles/globals.css`), `createAdminClient()` (service-role) para toda a escrita privilegiada, `logWarn`/`logError` (`lib/log.js`). Sem framework de testes (`npm run build` + smoke test manual).
+
+**Base:** `4821fbe` (16/10/2026) — 26 migrações aplicadas (`0001`…`0026`), `pg_cron` + `pg_net` activos.
+**Contexto de produto (lei e mercado):** `localizador/2026-10-12-gestao-e-faturacao-apis.md` — é ele que fixa os preços de referência (5.000–25.000 Kz/mês no mercado), o escalão gratuito («quem alimenta o Localizador»), a regra da neutralidade do directório e a fronteira da facturação (2A agora, 2B por parceiro, 2C nunca sem equipa dedicada).
+**Precedente de estilo e vocabulário:** `docs/2026-06-15-admin-role-ui.md` (projecto irmão) — `currentUserRole` propagado do Server parent, `ConfirmModal` em vez de `window.confirm`, «arquivar em vez de eliminar», badge com data+autor.
+
+---
+
+## 0. Levantamento — o que já existe (medido, não suposto)
+
+### 0.1 Estado da base de dados (16/10/2026)
+
+| Medida | Valor | O que significa |
+|---|---|---|
+| `pharmacies` | **9** (9 activas, **7** `verified`) | o directório real do piloto — **2 farmácias ainda sem selo**, que é trabalho de `onboarding` na área interna |
+| `admin_users` role `admin` | **0** | **ninguém da equipa CF tem conta** — a área interna nasce do zero |
+| `admin_users` role `farmacia` | **2** | duas contas de farmácia (de 9 farmácias) |
+| `pharmacy_staff` | **1** | o multi-utilizador com PIN existe mas quase não é usado |
+| `pharmacy_leads` | **1** (0 `onboarded`) | o funil de farmácias é hoje uma tabela sem ecrã |
+| `pharmacy_api_keys` | **2** | já há integração a correr em produção |
+| `pharmacy_webhooks` | **0** | nenhum destino registado ainda |
+| Tabelas `audit_logs` / planos / subscrições | **não existem** | a trilha de auditoria e os planos são para criar |
+
+### 0.2 Como nasce hoje uma conta de farmácia
+
+`scripts/create-pharmacy-user.js` (CLI, service-role do `.env.local`): cria/garante a farmácia → cria o user Auth pela **Admin API** (`createUser` com `email_confirm: true` e senha escolhida pelo operador) → faz upsert em `admin_users` (`role='farmacia'` + `pharmacy_id`). Verifica no fim com um `generateLink` de magiclink.
+
+Problemas que isto cria (é o motivador deste plano):
+- exige a **chave service-role num portátil** e não deixa rasto de quem fez o quê;
+- a senha inicial é escolhida por nós e enviada fora de banda (WhatsApp) — o dono da farmácia nunca prova que controla o e-mail;
+- não há caminho para **suspender, repor acesso ou transferir a titularidade** sem voltar ao terminal;
+- nada liga a farmácia a um **plano**, porque planos não existem.
+
+### 0.3 Funções do portal da farmácia e quem as pode usar hoje
+
+Roles existentes: `admin_users.role = 'farmacia'` (conta da farmácia, 1 ↔ 1 farmácia) e `pharmacy_staff.role = 'balcao' | 'gerente'` (perfil com PIN, sessão de 24 h no dispositivo).
+
+| Função | Rota | Balcão | Gerente | Notas de código |
+|---|---|---|---|---|
+| Visão geral / calendário do mês | `/portal` | ✅ | ✅ | — |
+| Atenção (fila de avisos) | `/portal/atencao` | ✅ | ✅ | — |
+| Stock (edição, validades, retirar) | `/portal/stock` | ✅ | ✅ | `isManager` passado ao `StockPanel` (validação de fármacos só gerente) |
+| Entrada de stock | `/portal/entrada` | ✅ | ✅ | — |
+| Movimentos (livro-razão) | `/portal/movimentos` | ✅ | ✅ | `stock_movements` (0020) |
+| Reservas | `/portal/reservas` | ✅ | ✅ | — |
+| Vendas | `/portal/vendas` | ✅ | ✅ | — |
+| Desempenho | `/portal/desempenho` | só o próprio | ✅ equipa toda | ranking, partilha, comparação — gates `isManager` |
+| Equipa (perfis + PIN) | `/portal/equipa` | ❌ | ✅ | `createStaffProfile` exige gerente |
+| Integração (chaves, CSV, webhooks, chamadas) | `/portal/integracao` | ❌ | ✅ | `canManage = staff.role === 'gerente'` |
+| Sessão (PIN, trocar perfil) | `/portal/sessao` | ✅ | ✅ | — |
+| Ajuda | `/portal/ajuda` | ✅ | ✅ | — |
+
+**Leitura:** o portal já tem a tríade de produto (stock + validade + reservas + atribuição por pessoa). O que falta é a dimensão que este plano introduz: **o que a farmácia tem direito a usar depende do plano**, e a equipa CF não tem sequer um sítio para o decidir.
+
+### 0.4 Limites que já existem no código (matéria-prima dos planos)
+
+| Limite | Valor hoje | Onde |
+|---|---|---|
+| Destinos de webhook por farmácia | `MAX_WEBHOOKS = 5` | `lib/actions/integration.js` |
+| Linhas por importação CSV | `MAX_IMPORT_ROWS = 2000` | `lib/actions/integration.js` |
+| Tamanho do lote de importação | `IMPORT_CHUNK = 100` | `lib/csv.js` |
+| Pedidos por minuto por chave de API | `rate_limit_per_minute = 120` (coluna, por chave) | `0023_pharmacy_api_keys.sql`, consumido por `api_rate_consume` |
+| Validade máxima de uma chave | `MAX_KEY_DAYS = 3650` | `lib/actions/integration.js` |
+| Tentativas de entrega de webhook | `MAX_ATTEMPTS = 10` | `lib/webhooks.js` |
+| Lado máximo da imagem de produto | `MAX_SIDE = 800` | `lib/image-compress.js` |
+| Confirmação de stock «fresca» | 72 h / 5 dias | view `stock_confirmed`, `lib/expiry.js` |
+
+Todos estes valores são hoje **constantes globais, iguais para todas as farmácias** — é exactamente essa a costura onde os planos entram: passam a ser resolvidos por `entitlements(plan_code)` em vez de constantes.
+
+### 0.5 O que não existe e este plano traz
+
+1. **Conta interna** para a equipa CF (0 hoje) e níveis internos com menor privilégio.
+2. **Área interna**: lista e ficha de farmácia, ecrã de contas, ecrã de planos, ecrã de auditoria.
+3. **Convite** como caminho oficial de criação de conta (o CLI fica só para bootstrap e desenvolvimento).
+4. **Planos** (`localizador` / `gestao` / `conformidade`) com entitlements aplicados no servidor.
+5. **Trilha de auditoria** de tudo o que a equipa faz.
+6. **Funil de farmácias** com ecrã (a `pharmacy_leads` deixa de ser uma tabela órfã) e conversão lead → farmácia + conta num clique.
+7. **Ciclo de vida** da conta e da farmácia: convite, reenvio, reposição de senha, suspensão, transferência de titularidade — todos auditados, nenhum com `delete`.
+
+---
+
+## 1. Brainstorm — as opções que estiveram em cima da mesa
+
+### 1.1 Onde vive o gestor
+
+| Opção | Prós | Contras | Veredicto |
+|---|---|---|---|
+| A. **Área interna neste repo** (`app/interno/**`) | os dados vivem aqui (farmácias, contas, stock, reservas, chaves, planos); uma sessão, um deploy; reutiliza tokens, `createAdminClient`, padrão de Server Actions | mais superfície num repo que também serve o público | **Escolhida** |
+| B. No site principal (conhecafarmacia.com), que já tem admin + audit_logs | reutiliza um admin a sério | projecto e base de dados **diferentes**; obrigaria a API entre produtos ou a duplicar o modelo; o staff da farmácia não existe lá | Rejeitada |
+| C. Ferramenta de terceiros (Retool/Appsmith) | rápido para ver dados | fora do controlo deixa a autorização fora do código, sem RLS nem auditoria nossa; mais um fornecedor com acesso a dados de farmácias | Rejeitada |
+
+### 1.2 Como modelar os níveis internos
+
+| Opção | Prós | Contras | Veredicto |
+|---|---|---|---|
+| A. **Alargar `admin_users.role`** com os 5 níveis internos | sem tabela nova; `is_admin()` já existe e passa a `is_platform_member()`; é o que o projecto irmão faz (`admin`/`superadmin`) | mistura «tipo de identidade» e «nível» na mesma coluna | **Escolhida** (com matriz fina em código) |
+| B. Tabela `platform_members` + `platform_roles` | separação limpa, N papéis por pessoa | tabela e políticas novas para 2–3 pessoas reais; mais um join em cada guard | Adiada (Out of Scope) |
+| C. Enum de permissões em JSON por utilizador | flexível | ilegível, impossível de auditar, tentação de permissões ad-hoc | Rejeitada |
+
+### 1.3 Como modelar planos
+
+| Opção | Prós | Contras | Veredicto |
+|---|---|---|---|
+| A. **Entitlements em código, estado em tabela** | muda preço/limite sem migração; um só lugar a ler (`lib/plans.js`); testável no build | exige deploy para mudar um limite | **Escolhida** |
+| B. Catálogo em tabela (`plans`, `plan_features`) editável no ecrã | a equipa muda limites sem deploy | risco de a autorização ficar em dados editáveis por humanos; mais RLS e mais UI para nada | Rejeitada na fase 1 |
+| C. SDK de facturação (Stripe/Entitlements) | ciclo de cobrança a sério | o mercado paga 5.000–25.000 Kz/mês e não há gateway usado; trazer um fornecedor externo agora é custo sem receita | Adiada (Out of Scope) |
+
+### 1.4 Como criar a conta da farmácia
+
+| Opção | Prós | Contras | Veredicto |
+|---|---|---|---|
+| A. **Convite por e-mail** (`inviteUserByEmail`) — o dono define a própria senha | prova que controla o e-mail; nenhuma senha passa por nós; o link expira (1 h por omissão) | depende de SMTP configurado (ver risco R2) | **Escolhida** |
+| B. `createUser({ email_confirm: true })` + senha gerada por nós (como o script) | independente de e-mail | a senha viaja fora de banda; a farmácia nunca prova o e-mail; contas órfãs | Só para bootstrap/dev |
+| C. Auto-registo da farmácia (signup público) | escala | destrói a curadoria do directório (farmácias a sério verificadas por nós) e enche o sistema de contas por validar | Rejeitada |
+
+---
+
+## 2. Decisões locked in
+
+| Decisão | Escolha | Razão |
+|---|---|---|
+| Onde vive a área interna | **`app/interno/**` neste repo**, route group `(console)` com gate no layout | uma base de dados, uma sessão, um deploy; `/portal` fica intocado |
+| Nomes das rotas | `/interno`, `/interno/login`, `/interno/farmacias`, `/interno/farmacias/[id]`, `/interno/leads`, `/interno/planos`, `/interno/auditoria`, `/interno/equipa`, `/interno/mfa` | PT, sem ambiguidade com `/portal/equipa` (que é a equipa **da farmácia**). **Não há página de contas solta**: uma conta é sempre de uma farmácia e vive na ficha dela |
+| Níveis internos | `superadmin`, `onboarding`, `suporte`, `faturacao`, `auditoria` na coluna `admin_users.role` (CHECK alargado na 0027) | menor privilégio e separação de funções sem tabelas novas; alinha com o `admin`/`superadmin` do projecto irmão |
+| Onde se decide o que cada nível pode | **`lib/platform/permissions.js`** (matriz declarativa `can(role, action)`), chamada nas Server Actions | uma só fonte de verdade; o detalhe fica testável em código em vez de disperso por policies |
+| `is_admin()` (predicado RLS) | passa a `role in ('admin','superadmin')` — só o **nível alto** mantém o acesso amplo da 0001 | a área interna lê e escreve com **service-role**; alargar a RLS a `suporte`/`auditoria` daria acesso a reservas e contactos de clientes a quem a matriz diz que não deve vê-los. Negar por omissão também ao nível dos dados |
+| Papel legado `admin` | mantido e **equivalente a `superadmin`** (`can()` aceita os dois) | a 0001 e as policies das 0005/0012/0018/0020/0023 falam de `admin`; renomear exigiria tocar em seis migrações. O runbook proíbe criar contas novas com `role='admin'` |
+| MFA das contas internas | **TOTP obrigatório**; acções destrutivas/de plano exigem sessão **`aal2`** validada no servidor | CIS Control 6 (MFA para administração); TOTP do Supabase Auth existe em todos os planos |
+| Planos: catálogo | **`lib/plans.js`** — código: `localizador` (0 Kz), `gestao` (15.000 Kz/mês), `conformidade` (45.000 Kz/mês, fase 2B) | preços e limites mudam depressa; a autorização não pode viver em dados editáveis |
+| Planos: estado | **`pharmacy_subscriptions`** (1 linha por farmácia): `plan_code`, `status` (`trial`/`activo`/`graca`/`suspenso`/`cancelado`), `trial_until`, `grace_until`, `notes`, `updated_by` | histórico de negócio em dados; nenhuma migração por novo preço |
+| Sem gateway de pagamento | Atribuição **manual** por `faturacao`/`superadmin`; estado e notas no ecrã | o mercado paga por transferência/multicaixa e não há checkout; cobrança é Out of Scope |
+| `notes` e `updated_by` da subscrição | fora do grant de colunas ao `authenticated` (**grant por coluna**, como o `pin_hash` na 0018) | «nunca mostradas à farmácia» deixa de ser intenção e passa a ser permissão — a farmácia lê o plano e os prazos, não o comentário que a equipa escreve sobre ela |
+| Apagar uma subscrição | **impossível** para todos os papéis da API (`delete` revogado no `service_role`) | cancelar é `status = cancelado` e voltar ao plano de entrada; a regra fica no schema em vez de depender da disciplina de quem escreve o código |
+| Aplicação dos entitlements | **No servidor, sempre** — `requireEntitlement(pharmacyId, feature)` nas Server Actions do portal + estados de UI para não oferecer o que não existe | esconder botões não é autorização (OWASP); o servidor decide |
+| Interruptor dos planos | **aplicados por omissão**; `PLANS_ENFORCED=false` no ambiente desliga tudo de imediato e sem deploy | implementado como opt-in durante a verificação (as 9 farmácias do piloto estão no plano de entrada e duas têm integração a correr, e eu não ia cortar funções a quem as usa hoje por causa de um deploy). **Decidido pelo dono do produto em 16/10/2026:** as farmácias ficam no plano de entrada e a aplicação vale como desenhada — o interruptor volta a ser o que o plano dizia, com a decisão de dados a sustentá-lo. Desligar continua a ser a saída de emergência |
+| Auditoria | **`platform_audit_log`** append-only: sem `update`/`delete` para ninguém, `select` só para `is_platform_member()`; escrita exclusivamente via service-role | os registos que auditam não podem ser editáveis por quem audita; vocabulário igual ao `audit_logs` do projecto irmão |
+| Eliminar | **Nunca.** Farmácia sai de circulação por `active=false`; conta Auth por ban (`ban_duration`) + `active=false`; perfis por `active=false` | preserva histórico (stock, reservas, movimentos) e cumpre «nunca apagar» do lado fiscal |
+| Suspensão efetiva | **Ban + `pharmacies.active=false`** (o gate do portal já exige farmácia activa) e/ou desactivar perfis | um ban não invalida sessões já emitidas — a segunda peça é o que corta o acesso de facto |
+| Impersonação («entrar como») | **Fora de âmbito na v1** — o suporte lê pela ficha interna (auditado) | o risco de uma sessão em nome do cliente não se paga; se voltar, entra com ticket, TTL, banner visível e actor/subject separados na trilha |
+| Transferir titularidade | Convite para o novo dono + desactivar o anterior, em **duas aprovações** (quem pede ≠ quem aprova) | acção de alto impacto (NIST AC-3(2) / separação de funções) |
+| Redes / grupos (2–10 lojas) | Fora de âmbito; a coluna `admin_users.pharmacy_id` fica 1↔1 e a migração futura é uma tabela `pharmacy_members` | não construir multi-loja sem o primeiro cliente de grupo (o roadmap fala dele, mas não existe) |
+| Farmácias não clientes | Aparecem no directório com contacto e **sem stock**; nenhum plano muda ranking, frescura ou posição | a regra de ouro do roadmap: sem isso o activo (confiança) passa a publicidade disfarçada |
+
+---
+
+## 3. Níveis e permissões
+
+### 3.1 Níveis internos (Equipa CF)
+
+| Nível | Para quê | Pode | Não deve ter |
+|---|---|---|---|
+| `superadmin` | fundador/proprietário | tudo o que a matriz define, incluindo gerir níveis internos e exportar a trilha | uso diário em contas partilhadas (o login é individual e com MFA); e **não** pode apagar nada — «eliminar» não existe em nenhum nível |
+| `onboarding` | quem traz farmácias para dentro | criar farmácia, editar ficha, verificar, convidar/reenviar/revogar conta, activar/desactivar, converter lead | mexer em planos, ver auditoria completa, exportar em massa |
+| `suporte` | responder a pedidos | ler ficha, stock, reservas, entregas de webhook, chamadas de API; confirmar stock «por telefone» | alterar ficha, contas, planos; exportar |
+| `faturacao` | dinheiro | ver ficha comercial, atribuir/mudar plano, trial, graça, suspender por pagamento, notas internas | ver dados clínicos/operacionais (reservas com contacto), gerir contas ou níveis |
+| `auditoria` | quem revê | ler a trilha completa e exportá-la (com registo do próprio export) | alterar qualquer coisa — inclusive a trilha |
+| `farmacia` | (existente) conta da farmácia | o portal da farmácia | nada da área interna |
+
+### 3.2 Matriz acção × nível (a autorização que vai em `permissions.js`)
+
+| Acção | superadmin | onboarding | suporte | faturacao | auditoria |
+|---|---|---|---|---|---|
+| `pharmacy.view` (ler ficha, stock, reservas) | ✅ | ✅ | ✅ | só ficha comercial | ✅ (sem contacto de cliente) |
+| `pharmacy.create` | ✅ | ✅ | ❌ | ❌ | ❌ |
+| `pharmacy.update` (ficha) | ✅ | ✅ | ❌ | ❌ | ❌ |
+| `pharmacy.verify` (selo verificado) | ✅ | ✅ | ❌ | ❌ | ❌ |
+| `pharmacy.activate` / `deactivate` | ✅ | ✅ | ❌ | ❌ | ❌ |
+| `stock.confirm_by_phone` (origem `team`) | ✅ | ✅ | ✅ | ❌ | ❌ |
+| `account.invite` / `account.resend` | ✅ | ✅ | ❌ | ❌ | ❌ |
+| `account.revoke` (convite pendente) | ✅ | ✅ | ❌ | ❌ | ❌ |
+| `account.suspend` / `unsuspend` | ✅ | ✅ | ❌ | ✅ (só por pagamento) | ❌ |
+| `account.reset_password` (reenviar recuperação) | ✅ | ✅ | ❌ | ❌ | ❌ |
+| `account.transfer_ownership` | ✅ (aprova) | ✅ (pede) | ❌ | ❌ | ❌ |
+| `plan.assign` / `plan.change` / `plan.trial` | ✅ | ❌ | ❌ | ✅ | ❌ |
+| `audit.read` | ✅ | ❌ | ❌ | ❌ | ✅ |
+| `audit.export` | ✅ | ❌ | ❌ | ❌ | ✅ (fica registado) |
+| `team.manage` (níveis internos) | ✅ | ❌ | ❌ | ❌ | ❌ |
+| `lead.*` (funil) | ✅ | ✅ | ✅ (ler) | ❌ | ❌ |
+
+Regras estruturais: **ninguém se promove** (`team.manage` não altera o próprio nível nem o último `superadmin`), **quem pede não aprova** a transferência de titularidade, e **não há acções fora da matriz** — uma acção nova entra na matriz antes de existir na UI.
+
+### 3.3 Funções da farmácia por plano
+
+| Função | `localizador` (grátis) | `gestao` | `conformidade` |
+|---|---|---|---|
+| Stock, validade, retirar/repor, Atenção, Reservas, Perfil, Ajuda | ✅ | ✅ | ✅ |
+| Entrada de stock completa (preços, estrutura da caixa) | ✅ | ✅ | ✅ |
+| Movimentos (livro-razão) | ❌ | ✅ | ✅ |
+| Vendas e Desempenho (relatórios) | ❌ | ✅ | ✅ |
+| Equipa com PIN (perfis, atribuição por pessoa) | ❌ | ✅ | ✅ |
+| Integração: chaves de API, CSV, webhooks | ❌ | ✅ | ✅ |
+| Lotes/FEFO e validade por lote | ❌ | ✅ | ✅ |
+| Facturação conforme (parceiro certificado) | ❌ | ❌ | ✅ (fase 2B) |
+| Selo de origem no cliente final (API/CSV «automático») | ✅ | ✅ | ✅ |
+| Aparecer no directório | ✅ (sempre) | ✅ | ✅ |
+
+Nota de desenho: o tier grátis é **de entrada no Localizador** (o que alimenta o directório), não uma demo com prazo. O pago é **gestão da farmácia** (atribuição por pessoa, relatórios, integração). Isto segue a recomendação do roadmap («escalão gratuito para quem alimenta o Localizador») e evita a armadilha de transformar o piloto numa prova gratuita de 14 dias.
+
+### 3.4 Limites por plano (com os valores que já existem no código)
+
+| Limite | `localizador` | `gestao` | `conformidade` | Hoje |
+|---|---|---|---|---|
+| Chaves de API activas | 0 | 3 | 5 | sem limite por plano |
+| Destinos de webhook | 0 | 5 | 5 | `MAX_WEBHOOKS = 5` |
+| Pedidos/min por chave | — | 120 | 300 | `rate_limit_per_minute = 120` (por chave) |
+| Linhas por importação CSV | 0 | 2000 | 2000 | `MAX_IMPORT_ROWS = 2000` |
+| Perfis de equipa (PIN) | 0 | 10 | 20 | sem limite |
+| Retenção de `stock_movements` | — | 24 meses | 36 meses | sem expurgo |
+| Exportações do portal | 0/mês | 4/mês | 12/mês | não existe |
+
+---
+
+## 4. Planos: catálogo, ciclo de vida e aplicação
+
+### 4.1 Catálogo (código, não tabela)
+
+```js
+// lib/plans.js
+export const PLANS = {
+  localizador: { nome: 'Localizador', precoKz: 0,       ciclo: 'mes', ordem: 1,
+                 descricao: 'Aparecer no Localizador com stock confirmado.' },
+  gestao:      { nome: 'Gestão',      precoKz: 15_000,  ciclo: 'mes', ordem: 2,
+                 descricao: 'Gerir stock, equipa e relatórios; ligar o sistema da farmácia.' },
+  conformidade:{ nome: 'Conformidade',precoKz: 45_000,  ciclo: 'mes', ordem: 3, fase: '2B',
+                 descricao: 'Gestão + facturação conforme, por parceiro certificado.' },
+}
+```
+
+Preços ancorados no mercado angolano (5.000–25.000 Kz/mês) e na recomendação de *bundlar* conformidade num escalão mais alto (30.000–60.000 Kz/mês) — `localizador/2026-10-12-gestao-e-faturacao-apis.md`, Parte 6.
+
+### 4.2 Ciclo de vida da subscrição
+
+| Estado | Significado | Efeito no portal | Como se sai |
+|---|---|---|---|
+| `trial` | piloto/degustação com prazo (`trial_until`) | acesso de `gestao` completo | passa a `activo` (paga) ou a `localizador` no fim |
+| `activo` | plano em vigor | entitlements do plano | mudança de plano planeada |
+| `graca` | pagamento falhado/atrasado (`grace_until`, 15 dias por omissão) | **nada se corta** no período de graça | volta a `activo` ou cai para `localizador` |
+| `suspenso` | corte por decisão humana (abuso, incumprimento grave) | só leitura no portal + stock sai do directório após 72 h | `activo` ou `localizador` |
+| `cancelado` | saiu do serviço pago | fica em `localizador` (nunca perde conta nem histórico) | re-`activo` |
+
+**Regras que não se negociam:** a descida de plano **nunca apaga dados** (o que excede o limite fica visível mas inerte até caber, no espírito do «sem apagar dados automaticamente» do Stripe); a farmácia **nunca** desaparece do directório por causa de plano — `localizador` é sempre possível; e o stock existente continua a ser servido aos clientes depois de uma descida.
+
+### 4.3 Aplicação no servidor
+
+```js
+// lib/plans.js
+export function entitlements(planCode) {
+  return LIMITS[planCode] ?? LIMITS.localizador // falha para o mínimo, nunca para o máximo
+}
+```
+
+- `lib/platform/subscriptions.js` → `getSubscription(pharmacyId)` (service-role) + `requireEntitlement(pharmacyId, feature, n)` devolvendo `{ ok: false, error: 'PLANO_INSUFICIENTE' }`, no mesmo formato dos guards da farmácia (`{ ok, error }`).
+- Chamado **nas Server Actions** do portal (chaves, webhooks, CSV, perfis, relatórios) e nos Route Handlers (`/api/ingest/stock`, que passa a usar `entitlements(plan).ingestPerMinute` em vez do `120` fixo da chave).
+- Na UI, a função bloqueada não desaparece em silêncio: aparece com o cadeado, **o nome do plano que a desbloqueia** e o contacto comercial (é a única publicidade interna que se admite — vender de dentro do produto, sem tocar no directório público).
+- `PLANS_ENFORCED=false` no ambiente faz `requireEntitlement` devolver sempre `ok: true` (interruptor de emergência, sem deploy).
+
+---
+
+## 5. Práticas de gestão adoptadas (e de onde vêm)
+
+| Prática | Como aparece neste plano | Fonte |
+|---|---|---|
+| Menor privilégio + negar por omissão | 5 níveis internos; matriz fechada; acção nova entra na matriz antes de existir | OWASP Authorization Cheat Sheet |
+| Contexto de tenant validado no servidor, nunca no pedido do cliente | `pharmacyId` vem sempre da sessão/BD, nunca de um ID enviado pelo browser; guards por acção | OWASP Multi-Tenant Security |
+| Separação de funções e dupla aprovação | transferência de titularidade (pede ≠ aprova), exportações registadas, `faturacao` não vê dados operacionais | NIST SP 800-53 AC-3(2) |
+| Provisionamento de cliente como fluxo único e observável | farmácia + conta + plano + auditoria numa operação com resultado registado | AWS SaaS Lens (tenant onboarding) |
+| Primeira conta do cliente por convite, com prova de posse do e-mail | `inviteUserByEmail` + escolha de senha pelo dono; sem senhas partilhadas | OWASP Forgot Password · Supabase Auth |
+| Suporte sem «entrar como» | leitura pela ficha interna, auditada; impersonação fora de âmbito v1 | WorkOS Impersonation · Microsoft GDAP |
+| Trilha de auditoria imutável e com contexto | `platform_audit_log` append-only, com actor, papel, tenant, antes/depois, motivo | OWASP Logging |
+| Revisão periódica de acessos | revisão trimestral dos níveis internos (superadmin/suporte) e anual da RBAC; sem revogação automática em saídas | CIS Control 6 |
+| Entitlements como fonte de autorização (feature flags não autorizam) | `lib/plans.js` consultado no servidor; flags só para lançamento gradual | Stripe Entitlements |
+| Limites com unidade, janela e comportamento definidos | tabela §3.4 (por minuto, por mês, por farmácia) e mensagens de limite claras | Stripe — billing alerts/limits |
+| Falha de pagamento com graça e sem apagar | `graca` 15 dias → `localizador`, nunca `delete` | Stripe — subscription lifecycle |
+| MFA para administração | TOTP obrigatório; `aal2` exigido nas acções destrutivas | CIS Control 6 · Supabase MFA |
+
+---
+
+## File Structure
+
+### Criar
+
+| Path | Responsabilidade |
+|---|---|
+| `supabase/migrations/0027_platform_team.sql` | CHECK de `admin_users.role` alargado; `is_platform_member()`/`is_superadmin()`; tabela `platform_audit_log` (append-only) + grants/RLS |
+| `supabase/migrations/0028_pharmacy_subscriptions.sql` | `pharmacy_subscriptions` + backfill (`localizador`/`activo` para as 9) + índices |
+| `lib/plans.js` | catálogo, preços, `entitlements()`/`LIMITS` por plano (fonte de verdade dos limites) |
+| `lib/platform/session.js` | `getPlatformSession()` (role + MFA), `requirePlatform(action)`, redireccionamento para `/interno/login` |
+| `lib/platform/permissions.js` | matriz `ACTIONS` + `can(role, action)` + `describeAction()` (para a mensagem de erro) |
+| `lib/platform/audit.js` | `logPlatformAudit({ action, table, recordId, pharmacyId, before, after, reason })` (service-role, best-effort, nunca lança) |
+| `lib/platform/subscriptions.js` | `getSubscription`, `setPlan`, `requireEntitlement` |
+| `lib/actions/platform-pharmacies.js` | Server Actions: criar/editar/verificar/activar/desactivar farmácia; converter lead |
+| `lib/actions/platform-accounts.js` | Server Actions: convidar, reenviar, revogar, suspender, repor senha, transferir titularidade |
+| `lib/actions/platform-plans.js` | Server Actions: atribuir plano, trial, graça, suspender por pagamento |
+| `lib/actions/platform-team.js` | Server Actions: criar/alterar nível interno (com protecção do último `superadmin`) |
+| `app/interno/login/page.js` | login da equipa CF (email+senha, TOTP, estados de erro explícitos) |
+| `app/interno/(console)/layout.js` | gate da área interna + shell |
+| `app/interno/(console)/page.js` | painel de entrada (farmácias por estado, leads, subscrições em graça, últimas acções) |
+| `app/interno/(console)/farmacias/page.js` | lista com filtros (município, estado, plano, frescura do stock) |
+| `app/interno/(console)/farmacias/[id]/page.js` | ficha: dados, contactos, contas, perfis, chaves/webhooks, stock recente, reservas, plano, acções |
+| `app/interno/(console)/leads/page.js` | funil `pharmacy_leads` + conversão em farmácia/conta |
+| `app/interno/(console)/planos/page.js` | subscrições: plano, estado, trial/graça, histórico de mudanças |
+| `app/interno/(console)/auditoria/page.js` | trilha com filtros (actor, acção, farmácia, período) + export CSV auditado |
+| `app/interno/(console)/equipa/page.js` | níveis internos, MFA de cada conta, convites pendentes |
+| `app/interno/(console)/mfa/page.js` | inscrição TOTP (`enroll`/`challenge`/`verify`) |
+| `components/interno/InternoShell.jsx` | shell (sidebar/top-bar) da área interna, tokens do portal |
+| `components/interno/PharmacyTable.jsx`, `PharmacyForm.jsx`, `AccountPanel.jsx`, `PlanPanel.jsx`, `AuditTable.jsx`, `LeadTable.jsx`, `ConfirmActionModal.jsx` | UI da área interna (o `ConfirmActionModal` mostra **o motivo obrigatório** e o resumo antes/depois) |
+
+### Modificar
+
+| Path | Mudança |
+|---|---|
+| `scripts/create-pharmacy-user.js` | passa a aceitar `--platform-role superadmin\|onboarding\|suporte\|faturacao\|auditoria` (cria conta CF, sem `pharmacy_id`) e `--invite`; mantém-se como bootstrap/dev (a UI passa a ser o caminho oficial). Cabeçalho actualizado. |
+| `lib/actions/integration.js` | `MAX_WEBHOOKS`/`MAX_IMPORT_ROWS` deixam de ser constantes globais e passam a `entitlements(plan)` (com o valor actual como fallback); `LIMITE_DESTINOS` ganha mensagem com o plano que desbloqueia |
+| `app/api/ingest/stock/route.js` | rate-limit por chave passa a considerar `entitlements(plan).ingestPerMinute` (o `rate_limit_per_minute` da chave é o teto técnico, o plano é o de negócio) |
+| `app/portal/(dashboard)/equipa/page.js` + `components/portal/EquipaManager.jsx` | estado de plano insuficiente (cadeado + plano) em vez de formulário |
+| `app/portal/(dashboard)/movimentos/page.js`, `vendas`, `desempenho`, `integracao` | idem: gate por entitlement com aviso claro |
+| `app/portal/(dashboard)/layout.js` | lê a subscrição uma vez e passa-a ao shell (a sidebar mostra o plano no rodapé) |
+| `components/portal/PortalSidebar.jsx` | chip do plano + itens bloqueados com cadeado (nunca escondidos sem explicação) |
+| `proxy.js` | (/interno não precisa de regra própria — o gate é no layout; só confirmar que o CSP com nonce cobre a área nova) |
+
+### Já criado/alterado (16/10/2026 — Phases 3.1–3.4 + 7.3)
+
+| Path | O que é |
+|---|---|
+| `lib/plans.js` (novo) | catálogo (`PLANS`, `FEATURES`, `LIMITS`), `entitlements()`/`hasFeature()`/`planNeededFor*` e o interruptor `PLANS_ENFORCED` |
+| `lib/platform/subscriptions.js` (novo) | `getSubscription` (cliente da sessão, colunas explícitas), `requireEntitlement`, `allow`, `STATUS_LABELS` |
+| `lib/platform/permissions.js` (novo) | matriz §3.2 (27 acções × 5 níveis), `can`/`describeAction`/`viewScope`, `ACOES_COM_MFA`/`ACOES_COM_MOTIVO` e a decisão pura `decideAccess()` |
+| `lib/platform/session.js` (novo) | `getPlatformSession(Verbose)` (nível + MFA + conta suspensa), `requirePlatform(action, { reason })`, `requirePlatformSession()`/`requirePlatformPage()` |
+| `lib/platform/audit.js` (novo) | `logPlatformAudit` (service-role, best-effort, nunca lança), `diffJson`, `newRequestId` |
+| `components/portal/PlanGate.jsx` (novo) | portão de página (default) + `PlanBlocked` para as páginas que decidem antes de ir buscar dados |
+| `app/portal/(dashboard)/layout.js` | lê a subscrição uma vez e passa `plan` ao shell (só dados serializáveis; `PLANS_ENFORCED` vem do servidor porque não é `NEXT_PUBLIC_*`) |
+| `components/portal/{PortalShell,PortalSidebar}.jsx` | plumbing de `plan` + chip do plano + cadeado e `title` nos itens fora do plano |
+| `app/portal/(dashboard)/{movimentos,vendas,integracao}/page.js` | `PlanGate` em volta do painel |
+| `app/portal/(dashboard)/{equipa,desempenho}/page.js` | lêem a subscrição e devolvem `PlanBlocked` **antes** de ir buscar dados |
+| `lib/actions/{integration,pharmacy-portal,pharmacy-staff}.js` | guardas `requireEntitlement` nas 7 acções (a autorização a sério) |
+| `components/portal/{EquipaManager,MovementsPanel,SalesReport,IntegrationPanel}.jsx` | `PLANO_INSUFICIENTE` no mapa de mensagens (erro explicado, não «Erro inesperado») |
+| `components/ui/Icon.jsx` | `LockIcon` |
+| `styles/globals.css` | `.portal-side-plan`, `.portal-nav-item--locked`, `.portal-nav-lock` (+ versões v2) |
+| `scripts/create-pharmacy-user.js` | `ensureSubscription()` — o caminho oficial de onboarding passa a deixar o plano de entrada criado |
+
+### Não modificar (reutilizar)
+
+- `lib/supabase/{server,admin}.js`, `lib/log.js`, `lib/pharmacy-session.js`, `lib/staff-session.js` — a sessão da farmácia e a sessão interna são coisas distintas e ficam separadas
+- `components/portal/*` (exceto o shell e as páginas com gates) — a área interna tem os seus componentes
+- `styles/globals.css` — os tokens e as classes `portal-*` são reutilizados; classes novas só se faltar alguma peça de tabela/estado
+- `supabase/migrations/0001…0026` — a 0027 e a 0028 são aditivas
+- `app/portal/**` (rotas e Server Actions existentes) — nenhuma rota muda de sítio
+- O directório público (`app/farmacia/**`, `components/search/**`) — **nenhum** plano pode alterar o que o cliente final vê
+
+---
+
+## Phase 1 — Migração 0027: níveis internos + trilha de auditoria
+
+> **ESTADO: FEITA em 16/10/2026** — `supabase/migrations/0027_platform_team.sql` aplicada no projecto `mxqhmtpshlpnbkninawt` (HTTP 201, `exit=0`) e **aplicada segunda vez** para provar idempotência (1 check de papéis, 4 helpers, 1 policy, 0 linhas na trilha). Provas medidas na secção «Resultado» no fim da Task 1.3. Nenhum ficheiro da aplicação foi tocado — só a base de dados.
+
+### Task 1.1: Confirmar o estado real antes de escrever SQL
+
+- [x] **Step 1: Correr e guardar o resultado** (`python scripts/query.py "<sql>"`):
+
+```sql
+-- 1.1.1 — os CHECK de admin_users (esperado: DOIS — o do papel e o que
+--         amarra role='farmacia' a pharmacy_id; guardar os dois NOMES)
+select c.conname, pg_get_constraintdef(c.oid) as definicao
+from pg_constraint c join pg_class cl on cl.oid = c.conrelid
+where cl.relname = 'admin_users' and c.contype = 'c';
+
+-- 1.1.2 — quantas contas internas existem (esperado: 0)
+select role, count(*) from public.admin_users group by role;
+
+-- 1.1.3 — confirmar que o projecto irmão não tem nada aqui (evitar colisão de nomes)
+select to_regclass('public.audit_logs') as audit_logs, to_regclass('public.platform_audit_log') as nova;
+```
+
+- [x] **Step 2:** `admin_users_role_check` = `CHECK (role = ANY (ARRAY['admin','farmacia']))` e `admin_users_check` = `CHECK ((role = 'farmacia') = (pharmacy_id IS NOT NULL))` — **os dois nomes eram os esperados**, logo o `drop constraint` do Step seguinte acerta. Contas: `farmacia` = 2, `admin` = 0. Colisões: `audit_logs`, `platform_audit_log` e `pharmacy_subscriptions` devolveram `null`. **Sem desvios** — o aviso seguinte é a regra geral, não um problema encontrado: Não inventar nomes de constraint. E se o nome desse CHECK **não** for `admin_users_role_check`, corrigir o `drop constraint` do Step seguinte: com o nome errado o `drop ... if exists` falha em silêncio, o `add constraint` acrescenta um **segundo** CHECK e a migração parece passar enquanto continua a recusar `suporte`.
+
+### Task 1.2: Escrever a migração (não aplicar ainda)
+
+**Files:** Create: `supabase/migrations/0027_platform_team.sql`
+
+- [x] **Step 1: Escrever o ficheiro** — escrito e aplicado. O SQL abaixo é o **desenho** que foi para o repositório (roles, helpers, predicate da policy, grants e bloco de verificação são os mesmos); o ficheiro entregue tem os comentários por extenso e é ele a fonte de verdade: [0027_platform_team.sql](supabase/migrations/0027_platform_team.sql).
+
+```sql
+-- 0027 · Níveis internos da Equipa CF + trilha de auditoria
+-- Aditiva e idempotente. Aplicar:
+--   python scripts/apply-migration.py supabase/migrations/0027_platform_team.sql
+
+-- A) Alargar o CHECK de papéis. 'admin' mantém-se (compatibilidade com
+--    contas existentes e com o projecto irmão); os níveis novos são os
+--    que a matriz de lib/platform/permissions.js usa.
+alter table public.admin_users drop constraint if exists admin_users_role_check;
+alter table public.admin_users
+  add constraint admin_users_role_check
+  check (role in ('admin','superadmin','onboarding','suporte','faturacao','auditoria','farmacia'));
+
+-- B) Quem é da equipa CF (todos os níveis internos) e quem é superadmin.
+create or replace function public.is_platform_member()
+returns boolean language sql security definer set search_path = public as $$
+  select exists (
+    select 1 from public.admin_users
+    where user_id = auth.uid()
+      and role in ('admin','superadmin','onboarding','suporte','faturacao','auditoria')
+  );
+$$;
+
+-- O nível alto, com o nome explícito para código novo; `is_admin()`
+-- (bloco C) é o mesmo predicado com o nome legado que as policies já
+-- referenciam. Uma única lista de papéis, para não divergirem.
+create or replace function public.is_superadmin()
+returns boolean language sql security definer set search_path = public as $$
+  select public.is_admin();
+$$;
+
+-- Quem lê a trilha: o nível alto e o de auditoria — a matriz diz
+-- `audit.read: superadmin | auditoria`, e a policy acompanha-a.
+create or replace function public.is_auditor()
+returns boolean language sql security definer set search_path = public as $$
+  select exists (
+    select 1 from public.admin_users
+    where user_id = auth.uid() and role = 'auditoria'
+  );
+$$;
+
+grant execute on function public.is_platform_member() to public;
+grant execute on function public.is_superadmin() to public;
+grant execute on function public.is_auditor() to public;
+
+-- C) is_admin() continua a existir (as policies da 0001, 0005, 0012, 0018,
+--    0020 e 0023 usam-no) e passa a aceitar o nível alto: 'admin' legado
+--    e 'superadmin'. Os níveis de leitura/operação (onboarding, suporte,
+--    faturacao, auditoria) NÃO ganham acesso RLS: quem lhes dá leitura é
+--    a matriz em lib/platform/permissions.js, com a área interna a ler e
+--    a escrever por service-role. Alargar aqui a RLS daria a estes níveis
+--    reservas, contactos de clientes e escrita em farmácias sem passar
+--    pela matriz.
+create or replace function public.is_admin()
+returns boolean language sql security definer set search_path = public as $$
+  select exists (
+    select 1 from public.admin_users
+    where user_id = auth.uid() and role in ('admin','superadmin')
+  );
+$$;
+
+-- E) NOTA: a 0001 tem um CHECK de tabela
+--      check ((role = 'farmacia') = (pharmacy_id is not null))
+--    que esta migração NÃO toca. Consequência directa: uma conta interna
+--    (qualquer dos 5 níveis) tem de ficar com pharmacy_id = null, e uma
+--    conta de farmácia tem de o ter preenchido. lib/actions/platform-accounts.js
+--    nunca escreve pharmacy_id em contas internas.
+
+-- D) Trilha de auditoria append-only.
+create table if not exists public.platform_audit_log (
+  id           bigserial primary key,
+  created_at   timestamptz not null default now(),
+  actor_user_id uuid references auth.users(id) on delete set null,
+  actor_role   text,
+  actor_email  text,
+  action       text not null,              -- ex.: 'pharmacy.create'
+  table_name   text,
+  record_id    text,
+  pharmacy_id  uuid references public.pharmacies(id) on delete set null,
+  reason       text,                       -- motivo obrigatório nas acções destrutivas
+  request_id   text,
+  ip           inet,
+  user_agent   text,
+  before       jsonb,
+  after        jsonb
+);
+
+create index if not exists platform_audit_log_created_idx
+  on public.platform_audit_log (created_at desc);
+create index if not exists platform_audit_log_pharmacy_idx
+  on public.platform_audit_log (pharmacy_id, created_at desc);
+create index if not exists platform_audit_log_actor_idx
+  on public.platform_audit_log (actor_user_id, created_at desc);
+
+alter table public.platform_audit_log enable row level security;
+
+drop policy if exists "platform_audit_log read high levels" on public.platform_audit_log;
+create policy "platform_audit_log read high levels"
+  on public.platform_audit_log for select
+  using (public.is_superadmin() or public.is_auditor());
+
+-- Privilégios. A policy NÃO basta: `service_role` tem rolbypassrls=true
+-- (medido: select rolbypassrls from pg_roles → true), portanto passa por
+-- cima de qualquer policy. O que trava é privilégio de tabela — e as
+-- tabelas novas em public nascem com ALL para service_role (medido na
+-- 0023), daí o revoke explícito ter de incluir o service_role.
+revoke all on public.platform_audit_log from anon, authenticated, service_role;
+grant select on public.platform_audit_log to authenticated;        -- a policy decide as linhas
+grant select, insert on public.platform_audit_log to service_role; -- escreve só o servidor
+revoke update, delete on public.platform_audit_log from service_role;
+
+comment on table public.platform_audit_log is
+  'Trilha de auditoria da Equipa CF (0027). Append-only para todos os papéis que falam com a API (anon, authenticated, service_role: sem UPDATE/DELETE — provado, não só listado). O papel dono (postgres, dashboard/Management API) fica fora deste cerco: inerente ao Postgres, e a razão pela qual o motivo e o antes/depois são gravados na escrita em vez de corrigidos depois.';
+comment on column public.platform_audit_log.reason is
+  'Motivo escrito por quem executa. Obrigatório nas acções destrutivas (validado em lib/platform/audit.js, não no schema: a trilha nunca deve recusar registar).';
+
+-- Verificação da própria migração: se ficou um CHECK antigo por cima (nome
+-- diferente do esperado), rebenta aqui em vez de deixar uma base que parece
+-- migrada e recusa 'suporte' na primeira conta da equipa.
+do $$
+declare n_ok int; n_velhos int;
+begin
+  select
+    count(*) filter (where pg_get_constraintdef(c.oid) like '%ANY (ARRAY%'
+                       and pg_get_constraintdef(c.oid) like '%superadmin%'),
+    count(*) filter (where pg_get_constraintdef(c.oid) like '%ANY (ARRAY%'
+                       and pg_get_constraintdef(c.oid) not like '%superadmin%')
+  into n_ok, n_velhos
+  from pg_constraint c join pg_class cl on cl.oid = c.conrelid
+  where cl.relname = 'admin_users' and c.contype = 'c';
+
+  if n_velhos > 0 then
+    raise exception 'Ficou um CHECK antigo de papeis em admin_users a recusar os niveis novos';
+  end if;
+  if n_ok <> 1 then
+    raise exception 'Esperava um CHECK de papeis com superadmin, encontrei %', n_ok;
+  end if;
+end $$;
+```
+
+- [x] **Step 2:** Confirmado no ficheiro: (A) CHECK do papel alargado, (B) os **três** helpers (`is_platform_member`, `is_superadmin`, `is_auditor`), (C) `is_admin()` redefinido a incluir `superadmin`, (D) tabela + índices + grants sem `update`/`delete`, (E) a nota do CHECK `(role = 'farmacia') = (pharmacy_id is not null)`. Acrescentado no fim da migração um bloco `do $$ … $$` que **recusa terminar** se tiver ficado um CHECK antigo por cima — a armadilha do nome errado deixa de ser silenciosa.
+- [x] **Step 3:** Aplicar com `python scripts/apply-migration.py supabase/migrations/0027_platform_team.sql`. Nota do ambiente: o script imprime um `✅` no fim — se o terminal estiver em cp1252 o emoji falha **depois** de aplicar (HTTP 201); já corrigido com `sys.stdout.reconfigure(encoding='utf-8')`.
+
+### Task 1.3: Validar a 0027
+
+- [x] **Step 1:** `select pg_get_constraintdef(oid) from pg_constraint where conname = 'admin_users_role_check';` → os 7 papéis listados.
+- [x] **Step 2:** Os quatro predicados corridos **sem sessão** (`auth.uid()` é null) → `equipa`, `admin`, `super` e `auditoria` todos `false`.
+- [x] **Step 3:** `insert into public.admin_users (user_id, role) values ('00000000-0000-0000-0000-000000000000','suporte')` → erro **23503** (`admin_users_user_id_fkey`), **não 23514**: o CHECK aceita `suporte`.
+- [x] **Step 4:** Append-only provado por **negação real**, não por listagem de grants.
+
+**Resultado (16/10/2026, projecto `mxqhmtpshlpnbkninawt`)**
+
+| Prova | Comando | Resultado |
+|---|---|---|
+| Papéis no CHECK | `pg_get_constraintdef` | `ARRAY['admin','superadmin','onboarding','suporte','faturacao','auditoria','farmacia']` |
+| `admin_users_check` intacto | idem | `((role = 'farmacia') = (pharmacy_id IS NOT NULL))` — a migração não lhe tocou |
+| Predicados sem sessão | `select is_platform_member(), is_admin(), is_superadmin(), is_auditor()` | `false, false, false, false` |
+| CHECK aceita os níveis novos | insert com uid inexistente | `23503` (FK) — nunca `23514` (CHECK) |
+| Escrita do servidor | `begin; set local role service_role; insert …; rollback;` | **passa** (1 linha visível antes do rollback) |
+| **`update` negado** | `set local role service_role; update platform_audit_log …` | **42501 `permission denied for table platform_audit_log`** |
+| **`delete` negado** | `set local role service_role; delete from platform_audit_log` | **42501 `permission denied for table platform_audit_log`** |
+| Leitura de nível baixo | `set local role authenticated; select count(*)` | `0` linhas (a policy pede `is_superadmin()` ou `is_auditor()`) |
+| Privilégios finais | `has_table_privilege` | `anon`: nada · `authenticated`: só SELECT · `service_role`: SELECT+INSERT (sem UPDATE/DELETE) · `postgres` (dono): tudo |
+| Trilha limpa | `select count(*) from platform_audit_log` | `0` — as provas correram dentro de transacções com `rollback`, logo não ficou resíduo para apagar |
+| Idempotência | segunda aplicação da 0027 | HTTP 201, `exit=0`, sem duplicar check/helper/policy |
+
+Duas notas honestas que saíram daqui:
+
+1. O `set role service_role` funciona porque o papel `postgres` é **membro** de `service_role` (medido em `pg_auth_members`) — é o que torna a prova de negação possível em vez de uma leitura de catálogo. E é preciso negá-la por *grant*, porque `service_role` tem `rolbypassrls = true`: a policy sozinha não travava nada.
+2. O papel dono (`postgres`, o do dashboard e desta API) tem UPDATE/DELETE sobre a trilha. Não há `REVOKE` que o trave — é inerente ao Postgres. É por isso que o motivo e o antes/depois são gravados **na escrita**, e não corrigíveis depois, e está dito no comentário da tabela em vez de ficar subentendido.
+
+---
+
+## Phase 2 — Migração 0028: subscrições por farmácia
+
+> **ESTADO: FEITA em 16/10/2026** — `supabase/migrations/0028_pharmacy_subscriptions.sql` aplicada (HTTP 201, `exit=0`) e **aplicada segunda vez** para provar idempotência (9 linhas, 1 policy, 2 índices = PK + `plan_idx`). Backfill completo: as 9 farmácias em `localizador`/`activo`, nenhuma sem plano. Provas medidas na Task 2.1 Step 2. Continua sem haver ficheiro da aplicação tocado — só a base de dados.
+
+### Task 2.1: Escrever a migração
+
+**Files:** Create: `supabase/migrations/0028_pharmacy_subscriptions.sql`
+
+- [x] **Step 1: Escrever o ficheiro** — escrito e aplicado. Como na 0027: o SQL abaixo é o **desenho**; o ficheiro entregue é a fonte de verdade — [0028_pharmacy_subscriptions.sql](supabase/migrations/0028_pharmacy_subscriptions.sql).
+
+```sql
+-- 0028 · Plano de cada farmácia (estado) — o catálogo vive em lib/plans.js
+-- Aditiva e idempotente.
+
+create table if not exists public.pharmacy_subscriptions (
+  pharmacy_id  uuid primary key references public.pharmacies(id) on delete cascade,
+  plan_code    text not null default 'localizador',   -- sem CHECK: um plano novo não pede migração
+  status       text not null default 'activo'
+               check (status in ('trial','activo','graca','suspenso','cancelado')),
+  trial_until  timestamptz,
+  grace_until  timestamptz,
+  started_at   timestamptz not null default now(),
+  ended_at     timestamptz,
+  notes        text,                                   -- notas internas (nunca mostradas à farmácia)
+  updated_by   uuid references auth.users(id) on delete set null,
+  updated_at   timestamptz not null default now()
+);
+
+create index if not exists pharmacy_subscriptions_plan_idx
+  on public.pharmacy_subscriptions (plan_code, status);
+
+alter table public.pharmacy_subscriptions enable row level security;
+
+-- Policy mais larga que a da trilha (0027), de propósito: um plano é
+-- metadado comercial, não contacto de cliente nem reserva. As ESCRITAS de
+-- plano são de superadmin/faturacao; a leitura segue a ficha da farmácia.
+drop policy if exists "subscriptions read own or team" on public.pharmacy_subscriptions;
+create policy "subscriptions read own or team"
+  on public.pharmacy_subscriptions for select
+  using (public.is_platform_member() or public.is_own_pharmacy(pharmacy_id));
+
+revoke all on public.pharmacy_subscriptions from anon, authenticated, service_role;
+
+-- A farmácia vê o plano, o estado e os prazos. `notes` (comentário interno
+-- da equipa sobre a negociação) e `updated_by` ficam FORA do grant, por
+-- coluna — a mesma técnica com que a 0018 esconde o pin_hash da equipa.
+grant select (pharmacy_id, plan_code, status, trial_until, grace_until,
+              started_at, ended_at, updated_at)
+  on public.pharmacy_subscriptions to authenticated;
+
+grant select, insert, update on public.pharmacy_subscriptions to service_role;
+-- Nada se apaga: sair do serviço pago é `cancelado`. A regra fica no schema,
+-- e não só na cabeça de quem escreve o código.
+revoke delete on public.pharmacy_subscriptions from service_role;
+
+-- Backfill: todas as farmácias existentes entram no plano de entrada,
+-- activo e sem prazo (o directório é neutro e gratuito).
+insert into public.pharmacy_subscriptions (pharmacy_id, plan_code, status)
+select id, 'localizador', 'activo' from public.pharmacies
+on conflict (pharmacy_id) do nothing;
+
+-- A migração verifica-se a si própria: se o backfill falhou, se ficou
+-- escrita aberta a anon/authenticated, ou se o revoke do DELETE não pegou
+-- no service_role, rebenta aqui em vez de deixar uma base que parece
+-- migrada e uma farmácia sem plano atribuível.
+do $$
+declare sem_plano int; aberturas int;
+begin
+  select count(*) into sem_plano
+  from public.pharmacies p
+  left join public.pharmacy_subscriptions s on s.pharmacy_id = p.id
+  where s.pharmacy_id is null;
+  if sem_plano > 0 then
+    raise exception 'Backfill incompleto: % farmacia(s) sem linha de subscricao', sem_plano;
+  end if;
+
+  select count(*) into aberturas
+  from unnest(array['anon','authenticated']) r
+  where has_table_privilege(r,'public.pharmacy_subscriptions','INSERT')
+     or has_table_privilege(r,'public.pharmacy_subscriptions','UPDATE')
+     or has_table_privilege(r,'public.pharmacy_subscriptions','DELETE');
+  if aberturas > 0 then
+    raise exception 'Privilegios de escrita abertos a anon/authenticated';
+  end if;
+
+  if has_table_privilege('service_role','public.pharmacy_subscriptions','DELETE') then
+    raise exception 'service_role ainda tem DELETE (subscricoes nunca se apagam)';
+  end if;
+end $$;
+```
+
+- [x] **Step 2:** Aplicar e validar
+
+**Resultado (16/10/2026, projecto `mxqhmtpshlpnbkninawt`)**
+
+| Prova | Comando | Resultado |
+|---|---|---|
+| Backfill completo | `count(*)` na tabela / left join com `pharmacies` | `9` linhas, `0` farmácias sem plano |
+| Distribuição | `group by plan_code, status` | `localizador/activo` = **9** |
+| `status` inválido recusado | `update … set status='foo'` | **23514** `pharmacy_subscriptions_status_check` |
+| Plano novo **não** pede migração | `update … set plan_code='plano_futuro_sem_migracao'` | **passa** (por desenho: sem CHECK no `plan_code`) |
+| `graca` + `trial_until` aceites | `update … set status='graca', trial_until=now()+interval '30 days'` | **passa** |
+| Colunas visíveis à farmácia | `has_column_privilege('authenticated', …, 'SELECT')` | as 8 colunas do plano: `true` |
+| **`notes` fora do alcance da farmácia** | `has_column_privilege('authenticated', …, 'notes', 'SELECT')` | `false` — e `select notes` como `authenticated` devolve **42501** |
+| `updated_by` fora do alcance | idem para `updated_by` | `false` (o `service_role` lê as duas: `true`) |
+| Leitura permitida sem sessão | `set local role authenticated; select pharmacy_id, plan_code, status …` | **0 linhas** (a policy exige membro da equipa ou a própria farmácia) |
+| Escrita do servidor | `set local role service_role; update … set status='graca' …` | **passa** |
+| **`DELETE` negado** | `set local role service_role; delete from pharmacy_subscriptions` | **42501 `permission denied for table pharmacy_subscriptions`** |
+| Estado final intacto | `group by plan_code, status` depois de todas as provas | `localizador/activo` = 9 — tudo dentro de transacções com `rollback` |
+| Idempotência | segunda aplicação da 0028 | HTTP 201, `exit=0`, sem duplicar policy/índice/linha |
+
+Uma nota de alcance que a medição obrigou a corrigir: `has_table_privilege('authenticated', …, 'SELECT')` devolve **`false`**, porque o grant é por coluna — e é por isso que a prova boa aqui é `has_column_privilege` (coluna a coluna) e o `select notes` a falhar com 42501, não a listagem de privilégios de tabela. Sem isso, o ecrã «privilégios» diria que a farmácia não lê nada, e a farmácia lê oito colunas.
+
+---
+
+## Phase 3 — `lib/plans.js` e `lib/platform/*`
+
+> **ESTADO: FEITA (16/10/2026)** — `lib/plans.js` (Task 3.1), `lib/platform/subscriptions.js` (que o File Structure previa mas o Phase não listava como tarefa) e as **Tasks 3.2–3.4** (`permissions`, `session`, `audit`), o núcleo da área interna. A evidência desta última passagem está no fim do Phase.
+>
+> Nota de âmbito: estes três módulos ainda **não têm quem os chame** — a primeira chamada chega na Phase 4 (o gate do `/interno`). Por isso o `npm run build` não os compila sequer (não estão no grafo de módulos): a prova deles foi feita a executar, não a compilar (ver a tabela abaixo).
+
+### Task 3.1: `lib/plans.js` (catálogo + entitlements)
+
+- [x] **Step 1:** `PLANS` (§4.1), `FEATURES` (§3.3), `LIMITS` (§3.4), `entitlements(planCode)` com fallback para `localizador`, `hasFeature`, `planNeededForFeature` e `planNeededForLimit`. `PLANS_ENFORCED` lê `process.env.PLANS_ENFORCED !== 'false'` (aplicado por omissão, como o plano dizia), depois da decisão de 16/10/2026 sobre o plano das farmácias do piloto — durante a verificação esteve opt-in, para eu poder medir os dois modos sem que um deploy cortasse funções a quem as usa hoje.
+- [x] **Step 2:** `npm run build` → **0 erros** (`PIPESTATUS=0`), com as 17 rotas do portal listadas. `lib/plans.js` só expõe preços e limites — nenhum segredo.
+- [x] **Step extra (não previsto no plano):** `lib/platform/subscriptions.js` lê a subscrição com o cliente da sessão (RLS + grant por coluna) e nomeia EXPLICITAMENTE as colunas em vez de `*` — o `*` falharia com 42501 por causa do grant por coluna da 0028. Sem linha ou com erro resolve para o plano de entrada (`falha: true`), nunca para o plano acima.
+
+### Task 3.2: `lib/platform/permissions.js`
+
+- [x] **Step 1:** Matriz declarativa com as 27 acções da tabela §3.2. Desvios do enunciado, todos deliberados: (a) chamam-se `PLATFORM_ROLES` e **não** `ROLES`, porque é o mesmo nome que a sessão da farmácia usa para o que *não* é isto; (b) cada acção declara `allow: [níveis]` (lista de PERMITIDOS) em vez de `{ role: true|false }` — é a mesma informação sem 5 booleanos por linha, e o que importa é que uma acção nova nasce sem ninguém e um nível novo nasce sem nada (negar por omissão); (c) além de `can`/`describeAction`, exporta `actionsForRole` (a sidebar nasce da matriz) e `rolesForAction` (o ecrã da equipa); (d) as duas qualificações das células — «só ficha comercial» (`faturacao`) e «sem contacto de cliente» (`auditoria`) — não são detalhe de UI e por isso existem como código: `viewScope(role)` devolve `{ operacao, contacto }`.
+- [x] **Step 2:** Regras estruturais no módulo, como funções puras: `podeMexerNoNivel(actor, alvo)` (ninguém se promove) e `separacaoDeFuncoes(pediu, aprova)` (quem pede não aprova). O `account.transfer_ownership` foi **partido em dois** — `.request` (`superadmin`+`onboarding`) e `.approve` (`superadmin`) — para que «pede ≠ aprova» seja uma permissão e não um comentário. A outra metade da regra (o último `superadmin` não sai) é uma consulta ao estado da tabela e fica na acção, em SQL (Phase 9).
+- [x] **Ponto extra:** a ORDEM das recusas é código, não acaso: permissão **antes** de MFA (pedir TOTP a quem não pode fazer a acção revelaria que a acção existe) e motivo por último. Está em `decideAccess()` — função **pura** que recebe `{ role, mfa }` e devolve a decisão, para que as quatro recusas se provem sem base de dados nem cookies (a sessão fica em `session.js`, que lhe passa o resultado).
+
+### Task 3.3: `lib/platform/session.js`
+
+- [x] **Step 1:** `getPlatformSession()` (e `getPlatformSessionVerbose()`, que nomeia a razão: `SEM_USER`, `CONTA_SUSPENSA`, `ERRO_PERFIL`, `SEM_PERFIL`, `PAPEL_ERRADO`, `EXCECAO`). A leitura do próprio nível passa pela policy «admin_users self read» da 0001 com o token da pessoa — não precisa de service-role para saber quem é. O papel **gravado** viaja na sessão ao lado do normalizado (`roleRaw`): decidir usa o normalizado, auditar guarda o que está na base. **Ponto extra medido no caminho:** se o `banned_until` vier no user, a sessão não existe (`CONTA_SUSPENSA`) — um ban não corta sessões já emitidas, e esta era a segunda peça que faltava do lado interno.
+- [x] **Step 2:** `requirePlatform(action, { reason })` — a mesma decisão do enunciado, com a avaliação movida para `decideAccess()` (Task 3.2) e um quarto código acrescentado: `MOTIVO_OBRIGATORIO`, para as acções da lista `ACOES_COM_MOTIVO`. É aqui que a exigência de motivo passa a ser estrutural: acontece **antes** da escrita e no mesmo sítio para todas as acções, para que nenhuma se esqueça dela (e a trilha, essa, nunca recusa registar — ver 3.4).
+- [x] **Step 3:** `ACOES_COM_MFA` derivado da matriz (um `mfa: true` por acção, sem lista à parte que possa divergir dela): `pharmacy.deactivate`, `account.suspend`, `account.unsuspend`, `account.revoke`, `account.transfer_ownership.*`, `plan.assign|change|trial|grace|suspend|resume`, `team.manage` e `audit.export` (14). Validado no servidor por `getAuthenticatorAssuranceLevel()`, nunca só na UI — e **falha FECHADA**: se a leitura do nível falhar, o nível fica `null` (≠ `aal2`) e a acção sensível é recusada.
+- [x] **Cuidado com a forma do código do enunciado:** o `'use server'` que ele mostra no topo faria o build **recusar** o ficheiro (um módulo `'use server'` só pode exportar funções async, e isto exporta a matriz, `SESSION_REASONS` e valores). Estes três módulos são código SÓ de servidor (importam `next/headers`, cookies e `node:crypto`) **sem** essa directiva — como `lib/pharmacy-session.js`. As Server Actions de verdade vivem em `lib/actions/*`.
+- [x] **Guardas de página:** `requirePlatformSession()` (sem sessão → `redirect('/interno/login?motivo=…')`, fora de qualquer try/catch — `redirect()` funciona lançando) e `requirePlatformPage(action)`, que em vez de redireccionar devolve `SEM_PERMISSAO` para o ecrã explicar (Task 4.2 Step 3).
+
+### Task 3.4: `lib/platform/audit.js`
+
+- [x] **Step 1:** `logPlatformAudit({ action, table, recordId, pharmacyId, before, after, reason, session, requestId, request })` com service-role; `try/catch` que nunca lança; `logError('platform', …)` se a escrita falhar — uma auditoria em falta tem de ser visível. Dois extras que o contrato pediu: `session` (o actor vem de `requirePlatform`; sem ela, o escritor lê a sessão, porque um registo sem dono não serve) e `requestId` (ligar os 3-4 registos da MESMA operação — converter um lead grava farmácia + convite + estado do funil).
+- [x] **Step 2:** `diffJson(before, after)` guarda só as chaves alteradas, com serialização canónica (ordem de chaves e aninhamento não contam como mudança). Três casos explícitos além do diff: criar (`before: null`), remover (`after: null`) e «nada mudou» (`{}`, que é informação).
+- [x] **Escritas sintéticas com guardas de propósito:** `ip` (`inet`) e `pharmacy_id` (FK) são validados antes da inserção — um cabeçalho ou um id com lixo fazia falhar a INSERÇÃO e perder-se-ia a linha inteira, que é exactamente o que não pode acontecer numa trilha. Lixo → campo nulo, registo escrito (medido, ver abaixo).
+- [x] **Motivo em falta não apaga o rasto:** o escritor não recusa registar por falta de motivo — grava `reason: null` e deixa um `logWarn`, porque o registo sem motivo é a prova de que o motivo faltou. A exigência vive antes, em `requirePlatform`.
+
+**Evidência (16/10/2026) — executado, não só compilado**
+
+| Prova | Como | Resultado |
+|---|---|---|
+| Matriz §3.2, célula a célula | script node: a tabela §3.2 transcrita **de novo** à mão e comparada com `can()` | **135 células** (27 acções × 5 níveis), **0 divergências**; acção inexistente e `constructor` → `false` |
+| Papel legado e conta de farmácia | o mesmo script | `admin` → superadmin (alcança `team.manage`); `farmacia`, `''`, `'SuperAdmin'`, `7`, `{}` → sem sessão |
+| Decisão de acesso | `decideAccess()` com sessões sintéticas | as 4 recusas **com a ordem certa**: permissão vence sobre MFA, MFA vence sobre motivo; AAL ilegível → `MFA_NECESSARIO` (falha fechada); motivo `'   '` → `MOTIVO_OBRIGATORIO` |
+| Sessão real sem cookies | rota temporária `/api/sonda-tmp` (apagada no fim) | `SEM_USER` (`Auth session missing!`) |
+| Sessão real de **farmácia** | a mesma rota, com as cookies da conta de farmácia do piloto que está no browser | **`PAPEL_ERRADO`** (`farmacia`) — o portal e a área interna não se cruzam |
+| Sessão real de **equipa** | conta descartável `sonda-interno@…` (`superadmin`, criada e apagada nesta passagem) | `reason: OK`, `role: superadmin`, `roleRaw: superadmin`; **`mfa.currentLevel = 'aal1'`**, `metodos: [password]` — a chamada `getAuthenticatorAssuranceLevel()` devolve a forma documentada neste stack |
+| MFA a travar a sério | `requirePlatform('plan.change')` e `('team.manage')` com essa sessão `aal1` | **`MFA_NECESSARIO`**, com o nível actual no erro (é a metade da Task 11.2 Step 6 que já se pode medir) |
+| Permissão a deixar passar | `requirePlatform('audit.read')` com a mesma sessão | `ok: true` |
+| Acção fora da matriz | `requirePlatform('plan.everything')` | `SEM_PERMISSAO` (a mensagem cita a acção) |
+| Trilha: escrita real | 5 escritas sintéticas do próprio `logPlatformAudit` pelo service-role | `action`, `table_name`, `record_id`, FK da farmácia, `host(ip)`, `user_agent`, `request_id` e `before`/`after` **só com as chaves que mudaram** (um campo igual dos dois lados ficou de fora) |
+| Acentos do motivo | `select reason = 'sonda de verificação — apagar'` | `true` |
+| Actor na trilha | escrita com a sessão da conta descartável | `actor_user_id`, `actor_role='superadmin'`, `actor_email` — o papel **gravado** |
+| Cabeçalho hostil não perde o registo | `x-forwarded-for: 999.999.999.999` + `pharmacyId: abc-invalido` | `ip` e `pharmacy_id` nulos e a linha **escrita** (`ok: true`) — era isto que a guarda existe para evitar |
+| Vários saltos de proxy | `x-forwarded-for: 10.0.0.7, 70.41.3.18` | guarda o primeiro (`10.0.0.7`) |
+| Trilha nunca recusa nem lança | `logPlatformAudit({ table: … })` sem `action` | `{ ok: false, error: 'SEM_ACAO' }`, sem excepção e **sem linha** |
+| Append-only confirmado (Task 11.4 Step 9) | `set local role service_role; update/delete` na trilha | **42501 permission denied** nos dois — a linha que o escritor grava não se corrige depois |
+| Limpeza | linhas e conta descartável apagadas (papel dono da tabela) | trilha **0**, contas internas **0**, 2 contas de farmácia, 9 farmácias, 9 subscrições — o estado de partida |
+
+**Limitação desta passagem:** uma sessão **`aal2`** a atravessar o portão não foi exercida — exige uma conta interna com TOTP inscrito, e o ecrã de inscrição (`/interno/mfa`) é a Phase 4. O ramo está coberto no teste puro (`decideAccess` com `aal2` → `ok`), mas não com um segundo factor real.
+
+---
+
+## Phase 4 — Área interna: rotas, sessão e shell
+
+### Task 4.1: Login da equipa
+
+- [ ] **Step 1:** `app/interno/login/page.js` (Client): email+senha, depois do `signInWithPassword` pedir TOTP se `nextLevel === 'aal2'`, com as mensagens de erro explícitas (incluindo `MFA_NECESSARIO` e conta desactivada).
+- [ ] **Step 2:** Confirmar que a rota **não** é indexável (`app/robots.js` já bloqueia? se não: acrescentar `/interno` ao disallow) e que nenhum link público aponta para lá.
+
+### Task 4.2: Gate e shell
+
+- [ ] **Step 1:** `app/interno/(console)/layout.js` espelha o do portal: `getPlatformSession()` → se `null`, `redirect('/interno/login?motivo=…')`; `export const dynamic = 'force-dynamic'`.
+- [ ] **Step 2:** `components/interno/InternoShell.jsx` com sidebar (Painel, Farmácias, Leads, Planos, Auditoria, Equipa) e `role` visível no topo. Reutilizar tokens/classes do portal; **não** reutilizar `PortalShell` (o da farmácia tem sino de reservas e navegação da farmácia).
+- [ ] **Step 3:** Smoke: entrar com uma conta de nível `suporte` e confirmar que só vê o que a matriz permite (links ausentes **e** acção directa por URL devolve `SEM_PERMISSAO`).
+
+---
+
+## Phase 5 — Farmácias: lista, ficha e edição
+
+### Task 5.1: Lista
+
+- [ ] **Step 1:** `app/interno/(console)/farmacias/page.js` (Server) → `listPharmacies()` em `lib/actions/platform-pharmacies.js` com filtros (município, `active`, `verified`, plano, «stock fresco há >5 dias») e contagens por estado.
+- [ ] **Step 2:** `components/interno/PharmacyTable.jsx`: farmácia, município, estado (activa/inactiva), selo verificado, plano, última confirmação de stock, nº de contas/perfis, e link para a ficha.
+
+### Task 5.2: Ficha
+
+- [ ] **Step 1:** `app/interno/(console)/farmacias/[id]/page.js` com blocos: **Identificação** (nome, slug, município, morada, contactos, horário, mapa), **Estado** (activa, verificada, plano, última acção), **Contas** (contas Auth ligadas + convites pendentes), **Equipa** (perfis com PIN, papel, activo — só leitura aqui, a farmácia é que gere), **Integração** (chaves, destinos, últimas entregas), **Operação** (stock confirmado, reservas recentes, movimentos), **Histórico** (auditoria dessa farmácia).
+- [ ] **Step 2:** Acções no cabeçalho: *Editar*, *Verificar*, *Desactivar/Activar*, *Confirmar stock por telefone* (grava `stock_items` com `source='team'`, origem já existente da 0022), cada uma em `ConfirmActionModal` com **motivo obrigatório** nas destrutivas.
+
+### Task 5.3: Conversão de lead
+
+- [ ] **Step 1:** `app/interno/(console)/leads/page.js`: `pharmacy_leads` por estado (`novo → em_conversa → demonstracao → acordo → onboarded | descartado`), com quem mudou o quê e quando (auditoria).
+- [ ] **Step 2:** Botão **Converter** → abre o formulário de farmácia pré-preenchido (nome, município, telefone, contacto) e, ao gravar, cria farmácia + convite ao dono + `pharmacy_leads.status='onboarded'` numa só operação auditada.
+
+---
+
+## Phase 6 — Contas: convite e ciclo de vida
+
+### Task 6.1: Pré-requisito de SMTP (bloqueante)
+
+- [ ] **Step 1:** Configurar SMTP próprio no Supabase Auth (*Authentication → Emails*). O remetente integrado **recusa entregar a endereços que não sejam da equipa do projecto** (o pedido falha com `Email address not authorized`) e está limitado a **2 mensagens/hora**, valor que a Supabase diz poder mudar sem aviso: com o remetente integrado é tecnicamente impossível convidar uma farmácia. Depois de configurar SMTP próprio, o limite **inicial** é de 30 mensagens/hora e ajusta-se em *Authentication → Rate Limits*. Registar a decisão do fornecedor de SMTP no runbook (a Supabase lista Resend, AWS SES, Postmark, SendGrid, ZeptoMail, Brevo).
+- [ ] **Step 2:** Personalizar o template **Invite user** em PT, com o nome do produto e o link de suporte; confirmar `redirectTo` na lista de *Redirect URLs* (se não estiver lá, o `redirectTo` é **ignorado em silêncio** e o convite vai para o Site URL — sem erro nenhum). Nota: um convite não aceite expira ao fim de `Email OTP Expiration` (1 h por omissão) — é o mesmo valor dos magic links; prever o reenvio (Task 6.3) desde já.
+- [ ] **Step 3:** Verificar a entrega real (Gmail + Outlook + um endereço .ao) e medir o tempo até chegar. Guardar o resultado no plano (nota datada) — se falhar, parar antes das Phases seguintes.
+
+### Task 6.2: Convidar
+
+- [ ] **Step 1:** `invitePharmacyAccount({ pharmacyId, email, displayName, reason })`: guard `requirePlatform('account.invite')` → cria/garante farmácia → `admin.auth.admin.inviteUserByEmail(email, { redirectTo, data: { display_name } })` → upsert em `admin_users` (`role='farmacia'`, `pharmacy_id`) → `logPlatformAudit`. Devolve `{ ok: true, invitedAt }` ou `{ ok: false, error }` com códigos (`EMAIL_EM_USO`, `FARMACIA_INACTIVA`, `SEM_PERMISSAO`).
+- [ ] **Step 2:** Página de aceitação (`/portal/convite?…` ou a rota que o Auth devolver): o dono define a **própria** senha com `auth.updateUser({ password })`; nada de senhas escolhidas por nós.
+- [ ] **Step 3:** Testar o caminho feliz com um e-mail real e confirmar em `auth.users` que `email_confirmed_at` só é preenchido quando o convite é aceite.
+
+### Task 6.3: Reenviar, revogar, suspender, repor, transferir
+
+- [ ] **Step 1:** **Reenviar**: o caminho documentado para um convite expirado é **voltar a chamar `inviteUserByEmail`** — o próprio «Users» diz «se um convite expira antes de ser aceite, envie um novo convite», e o único caso que devolve erro é quando o e-mail já pertence a um user **confirmado**. Não apagar nada para reenviar. Mapear os dois erros reais: `Email address not authorized` (remetente integrado, ver Task 6.1) e o erro de e-mail já confirmado (que é quando se passa a `resetPasswordForEmail`).
+- [ ] **Step 2:** **Revogar convite pendente** (só quando a morada está errada ou a farmácia desistiu): o `deleteUser` do pendente arrasta a linha de `admin_users` pela FK `on delete cascade`. Verificar primeiro que a conta não tem dados de negócio associados (nunca apagar depois de aceite — aí o caminho é suspender, Step 3) e registar o motivo.
+- [ ] **Step 3:** **Suspender**: `updateUserById(userId, { ban_duration: '876000h' })` **e** `admin_users`/farmacia em estado inactivo. Um ban não mata sessões já emitidas — o corte efetivo é o `pharmacies.active = false` que `getPharmacySession` já exige, mais `pharmacy_staff.active = false` se aplicável. **Nunca** `delete`.
+- [ ] **Step 4:** **Repor acesso**: `resetPasswordForEmail` no e-mail do dono (auditado com motivo).
+- [ ] **Step 5:** **Transferir titularidade**: convite ao novo dono → confirmação → desactivar a conta antiga; exige `team.manage`-like dupla aprovação (pede `onboarding`, aprova `superadmin`) e motivo.
+
+---
+
+## Phase 7 — Planos: atribuir, mudar, gravar estado
+
+### Task 7.1: Server Actions
+
+- [ ] **Step 1:** `lib/actions/platform-plans.js`: `assignPlan({ pharmacyId, planCode, reason })`, `startTrial({ pharmacyId, planCode, until, reason })`, `startGrace({ pharmacyId, until, reason })`, `suspendForBilling({ pharmacyId, reason })`, `resumePlan({ pharmacyId })`. Todas com `requirePlatform(...)` + `logPlatformAudit` com `before`/`after` (`plan_code`, `status`, prazos).
+- [ ] **Step 2:** `getSubscriptions()` e `getPlanHistory(pharmacyId)` (a partir de `platform_audit_log` filtrado por acção `plan.*`), para o ecrã.
+
+### Task 7.2: Ecrã
+
+- [ ] **Step 1:** `app/interno/(console)/planos/page.js`: subscrições por plano/estado, prazos em destaque (trial a acabar, graça a expirar), notas internas e histórico por farmácia.
+- [ ] **Step 2:** `PlanPanel.jsx` na ficha da farmácia: mudar plano, iniciar trial, dar graça, suspender por pagamento — cada acção com motivo e resumo antes/depois.
+
+### Task 7.3: Aplicar os entitlements no portal (a parte que muda o produto)
+
+> **ESTADO: FEITA em 16/10/2026** — portão de plano em 5 páginas, guardas de servidor em 7 acções e chip do plano na sidebar. Verificado ponta a ponta no browser com uma farmácia de teste descartável (criada e apagada no fim; as 9 de produção não foram tocadas).
+
+- [x] **Step 1:** `requireEntitlement(pharmacyId, feature, need)` em [lib/platform/subscriptions.js](lib/platform/subscriptions.js): atende funcionalidades (chave de `FEATURES`) e limites numéricos (`need` contra `entitlements[chave]`), e com o interruptor desligado devolve `ok: true` sem ler a base de dados.
+- [x] **Step 2 (com uma excepção deliberada):** guardas em `createApiKey` (`apiKeys`), `saveWebhook` (`webhooks`), `previewStockImport`/`startStockImport` (`importRows`), `createStaffProfile` (`staffProfiles`), `getMyMovements` (`movimentos`), `getSalesReport` (`vendas`), `getPerformanceReport`/`listTeam` (`desempenho`/`equipa`). **Não** foi tocado o `app/api/ingest/stock/route.js`: fechar a ingestão por plano pararia a sincronização das 2 chaves que estão a correr em produção. **Decidido em 16/10/2026:** fica aberta por agora, mesmo com as farmácias no plano de entrada — o limite `ingestPerMinute` já existe no catálogo, é só ligá-lo quando se quiser.
+- [x] **Step 3:** `components/portal/PlanGate.jsx` (server component) com o estado bloqueado: diz a funcionalidade, o plano que a abre, que **nada se perdeu** e o contacto (`CONTACT_EMAIL`/`CONTACT_WHATSAPP` de `lib/constants.js`). Na sidebar, o item fora do plano **não desaparece**: fica esbatido com cadeado e um `title` que explica.
+- [x] **Step 4:** Ciclo testado com dados reais, e por medição:
+
+**Evidência (16/10/2026, farmácia de teste `teste-planos-portal`, já apagada)**
+
+| Prova | Como | Resultado |
+|---|---|---|
+| Chip do plano no portal | `document.querySelector('.portal-side-plan')` | `Localizador` — e, com a farmácia em `gestao`, `Gestão` |
+| Itens fora do plano | DOM da sidebar, plano de entrada | 5 travados com cadeado (Movimentos, Vendas, Desempenho, Equipa, Integração) e `title` «faz parte de um plano superior»; livres: Visão geral, Atenção, Stock, Reservas, Sessão, Ajuda |
+| Página bloqueada | `/portal/movimentos` e `/portal/integracao` | estado «Função do plano Gestão» com o contacto e «voltar à visão geral» — em **duas** farmácias diferentes (a de teste e a de produção que já tinha sessão no browser) |
+| **O servidor recusa, não só a página** | plano lido como `gestao`, painel aberto, plano mudado para `localizador` na base de dados, e clique em **Criar chave** | mensagem «Esta função faz parte de um plano superior…» e **0 chaves** criadas (conferido por SQL) |
+| Ramo dos limites numéricos | o mesmo com a Equipa e `createStaffProfile` (`staffProfiles` = 0 no plano de entrada) | recusa do servidor, **1 perfil** na farmácia (só o de origem); a página recarregou para o estado do plano |
+| Interruptor a desligar (saída de emergência) | servidor reiniciado com `PLANS_ENFORCED=false` | Integração e Equipa renderizam normais, 0 cadeados, chip «Plano Localizador» — o portal volta ao comportamento anterior sem deploy de código |
+| Modo por omissão (aplicado) | servidor sem variável nenhuma | `/portal/movimentos` bloqueado e 5 itens com cadeado, como desenhado — confirma que a decisão de 16/10/2026 ficou a valer sem depender de configuração |
+| `npm run build` | build completo | **0 erros**; `prettier --check` limpo nos ficheiros desta passagem |
+| Limpeza | apagar user + farmácia de teste | contagens de volta ao original: 9 farmácias, 9 subscrições, 1 perfil, 2 chaves, 2 contas |
+
+**Defeito encontrado e corrigido durante a verificação:** com a página já aberta, os painéis de Equipa, Movimentos e Vendas mostravam **«Erro inesperado.»** em vez de explicarem o plano (o mapa de erros desses três componentes não conhecia `PLANO_INSUFICIENTE`). Corrigido nos três, e a página Desempenho passou a devolver o próprio estado do plano quando a acção é recusada, em vez de «recarregue e tente de novo» — que recarregado dava exactamente o mesmo.
+
+---
+
+## Phase 8 — Auditoria: ecrã e exportação
+
+### Task 8.1: Ecrã
+
+- [ ] **Step 1:** `app/interno/(console)/auditoria/page.js` (só `superadmin`/`auditoria`): filtros por actor, papel, acção, farmácia e período; colunas tempo, actor (email+papel), acção, alvo, motivo, e detalhe expansível com `before`/`after`.
+- [ ] **Step 2:** Paginação por cursor (`created_at`+`id`) — a tabela cresce para sempre.
+
+### Task 8.2: Exportação (auditada)
+
+- [ ] **Step 1:** Export CSV por streaming, com `requirePlatform('audit.export')`, limite de período e **um registo na própria trilha** (`action='audit.export'`, `after={ filtros, linhas }`). Exportar é uma acção sensível: também tem de ser auditável.
+- [ ] **Step 2:** Retenção: definir e documentar (proposta: **5 anos** para acções de conta/plano, 24 meses para leitura; nada de apagar antes disso). Não há prazo universal — a decisão fica escrita no plano.
+
+---
+
+## Phase 9 — Equipa CF (níveis internos)
+
+- [ ] **Step 1:** `app/interno/(console)/equipa/page.js`: pessoas, nível, último acesso, MFA activo (sim/não), convites pendentes.
+- [ ] **Step 2:** Criar/alterar nível com `requirePlatform('team.manage')` + MFA, proibindo: alterar o próprio nível, e remover/desactivar o **último** `superadmin` (verificação em SQL antes do update).
+- [ ] **Step 3:** Convite de membro da equipa pelo mesmo `inviteUserByEmail`, mas com `role` definido **antes** do primeiro login e MFA exigido no primeiro acesso.
+- [ ] **Step 4:** Nota de partida pequena: semear apenas **um** `superadmin`. Os restantes níveis existem na matriz mas ficam por atribuir até haver uma segunda pessoa — a matriz é a garantia de que, quando ela chegar, não se inventa permissão no dia.
+
+---
+
+## Phase 10 — Bootstrap da primeira conta interna
+
+### Task 10.1: Script
+
+- [ ] **Step 1:** `scripts/create-pharmacy-user.js` passa a aceitar `--platform-role` (cria `admin_users` sem `pharmacy_id`) e `--invite` (usa `inviteUserByEmail` em vez de senha passada por nós). Actualizar o cabeçalho de uso e o `--help` implícito do parser.
+- [ ] **Step 2:** Correr o bootstrap: `node --env-file=.env.local scripts/create-pharmacy-user.js --email <email do fundador> --invite --platform-role superadmin --name '<nome>'` e aceitar o convite.
+- [ ] **Step 3:** Confirmar `select role from admin_users where role <> 'farmacia'` → 1 linha `superadmin`; e que `is_platform_member()` devolve `true` nessa sessão.
+
+### Task 10.2: Runbook (documentação operacional)
+
+- [ ] **Step 1:** Escrever o runbook em `localizador/` (ou secção própria no fim deste ficheiro, na implementação): criar superadmin, convidar farmácia, converter lead, mudar plano, dar graça, suspender, repor acesso, transferir titularidade, reverter um plano errado (`PLANS_ENFORCED=false` + correcção em `pharmacy_subscriptions`), e o que fazer se a trilha não registar (ver log `platform`).
+- [ ] **Step 2:** Actualizar `localizador/2026-10-12-gestao-e-faturacao-apis.md` com uma linha a apontar para este plano (a ideia 2A deixou de ser «falta isto» e passa a ter equipa interna e planos).
+
+---
+
+## Phase 11 — Verificação end-to-end (smoke test)
+
+### Task 11.1: Caminho feliz (superadmin, com MFA)
+
+- [ ] **Step 1:** `/interno/login` com a conta `superadmin` → pede TOTP → entra no painel.
+- [ ] **Step 2:** Criar uma farmácia de teste (`--platform-role` inexistente na UI), **convidar** um e-mail real → aceitar o convite → definir senha → entrar em `/portal/login` e confirmar que a farmácia vê o portal em `localizador` (sem Movimentos, Vendas, Desempenho, Equipa, Integração).
+- [ ] **Step 3:** Mudar a farmácia de teste para `gestao` (motivo preenchido) → recarregar o portal → as funções aparecem; **conferir a trilha**: `select action, actor_role, reason, before, after from platform_audit_log order by created_at desc limit 5;`.
+- [ ] **Step 4:** Desactivar a farmácia → confirmar que o portal da farmácia corta o acesso (não só esconde) e que `/farmacia/<slug>` deixa de mostrar stock.
+
+### Task 11.2: Permissões (o teste que costuma falhar)
+
+- [ ] **Step 5:** Entrar com uma conta `suporte`: confirmar que **não** vê Farmácias→editar, contas, planos, auditoria; e que chamar as Server Actions por POST directo (`invitePharmacyAccount`, `assignPlan`) devolve `SEM_PERMISSAO` e **regista** a tentativa.
+- [ ] **Step 6:** Repetir com `faturacao` (vê plano, não vê reservas) e com `auditoria` (vê trilha, não altera nada; tentar exportar sem MFA → `MFA_NECESSARIO`).
+
+### Task 11.3: Limites
+
+- [x] **Step 7 (parcial, medido):** na farmácia de teste com plano de entrada — **criar chave de API → `PLANO_INSUFICIENTE`** e **criar perfil de equipa → `PLANO_INSUFICIENTE`** (o ramo dos limites numéricos), sem nada criado (conferido por SQL). Ficou por exercer o caminho do **CSV** (`importRows`): a importação é um fluxo de vários passos no painel e o guard é o mesmo código já provado nas duas chaves acima.
+- [ ] **Step 8:** Numa farmácia `gestao`: criar 2 chaves (ok) e a 6ª de webhook → `LIMITE_DESTINOS` com mensagem a nomear o plano. (Não exercido: o teto de 5 destinos do `gestao` é o mesmo valor que a constante antiga já aplicava, e levantar 6 webhooks a sério criaria destinos falsos.)
+
+### Task 11.4: Auditoria e integridade
+
+- [ ] **Step 9:** Confirmar no SQL Editor que `update`/`delete` em `platform_audit_log` falham mesmo em `service_role`.
+- [ ] **Step 10:** Confirmar que cada acção das Tasks 11.1–11.3 tem linha na trilha com actor, papel, farmácia e motivo (nas destrutivas).
+
+---
+
+## Phase 12 — Commit + push
+
+- [ ] **Step 1:** `git status` → confirmar exatamente os ficheiros das tabelas *Criar*/*Modificar* (e nenhum do portal público).
+- [ ] **Step 2:** `npm run format` + `npm run build` → 0 erros.
+- [ ] **Step 3:** Apresentar o diff por concern (o utilizador quer revisão antes do push): 1) migrações 0027/0028 e o seu teste no SQL Editor; 2) `lib/plans.js` + `lib/platform/*`; 3) área interna (`app/interno/**` + `components/interno/**`); 4) bootstrap/script; 5) gates de entitlements no portal da farmácia.
+- [ ] **Step 4:** Commits separados por concern (não monolítico), ex.: `feat(db): 0027 níveis internos + trilha de auditoria`, `feat(db): 0028 subscrições por farmácia`, `feat(platform): planos, permissões e sessão interna`, `feat(interno): área interna (farmácias, contas, planos, auditoria)`, `feat(portal): entitlements por plano`, `feat(scripts): bootstrap de conta interna`.
+- [ ] **Step 5:** Push **só com autorização** (e depois do deploy de produção voltar a estar verde: o cron passou para `pg_cron`/`pg_net` na 0026).
+
+---
+
+## Risk & Rollback
+
+| Risco | Mitigação | Rollback |
+|---|---|---|
+| Alargar o CHECK de `admin_users.role` deixa alguém sem acesso | Não há contas internas hoje (0 medidas); `is_admin()` continua a aceitar `admin`; os 2 utilizadores `farmacia` não são tocados | `alter table … add constraint` de volta ao CHECK antigo (as linhas `farmacia`/`admin` continuam válidas) |
+| O `drop constraint if exists` erra o nome e ficam **dois** CHECK em cima (a migração parece passar mas `suporte` continua recusado) | Task 1.1 Step 1 lê `c.conname` antes de escrever SQL; Task 1.3 Step 3 prova que o erro de um insert é 23503 (FK) e não 23514 (CHECK) | Correr `alter table public.admin_users drop constraint <nome-extra>;` e repetir o teste |
+| Alguém cria uma conta nova com o papel legado `admin` «para testar» e escapa à matriz | O runbook proíbe `role='admin'` em contas novas; `can()` trata `admin` como `superadmin`, por isso a conta é visível como nível alto e não como invisível | Repor o papel correcto com `update admin_users set role='superadmin' where user_id=…` (com MFA e registo na trilha) |
+| E-mails de convite não chegam (remetente integrado: 2/hora e recusa endereços fora da equipa, com o erro `Email address not authorized`) | Task 6.1 é bloqueante: SMTP próprio configurado e testado **antes** de convidar clientes (com SMTP próprio o limite inicial sobe a 30/hora, ajustável) | Enquanto não estiver testado, convidar só para endereços da equipa (que o remetente integrado aceita) para validar o fluxo; nenhum convite a cliente antes do SMTP |
+| Gating corta um cliente pagante por engano | `PLANS_ENFORCED=false` desliga os gates sem deploy; mensagem de erro diz qual plano falta; subida/descida de plano auditada com antes/depois | Desligar o interruptor, corrigir `pharmacy_subscriptions`, voltar a ligar |
+| Um `suporte` ganha poderes por engano | Matriz fechada em código (uma acção nova entra na matriz antes da UI); guards em todas as Server Actions; teste 11.2 passa por POST directo | Alterar a matriz (1 linha) e redeploy; a trilha mostra quem fez o quê |
+| Perder o último `superadmin` (ficar sem equipa) | Verificação SQL que impede remover/desactivar o último `superadmin`; bootstrap documentado no script | Recriar o superadmin pelo script (Phase 10) |
+| Ban não mata sessões activas | Suspensão = ban **e** farmácia/ perfil inactivos (`getPharmacySession` já exige farmácia activa) | Reactivar farmácia/perfis; o ban mantém-se até decisão |
+| Convite apagado por engano arrasta `admin_users` em cascata | Revogar só user Auth **pendente** (nunca confirmado); nunca apagar conta com histórico; regra escrita no runbook | Reconvidar o mesmo e-mail e religar a `pharmacy_id` |
+| Auditoria cresce sem limite | Índices por data/farmácia/actor; paginação por cursor; política de retenção definida (Phase 8) | Expurgo por `pg_cron` (job novo) se o volume doer — nunca `update`/`delete` manual |
+| Token de sessão interna roubado dá acesso a dados de clientes | A RLS **não** foi alargada aos níveis de leitura (só `admin`/`superadmin`); a leitura de `suporte`/`auditoria` passa por código que decide o que devolve, e as respostas não são cacheadas (`dynamic = 'force-dynamic'`, `no-store`) | Revogar o nível (volta a `farmacia`/inactivo) e `/interno/login` corta no acesso seguinte; a trilha mostra o que foi lido e exportado |
+| Duplicar o `admin_users` como identidade interna e da farmácia confunde | A área interna só olha para `role <> 'farmacia'`; o portal só entra com `role='farmacia'` (já validado em `lib/pharmacy-session.js`) | Manter as duas sessões separadas (`lib/pharmacy-session.js` vs `lib/platform/session.js`) — nunca cruzar |
+| Adicionar 5 níveis internos para 1 pessoa | Semear só `superadmin`; níveis existem na matriz mas ficam por atribuir | Ignorar os níveis extra até haver a segunda pessoa |
+
+---
+
+## Out of Scope (deferido, com o porquê)
+
+- **Gateway de pagamento** (Multicaixa/transferência/Stripe): o mercado paga 5.000–25.000 Kz/mês e a cobrança é manual hoje; só faz sentido com o primeiro cliente pago e volume.
+- **Facturação/AGT**: é a fase 2B/C do roadmap (`localizador/2026-10-12-gestao-e-faturacao-apis.md`) — outro produto, outra equipa, certificação própria. O plano `conformidade` existe só como catálogo.
+- **Impersonação («entrar como a farmácia»)**: risco alto para o valor; se voltar, exige ticket, TTL, banner visível e actor/subject separados na trilha.
+- **Redes/grupos (2–10 lojas)** e preço por loja: primeiro cliente de grupo; a migração futura é uma tabela `pharmacy_members` (N contas ↔ N farmácias) e o `admin_users.pharmacy_id` fica 1↔1 por agora.
+- **Auto-registo de farmácias**: destrói a curadoria do directório; a entrada é por convite depois do funil.
+- **Tabelas `plans`/`plan_features` editáveis no ecrã**: o código é a fonte de verdade nesta fase.
+- **MFA obrigatório em todas as acções** (agora só nas sensíveis) e **SSO** para a equipa CF.
+- **Dupla aprovação para eliminação de pacotes de dados e exportações em massa** (só a transferência de titularidade a tem nesta fase).
+- **Renomear `scripts/create-pharmacy-user.js` para `create-user.js`** (fica a extensão com `--platform-role`).
+- **PWA/offline da área interna** e **expurgo automático da trilha** por `pg_cron`.
+- **Migrar o funil para CRM externo** (HubSpot/Linear): a `pharmacy_leads` já tem os estados certos; integrar antes disso é custo.
+
+---
+
+## Fontes
+
+**Segurança e desenho de acessos**
+
+- [OWASP — Authorization Cheat Sheet](https://cheatsheetseries.owasp.org/cheatsheets/Authorization_Cheat_Sheet.html) · [Multi-Tenant Security](https://cheatsheetseries.owasp.org/cheatsheets/Multi_Tenant_Security_Cheat_Sheet.html) · [Logging Cheat Sheet](https://cheatsheetseries.owasp.org/cheatsheets/Logging_Cheat_Sheet.html) · [Forgot Password Cheat Sheet](https://cheatsheetseries.owasp.org/cheatsheets/Forgot_Password_Cheat_Sheet.html)
+- [NIST SP 800-53 (AC-3(2), autorização dupla)](https://csrc.nist.gov/pubs/sp/800/53/r5/upd1/final) · [texto do controlo AC-3(2)](https://grcacademy.io/nist-800-53/controls/ac-3-2/)
+- [CIS Control 6 — Access Control](https://cas.docs.cisecurity.org/en/latest/source/Controls6/)
+- [AWS SaaS Lens — onboarding de tenants](https://wa.aws.amazon.com/saas.question.OPS_3.en.html)
+- [WorkOS — Impersonation](https://workos.com/docs/authkit/impersonation) · [Microsoft — GDAP (acesso de parceiro granular)](https://learn.microsoft.com/en-us/partner-center/customers/gdap-introduction)
+- [Google Cloud — service accounts](https://docs.cloud.google.com/iam/docs/service-account-overview)
+- [AWS S3 Object Lock (WORM)](https://docs.aws.amazon.com/AmazonS3/latest/userguide/object-lock.html) · [CloudTrail — integridade de logs](https://docs.aws.amazon.com/awscloudtrail/latest/userguide/cloudtrail-log-file-validation-intro.html)
+
+**Planos, entitlements e cobrança**
+
+- [Stripe — Entitlements](https://docs.stripe.com/billing/entitlements) · [Billing alerts/limites](https://docs.stripe.com/api/billing/alert) · [Alterar preço/subscrição](https://docs.stripe.com/billing/subscriptions/change-price) · [Ciclo de subscrição e `past_due`](https://docs.stripe.com/billing/subscriptions/overview) · [Webhooks](https://docs.stripe.com/billing/subscriptions/webhooks)
+
+**Supabase (Auth, convites, MFA, ban)**
+
+- [Users — convites e validade](https://supabase.com/docs/guides/auth/users) · [`inviteUserByEmail`](https://supabase.com/docs/reference/javascript/auth-admin-inviteuserbyemail) · [`generateLink`](https://supabase.com/docs/reference/javascript/auth-admin-generatelink) · [`resetPasswordForEmail`](https://supabase.com/docs/reference/javascript/auth-resetpasswordforemail) · [`createUser`](https://supabase.com/docs/reference/javascript/auth-admin-createuser) · [`updateUserById` (ban)](https://supabase.com/docs/reference/javascript/auth-admin-updateuserbyid)
+- [TOTP e fluxo de MFA](https://supabase.com/docs/guides/auth/auth-mfa/totp) · [AAL e enforcement](https://supabase.com/docs/guides/auth/auth-mfa) · [`getAuthenticatorAssuranceLevel`](https://supabase.com/docs/reference/javascript/auth-mfa-getauthenticatorassurancelevel)
+- [Rate limits de e-mail](https://supabase.com/docs/guides/auth/rate-limits) · [SMTP próprio](https://supabase.com/docs/guides/auth/auth-smtp) · [Templates](https://supabase.com/docs/guides/auth/auth-email-templates) · [Redirect URLs](https://supabase.com/docs/guides/auth/redirect-urls)
+
+**Contexto interno do projecto**
+
+- `localizador/2026-10-12-gestao-e-faturacao-apis.md` — preços de referência, escalão gratuito, neutralidade do directório, fases 2A/2B/2C
+- `docs/2026-06-15-admin-role-ui.md` — vocabulário e padrão (role prop, ConfirmModal, arquivar em vez de eliminar, trilha com autor)
+- Código medido em 16/10/2026: `0001_initial_schema.sql`, `0018_pharmacy_staff.sql`, `0022`, `0023`, `0025`, `0026`, `lib/pharmacy-session.js`, `lib/staff-session.js`, `lib/actions/{pharmacy-staff,integration,pharmacy-portal}.js`, `scripts/create-pharmacy-user.js`

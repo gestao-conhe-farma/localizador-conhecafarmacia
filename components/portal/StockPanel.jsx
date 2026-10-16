@@ -17,6 +17,7 @@ import DrugCreateForm from '@/components/portal/DrugCreateForm'
 import { setSaleOptions, validatePendingDrug } from '@/lib/actions/pharmacy-portal'
 import { unitLabel } from '@/lib/sale-options'
 import { CloseIcon } from '@/components/ui/Icon'
+import Notice from '@/components/ui/Notice'
 import StateLabel from '@/components/portal/StateLabel'
 import RestockDrawer from '@/components/portal/RestockDrawer'
 
@@ -1165,40 +1166,27 @@ export default function StockPanel({ compact = false, isManager = false }) {
       <RestockDrawer open={restockOpen} onClose={() => setRestockOpen(false)} />
 
       {showStale && (
-        <div className="portal-banner" role="status">
-          <span>
-            {staleCount === 1
-              ? 'O seu stock está desactualizado — actualize para voltar a aparecer como «confirmado» no Localizador.'
-              : `${staleCount} produtos com stock desactualizado — actualize para voltarem a aparecer como «confirmados» no Localizador.`}
-          </span>
-          <button
-            type="button"
-            className="portal-banner-close"
-            aria-label="Dispensar este lembrete (volta se a situação piorar)"
-            title="Dispensar — volta se a situação piorar"
-            onClick={() => dismissBanner('stale', { count: staleCount })}
-          >
-            <CloseIcon size={12} />
-          </button>
-        </div>
+        <Notice
+          role="status"
+          onDismiss={() => dismissBanner('stale', { count: staleCount })}
+          dismissLabel="Dispensar este lembrete (volta se a situação piorar)"
+        >
+          {staleCount === 1
+            ? 'O seu stock está desactualizado — actualize para voltar a aparecer como «confirmado» no Localizador.'
+            : `${staleCount} produtos com stock desactualizado — actualize para voltarem a aparecer como «confirmados» no Localizador.`}
+        </Notice>
       )}
 
       {showExpiry && (
-        <div className="portal-banner portal-banner--danger" role="alert">
-          <span>
-            Validade: {expiryMessage}. Os produtos com validade passada deixam de aparecer no
-            Localizador até a validade ser corrigida.
-          </span>
-          <button
-            type="button"
-            className="portal-banner-close"
-            aria-label="Dispensar este lembrete (volta se a situação piorar)"
-            title="Dispensar — volta se a situação piorar"
-            onClick={() => dismissBanner('expiry', { ...expiryBuckets })}
-          >
-            <CloseIcon size={12} />
-          </button>
-        </div>
+        <Notice
+          tone="danger"
+          role="alert"
+          onDismiss={() => dismissBanner('expiry', { ...expiryBuckets })}
+          dismissLabel="Dispensar este lembrete (volta se a situação piorar)"
+        >
+          Validade: {expiryMessage}. Os produtos com validade passada deixam de aparecer no
+          Localizador até a validade ser corrigida.
+        </Notice>
       )}
 
       {/* KPIs de resumo (refs 4/6): contagens REAIS do snapshot —

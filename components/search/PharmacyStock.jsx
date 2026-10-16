@@ -8,6 +8,7 @@ import { openStatus } from '@/lib/opening-hours'
 import { monthYear } from '@/lib/expiry'
 import { logError } from '@/lib/log'
 import ReserveModal from '@/components/search/ReserveModal'
+import Notice from '@/components/ui/Notice'
 import { formatOptionLabel, formatPerBase, unitLabel } from '@/lib/sale-options'
 
 import { fmtKzPublic as fmtKz } from '@/lib/reservation-format'
@@ -292,11 +293,17 @@ export default function PharmacyStock({ slug, initialItems = null }) {
 
           {!error && items !== null && (
             <>
-              {/* CRÍTICOS — painel verde-água com borda esquerda (meio-termo A×D) */}
+              {/* CRÍTICOS — o painel é um aviso (tone="ok", large) com o
+                  ícone de prioridade: verde de «temos em stock», nunca um
+                  estado de erro. */}
               {criticals.length > 0 && !query && (
                 <section className="crit-section">
-                  <div className="crit-panel">
-                    <p className="crit-k">Críticos em stock — prioridade máxima</p>
+                  <Notice
+                    tone="ok"
+                    icon="prioridade"
+                    large
+                    title="Críticos em stock — prioridade máxima"
+                  >
                     {criticals.map((it) => (
                       <div key={it.stock_item_id} className="crit-item">
                         <div>
@@ -347,7 +354,7 @@ export default function PharmacyStock({ slug, initialItems = null }) {
                         </div>
                       </div>
                     ))}
-                  </div>
+                  </Notice>
                 </section>
               )}
 

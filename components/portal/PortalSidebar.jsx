@@ -9,7 +9,7 @@ import { leaveStaffProfile } from '@/lib/actions/pharmacy-staff'
 import { createClient } from '@/lib/supabase/client'
 import { getRestockAck } from '@/lib/restock'
 import { logWarn } from '@/lib/log'
-import { ChevronIcon, CloseIcon, NavIcon } from '@/components/ui/Icon'
+import { ChevronIcon, CloseIcon, LockIcon, NavIcon } from '@/components/ui/Icon'
 import ThemeToggle from '@/components/ui/ThemeToggle'
 
 const NAV = [
@@ -38,6 +38,7 @@ const NAV = [
         href: '/portal/movimentos',
         label: 'Movimentos',
         icon: 'movimentos',
+        feature: 'movimentos',
       },
       {
         href: '/portal/reservas',
@@ -45,10 +46,15 @@ const NAV = [
         icon: 'reservas',
         bell: true,
       },
-      { href: '/portal/vendas', label: 'Vendas', icon: 'vendas' },
+      { href: '/portal/vendas', label: 'Vendas', icon: 'vendas', feature: 'vendas' },
       // Visível a todos (0018): o gerente vê a equipa, o balcão vê a
       // versão pessoal — o escopo é imposto no servidor.
-      { href: '/portal/desempenho', label: 'Desempenho', icon: 'desempenho' },
+      {
+        href: '/portal/desempenho',
+        label: 'Desempenho',
+        icon: 'desempenho',
+        feature: 'desempenho',
+      },
     ],
   },
   {
@@ -58,11 +64,16 @@ const NAV = [
     group: 'Farmácia',
     items: [
       { href: '/portal/sessao', label: 'Sessão', icon: 'perfil' },
-      { href: '/portal/equipa', label: 'Equipa', icon: 'equipa', gerente: true },
+      { href: '/portal/equipa', label: 'Equipa', icon: 'equipa', gerente: true, feature: 'equipa' },
       // Integração (0023/0024): chaves de API, importação CSV e webhooks.
       // Visível a todos — criar/revogar chaves é que exige perfil gerente
       // (a página diz isso e desactiva o que não for permitido).
-      { href: '/portal/integracao', label: 'Integração', icon: 'integracao' },
+      {
+        href: '/portal/integracao',
+        label: 'Integração',
+        icon: 'integracao',
+        feature: 'integracao',
+      },
       { href: '/portal/ajuda', label: 'Ajuda', icon: 'ajuda' },
     ],
   },
@@ -95,8 +106,13 @@ function iniciais(nome) {
  * `staff` (0018): perfil activo do dispositivo — é o ÚNICO lugar com o
  * nome do farmacêutico (menu directo com trocar/sair; a página Sessão
  * tem o PIN e os seus dados) e esconde Equipa a quem não é gerente.
+ *
+ * `plan` (0028): o que a farmácia tem direito a usar. Os itens fora do
+ * plano NÃO desaparecem — ficam com um cadeado e um `title` a dizer
+ * porque estão fechados, porque esconder uma função que continua lá
+ * deixa a farmácia a procurá-la. A autorização a sério é do servidor.
  */
-export default function PortalSidebar({ pharmacyId, userName, staff, navOpen, onClose }) {
+export default function PortalSidebar({ pharmacyId, userName, staff, plan, navOpen, onClose }) {
   const pathname = usePathname()
   const [pending, setPending] = useState(0)
   const [pulse, setPulse] = useState(false)
@@ -186,6 +202,11 @@ export default function PortalSidebar({ pharmacyId, userName, staff, navOpen, on
     ...g,
     items: g.items.filter((t) => !t.gerente || staff?.role === 'gerente'),
   }))
+
+  // Item fora do plano: com a aplicação dos planos ligada e sem a função,
+  // fica com cadeado (o link mantém-se — a página é que explica).
+  const bloqueado = (feature) =>
+    Boolean(plan?.enforced && feature && plan.features?.[feature] !== true)
   // Numeração estrutural (01, 02, …) — a mesma do NavLateral do gestão.
   const flat = grupos.flatMap((g) => g.items)
 
@@ -227,6 +248,19 @@ export default function PortalSidebar({ pharmacyId, userName, staff, navOpen, on
               />
             </Link>
             <p className="portal-side-eyebrow">Portal da farmácia</p>
+            {plan?.nome && (
+              <p
+                className="portal-side-plan"
+                title={
+                  plan.enforced
+                    ? `Plano ${plan.nome} — os itens com cadeado precisam de um plano superior.`
+                    : `Plano ${plan.nome}.`
+                }
+              >
+                {plan.nome}
+                {plan.estadoLabel ? <span> · {plan.estadoLabel}</span> : null}
+              </p>
+            )}
           </div>
           {/* Só visível no mobile, quando a sidebar é drawer: cobre o botão
               ☰ da top-bar, por isso precisa de fechar próprio. */}
@@ -267,6 +301,7 @@ export default function PortalSidebar({ pharmacyId, userName, staff, navOpen, on
                     pulse={pulse}
                     attention={attention}
                     expiry={expiry}
+                    locked={bloqueado(t.feature)}
                     onClose={onClose}
                   />
                 )
@@ -327,7 +362,7 @@ export default function PortalSidebar({ pharmacyId, userName, staff, navOpen, on
 }
 
 /** Item simples — link directo com número, ícone, badges. */
-function NavSimples({ item, num, pending, pulse, attention, expiry, onClose }) {
+function NavSimples({ item, num, pending, pulse, attention, expiry, locked, onClose }) {
   const pathname = usePathname()
   const active =
     pathname === item.href || (item.href !== '/portal' && pathname.startsWith(item.href + '/'))
@@ -335,8 +370,11 @@ function NavSimples({ item, num, pending, pulse, attention, expiry, onClose }) {
   return (
     <Link
       href={item.href}
-      className={`portal-nav-item${active ? ' portal-nav-item--active' : ''}`}
+      className={`portal-nav-item${active ? ' portal-nav-item--active' : ''}${locked ? ' portal-nav-item--locked' : ''}`}
       aria-current={active ? 'page' : undefined}
+      title={
+        locked ? `${item.label} faz parte de um plano superior — abra para saber como` : undefined
+      }
       onClick={onClose}
       // Alvo do tour no ITEM (sempre existe); o badge animado é o detalhe
       // que o passo descreve — antes vivia só no badge e, sem reservas
@@ -346,6 +384,11 @@ function NavSimples({ item, num, pending, pulse, attention, expiry, onClose }) {
       <span className="portal-nav-num">{num}</span>
       <NavIcon name={item.icon} />
       <span className="portal-nav-text">{item.label}</span>
+      {locked && (
+        <span className="portal-nav-lock" aria-hidden="true">
+          <LockIcon size={12} />
+        </span>
+      )}
       {item.attention && attention > 0 && (
         <span
           className="portal-nav-badge portal-nav-badge--red"

@@ -4,6 +4,8 @@ import { getPerformanceReport } from '@/lib/actions/pharmacy-staff'
 import { fmtKz } from '@/lib/reservation-format'
 import StaffCompare from '@/components/portal/StaffCompare'
 import StaffShareDonut from '@/components/portal/StaffShareDonut'
+import { PlanBlocked } from '@/components/portal/PlanGate'
+import { allow, getSubscription } from '@/lib/platform/subscriptions'
 
 export const metadata = {
   title: 'Portal da farmácia — desempenho',
@@ -40,12 +42,24 @@ function pctClasse(pct) {
  */
 export default async function DesempenhoPage({ searchParams }) {
   const staff = await requireActiveStaff()
+  // O plano decide ANTES do relatório: sem a função, o turno não paga o
+  // custo de o calcular para o esconder a seguir.
+  const sub = await getSubscription(staff.pharmacy_id)
+  if (!allow(sub, 'desempenho')) return <PlanBlocked feature="desempenho" sub={sub} />
+
   const isManager = staff.role === 'gerente'
   const params = await searchParams
   const dias = JANELAS.some((j) => j.id === Number(params?.dias)) ? Number(params.dias) : 30
   const report = await getPerformanceReport({ days: dias })
 
   if (!report.ok) {
+    // O plano pode ter mudado entre a leitura acima e o relatório: o
+    // servidor recusou, e a resposta certa é o estado do plano (com o
+    // caminho para tratar dele) — e não «recarregue e tente de novo»,
+    // que recarregado dá exactamente o mesmo.
+    if (report.error === 'PLANO_INSUFICIENTE') {
+      return <PlanBlocked feature="desempenho" sub={sub} />
+    }
     return (
       <div className="portal-page">
         <div className="portal-page-head">

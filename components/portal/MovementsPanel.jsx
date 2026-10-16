@@ -20,6 +20,9 @@ const ERRORES = {
   SESSAO_EXPIRADA: 'Sessão expirada — recarregue a página e entre novamente.',
   MIGRACOES_EM_FALTA: 'O histórico ainda não está disponível nesta base de dados.',
   FALHA_CARREGAR: 'Não foi possível carregar o histórico. Tente novamente.',
+  // O plano pode mudar com a página já aberta (o servidor recusa sempre).
+  PLANO_INSUFICIENTE:
+    'Esta função faz parte de um plano superior ao da farmácia. Fale com a equipa da Conheça Farmácia para tratar do plano — o que já está configurado continua a funcionar.',
 }
 
 const WINDOWS = [

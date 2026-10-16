@@ -244,18 +244,19 @@ estão no **Guia do gestor**.
 
 ## Resumo de 30 segundos
 
-| O que aconteceu | Onde vais | O que fazes |
-| --------------------------------- | ---------------------------------- | ----------------------------------------------------------------- || Cliente reservou | Reservas | Confirmar (com quantidade) → WhatsApp → Concluída quando levantar |
-| Procuro um medicamento ou reserva | Pesquisa (tecla / ou barra de cima) | Nome, molécula ou telefone → Enter |
-| Não temos o produto | Reservas | Recusar + motivo (com texto, o cliente lê) |
-| Produto esgotou | Atenção | «Repor na entrada» quando chegar mercadoria |
-| Chegou fornecedor | Stock → Entrada de stock | Escrever unidades → Somar |
-| Medicamento não está no catálogo | Stock → + Adicionar medicamento | Criar → o gerente valida e publica |
-| Saldo não bate | Movimentos | Ver o que mexeu no produto |
-| Mudou preço/validade/marca | Stock → nome do medicamento | Preencher no modal → Guardar |
-| Mudou de turno / outro colega | Fundo do menu (nome do perfil) | Trocar perfil → cartão → PIN |
-| Mudou morada, telefone ou horário | Perfil (nome da farmácia, em cima) | Editar → Guardar (visível no Localizador) |
-| Quero ver quem vendeu mais | Desempenho | Escolher 7 / 30 / 90 dias → ranking e tabela |
+| O que aconteceu                   | Onde vais                           | O que fazes                                                       |
+| --------------------------------- | ----------------------------------- | ----------------------------------------------------------------- |
+| Cliente reservou                  | Reservas                            | Confirmar (com quantidade) → WhatsApp → Concluída quando levantar |
+| Procuro um medicamento ou reserva | Pesquisa (tecla / ou barra de cima) | Nome, molécula ou telefone → Enter                                |
+| Não temos o produto               | Reservas                            | Recusar + motivo (com texto, o cliente lê)                        |
+| Produto esgotou                   | Atenção                             | «Repor na entrada» quando chegar mercadoria                       |
+| Chegou fornecedor                 | Stock → Entrada de stock            | Escrever unidades → Somar                                         |
+| Medicamento não está no catálogo  | Stock → + Adicionar medicamento     | Criar → o gerente valida e publica                                |
+| Saldo não bate                    | Movimentos                          | Ver o que mexeu no produto                                        |
+| Mudou preço/validade/marca        | Stock → nome do medicamento         | Preencher no modal → Guardar                                      |
+| Mudou de turno / outro colega     | Fundo do menu (nome do perfil)      | Trocar perfil → cartão → PIN                                      |
+| Mudou morada, telefone ou horário | Perfil (nome da farmácia, em cima)  | Editar → Guardar (visível no Localizador)                         |
+| Quero ver quem vendeu mais        | Desempenho                          | Escolher 7 / 30 / 90 dias → ranking e tabela                      |
 
 **Duas regras que valem ouro:**
 

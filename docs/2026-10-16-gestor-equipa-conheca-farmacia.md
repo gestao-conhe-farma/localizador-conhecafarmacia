@@ -253,6 +253,8 @@ Preços ancorados no mercado angolano (5.000–25.000 Kz/mês) e na recomendaç�
 
 **Regras que não se negociam:** a descida de plano **nunca apaga dados** (o que excede o limite fica visível mas inerte até caber, no espírito do «sem apagar dados automaticamente» do Stripe); a farmácia **nunca** desaparece do directório por causa de plano — `localizador` é sempre possível; e o stock existente continua a ser servido aos clientes depois de uma descida.
 
+**Decidido em 17/10/2026 — o prazo é uma linha, não um aviso.** Um `trial` ou uma `graca` com o prazo no passado põem a farmácia no plano de entrada **na hora**, na leitura (`effectivePlanOf` em [lib/platform/subscriptions.js](lib/platform/subscriptions.js)), sem job agendado e sem escrever nada na base. O `status` fica como está: é o que diz à equipa porque é que a farmácia desceu, e é o que faz «retomar» devolver exactamente o que ela tinha (`plan_code` intacto durante toda a suspensão). Os dados não se perdem, e o portal explica o motivo em vez de deixar a farmácia a adivinhar («O período de experiência terminou, por isso o portal voltou ao plano Localizador»). Uma data **em falta** conta como terminada — falhar para o mínimo, nunca para o máximo, como o código de plano desconhecido. Isto mantém a promessa que o ecrã do primeiro plano faz a quem negocia e que o comentário da 0028 já dizia — antes desta decisão a farmácia ficava com o plano pago para sempre, porque não havia nada que lesse o prazo.
+
 ### 4.3 Aplicação no servidor
 
 ```js
@@ -741,10 +743,18 @@ Uma nota de alcance que a medição obrigou a corrigir: `has_table_privilege('au
 
 ## Phase 4 — Área interna: rotas, sessão e shell
 
+> **ESTADO: FEITA (16/10/2026)** — login em dois passos, gate, shell e a área de farmácias (lista + ficha + edição + verificação + desactivar com motivo), tudo percorrido no browser com uma conta descartável e uma farmácia descartável, ambas apagadas no fim. Evidência no fim do Phase 5.
+
 ### Task 4.1: Login da equipa
 
-- [ ] **Step 1:** `app/interno/login/page.js` (Client): email+senha, depois do `signInWithPassword` pedir TOTP se `nextLevel === 'aal2'`, com as mensagens de erro explícitas (incluindo `MFA_NECESSARIO` e conta desactivada).
-- [ ] **Step 2:** Confirmar que a rota **não** é indexável (`app/robots.js` já bloqueia? se não: acrescentar `/interno` ao disallow) e que nenhum link público aponta para lá.
+- [x] **Step 1:** `app/interno/login/page.js` + `components/interno/InternoLoginForm.jsx`: email+senha e, quando a conta tem TOTP inscrito (`nextLevel === 'aal2'`), o código de seis dígitos no passo 2 — os dois passos **na mesma Server Action** (`lib/actions/platform-auth.js`), para que a sessão seja escrita no servidor (o `signInWithPassword` no browser guardava a sessão só no cliente e o servidor voltava a mandar para o login). Mensagens explícitas para `CREDENCIAIS`, `SEM_ACESSO_INTERNO`, `MFA_SEM_FACTOR`, `MFA_CODIGO` e `MFA_NECESSARIO`.
+- [x] **Step 2:** `/interno` no `disallow` de `app/robots.js` e `robots: { index: false }` no metadata das duas páginas internas. Nenhum link público aponta para lá (a área não aparece em sitemap nem em navegação do site).
+
+### Task 4.2: Gate e shell
+
+- [x] **Step 1:** `app/interno/(console)/layout.js` espelha o do portal: `getPlatformSessionVerbose()` → sem sessão, `redirect('/interno/login?motivo=…&detalhe=…')`; `export const dynamic = 'force-dynamic'`. A navegação nasce da matriz no servidor (um item só existe se o nível tiver a acção) e o `role` está no topo e no rodapé.
+- [x] **Step 2:** `components/interno/InternoShell.jsx` com sidebar (Painel, Farmácias) e a lista «Brevemente: Leads · Planos · Auditoria · Equipa» — um link para uma página que não existe é pior do que a sua ausência. Tokens/classes próprios da área interna (`styles/globals.css`, secção `interno-*`); **não** reutiliza `PortalShell`. O rodapé diz o estado do segundo factor («Sem autenticador inscrito» / «Sessão só com senha» / «Segundo factor verificado nesta sessão»), e o topo mostra o aviso `Só senha` quando é esse o caso.
+- [ ] **Step 3 (por fazer):** smoke com uma conta de nível `suporte` a confirmar na UI que só vê o que a matriz permite. O `suporte` **tem** `pharmacy.view` (vê a lista e a ficha, com os cortes de `viewScope`), mas não tem editar/verificar/desactivar — a verificação desta passagem foi feita com `superadmin`, e a matriz em si está coberta pelo teste das 135 células do Phase 3.
 
 ### Task 4.2: Gate e shell
 
@@ -758,18 +768,47 @@ Uma nota de alcance que a medição obrigou a corrigir: `has_table_privilege('au
 
 ### Task 5.1: Lista
 
-- [ ] **Step 1:** `app/interno/(console)/farmacias/page.js` (Server) → `listPharmacies()` em `lib/actions/platform-pharmacies.js` com filtros (município, `active`, `verified`, plano, «stock fresco há >5 dias») e contagens por estado.
-- [ ] **Step 2:** `components/interno/PharmacyTable.jsx`: farmácia, município, estado (activa/inactiva), selo verificado, plano, última confirmação de stock, nº de contas/perfis, e link para a ficha.
+- [x] **Step 1:** `app/interno/(console)/farmacias/page.js` (Server) → `listPharmacies(filtros)` em `lib/actions/platform-pharmacies.js` com filtros (município, estado, selo, plano — incluindo «sem plano» — e stock fresco/parado) e contagens de topo. A agregação vive na base de dados: `platform_pharmacy_overview()` (migração **0029**), porque o PostgREST não faz `group by` e sem ela a lista arrastaria seis tabelas inteiras para contar linhas.
+- [x] **Step 2:** `components/interno/PharmacyTable.jsx`: farmácia, município, estado, selo, plano, contas, stock confirmado (com a janela de 72 h do Localizador), reservas abertas, última acção e link para a ficha. As colunas operacionais só entram no payload quando `viewScope(role).operacao` é `true` — um `faturacao` não recebe stock nem reservas.
 
 ### Task 5.2: Ficha
 
-- [ ] **Step 1:** `app/interno/(console)/farmacias/[id]/page.js` com blocos: **Identificação** (nome, slug, município, morada, contactos, horário, mapa), **Estado** (activa, verificada, plano, última acção), **Contas** (contas Auth ligadas + convites pendentes), **Equipa** (perfis com PIN, papel, activo — só leitura aqui, a farmácia é que gere), **Integração** (chaves, destinos, últimas entregas), **Operação** (stock confirmado, reservas recentes, movimentos), **Histórico** (auditoria dessa farmácia).
-- [ ] **Step 2:** Acções no cabeçalho: *Editar*, *Verificar*, *Desactivar/Activar*, *Confirmar stock por telefone* (grava `stock_items` com `source='team'`, origem já existente da 0022), cada uma em `ConfirmActionModal` com **motivo obrigatório** nas destrutivas.
+- [x] **Step 1:** `app/interno/(console)/farmacias/[id]/page.js` com os blocos: **Identificação** (nome, slug, município, morada, contactos, horário, mapa, página pública), **Estado e plano** (activa/inactiva, selo, plano e prazos, contas, perfis, chaves, destinos, reservas, notas internas), **Contas da farmácia** (e-mail e estado do Auth, convite aceite ou por aceitar), **Perfis do balcão** (só leitura), **Integração**, **Stock confirmado**, **Reservas recentes** (contacto só com `viewScope.contacto`) e **Histórico** (trilha dessa farmácia, com o antes/depois e o motivo).
+- [x] **Step 2:** Acções no cabeçalho — *Editar ficha*, *Dar/Retirar selo* e *Desactivar/Activar farmácia* — com `ConfirmActionModal` e **motivo obrigatório** na desactivação. **Pendente nesta fase:** *Confirmar stock por telefone* (`stock.confirm_by_phone`, grava `stock_items` com `source='team'`) não foi construído nesta passagem; a matriz já tem a acção e a 0022 já tem a origem, falta o formulário.
 
 ### Task 5.3: Conversão de lead
 
 - [ ] **Step 1:** `app/interno/(console)/leads/page.js`: `pharmacy_leads` por estado (`novo → em_conversa → demonstracao → acordo → onboarded | descartado`), com quem mudou o quê e quando (auditoria).
 - [ ] **Step 2:** Botão **Converter** → abre o formulário de farmácia pré-preenchido (nome, município, telefone, contacto) e, ao gravar, cria farmácia + convite ao dono + `pharmacy_leads.status='onboarded'` numa só operação auditada.
+
+---
+
+**Evidência (16/10/2026, projecto `mxqhmtpshlpnbkninawt`) — percorrido no browser, não só compilado**
+
+| Prova | Como | Resultado |
+|---|---|---|
+| Build | `npm run build` | **0 erros** (`exit=0`), com `/interno`, `/interno/login`, `/interno/farmacias` e `/interno/farmacias/[id]` na tabela de rotas; `prettier --check` limpo nos ficheiros desta passagem |
+| Agregação da lista | `platform_pharmacy_overview()` (0029) | uma linha por farmácia (`9` farmácias → `9` linhas, verificado dentro da própria migração) e a lista mostra plano, contas, stock confirmado nas últimas 72 h, reservas abertas e última acção |
+| Filtros e contagens | lista com município/estado/selo/plano/stock | `10` farmácias (9 + a de teste), `3 sem selo`, `10 a mostrar`; filtros a reduzir a lista sem perder os totais |
+| Login em dois passos | conta descartável com TOTP inscrito | passo 2 («Passo 2 de 2») com `factorId`/`challengeId` no formulário; com o código, a sessão entra **`aal2`** e o shell mostra «Segundo factor verificado nesta sessão» |
+| Edição da ficha | *Editar ficha* → WhatsApp + horário | gravado na base **e** na ficha redesenhada; linha na trilha com o actor, o papel e as duas chaves alteradas (`whatsapp`, `opening_hours`) |
+| Verificação (selo) | *Dar selo de verificada* | `verified = true` e selo visível na ficha (depois do defeito 1, abaixo) |
+| **Recusa por falta de segundo factor** | *Desactivar farmácia* **com motivo escrito**, sessão `aal1` | mensagem «Esta acção exige o segundo factor…», **0 linhas na trilha** e `active` intacto na base — a acção não acontece *e* não deixa rasto de que aconteceu |
+| Desactivar com motivo | o mesmo diálogo, sessão `aal2` | `active = false` e trilha `pharmacy.deactivate` com `reason` (e o antes/depois de `active`) |
+| Corte do directório | `GET /farmacia/teste-ficha-interno` com a farmácia inactiva | «esta farmácia não existe» — sai do Localizador; a ficha de produção continua a render no mesmo pedido de controlo |
+| Corte do portal | login em `/portal/login` com a conta da farmácia inactiva | «Esta conta não tem acesso ao portal — fale com a equipa Conheça Farmácia.» |
+| Activar | *Activar farmácia* (sem motivo, não é destrutiva) | `active = true`, trilha `pharmacy.activate` |
+| **O caminho do cliente continua travado** | pedido `authenticated` (token real da farmácia, sem passar pela UI) a tentar `verified`, `active` e `slug` | **1 linha actualizada** (a RLS deixou a farmácia escrever na sua linha) e os **três campos iguais aos de origem** — o trigger repôs-os |
+| Gate a nomear a razão | `/interno/farmacias` com cookies de uma conta entretanto apagada | `redirect` para `/interno/login?motivo=SEM_USER` com «Sem sessão iniciada.» no ecrã |
+| Limpeza | conta interna + conta de farmácia + farmácia de teste + as linhas da trilha | `9` farmácias, `9` subscrições, `2` contas de farmácia, `0` contas internas, trilha `0` — o estado de partida |
+
+**Defeitos encontrados e corrigidos nesta passagem (3)**
+
+1. **O trigger da 0005 repunha `verified`/`active` em silêncio.** A acção *Dar selo* escrevia, o Postgres repunha o valor antigo e a trilha ficava a registar uma mudança que nunca aconteceu — medido: linha `pharmacy.verify` na trilha com `pharmacies.verified` ainda `false`. Pior do que uma acção que falha: uma auditoria que mente. Corrigido na migração **0030**: o caminho privilegiado (`service_role` pelo PostgREST, ou a ligação de administração sem claims) passa a poder mudar as duas colunas; qualquer pedido **com claims** — o portal da farmácia — continua a recebê-las repostas, como na 0005. `slug` e `created_at` continuam intocáveis para todos. A migração mede as duas direcções com uma farmácia de sonda e apaga-a antes de decidir se passou. **E as Server Actions deixaram de confiar na escrita:** `setPharmacyVerified`/`setPharmacyActive` lêem a linha de volta e devolvem `SEM_EFEITO` (com log) se o valor gravado não for o pedido, para que a trilha nunca seja mais optimista do que a base.
+2. **A página de login tratava uma sessão `aal1` como sessão completa.** A action devolvia `MFA_NECESSARIO` com o desafio aberto, o React redesenhava a rota e a página — ao ver cookies de sessão — redireccionava para `/interno`. O passo do código nunca aparecia: uma conta **com** TOTP inscrito entrava só com a senha, e a única coisa a travá-la era a recusa das acções sensíveis. Corrigido com `mfa.pendente` em `lib/platform/session.js` (`nextLevel === 'aal2'` **e** `currentLevel !== 'aal2'`) e a página a mandar embora apenas sessões completas (para uma conta sem factor inscrito, `aal1` já é o máximo dela).
+3. **A migração 0019 (`pharmacies.email`) nunca tinha sido aplicada a este projecto.** O portal escreve nessa coluna desde a fase do perfil (`updatePharmacyProfile`, 0019) — ou seja, «Guardar» em `/portal/sessão` falhava com `Could not find the 'email' column of 'pharmacies' in the schema cache`. Aplicada nesta passagem (é idempotente: `add column if not exists`), o que também desbloqueia o e-mail de contacto na ficha da área interna.
+
+**Limitações desta passagem:** (a) o smoke com um nível `suporte` (Task 4.2 Step 3) não foi feito — a verificação foi com `superadmin`; (b) *Confirmar stock por telefone* (Task 5.2 Step 2) não foi construída; (c) a linha de trilha falsa que o defeito 1 deixou foi removida com o resto das linhas da conta de sonda, para não ficar na trilha de produção um registo de uma mudança que não aconteceu.
 
 ---
 
@@ -799,15 +838,51 @@ Uma nota de alcance que a medição obrigou a corrigir: `has_table_privilege('au
 
 ## Phase 7 — Planos: atribuir, mudar, gravar estado
 
+> **ESTADO: FEITA em 16/10/2026** — o ciclo completo (primeiro plano, experiência, graça,
+> suspensão e retoma) percorrido no browser com uma farmácia de sonda, medida por SQL na
+> `pharmacy_subscriptions` e na trilha. A sonda foi apagada no fim (9 farmácias, 9
+> subscrições, como antes); ficam **registos `plan.*` na trilha** sem farmácia associada —
+> é de propósito, a trilha é append-only, e o `actor_email` fica gravado.
+>
+> **Segunda passagem, 17/10/2026** — o **fim do prazo** passou a valer (decisão do §4.2):
+> experiência ou graça terminadas põem a farmácia no plano de entrada na leitura, e o painel
+> da ficha ganhou o caminho de volta. Medido com uma segunda sonda (declarada na tabela
+> abaixo), também apagada no fim.
+
 ### Task 7.1: Server Actions
 
-- [ ] **Step 1:** `lib/actions/platform-plans.js`: `assignPlan({ pharmacyId, planCode, reason })`, `startTrial({ pharmacyId, planCode, until, reason })`, `startGrace({ pharmacyId, until, reason })`, `suspendForBilling({ pharmacyId, reason })`, `resumePlan({ pharmacyId })`. Todas com `requirePlatform(...)` + `logPlatformAudit` com `before`/`after` (`plan_code`, `status`, prazos).
-- [ ] **Step 2:** `getSubscriptions()` e `getPlanHistory(pharmacyId)` (a partir de `platform_audit_log` filtrado por acção `plan.*`), para o ecrã.
+- [x] **Step 1:** `lib/actions/platform-plans.js`: `assignPlan({ pharmacyId, planCode, modo, dias, notas, motivo })`, `startTrial({ pharmacyId, planCode, dias, motivo })`, `startGrace({ pharmacyId, dias, motivo })`, `suspendForBilling({ pharmacyId, motivo })`, `resumePlan({ pharmacyId, motivo })` e `changePlan(...)`. Todas com `requirePlatform(...)` (matriz + `aal2` + motivo) e `logPlatformAudit` com `before`/`after` (`plano`, `estado`, `experiencia_ate`, `graca_ate`, `notas`). **Duas decisões face ao enunciado:** o prazo pede-se em **dias** (1–365), não em data absoluta — quem negoceia diz «20 dias de graça», e a data calcula-se num sítio só; e o `plan_code` **não muda** durante uma suspensão (o que desce é o plano *em vigor*), para que retomar devolva exactamente o que a farmácia tinha.
+- [x] **Step 2:** `getSubscriptions()` (todas as farmácias, **incluindo as que ainda não têm plano**) e `getPlanHistory(pharmacyId, limite)` (trilha filtrada por acção `plan.*`), para o ecrã. Há ainda `getPrimeiroPlano(pharmacyId)`, que serve o ecrã do primeiro plano.
 
 ### Task 7.2: Ecrã
 
-- [ ] **Step 1:** `app/interno/(console)/planos/page.js`: subscrições por plano/estado, prazos em destaque (trial a acabar, graça a expirar), notas internas e histórico por farmácia.
-- [ ] **Step 2:** `PlanPanel.jsx` na ficha da farmácia: mudar plano, iniciar trial, dar graça, suspender por pagamento — cada acção com motivo e resumo antes/depois.
+- [x] **Step 1:** `app/interno/(console)/planos/page.js`: KPIs (por atribuir, em experiência, em graça, **prazos terminados**, suspensos, activos, prazos a expirar — os seis primeiros particionam as farmácias: um prazo vencido não conta como «em experiência»), a secção **«Primeiro plano por atribuir»** (as farmácias recém-criadas, que é onde se vê quem entrou e ainda não tem plano), a tabela de subscrições — ordenada por **urgência** e não por alfabeto (prazo **terminado**, depois o que vai terminar, depois o que pede decisão) — com prazo, notas internas e histórico do antes/depois.
+- [x] **Step 2:** `PlanPanel.jsx` na ficha da farmácia (mudar plano, iniciar experiência, dar graça, suspender por pagamento, retomar) com `PlanActionModal.jsx` — um só diálogo para as cinco acções, porque partilham a anatomia (o que vai acontecer, antes/depois, motivo obrigatório). Uma farmácia **sem** plano não se resolve num diálogo: o botão é um link para `/interno/planos/primeiro-plano/[id]` (`FirstPlanForm.jsx`), o único caminho que cria a linha da 0028.
+
+**Evidência (16/10/2026, farmácia de sonda `teste-planos-interno`, já apagada)**
+
+| Prova | Como | Resultado |
+|---|---|---|
+| Primeiro plano | `/interno/planos` → «Atribuir o primeiro plano» → ecrã do primeiro plano, Gestão em experiência de 10 dias com nota interna | linha criada na 0028 (`plan_code=gestao`, `status=trial`, `trial_until`+10 d, `notes` gravadas) e `plan.assign` na trilha com `before: null`, o `after` completo e o motivo |
+| Experiência → graça | ficha → «Dar graça», 20 dias | `status=graca`, `grace_until`+20 d, `trial_until` limpo; `plan.grace` com `trial → graca` |
+| Graça → suspensão | «Suspender por pagamento» | `status=suspenso` e **`plan_code` intacto** (`gestao`); `plan.suspend` com `graca → suspenso` |
+| **O corte chega ao produto** | portal da farmácia com o plano suspenso | Movimentos bloqueado, com o nome da função, o plano que a abre e o contacto |
+| Retoma | «Retomar plano» | `status=activo`, prazos limpos; `plan.resume` com `suspenso → activo`; o portal volta a abrir Movimentos **sem nova sessão** |
+| **O servidor recusa, não só a página** | sessão só com senha (`Só senha` no topo), «Dar graça» com motivo | «Esta acção exige o segundo factor…»: **0** alterações na base e **0** registos novos na trilha (4 antes, 4 depois) |
+| Leitura sem segundo factor | `/interno/planos` na mesma sessão de senha | ecrã completo, KPIs e histórico — ver defeito 1 |
+| Painel de entrada | `/interno` com a farmácia suspensa | «Planos a rever: 1» e três pontos de atenção para a mesma farmácia (stock, plano, selo) |
+| **O prazo terminado desce o plano** (17/10) | sonda nova com `gestao`/`trial` e `trial_until` **dois dias no passado** → portal | chip «Localizador · experiência terminada» e Movimentos bloqueado com «O período de experiência terminou, por isso o portal voltou ao plano Localizador» |
+| **É o prazo, não o estado** (17/10) | a MESMA linha, só com `trial_until` movido para +5 dias (um `update` em SQL) | chip «Gestão · Em experiência» e Movimentos **aberto** — o `status` é o mesmo (`trial`); o que mudou foi a data |
+| Ecrãs internos com o prazo terminado (17/10) | `/interno/planos` e a ficha da mesma farmácia | KPI «Prazos terminados: 1» com «Em experiência: 0» (não conta o que já acabou), linha com «em vigor: Localizador» e chip «terminado» no prazo, ficha com «Em vigor: Localizador — o prazo terminou» |
+| Ouvir a sonda no portal depois de retomar (17/10) | «Retomar plano» na ficha com o prazo terminado | `status=activo`, prazos limpos, `plan.resume` com `trial → activo`; o portal voltou a abrir Movimentos com o chip «Gestão» — o caminho de volta existe e funciona |
+| `npm run build` | build completo | **0 erros**; `prettier --check` limpo nos ficheiros desta passagem |
+| Limpeza | apagar as 3 contas de sonda e a farmácia | 9 farmácias, 9 subscrições, 2 contas — como antes da verificação |
+
+**Defeito encontrado e corrigido na segunda passagem (17/10):** com o prazo terminado, o painel da ficha **não oferecia caminho de volta**. O botão «Iniciar experiência» só aparecia quando o estado não era `trial` (ou seja, escondido exactamente no caso em que ele faz sentido) e «Retomar plano» só existia para `suspenso` — por isso quem enfrentasse uma experiência terminada podia mudar o plano e nada aconteceria, porque o prazo velho continuava a mandar. Corrigido: «Retomar plano» aparece com o prazo terminado (e o diálogo explica que o plano negociado volta a vigor, activo desde agora), o botão passa a «Dar experiência nova», e o painel diz por escrito o que aconteceu e quais são as duas saídas. Ficou também uma decisão de código: `fichaPlano` passou a viver em `lib/platform/subscriptions.js`, ao lado da regra do que está em vigor — estava duplicada em `platform-plans.js` e `platform-pharmacies.js`, que é como a ficha diria «Gestão» de uma farmácia que o portal já tratava como Localizador.
+
+**Defeito encontrado e corrigido durante a verificação:** as **leituras** do ecrã dos planos exigiam `aal2`. A matriz marca `plan.change` com MFA (é uma acção de dinheiro) e o guard de leitura reutilizava o de escrita, por isso `/interno/planos` ficava inutilizável numa sessão só com senha — precisamente o caso do `faturacao`, que tem `plan.change` mas pode não ter autenticador inscrito. Corrigido com `requirePlatformRead()` em [lib/platform/session.js](lib/platform/session.js): ler um plano não pede segundo factor; **escrever** continua a pedir, e o servidor recusa (medido acima). Aproveitou-se para o antes/depois do histórico passar a mostrar **só o que mudou, um campo por linha** — inline, `… → "activo"graça_ate: …` lê-se como um só campo.
+
+
 
 ### Task 7.3: Aplicar os entitlements no portal (a parte que muda o produto)
 

@@ -49,6 +49,11 @@ export function PlanBlocked({ feature, sub }) {
   const planoNecessario = PLANS[spec.plano]?.nome || spec.plano
   const planoAtual = sub?.plan?.nome || 'Localizador'
   const suspenso = sub?.status === 'suspenso' || sub?.status === 'cancelado'
+  // Prazo terminado: não é uma decisão contra a farmácia, é o fim do que
+  // estava combinado — e o texto tem de dizer isso, porque é o que explica
+  // «porque é que funcionava ontem e hoje não».
+  const vencido = sub?.prazoVencido === true
+  const prazoNome = sub?.status === 'graca' ? 'período de graça' : 'período de experiência'
 
   return (
     <div className="portal-page">
@@ -61,9 +66,11 @@ export function PlanBlocked({ feature, sub }) {
 
       <Notice tone="warn" large title={`Função do plano ${planoNecessario}`}>
         <p>
-          {suspenso
-            ? `A sua subscrição está ${sub?.status === 'suspenso' ? 'suspensa' : 'cancelada'}, por isso o portal está no plano ${planoAtual}.`
-            : `Esta parte do portal abre com o plano ${planoNecessario}. A farmácia está no plano ${planoAtual}.`}{' '}
+          {vencido
+            ? `O ${prazoNome} terminou, por isso o portal voltou ao plano ${planoAtual}.`
+            : suspenso
+              ? `A sua subscrição está ${sub?.status === 'suspenso' ? 'suspensa' : 'cancelada'}, por isso o portal está no plano ${planoAtual}.`
+              : `Esta parte do portal abre com o plano ${planoNecessario}. A farmácia está no plano ${planoAtual}.`}{' '}
           Nada do que já registou se perdeu — os dados continuam guardados e voltam a aparecer
           quando o plano mudar.
         </p>

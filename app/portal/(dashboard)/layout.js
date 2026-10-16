@@ -39,10 +39,20 @@ export default async function PortalLayout({ children }) {
   // `PLANS_ENFORCED` tem de vir do servidor (não é NEXT_PUBLIC_*, um
   // cliente leria `undefined`).
   const sub = await getSubscription(pharmacy.id)
+  // `sub.plan.nome` é o plano EM VIGOR (um prazo terminado ou uma suspensão
+  // descem ao plano de entrada) — e o rótulo diz porquê, em vez de dizer
+  // «Em experiência» de uma experiência que já acabou.
+  const estadoLabel = sub.prazoVencido
+    ? sub.status === 'graca'
+      ? 'graça terminada'
+      : 'experiência terminada'
+    : sub.status === 'activo'
+      ? null
+      : STATUS_LABELS[sub.status] || null
   const plan = {
     nome: sub.plan.nome,
     status: sub.status,
-    estadoLabel: sub.status === 'activo' ? null : STATUS_LABELS[sub.status] || null,
+    estadoLabel,
     features: sub.entitlements.features,
     enforced: PLANS_ENFORCED,
   }

@@ -33,10 +33,51 @@ const TOPICS = [
           </li>
         </ol>
         <p className="help-tip">
-          O menu à esquerda tem dois grupos — <b>Gestão</b> (o dia-a-dia: Atenção, Stock, Reservas,
-          Vendas) e <b>Farmácia</b> (o perfil que o cliente vê). Os itens têm um número por ordem e
-          os <b>badges</b> coloridos mostram o que está à espera de ti. A <b>Entrada de stock</b>{' '}
-          vive dentro de <b>Stock</b>: toca na <b>seta</b> ao lado de Stock para abrir o submenu.
+          O menu tem dois grupos — <b>Gestão</b> (o dia-a-dia: Atenção, Stock, Reservas, Vendas) e{' '}
+          <b>Farmácia</b> (o perfil que o cliente vê). Os itens têm um número por ordem e os{' '}
+          <b>badges</b> coloridos mostram o que está à espera de ti. A <b>Entrada de stock</b> vive
+          dentro de <b>Stock</b>: toca na <b>seta</b> ao lado de Stock para abrir o submenu.
+        </p>
+        <p className="help-tip">
+          <b>Telemóvel ou tablet:</b> o menu vive no botão <b>☰</b> (canto superior esquerdo) —
+          toca para abrir o menu completo; toca em ✕ (ou fora do menu) para fechar.
+        </p>
+      </>
+    ),
+  },
+  {
+    id: 'pesquisa',
+    icon: 'detalhes',
+    title: 'Pesquisa — tudo em segundos',
+    body: (
+      <>
+        <p>
+          A barra de pesquisa no <b>topo do portal</b> procura ao mesmo tempo <b>páginas</b>,{' '}
+          <b>medicamentos</b> (nome, molécula ou forma) e <b>reservas</b> (nome ou telefone do
+          cliente). Escolher um resultado leva-te à página certa — o stock abre já filtrado pelo
+          medicamento.
+        </p>
+        <p className="help-tip">
+          Atalho: toca em <b>/</b> em qualquer página para abrir a pesquisa, e <b>Esc</b> para
+          fechar. <b>Enter</b> abre o primeiro resultado — cliente ao balcão à espera, dois toques.
+        </p>
+      </>
+    ),
+  },
+  {
+    id: 'calendario',
+    icon: 'inicio',
+    title: 'Calendário do mês (Visão geral)',
+    body: (
+      <>
+        <p>
+          No fundo da <b>Visão geral</b>, o calendário marca cada dia com pontos: <b>venda</b>,{' '}
+          <b>entrada</b>, <b>validade a vencer</b>, <b>saída</b> e <b>ajuste</b>. Toca num dia para
+          ver o que se passou — dali podes <b>abrir a fila filtrada a esse dia</b>.
+        </p>
+        <p className="help-tip">
+          Serve para o «o que se passou no dia 12?»: chega-te ao detalhe sem procurar página a
+          página. As setas do teclado andam entre dias.
         </p>
       </>
     ),
@@ -48,13 +89,13 @@ const TOPICS = [
     body: (
       <>
         <p>
-          No canto superior direito da top-bar está o <b>perfil activo</b> — tudo o que registar
-          (vendas, reservas, entradas) fica em nome dele.
+          No <b>fundo do menu</b> está o <b>perfil activo</b> — tudo o que registar (vendas,
+          reservas, entradas) fica em nome dele. Em telemóveis e tablets, abre o menu com o botão{' '}
+          <b>☰</b> e o perfil está logo a seguir à navegação, junto ao botão do tema.
         </p>
         <ol className="help-ol">
           <li>
-            Toca no <b>nome do perfil</b> (top-bar) ou no bloco com o nome no fundo da sidebar —
-            abre o mesmo menu directo.
+            Toca no <b>bloco com o nome do perfil</b> (fundo do menu) — abre o menu directo.
           </li>
           <li>
             <b>Trocar perfil</b> — abre os cartões da equipa: escolhe o teu cartão e escreve o{' '}
@@ -271,6 +312,135 @@ const TOPICS = [
     ),
   },
   {
+    id: 'novo-medicamento',
+    icon: 'stock',
+    title: 'Medicamento novo + validação do gerente',
+    badge: 'Só o gerente valida',
+    body: (
+      <>
+        <p>
+          Se um medicamento que a farmácia vende <b>não existe no catálogo</b>, cria-o: em{' '}
+          <b>Stock</b>, botão <b>+ Adicionar medicamento</b>. Escreve o nome como aparece na caixa,
+          a molécula (DCI), a forma, a dosagem e se exige <b>receita médica</b>.
+        </p>
+        <div className="help-rule">
+          <b>Fluxo de validação:</b> o medicamento criado entra com a marca{' '}
+          <b>«Aguarda validação»</b> — só a tua farmácia o vê. O <b>gerente</b> abre o filtro{' '}
+          <b>Aguarda validação</b> no Stock e, no menu <b>⋯</b> da linha, escolhe{' '}
+          <b>Validar e publicar</b> (fica visível aos clientes) ou <b>Recusar fármaco</b> (só é
+          possível enquanto não tiver stock nem reservas). Só o gerente pode validar.
+        </div>
+        <p className="help-tip">
+          Enquanto está pendente, já podes marcar o stock dele — quando o gerente publica, o produto
+          aparece logo no Localizador com o stock registado.
+        </p>
+      </>
+    ),
+  },
+  {
+    id: 'movimentos',
+    icon: 'movimentos',
+    title: 'Movimentos — porquê este saldo?',
+    body: (
+      <>
+        <p>
+          A página <b>Movimentos</b> é o livro-razão do stock: cada entrada, venda, ajuste e
+          validade fica registado. Quando um saldo não bate, abre Movimentos e vê <b>o que mexeu</b>
+          no produto — data, quantidade e motivo.
+        </p>
+        <p className="help-tip">
+          Usa a pesquisa para ir direto a um medicamento e confere as entradas da sessão antes de
+          corrigir números à mão.
+        </p>
+      </>
+    ),
+  },
+  {
+    id: 'perfil-farmacia',
+    icon: 'inicio',
+    title: 'Perfil da farmácia (o que o cliente vê)',
+    body: (
+      <>
+        <p>
+          O <b>nome da farmácia</b> no canto superior direito abre o <b>Perfil</b>: é aqui que se
+          edita a ficha que os clientes vêem no Localizador — nome público, <b>morada</b>,{' '}
+          <b>telefone</b>, <b>email</b>, <b>WhatsApp</b> e o link do <b>mapa</b>.
+        </p>
+        <ul className="help-ul">
+          <li>
+            <b>Horário de atendimento</b> — escreve as horas («Seg–Sáb · 07:30–19:00» ou «Todos os
+            dias · 24 horas»). É deste texto que saem o selo <b>Aberto agora</b> e o filtro «só
+            abertas agora» da busca.
+          </li>
+          <li>
+            <b>Guardar</b> (no topo da página) — as alterações aparecem logo no Localizador.
+          </li>
+        </ul>
+        <p className="help-tip">
+          A ficha é tudo o que o cliente vê antes de decidir: sem telefone nem horário, a farmácia
+          perde o contacto para a que está ao lado.
+        </p>
+      </>
+    ),
+  },
+  {
+    id: 'equipa',
+    icon: 'equipa',
+    title: 'Equipa e PINs (para o gerente)',
+    body: (
+      <>
+        <p>
+          A página <b>Equipa</b> (só o gerente vê) gere quem trabalha na farmácia: cada colega tem
+          um <b>perfil</b> (Gerente ou Balcão) e um <b>PIN de 4 dígitos</b> para entrar no turno.
+        </p>
+        <ul className="help-ul">
+          <li>
+            <b>Adicionar colega</b> — nome, papel e PIN inicial. O colega pode mudar o PIN na página{' '}
+            <b>Sessão</b>.
+          </li>
+          <li>
+            <b>Desactivar perfil</b> — quem sai da farmácia: o perfil deixa de aparecer na escolha e
+            o histórico dos registos mantém-se.
+          </li>
+          <li>
+            <b>Papéis:</b> gerente valida medicamentos e gere a equipa; balcão atende, repõe e
+            registar. O resto é igual para todos.
+          </li>
+        </ul>
+      </>
+    ),
+  },
+  {
+    id: 'sessao',
+    icon: 'perfil',
+    title: 'Sessão: PIN, trocar de perfil e fechar a conta',
+    body: (
+      <>
+        <p>
+          A página <b>Sessão</b> é do <b>farmacêutico que está ao balcão neste dispositivo</b>: o
+          perfil activo, o PIN e a conta. O mesmo nome do perfil aparece no fundo do menu.
+        </p>
+        <ul className="help-ul">
+          <li>
+            <b>Trocar perfil</b> — escolhe o teu cartão e escreve o PIN; a partir daí as vendas,
+            reservas e entradas ficam em teu nome.
+          </li>
+          <li>
+            <b>Alterar PIN</b> — abre um painel e pede o PIN actual antes de gravar o novo.
+          </li>
+          <li>
+            <b>Terminar sessão da conta</b> — fecha também o perfil activo. Para mudar de pessoa sem
+            fechar a conta, usa <b>Trocar perfil</b>.
+          </li>
+        </ul>
+        <p className="help-tip">
+          Os dados da <b>farmácia</b> (nome, contacto, horário) não estão aqui: vivem no Perfil,
+          pelo nome da farmácia na barra de cima.
+        </p>
+      </>
+    ),
+  },
+  {
     id: 'vendas',
     icon: 'vendas',
     title: 'Vendas (para o gestor)',
@@ -284,11 +454,76 @@ const TOPICS = [
       </>
     ),
   },
+  {
+    id: 'desempenho',
+    icon: 'desempenho',
+    title: 'Desempenho — quem vende o quê',
+    body: (
+      <>
+        <p>
+          A página <b>Desempenho</b> conta as <b>reservas concluídas</b> (o cliente levantou) e as{' '}
+          <b>entradas de stock</b> de cada perfil, nas janelas de <b>7 / 30 / 90 dias</b> — com a
+          tendência face ao período anterior.
+        </p>
+        <ul className="help-ul">
+          <li>
+            <b>Gerente:</b> ranking, partilha das vendas e tabela avançada (unidades, ticket médio,
+            recusas), mais a comparação de dois perfis lado a lado.
+          </li>
+          <li>
+            <b>Balcão:</b> a mesma página, só com as tuas vendas — sem colegas à vista.
+          </li>
+        </ul>
+        <p className="help-tip">
+          O que foi registado antes de haver perfis conta como <b>Não atribuído</b> — não é erro.
+        </p>
+      </>
+    ),
+  },
+  {
+    id: 'integracao',
+    icon: 'integracao',
+    title: 'Integração — ligar o sistema da farmácia',
+    badge: 'Instalação',
+    body: (
+      <>
+        <p>
+          Para o <b>sistema de gestão da farmácia</b> enviar o stock sozinho — sem ninguém a
+          escrevê-lo —, abre <b>Integração</b>:
+        </p>
+        <ul className="help-ul">
+          <li>
+            <b>Chaves da farmácia</b> — a chave <code>cfk_…</code> que o sistema usa para entrar.
+            Aparece <b>uma vez só</b>: copia-a nesse momento. Criar e revogar chaves é do{' '}
+            <b>gerente</b>.
+          </li>
+          <li>
+            <b>Importar stock (CSV)</b> — exporta do teu sistema e importa aqui: escolher o ficheiro
+            → dizer o que é cada coluna → pré-visualização → aplicar. É a via sem programação.
+          </li>
+          <li>
+            <b>Webhooks</b> — regista um endereço do teu sistema para receber os avisos de
+            alterações de stock (<code>stock.updated</code>) e confirma nas <b>últimas entregas</b>{' '}
+            que estão a chegar.
+          </li>
+        </ul>
+        <p className="help-tip">
+          As <b>últimas chamadas de terceiros</b> mostram o que entrou e o que falhou: é o primeiro
+          sítio a olhar quando o stock não sincroniza.
+        </p>
+      </>
+    ),
+  },
 ]
 
 /** Resumo de 30 segundos — a tabela do guia. */
 const CHEATSHEET = [
   ['Cliente reservou', 'Reservas', 'Confirmar (com quantidade) → WhatsApp → Concluída'],
+  [
+    'Procuro um medicamento ou reserva',
+    'Pesquisa (barra de cima ou tecla /)',
+    'Escrever nome, molécula ou telefone → Enter',
+  ],
   ['Não temos o produto', 'Reservas', 'Recusar + motivo (com texto, o cliente lê)'],
   ['Produto esgotou', 'Atenção', '«Repor na entrada» quando chegar mercadoria'],
   ['Chegou fornecedor', 'Stock → «+ Nova entrada»', 'Painel lateral: qtd + unidade → Somar'],
@@ -297,13 +532,32 @@ const CHEATSHEET = [
     'Stock → seta → Entrada de stock',
     'Escrever qtd + unidade → Somar',
   ],
-  ['Mudou de turno / outro colega', 'Menu do nome (top-bar)', 'Trocar perfil → cartão → PIN'],
+  [
+    'Mudou de turno / outro colega',
+    'Fundo do menu (nome do perfil)',
+    'Trocar perfil → cartão → PIN',
+  ],
+  [
+    'Medicamento não está no catálogo',
+    'Stock → «+ Adicionar medicamento»',
+    'Criar → o gerente valida e publica',
+  ],
+  ['Saldo não bate', 'Movimentos', 'Ver o que mexeu no produto'],
+  ['Novo colega / PIN perdido', 'Equipa (gerente)', 'Criar perfil ou repor PIN'],
   ['Mudou preço/validade/marca', 'Stock → nome do medicamento', 'Preencher no modal → Guardar'],
   [
     'Deixou de vender um produto',
     'Stock → modal → Retirar',
     'Confirma — fica na Lixeira (restaurável)',
   ],
+  ['Não sei que perfil está activo', 'Sessão (ou fundo do menu)', 'Trocar perfil → cartão → PIN'],
+  [
+    'Mudou morada, telefone ou horário',
+    'Perfil (nome da farmácia, em cima)',
+    'Editar → Guardar (visível no Localizador)',
+  ],
+  ['Quero ver quem vendeu mais', 'Desempenho', 'Escolher 7 / 30 / 90 dias → ranking e tabela'],
+  ['Ligar o sistema da farmácia', 'Integração', 'Criar chave de API ou importar stock (CSV)'],
 ]
 
 export default function HelpPanel() {

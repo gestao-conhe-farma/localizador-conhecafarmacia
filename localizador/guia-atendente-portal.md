@@ -14,14 +14,27 @@
 2. Escreve o **email** e a **palavra-passe** da farmácia.
 3. Vês a **Visão geral**: os cartões mostram o que pede atenção hoje.
 
-> **Dica:** o menu à esquerda tem dois grupos — **Gestão** (o dia-a-dia:
+> **Dica:** o menu tem dois grupos — **Gestão** (o dia-a-dia:
 > Atenção, Stock, Reservas, Vendas) e **Farmácia** (o perfil que o cliente
 > vê). Os itens têm um número por ordem (01, 02…) e os badges coloridos
 > mostram o que está à espera de ti. A **Entrada de stock** vive dentro de
 > **Stock** — toca na seta ao lado de Stock para abrir o submenu.
 >
+> **Telemóvel ou tablet:** o menu vive no botão **☰** (canto superior
+> esquerdo) — toca para abrir o menu completo; toca em ✕ (ou fora do menu)
+> para fechar. O perfil activo e o tema ficam no fundo do menu.
+>
+> **Pesquisa rápida:** a barra no topo procura páginas, medicamentos (nome,
+> molécula ou forma) e reservas (nome ou telefone do cliente). Atalho: toca
+> em **/** em qualquer página para a abrir, **Enter** abre o primeiro
+> resultado e **Esc** fecha.
+>
 > **Atenção** é o nome da página que junta os avisos do dia (reposições,
 > validades, stock desactualizado).
+
+Na **Visão geral**, o calendário do mês marca cada dia com pontos (venda,
+entrada, validade, saída, ajuste): toca num dia para ver o que se passou e
+abrir a fila filtrada a esse dia.
 
 ---
 
@@ -54,7 +67,7 @@ resposta, a reserva expira sozinha e o cliente é avisado.
    - **Sem stock** — não temos de momento;
    - **Fora da zona** — não entregamos/atesendemos aí;
    - **Outro motivo** — abre uma caixa de texto: **escreve a explicação, o
-     cliente lê-a!** Ex.: *«Só atendemos levantamento no próprio dia.»*
+     cliente lê-a!** Ex.: _«Só atendemos levantamento no próprio dia.»_
 3. A mensagem de WhatsApp de recusa também já vai pronta.
 
 > **Detalhes:** tocar no **nome do medicamento** ou em **Detalhes** abre a
@@ -67,7 +80,7 @@ resposta, a reserva expira sozinha e o cliente é avisado.
 
 Quando uma reserva concluída leva as últimas unidades, o produto sai do
 Localizador e aparece na página **Atenção** com o aviso
-*«Vendeu · repor»*.
+_«Vendeu · repor»_.
 
 **Se já chegou mercadoria nova:**
 
@@ -144,7 +157,35 @@ Toca em **Guardar** — tudo fica visível no Localizador imediatamente.
 
 ---
 
-## 7. Vendas (para o gestor)
+## 7. Medicamento novo + validação do gerente
+
+Se um medicamento que a farmácia vende **não existe no catálogo**, cria-o:
+em **Stock**, botão **+ Adicionar medicamento**. Escreve o nome como
+aparece na caixa, a molécula (DCI), a forma, a dosagem e se exige
+**receita médica**.
+
+**Fluxo de validação:** o medicamento criado entra com a marca
+**«Aguarda validação»** — só a tua farmácia o vê. O **gerente** abre o
+filtro **Aguarda validação** no Stock e, no menu **⋯** da linha, escolhe
+**Validar e publicar** (fica visível aos clientes) ou **Recusar fármaco**
+(só é possível enquanto não tiver stock nem reservas). **Só o gerente
+pode validar.**
+
+> Enquanto está pendente, já podes marcar o stock dele — quando o gerente
+> publica, o produto aparece logo no Localizador com o stock registado.
+
+---
+
+## 8. Movimentos — porquê este saldo?
+
+A página **Movimentos** é o livro-razão do stock: cada entrada, venda,
+ajuste e validade fica registado. Quando um saldo não bate, abre
+**Movimentos** e vê **o que mexeu** no produto — data, quantidade e
+motivo. Usa a pesquisa para ir direto a um medicamento.
+
+---
+
+## 9. Vendas (para o gestor)
 
 A página **Vendas** mostra o total estimado por dia das reservas concluídas,
 com janelas de 7 / 30 / 90 dias. É estimado com o preço das formas de
@@ -152,17 +193,72 @@ venda — o final é o apurado no balcão.
 
 ---
 
+## 10. Sessão — perfil activo, PIN e fim do turno
+
+No fundo do menu está o **perfil activo**; a página **Sessão** junta tudo o
+que é teu **neste dispositivo**:
+
+1. **Trocar perfil** — escolhe o teu cartão e escreve o **PIN**. A partir
+   daí as vendas, reservas e entradas ficam em teu nome.
+2. **Alterar PIN** — abre um painel e pede o PIN actual antes de gravar o
+   novo.
+3. **Terminar sessão da conta** — fecha também o perfil activo. Para mudar
+   de pessoa sem fechar a conta do portal, usa **Trocar perfil**.
+
+> **Fim do turno:** basta **Trocar perfil** — o colega seguinte entra com o
+> PIN dele e o histórico de cada um mantém-se.
+
+---
+
+## 11. Desempenho — as tuas vendas
+
+A página **Desempenho** conta as **reservas concluídas** (o cliente
+levantou) e as **entradas de stock** de cada perfil, nas janelas de
+**7 / 30 / 90 dias**, com a tendência face ao período anterior.
+
+Como atendente vês só as **tuas** vendas (ticket médio, unidades,
+entradas). O **gerente** vê o ranking, a partilha das vendas e a tabela de
+toda a equipa.
+
+> O que foi registado antes de existir perfil activo conta como **Não
+> atribuído** — não é erro.
+
+---
+
+## 12. Ficha da farmácia (o que o cliente vê)
+
+O **nome da farmácia**, no canto superior direito, abre o **Perfil**:
+**morada**, **telefone**, **email**, **WhatsApp**, link do **mapa** e o
+**horário de atendimento**. Toca em **Guardar** no topo — as alterações
+aparecem logo no Localizador.
+
+> Escreve o horário com as horas («Seg–Sáb · 07:30–19:00» ou «Todos os
+> dias · 24 horas»): é deste texto que saem o selo **Aberto agora** e o
+> filtro «só abertas agora» da busca.
+
+A página **Integração** (chaves de API, importação de stock por CSV e
+webhooks) é trabalho de instalação — normalmente do gerente. Os detalhes
+estão no **Guia do gestor**.
+
+---
+
 ## Resumo de 30 segundos
 
 | O que aconteceu | Onde vais | O que fazes |
-|---|---|---|
-| Cliente reservou | Reservas | Confirmar (com quantidade) → WhatsApp → Concluída quando levantar |
+| --------------------------------- | ---------------------------------- | ----------------------------------------------------------------- || Cliente reservou | Reservas | Confirmar (com quantidade) → WhatsApp → Concluída quando levantar |
+| Procuro um medicamento ou reserva | Pesquisa (tecla / ou barra de cima) | Nome, molécula ou telefone → Enter |
 | Não temos o produto | Reservas | Recusar + motivo (com texto, o cliente lê) |
 | Produto esgotou | Atenção | «Repor na entrada» quando chegar mercadoria |
 | Chegou fornecedor | Stock → Entrada de stock | Escrever unidades → Somar |
+| Medicamento não está no catálogo | Stock → + Adicionar medicamento | Criar → o gerente valida e publica |
+| Saldo não bate | Movimentos | Ver o que mexeu no produto |
 | Mudou preço/validade/marca | Stock → nome do medicamento | Preencher no modal → Guardar |
+| Mudou de turno / outro colega | Fundo do menu (nome do perfil) | Trocar perfil → cartão → PIN |
+| Mudou morada, telefone ou horário | Perfil (nome da farmácia, em cima) | Editar → Guardar (visível no Localizador) |
+| Quero ver quem vendeu mais | Desempenho | Escolher 7 / 30 / 90 dias → ranking e tabela |
 
 **Duas regras que valem ouro:**
+
 1. **Responde às reservas em menos de 72 horas.**
 2. **Registra toda a mercadoria que chega** — quem procura o medicamento
    hoje só o encontra se o stock estiver confirmado.

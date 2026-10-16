@@ -1,7 +1,7 @@
 'use client'
 
 import Link from 'next/link'
-import { useState } from 'react'
+import { useCallback, useEffect, useRef, useState } from 'react'
 import PortalSidebar from '@/components/portal/PortalSidebar'
 import PortalSearch from '@/components/portal/PortalSearch'
 import PortalTour from '@/components/portal/PortalTour'
@@ -26,6 +26,52 @@ import ThemeToggle from '@/components/ui/ThemeToggle'
 export default function PortalShell({ pharmacy, userName, userSub, staff, children }) {
   const [navOpen, setNavOpen] = useState(false)
 
+  // Com o drawer aberto o toque na página NÃO navega: os pedidos de fecho
+  // chegam todos por aqui (véu, ☰, X e a mudança de rota da sidebar).
+  // Enquanto um passo do tour vive DENTRO do menu o drawer fica trancado:
+  // a navegação do passo fecharia o drawer por baixo e o destaque ficava
+  // pendurado no vazio. Trancar aqui (e não no tour) dispensa intervalos
+  // de vigilância a reabrir o menu — que sobravam a correr depois do fim.
+  const navLocked = useRef(false)
+  const closeNav = useCallback(() => {
+    if (navLocked.current) return
+    setNavOpen(false)
+  }, [])
+
+  // Em ecrã largo a sidebar é fixa: não há drawer para abrir nem véu para
+  // tapar. Se o estado ficar «aberto» a passar de telemóvel/tablet para
+  // desktop (rodar o tablet, alargar a janela), o conteúdo ficava inerte
+  // — sem cliques e sem nada visível para desbloquear.
+  useEffect(() => {
+    const mq = window.matchMedia('(max-width: 60rem)')
+    const sync = () => {
+      if (!mq.matches) setNavOpen(false)
+    }
+    sync()
+    mq.addEventListener('change', sync)
+    return () => mq.removeEventListener('change', sync)
+  }, [])
+
+  // O tour de onboarding pede para abrir/fechar o drawer quando um passo
+  // tem o alvo dentro do menu (em ecrã estreito o menu é um drawer fechado
+  // e os passos do tour não fariam sentido).
+  useEffect(() => {
+    const open = () => {
+      navLocked.current = true
+      setNavOpen(true)
+    }
+    const close = () => {
+      navLocked.current = false
+      setNavOpen(false)
+    }
+    window.addEventListener('portal-tour:open-nav', open)
+    window.addEventListener('portal-tour:close-nav', close)
+    return () => {
+      window.removeEventListener('portal-tour:open-nav', open)
+      window.removeEventListener('portal-tour:close-nav', close)
+    }
+  }, [])
+
   return (
     <div className="portal-shell">
       <PortalSidebar
@@ -33,7 +79,7 @@ export default function PortalShell({ pharmacy, userName, userSub, staff, childr
         userName={userName}
         staff={staff}
         navOpen={navOpen}
-        onClose={() => setNavOpen(false)}
+        onClose={closeNav}
       />
 
       {/* Com o drawer aberto o conteúdo fica inerte: sem cliques, sem foco

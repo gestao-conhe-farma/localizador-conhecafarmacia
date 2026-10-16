@@ -1,6 +1,6 @@
 'use client'
 
-import { useCallback, useEffect, useState } from 'react'
+import { useCallback, useEffect, useLayoutEffect, useRef, useState } from 'react'
 import { useRouter } from 'next/navigation'
 
 /**
@@ -19,6 +19,15 @@ import { useRouter } from 'next/navigation'
  * passo 1 mirava só o badge do sino, que só existe com reservas
  * pendentes — sem ele o tour ficava 3s no escuro e saltava passos.
  *
+ * Mobile/tablet (≤ 60rem): a sidebar é um drawer fechado e os alvos do
+ * menu medem fora do ecrã. Os passos `inNav` pedem à shell para abrir o
+ * drawer (evento `portal-tour:open-nav`) e a SHELL TRANCA-O enquanto esse
+ * passo vive — a navegação do passo fecha o drawer por baixo e o destaque
+ * ficava pendurado no vazio. A medição só aceita alvos VISÍVEIS no ecrã —
+ * sem isto, o destaque caía no vazio e o tour não fazia sentido em
+ * telemóvel. Em ecrã estreito a carta cola-se ao topo ou ao rodapé, no
+ * lado oposto ao alvo.
+ *
  * Estado: localStorage por utilizador (`portal-onboard:<sub>`) — quem
  * já fez não vê de novo; sessão nova do mesmo user também não. O ESC
  * interrompe; «Ver depois» reabre no próximo login (opção da última
@@ -36,15 +45,17 @@ const STEPS = [
     href: '/portal',
     target: '[data-tour="bell"]',
     title: 'Novas reservas chegam aqui',
-    body: 'Este sino, no item Reservas da sidebar, mostra as reservas por atender em tempo real — quando há novas, acende em âmbar e pulsa. As reservas esperam resposta até 72 horas.',
+    body: 'Este sino, no item Reservas do menu, mostra as reservas por atender em tempo real — quando há novas, acende em âmbar e pulsa. As reservas esperam resposta até 72 horas. Em telemóveis e tablets o menu é o drawer do botão ☰ (o tour abre-o por si).',
     placement: 'right',
+    inNav: true,
   },
   {
     href: '/portal',
     target: '[data-tour="staff-menu"]',
     title: 'Quem está ao balcão',
-    body: 'No fundo da sidebar está o perfil activo — tudo o que registar fica em nome dele. Tocar no nome abre o menu com «Trocar perfil» (escolha + PIN) e «Sair do perfil». O PIN e os seus dados vivem na página Sessão, na navegação.',
+    body: 'No fundo do menu está o perfil activo — tudo o que registar fica em nome dele. Tocar no nome abre o menu com «Trocar perfil» (escolha + PIN) e «Sair do perfil». O PIN e os seus dados vivem na página Sessão, na navegação.',
     placement: 'top',
+    inNav: true,
   },
   {
     href: '/portal/atencao',
@@ -54,7 +65,7 @@ const STEPS = [
     placement: 'bottom',
   },
   {
-    // Alvo no SUBMENU da sidebar (não na página de entrada): o passo
+    // Alvo no SUBMENU do menu (não na página de entrada): o passo
     // ensina onde a Entrada de stock vive — dentro de Stock. O efeito
     // abre o submenu (openSubmenu) antes de medir o alvo.
     href: '/portal/stock',
@@ -63,6 +74,7 @@ const STEPS = [
     body: 'Dentro do menu Stock fica a Entrada de stock — toque na seta para abrir. Chegou mercadoria? Escolha o medicamento, escreva quantas unidades chegaram e toque «Somar»: o produto volta a aparecer no Localizador.',
     placement: 'right',
     openSubmenu: true,
+    inNav: true,
   },
   {
     href: '/portal/stock',
@@ -87,14 +99,42 @@ function measure(el) {
   }
 }
 
-/** A carta cabe abaixo do alvo? Se não, tenta acima; senão, ao lado. */
-function pickPosition(rect, placement) {
-  const CARD_H = 260
-  const GAP = 14
+/** Em ecrã estreito (≤ 60rem) a sidebar é um drawer fechado. */
+function isDrawerLayout() {
+  return window.matchMedia('(max-width: 60rem)').matches
+}
+
+/**
+ * O alvo está realmente visível no ecrã: inteiro na horizontal e pelo
+ * menos parcialmente na vertical. Dentro do drawer fechado — ou a meio
+ * da animação de abertura — não conta: antes bastava «atravessar» a
+ * margem esquerda e o tour congelava o destaque fora do ecrã.
+ */
+function isOnScreen(el) {
+  const r = el.getBoundingClientRect()
+  return (
+    r.height > 0 &&
+    r.left >= -0.5 &&
+    r.right <= window.innerWidth + 0.5 &&
+    r.top < window.innerHeight &&
+    r.bottom > 0
+  )
+}
+
+/** Altura de reserva enquanto a carta ainda não foi medida. */
+const CARD_H = 260
+
+/**
+ * A carta cabe abaixo do alvo? Se não, tenta acima; senão, ao lado.
+ * `cardH` é a altura REAL da carta do passo (medida no DOM): com uma
+ * estimativa fixa, a carta de texto longo caía por cima do próprio alvo
+ * em tablet/desktop.
+ */
+function pickPosition(rect, placement, cardH) {
   const below = rect.vh - (rect.top + rect.height)
   const above = rect.top
-  if (placement !== 'top' && below > Math.min(CARD_H, rect.vh * 0.5)) return 'bottom'
-  if (placement !== 'bottom' && above > CARD_H) return 'top'
+  if (placement !== 'top' && below > Math.min(cardH, rect.vh * 0.5)) return 'bottom'
+  if (placement !== 'bottom' && above > cardH) return 'top'
   return rect.left > rect.vw / 2 ? 'left' : 'right'
 }
 
@@ -103,12 +143,18 @@ export default function PortalTour({ userSub }) {
   const [stepIdx, setStepIdx] = useState(-1) // -1 = inactivo
   const [rect, setRect] = useState(null)
   const [ready, setReady] = useState(false)
+  // Altura REAL da carta (o texto é diferente em cada passo): o mesmo
+  // componente decide a colocação com ela — nunca tapa o alvo.
+  const cardRef = useRef(null)
+  const [cardH, setCardH] = useState(0)
 
   const step = stepIdx >= 0 ? STEPS[stepIdx] : null
 
   const finish = useCallback(() => {
     setStepIdx(-1)
     setReady(false)
+    // O drawer que o tour abriu para os passos do menu volta a fechar.
+    window.dispatchEvent(new CustomEvent('portal-tour:close-nav'))
     try {
       localStorage.setItem(STORAGE_KEY(userSub), 'done')
     } catch {
@@ -119,6 +165,7 @@ export default function PortalTour({ userSub }) {
   const postpone = useCallback(() => {
     setStepIdx(-1)
     setReady(false)
+    window.dispatchEvent(new CustomEvent('portal-tour:close-nav'))
     // Sem gravar: reabre na próxima sessão (ver depois).
   }, [])
 
@@ -175,11 +222,19 @@ export default function PortalTour({ userSub }) {
     if (s.openSubmenu) {
       window.dispatchEvent(new CustomEvent('portal-tour:open-submenu'))
     }
+    // Passos com alvo NO MENU: em ecrã estreito o menu é um drawer
+    // fechado — abre-o (a shell ouve o evento) para o destaque fazer
+    // sentido. Nos restantes passos garante que o drawer fecha.
+    if (s.inNav && isDrawerLayout()) {
+      window.dispatchEvent(new CustomEvent('portal-tour:open-nav'))
+    } else {
+      window.dispatchEvent(new CustomEvent('portal-tour:close-nav'))
+    }
     // Tenta medir várias vezes: a navegação é client-side e o alvo
-    // só existe depois de a página do portal carregar. Se 5 segundos
-    // não chegarem (ex.: o alvo não existe porque a página demorou),
-    // SALTA o passo automaticamente — o tour nunca fica preso à
-    // espera de um elemento que não vai nascer.
+    // só existe depois de a página do portal carregar (em mobile com rede
+    // lenta, os painéis mostram spinner até o feed chegar). Se 8 segundos
+    // não chegarem, SALTA o passo automaticamente — o tour nunca fica
+    // preso à espera de um elemento que não vai nascer.
     const skip = setTimeout(() => {
       // Último passo: termina (grava como feito); senão avança.
       if (stepIdx === STEPS.length - 1) {
@@ -187,27 +242,49 @@ export default function PortalTour({ userSub }) {
       } else {
         setStepIdx((i) => i + 1)
       }
-    }, 5000)
+    }, 8000)
+    // Medição: o alvo nasce depois da navegação client-side e mexe-se
+    // enquanto o drawer ou o submenu abre (animação). O ciclo segue-o frame
+    // a frame e PÁRA quando o rect assenta — sem temporizadores de
+    // vigilância a correr depois do passo: quem mantém o menu aberto através
+    // da navegação é a shell, não um intervalo. `cancelled` corta o ciclo
+    // mesmo que reste um frame marcado.
+    let cancelled = false
     let tries = 0
     let raf = 0
+    let last = null
     const attempt = () => {
+      if (cancelled) return
       const el = document.querySelector(s.target)
-      // Alvo dentro do submenu fechado mede 0 de altura — só aceita
-      // quando existe E tem área visível.
-      if (el && el.getBoundingClientRect().height > 0) {
-        setRect(measure(el))
-        setReady(true)
-        clearTimeout(skip)
-        return
-      }
-      if (!el && s.openSubmenu) {
-        // Pede de novo à sidebar (o evento pode ter chegado antes de
-        // o componente montar o listener).
+      // Alvo ainda fechado: re-pede o que o passo precisa. O submenu do
+      // Stock mede zero fechado e reabre com um evento da sidebar; os
+      // alvos do menu só aparecem no ecrã com o drawer aberto — de quem o
+      // abre (e mantém aberto através da navegação) trata a shell.
+      if (s.openSubmenu && !(el && el.getBoundingClientRect().height > 0)) {
         window.dispatchEvent(new CustomEvent('portal-tour:open-submenu'))
       }
-      // ~16,7 ms por frame → 300 tentativas ≈ os mesmos 5 s do skip:
+      // Só aceita o alvo quando existe, tem área visível E está dentro
+      // do ecrã: dentro do drawer fechado até mede altura, mas vive fora
+      // do ecrã (translateX) — sem esta checagem o destaque caía no vazio.
+      if (el && isOnScreen(el)) {
+        const now = measure(el)
+        setRect(now)
+        setReady(true)
+        clearTimeout(skip)
+        // Assentou (o mesmo rect em dois frames seguidos)? Pára: o destaque
+        // está no alvo e o ciclo não fica a correr sem motivo.
+        const settled =
+          last &&
+          last.top === now.top &&
+          last.left === now.left &&
+          last.width === now.width &&
+          last.height === now.height
+        last = now
+        if (settled) return
+      }
+      // ~16,7 ms por frame → 480 tentativas ≈ os mesmos 8 s do skip:
       // a janela de procura e a de skip correm juntas.
-      if (tries < 300) {
+      if (tries < 480) {
         tries += 1
         raf = requestAnimationFrame(attempt)
       }
@@ -220,6 +297,7 @@ export default function PortalTour({ userSub }) {
     window.addEventListener('resize', remeasure)
     window.addEventListener('scroll', remeasure, true)
     return () => {
+      cancelled = true
       clearTimeout(skip)
       cancelAnimationFrame(raf)
       window.removeEventListener('keydown', onKey)
@@ -228,11 +306,18 @@ export default function PortalTour({ userSub }) {
     }
   }, [stepIdx, router, remeasure, postpone, finish])
 
+  // Mede a carta depois de cada render (só actualiza quando muda de
+  // tamanho, por isso não há ciclo). Antes do return para respeitar a
+  // ordem dos hooks.
+  useLayoutEffect(() => {
+    const h = cardRef.current?.offsetHeight || 0
+    if (h && h !== cardH) setCardH(h)
+  })
+
   // Inactivo ou ainda a medir o alvo: não renderiza nada (o rect pode
   // nem existir ainda — daí o return completo, sem if aninhado).
   if (stepIdx < 0 || !step || !rect || !ready) return null
 
-  const pos = pickPosition(rect, step.placement)
   const pad = 8
   const box = {
     top: rect.top - pad,
@@ -242,25 +327,38 @@ export default function PortalTour({ userSub }) {
   }
 
   const cardW = Math.min(320, rect.vw - 32)
+  const reserve = cardH || CARD_H
   let cardStyle
-  if (pos === 'bottom') {
+  if (rect.vw < 640) {
+    // Ecrã estreito (telemóvel): a carta cola-se ao lado oposto ao alvo,
+    // centrada — a colisão lateral não cabe num ecrã de 390 px.
+    const alvoEmBaixo = rect.top + rect.height / 2 > rect.vh / 2
     cardStyle = {
-      width: cardW,
-      top: box.top + box.height + 12,
-      left: Math.max(16, Math.min(box.left, rect.vw - cardW - 16)),
-    }
-  } else if (pos === 'top') {
-    cardStyle = {
-      width: cardW,
-      top: Math.max(16, box.top - 12 - 240),
-      left: Math.max(16, Math.min(box.left, rect.vw - cardW - 16)),
+      width: rect.vw - 32,
+      left: 16,
+      ...(alvoEmBaixo ? { top: 16 } : { bottom: 16 }),
     }
   } else {
-    const left = pos === 'right' ? box.left + box.width + 12 : box.left - cardW - 12
-    cardStyle = {
-      width: cardW,
-      top: Math.max(16, Math.min(box.top, rect.vh - 240 - 16)),
-      left: Math.max(16, Math.min(left, rect.vw - cardW - 16)),
+    const pos = pickPosition(rect, step.placement, reserve)
+    if (pos === 'bottom') {
+      cardStyle = {
+        width: cardW,
+        top: box.top + box.height + 12,
+        left: Math.max(16, Math.min(box.left, rect.vw - cardW - 16)),
+      }
+    } else if (pos === 'top') {
+      cardStyle = {
+        width: cardW,
+        top: Math.max(16, box.top - 12 - reserve),
+        left: Math.max(16, Math.min(box.left, rect.vw - cardW - 16)),
+      }
+    } else {
+      const left = pos === 'right' ? box.left + box.width + 12 : box.left - cardW - 12
+      cardStyle = {
+        width: cardW,
+        top: Math.max(16, Math.min(box.top, rect.vh - reserve - 16)),
+        left: Math.max(16, Math.min(left, rect.vw - cardW - 16)),
+      }
     }
   }
 
@@ -272,7 +370,7 @@ export default function PortalTour({ userSub }) {
       <div className="portal-tour-spot" style={box} onClick={postpone} aria-hidden="true" />
 
       {/* Carta do passo. */}
-      <div className="portal-tour-card" style={cardStyle} role="document">
+      <div className="portal-tour-card" ref={cardRef} style={cardStyle} role="document">
         <p className="portal-tour-step">
           Passo {stepIdx + 1} de {STEPS.length}
         </p>

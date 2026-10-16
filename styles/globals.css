@@ -2756,11 +2756,14 @@ html.dark .form-note {
       width: min(19.5rem, 86vw);
     }
 
-    /* «Portal da farmácia» desce para baixo do logo, no drawer. */
+    /* «Portal da farmácia» desce para baixo do logo, no drawer — com o
+       respiro do modo claro, padrão dos dois temas. O logo branco invisível
+       deixou de ocupar espaço (ver img.portal-logo-white); o ar que ele dava
+       em claro passou a ser explícito, para o drawer ser igual nos temas. */
     .portal-side-brand-main {
       flex-direction: column;
       align-items: flex-start;
-      gap: 0.25rem;
+      gap: 2.7rem;
     }
 
     /* O botão do perfil cede espaço ao tema, sem empurrar a linha. */
@@ -5437,20 +5440,24 @@ html.dark .form-note {
     color: var(--color-brand-deep);
   }
 
-  /* O logo troca de branco → verde: a régua branca extra sai. */
-  .portal-logo-white {
+  /* O logo troca de branco → verde. O seletor inclui o elemento (img.*)
+     para vencer `.portal-side-logo-link img { display: block }` — sem isto
+     o logo branco ficava visível em claro (branco sobre branco), ocupava
+     39 px e empurrava o eyebrow e o conteúdo para baixo: o drawer parecia
+     organizado de forma diferente consoante o tema. */
+  img.portal-logo-white {
     display: none;
   }
 
-  .portal-logo-green {
+  img.portal-logo-green {
     display: block;
   }
 
-  html.dark .portal-logo-white {
+  html.dark img.portal-logo-white {
     display: block;
   }
 
-  html.dark .portal-logo-green {
+  html.dark img.portal-logo-green {
     display: none;
   }
 

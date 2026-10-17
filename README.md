@@ -29,6 +29,27 @@ npm run dev
 
 Build de produção: `npm run build` · Deploy: push para `main` (Vercel).
 
+### E-mail (Resend)
+
+Os convites ao dono da farmácia não passam pelo remetente do Supabase: a conta é
+criada por `generateLink` (que não envia nada) e a mensagem sai pela API do
+[Resend](https://resend.com). Faltam duas variáveis no ambiente (`.env.local` e
+Vercel → Settings → Environment Variables, Production e Preview):
+
+```
+RESEND_API_KEY=re_...                 # permissão «Sending access»
+RESEND_FROM=Conheça Farmácia <nao-responder@conhecafarmacia.com>
+```
+
+O domínio de `RESEND_FROM` tem de estar verificado em **Resend → Domains** (registos
+SPF/DKIM). Sem isso o envio falha com `EMAIL_RECUSADO` e a UI diz o que corrigir.
+O plano gratuito dá 100 e-mails/dia e 3.000/mês. O template e o mapeamento de erros
+vivem em `lib/email.js`; o envio é feito em `lib/actions/leads.js` (`convidarDono`).
+
+Para os restantes e-mails do Supabase Auth (ex.: reposição de senha), configurar
+SMTP próprio em **Authentication → Emails → SMTP Settings**: `smtp.resend.com`,
+porta `465`, user `resend`, password = a mesma API key.
+
 ## Estrutura
 
 ```

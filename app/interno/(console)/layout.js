@@ -39,26 +39,42 @@ export default async function InternoLayout({ children }) {
 
   const { user, role, roleLabel: rotulo, legacy, mfa } = session
 
-  // Secções que existem hoje. As restantes fases (leads, planos, auditoria,
-  // equipa) entram aqui quando tiverem ecrã — um link para uma página que
-  // não existe é pior do que a sua ausência.
+  // Secções que existem hoje. Uma fase nova entra aqui quando tiver ecrã —
+  // um link para uma página que não existe é pior do que a sua ausência.
+  //
+  // Lista PLANA e numerada, como na plataforma de gestão: o ícone viaja como
+  // CHAVE (`icone`) porque um componente do lucide não atravessa a fronteira
+  // Server → Client, e o número é a posição na lista já FILTRADA — um item
+  // que o nível não tem não deixa um buraco na numeração.
   const secoes = [
-    {
-      grupo: 'Operação',
-      itens: [
-        { href: '/interno', label: 'Painel', acao: 'pharmacy.view' },
-        { href: '/interno/farmacias', label: 'Farmácias', acao: 'pharmacy.view' },
-        // A acção é `plan.change` e não `pharmacy.view`: a secção existe
-        // para quem negoceia os planos (superadmin/faturacao). Quem não a
-        // tem continua a ver o plano na ficha da farmácia.
-        { href: '/interno/planos', label: 'Planos', acao: 'plan.change' },
-      ],
-    },
-  ]
+    { href: '/interno', label: 'Painel', acao: 'pharmacy.view', icone: 'painel' },
+    { href: '/interno/farmacias', label: 'Farmácias', acao: 'pharmacy.view', icone: 'farmacias' },
+    // Os leads são a porta de entrada das farmácias: quem os lê vê a
+    // secção, e é pela mesma acção que a página autoriza. Quem só vê
+    // farmácias não perde nada por não a ter.
+    { href: '/interno/leads', label: 'Leads', acao: 'lead.read', icone: 'leads' },
+    // A acção é `plan.change` e não `pharmacy.view`: a secção existe
+    // para quem negoceia os planos (superadmin/faturacao). Quem não a
+    // tem continua a ver o plano na ficha da farmácia.
+    { href: '/interno/planos', label: 'Planos', acao: 'plan.change', icone: 'planos' },
+    // A trilha é a secção de quem a pode LER (`audit.read`: superadmin e
+    // auditoria). O export é outra acção (com MFA e motivo) e vive dentro
+    // da página — não é uma secção à parte.
+    { href: '/interno/auditoria', label: 'Auditoria', acao: 'audit.read', icone: 'auditoria' },
+    // A equipa é de quem repõe o segundo factor (`team.reset_mfa`): a
+    // reposição é o gesto que a secção existe para servir. Mudar níveis é
+    // `team.manage` e ainda não tem ecrã — o nível lê-se aqui.
+    { href: '/interno/equipa', label: 'Equipa', acao: 'team.reset_mfa', icone: 'equipa' },
+  ].filter((item) => can(role, item.acao))
 
-  const nav = secoes
-    .map((g) => ({ ...g, itens: g.itens.filter((t) => can(role, t.acao)) }))
-    .filter((g) => g.itens.length > 0)
+  // Definições fica FORA do filtro, e é o único item assim: as secções
+  // acima são acções sobre outrém e existem só para quem as pode fazer;
+  // esta é a própria conta (nome, senha, MFA, sessões), e todos os níveis
+  // têm uma. O número continua a ser a posição na lista já filtrada.
+  const nav = [
+    ...secoes,
+    { href: '/interno/definicoes', label: 'Definições', icone: 'definicoes' },
+  ].map((item, i) => ({ ...item, num: String(i + 1).padStart(2, '0') }))
 
   return (
     <InternoShell
@@ -72,7 +88,7 @@ export default async function InternoLayout({ children }) {
       mfa2={mfa?.currentLevel === 'aal2'}
       temFactor={mfa?.nextLevel === 'aal2'}
       nav={nav}
-      pendentes={['Leads', 'Auditoria', 'Equipa']}
+      pendentes={[]}
     >
       {children}
     </InternoShell>

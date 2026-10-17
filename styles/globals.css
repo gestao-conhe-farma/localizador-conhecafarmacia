@@ -12,6 +12,10 @@
   --color-brand-card: #ffffff;
   --color-brand-divider: #dfe4e0;
   --color-brand-line: #e3e0d8;
+  /* Faixa estrutural da área interna e do drawer — o verde escuro do
+     painel de entrada. Em escuro fica mais fundo, como na plataforma de
+     gestão: é chrome, não conteúdo, e não pode competir com o papel. */
+  --color-sidebar: #003528;
 
   /* Typography — fontes variáveis self-hosted (fontsource, importadas no layout) */
   --font-sans: 'Inter Variable', 'Inter', ui-sans-serif, system-ui, sans-serif;
@@ -41,6 +45,7 @@ html.dark {
   --color-brand-deep: #e5e7eb;
   --color-brand-primary: #005c4a;
   --color-brand-accent: #0d995f;
+  --color-sidebar: #0a0f0d;
   --color-tooltip-bg: #0f1a14;
   /* Texto secundário do portal: sem esta linha, tudo o que usa
      var(--color-brand-deep-60) caía no fallback verde-escuro
@@ -9472,134 +9477,128 @@ html.dark .sess-info-on {
    em que está. O que se reutiliza são os TOKENS (cores, sombras,
    tipografia) e o componente .notice, que já é global.
 
-   A sidebar é verde escuro FIXO nos dois temas (o mesmo #003528 do
-   painel estrutural do login da farmácia): é a identidade da área
-   interna e não pode ficar ilegível só porque o tema mudou — em
-   escuro o que muda é o resto da página, não a faixa.
+   A moldura segue a plataforma de gestão: sidebar escura de 16rem no
+   desktop, topbar fina e translúcida por cima do conteúdo, topbar
+   escura de 4rem no mobile (drawer pela direita) e a mesma linguagem
+   numerada 01, 02… da navegação. O verde é o token --color-sidebar,
+   mais fundo em tema escuro — a faixa é chrome e não compete com o
+   papel da página.
    ============================================================ */
 
 .interno-shell {
-  display: grid;
-  grid-template-columns: 16rem minmax(0, 1fr);
+  display: flex;
   min-height: 100dvh;
   background: var(--color-brand-bg);
   color: var(--color-brand-deep);
 }
 
-/* Faixa de identidade: verde escuro fixo, texto branco. `sticky` num
-   item de grelha precisa de altura explícita — sem ela a coluna
-   esticaria com a página e o rodapé fugia para baixo da dobra. */
+/* Sidebar de 16rem, escura e presa ao ecrã no desktop. Em mobile não
+   existe: a navegação vive no drawer (ver .interno-drawer). */
 .interno-side {
-  display: flex;
+  display: none;
+  flex: 0 0 16rem;
+  width: 16rem;
   flex-direction: column;
-  gap: 1.25rem;
-  padding: 1.25rem 1rem 1rem;
-  background: #003528;
+  background: var(--color-sidebar);
   color: #fff;
-  border-right: 1px solid var(--color-brand-divider);
   position: sticky;
   top: 0;
   height: 100dvh;
   overflow-y: auto;
+  overscroll-behavior: contain;
+}
+
+@media (min-width: 1024px) {
+  .interno-side {
+    display: flex;
+  }
 }
 
 .interno-side-brand {
-  display: grid;
-  gap: 0.375rem;
-  align-content: start;
+  padding: 1.75rem 1.5rem 1.5rem;
 }
 
 .interno-side-brand img {
   display: block;
-  max-width: 9rem;
-  height: auto;
+  height: 2rem;
+  width: auto;
 }
 
-/* 0,72 de branco sobre o verde escuro: ~7:1 — o mesmo cuidado dos
-   rótulos pequenos do portal, que a 11px precisam de folga. */
-.interno-side-eyebrow {
-  margin: 0.5rem 0 0;
+/* O mesmo tom dos rótulos pequenos da plataforma de gestão: 0,45 de
+   branco sobre o verde escuro chega para a leitura e não grita. */
+.interno-side-eyebrow,
+.interno-drawer-eyebrow {
+  margin: 0.625rem 0 0;
   font-size: 0.625rem;
   font-weight: 700;
   letter-spacing: 0.22em;
   text-transform: uppercase;
-  color: rgb(255 255 255 / 0.72);
-}
-
-.interno-side-role {
-  justify-self: start;
-  display: inline-flex;
-  align-items: center;
-  padding: 0.125rem 0.5rem;
-  border-radius: 999px;
-  background: rgb(255 255 255 / 0.14);
-  color: #fff;
-  font-size: 0.625rem;
-  font-weight: 700;
-  letter-spacing: 0.08em;
-  text-transform: uppercase;
+  color: rgb(255 255 255 / 0.45);
 }
 
 .interno-nav {
+  flex: 1 1 auto;
   display: grid;
-  gap: 0.25rem;
-  margin-top: 0.25rem;
+  align-content: start;
+  gap: 0.125rem;
+  padding: 0.25rem 0.75rem 1rem;
 }
 
 .interno-nav-group {
   display: grid;
-  gap: 0.125rem;
-  padding-top: 0.75rem;
-}
-
-.interno-nav-group:first-child {
-  padding-top: 0;
+  gap: 0.25rem;
+  padding: 0.75rem 0.75rem 0;
 }
 
 .interno-nav-label {
-  padding: 0 0.5rem 0.375rem;
   font-size: 0.625rem;
   font-weight: 700;
-  letter-spacing: 0.18em;
+  letter-spacing: 0.22em;
   text-transform: uppercase;
-  color: rgb(255 255 255 / 0.62);
+  color: rgb(255 255 255 / 0.3);
 }
 
 .interno-nav-item {
   display: flex;
   align-items: center;
-  gap: 0.625rem;
-  padding: 0.5rem 0.625rem;
+  gap: 0.75rem;
+  padding: 0.625rem 0.75rem;
   border-left: 2px solid transparent;
-  border-radius: 0.625rem;
-  color: rgb(255 255 255 / 0.86);
-  font-size: 0.875rem;
-  font-weight: 600;
+  border-radius: 0 0.5rem 0.5rem 0;
+  color: rgb(255 255 255 / 0.6);
+  font-size: 0.84375rem;
+  font-weight: 500;
   text-decoration: none;
   transition:
     background-color 0.15s ease,
     color 0.15s ease;
 }
 
+.interno-nav-item svg {
+  flex: 0 0 auto;
+}
+
 .interno-nav-item:hover {
-  background: rgb(255 255 255 / 0.07);
+  background: rgb(255 255 255 / 0.04);
   color: #fff;
 }
 
-/* Item activo: tinte mais claro + a barra mint que os olhos seguem
+/* Item activo: tinte mais claro + a barra de acento que os olhos seguem
    de relance (a cor não é o único sinal — o aria-current também). */
 .interno-nav-item--active {
-  background: rgb(255 255 255 / 0.13);
-  border-left-color: #7fd4ab;
+  background: rgb(255 255 255 / 0.07);
+  border-left-color: var(--color-brand-accent);
   color: #fff;
+  font-weight: 600;
 }
 
 .interno-nav-num {
-  min-width: 1.25rem;
-  font-size: 0.6875rem;
+  flex: 0 0 auto;
+  width: 1.25rem;
+  font-size: 0.625rem;
   font-weight: 700;
   font-variant-numeric: tabular-nums;
-  color: rgb(255 255 255 / 0.6);
+  color: rgb(255 255 255 / 0.3);
 }
 
 .interno-nav-text {
@@ -9610,19 +9609,131 @@ html.dark .sess-info-on {
   text-overflow: ellipsis;
 }
 
+/* Rodapé: o estado do segundo factor (link para /interno/mfa) e a
+   identidade — avatar, nome e nível — com a saída ao lado. */
 .interno-side-foot {
   margin-top: auto;
   display: grid;
-  gap: 0.125rem;
-  padding-top: 1rem;
-  border-top: 1px solid rgb(255 255 255 / 0.16);
+  gap: 0.75rem;
+  padding: 1rem 1rem 1.25rem;
 }
 
-.interno-foot-name {
-  font-size: 0.8125rem;
-  font-weight: 700;
+.interno-mfa-status {
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+  padding: 0.625rem 0.75rem;
+  border-radius: 0.5rem;
+  background: rgb(255 255 255 / 0.06);
+  color: rgb(255 255 255 / 0.7);
+  font-size: 0.75rem;
+  font-weight: 500;
+  text-decoration: none;
+  transition:
+    background-color 0.15s ease,
+    color 0.15s ease;
+}
+
+.interno-mfa-status:hover {
+  background: rgb(255 255 255 / 0.1);
   color: #fff;
-  overflow-wrap: anywhere;
+}
+
+.interno-mfa-status--ok {
+  background: transparent;
+  color: rgb(255 255 255 / 0.45);
+}
+
+.interno-mfa-ic {
+  flex: 0 0 auto;
+}
+
+/* Âmbar quando há um passo por fazer; verde quando já está feito. */
+.interno-mfa-status:not(.interno-mfa-status--ok) .interno-mfa-ic {
+  color: #fcd34d;
+}
+
+.interno-mfa-status--ok .interno-mfa-ic {
+  color: var(--color-brand-accent);
+}
+
+.interno-mfa-status-text {
+  flex: 1 1 auto;
+  min-width: 0;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.interno-mfa-go {
+  flex: 0 0 auto;
+  color: rgb(255 255 255 / 0.4);
+}
+
+.interno-side-user {
+  display: flex;
+  align-items: center;
+  gap: 0.75rem;
+  padding-top: 1rem;
+  border-top: 1px solid rgb(255 255 255 / 0.1);
+}
+
+.interno-avatar {
+  display: grid;
+  place-items: center;
+  flex: 0 0 auto;
+  width: 2.25rem;
+  height: 2.25rem;
+  border-radius: 999px;
+  background: rgb(255 255 255 / 0.1);
+  color: #fff;
+  font-size: 0.75rem;
+  font-weight: 700;
+}
+
+.interno-user-text {
+  min-width: 0;
+  flex: 1 1 auto;
+  display: grid;
+}
+
+.interno-user-name,
+.interno-user-role {
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.interno-user-name {
+  font-size: 0.8125rem;
+  font-weight: 600;
+  color: #fff;
+}
+
+.interno-user-role {
+  font-size: 0.6875rem;
+  color: rgb(255 255 255 / 0.45);
+}
+
+.interno-side-logout {
+  display: grid;
+  place-items: center;
+  flex: 0 0 auto;
+  width: 2.25rem;
+  height: 2.25rem;
+  border: 0;
+  border-radius: 0.5rem;
+  background: transparent;
+  color: rgb(255 255 255 / 0.5);
+  cursor: pointer;
+  transition:
+    color 0.15s ease,
+    background-color 0.15s ease;
+}
+
+.interno-side-logout:hover {
+  color: #f87171;
+  background: rgb(239 68 68 / 0.1);
 }
 
 .interno-foot-sub {
@@ -9631,41 +9742,334 @@ html.dark .sess-info-on {
   color: rgb(255 255 255 / 0.62);
 }
 
+/* O estado do segundo factor é um LINK para /interno/mfa: quem lê «sem
+   autenticador inscrito» está a ler um problema seu, e o sítio onde ele se
+   resolve é ali. A tinta é a mesma (não grita mais), com o realce só no
+   hover/foco — um aviso permanente em azul de link cansa quem já o leu. */
+.interno-foot-link {
+  text-decoration: none;
+  border-bottom: 1px solid rgb(255 255 255 / 0.28);
+  transition:
+    color 0.15s ease,
+    border-color 0.15s ease;
+}
+
+.interno-foot-link:hover,
+.interno-foot-link:focus-visible {
+  color: #fff;
+  border-bottom-color: rgb(255 255 255 / 0.6);
+}
+
 /* min-width: 0 para a coluna poder encolher — sem isto uma tabela
    larga empurra a grelha e a sidebar desaparece do ecrã. */
 .interno-main {
   min-width: 0;
+  flex: 1 1 auto;
   display: flex;
   flex-direction: column;
   background: var(--color-brand-bg);
 }
 
-.interno-top {
+.interno-main-content {
+  flex: 1 1 auto;
+  min-width: 0;
+}
+
+/* Topbar mobile: escura, 4rem, com o hamburger à esquerda, o logo ao
+   centro e o estado do segundo factor + tema à direita. */
+.interno-mobile-top {
   position: sticky;
   top: 0;
-  z-index: 20;
+  z-index: 40;
   display: flex;
   align-items: center;
-  justify-content: space-between;
-  gap: 1rem;
-  padding: 0.75rem clamp(1rem, 2.5vw, 2.5rem);
-  background: var(--color-brand-card);
-  border-bottom: 1px solid var(--color-brand-divider);
+  gap: 0.5rem;
+  height: 4rem;
+  padding: 0 1rem 0 0.5rem;
+  background: var(--color-sidebar);
+  border-bottom: 1px solid rgb(255 255 255 / 0.1);
+}
+
+.interno-mobile-logo {
+  flex: 1 1 auto;
+  display: flex;
+  justify-content: center;
+}
+
+.interno-mobile-logo img {
+  height: 1.75rem;
+  width: auto;
+}
+
+.interno-mobile-acts {
+  display: flex;
+  align-items: center;
+  gap: 0.25rem;
+}
+
+.interno-menu-btn {
+  display: grid;
+  place-items: center;
+  flex: 0 0 auto;
+  width: 2.5rem;
+  height: 2.5rem;
+  border: 0;
+  border-radius: 0.5rem;
+  background: transparent;
+  color: rgb(255 255 255 / 0.8);
+  cursor: pointer;
+  transition:
+    background-color 0.15s ease,
+    color 0.15s ease;
+}
+
+.interno-menu-btn:hover {
+  background: rgb(255 255 255 / 0.1);
+  color: #fff;
+}
+
+.interno-mobile-mfa {
+  display: grid;
+  place-items: center;
+  width: 2.5rem;
+  height: 2.5rem;
+  border-radius: 0.5rem;
+  color: #fcd34d;
+  text-decoration: none;
+}
+
+.interno-mobile-mfa--ok {
+  color: rgb(255 255 255 / 0.6);
+}
+
+.interno-mobile-mfa:hover {
+  background: rgb(255 255 255 / 0.1);
+  color: #fff;
+}
+
+/* O ícone e o rótulo do tema alternam por CSS (html.dark), nunca por
+   estado React: o tema só é conhecido no cliente (localStorage) e
+escolhê-lo no render partia a hidratação do sol/lua. */
+.interno-tema-ic {
+  display: inline-flex;
+}
+
+.interno-tema-ic--sol {
+  display: none;
+}
+
+html.dark .interno-tema-ic--sol {
+  display: inline-flex;
+}
+
+html.dark .interno-tema-ic--lua {
+  display: none;
+}
+
+.interno-tema-rotulo--sol {
+  display: none;
+}
+
+html.dark .interno-tema-rotulo--sol {
+  display: inline;
+}
+
+html.dark .interno-tema-rotulo--lua {
+  display: none;
+}
+
+/* Alternador de tema: um ícone, sem moldura (topbar e drawer). */
+.interno-tema {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 2.5rem;
+  height: 2.5rem;
+  border: 0;
+  border-radius: 0.5rem;
+  background: transparent;
+  color: var(--color-brand-deep);
+  cursor: pointer;
+  transition:
+    background-color 0.15s ease,
+    color 0.15s ease;
+}
+
+.interno-tema:hover {
+  background: var(--color-brand-bg-alt);
+  color: var(--color-brand-accent);
+}
+
+.interno-tema--escuro {
+  color: rgb(255 255 255 / 0.6);
+}
+
+.interno-tema--escuro:hover {
+  background: rgb(255 255 255 / 0.1);
+  color: #fff;
+}
+
+/* Topbar desktop: fina, translúcida, só com o estado e o tema à direita. */
+.interno-top {
+  display: none;
+}
+
+@media (min-width: 1024px) {
+  .interno-mobile-top {
+    display: none;
+  }
+
+  .interno-top {
+    position: sticky;
+    top: 0;
+    z-index: 40;
+    display: flex;
+    align-items: center;
+    justify-content: flex-end;
+    height: 3.5rem;
+    padding: 0 1.5rem;
+    background: color-mix(in srgb, var(--color-brand-bg-alt) 80%, transparent);
+    backdrop-filter: blur(10px);
+    border-bottom: 1px solid color-mix(in srgb, var(--color-brand-divider) 60%, transparent);
+  }
 }
 
 .interno-top-right {
   display: flex;
   align-items: center;
-  gap: 0.75rem;
+  gap: 0.5rem;
 }
 
-.interno-top-user {
-  display: inline-flex;
+/* ---- Drawer mobile ------------------------------------------- */
+
+.interno-drawer-overlay {
+  position: fixed;
+  inset: 0;
+  z-index: 50;
+  background: rgb(0 0 0 / 0.55);
+  backdrop-filter: blur(2px);
+}
+
+.interno-drawer {
+  position: fixed;
+  top: 0;
+  right: 0;
+  z-index: 50;
+  display: flex;
+  flex-direction: column;
+  width: 84%;
+  max-width: 24rem;
+  height: 100dvh;
+  background: var(--color-sidebar);
+  color: #fff;
+  outline: none;
+  overflow-y: auto;
+  overscroll-behavior: contain;
+}
+
+.interno-drawer-head {
+  display: flex;
   align-items: center;
-  gap: 0.375rem;
-  font-size: 0.8125rem;
+  justify-content: space-between;
+  gap: 1rem;
+  padding: 1.25rem 1.25rem 0;
+}
+
+.interno-drawer-head img {
+  display: block;
+  height: 2rem;
+  width: auto;
+}
+
+.interno-drawer-close {
+  display: grid;
+  place-items: center;
+  width: 2.25rem;
+  height: 2.25rem;
+  border: 0;
+  border-radius: 999px;
+  background: transparent;
+  color: rgb(255 255 255 / 0.6);
+  cursor: pointer;
+}
+
+.interno-drawer-close:hover {
+  background: rgb(255 255 255 / 0.1);
+  color: #fff;
+}
+
+.interno-drawer-eyebrow {
+  margin: 0.5rem 1.25rem 0;
+}
+
+.interno-drawer-nav {
+  flex: 1 1 auto;
+  display: grid;
+  align-content: start;
+  gap: 0.125rem;
+  padding: 1rem 0.75rem;
+}
+
+/* No drawer os alvos são de dedo: um pouco mais altos e maiores. */
+.interno-drawer-nav .interno-nav-item {
+  font-size: 0.90625rem;
+  padding: 0.75rem;
+}
+
+/* O drawer usa a MESMA selecção da sidebar: tinte + barra de acento à
+   esquerda. Sem isto, a regra de ecrã estreito (que transforma a
+   navegação da sidebar numa fila horizontal) também apanhava o drawer:
+   tirava-lhe a barra e punha uma linha por baixo — que num painel
+   vertical se lê como separador, não como «estou aqui». A especificidade
+   (0,2,0) vence a regra da media query, que é (0,1,0). */
+.interno-drawer-nav .interno-nav-item {
+  border-left: 2px solid transparent;
+  border-bottom: 0;
+  border-radius: 0 0.5rem 0.5rem 0;
+}
+
+.interno-drawer-nav .interno-nav-item--active {
+  border-left-color: var(--color-brand-accent);
+  border-bottom-color: transparent;
+  background: rgb(255 255 255 / 0.07);
+  color: #fff;
   font-weight: 600;
-  color: var(--color-brand-deep);
+}
+
+.interno-drawer-foot {
+  display: grid;
+  gap: 0.5rem;
+  padding: 1rem 1.25rem;
+  border-top: 1px solid rgb(255 255 255 / 0.1);
+}
+
+.interno-drawer-theme {
+  display: flex;
+  align-items: center;
+  gap: 0.75rem;
+  width: 100%;
+  padding: 0.625rem 0.75rem;
+  border: 0;
+  border-radius: 0.5rem;
+  background: transparent;
+  color: rgb(255 255 255 / 0.7);
+  font-size: 0.84375rem;
+  font-weight: 500;
+  cursor: pointer;
+}
+
+.interno-drawer-theme:hover {
+  background: rgb(255 255 255 / 0.05);
+  color: #fff;
+}
+
+/* Em desktop a navegação é a sidebar; o drawer não existe. Sem isto, um
+   estado aberto (ou uma animação a meio) aparecia por cima da página. */
+@media (min-width: 1024px) {
+  .interno-drawer,
+  .interno-drawer-overlay {
+    display: none;
+  }
 }
 
 /* Grelha de cartões com gap único: o cabeçalho e os cartões espaçam-se
@@ -9931,6 +10335,216 @@ html.dark .interno-pill--off {
   background: var(--color-brand-bg-alt);
   border-color: var(--color-brand-divider);
   color: var(--color-brand-deep);
+}
+
+/* Etiqueta que é um link (o aviso «Só senha» do topo leva à inscrição do
+   autenticador): sem sublinhado, porque a pílula já é um alvo visual, e com
+   a forma intacta no hover — muda a tinta, não o tamanho. */
+.interno-pill--link {
+  text-decoration: none;
+  cursor: pointer;
+}
+
+.interno-pill--link:hover,
+.interno-pill--link:focus-visible {
+  background: rgb(216 138 0 / 0.22);
+}
+
+html.dark .interno-pill--link:hover,
+html.dark .interno-pill--link:focus-visible {
+  background: rgb(216 138 0 / 0.28);
+}
+
+/* ---- Acções dentro de uma linha da tabela ---------------------
+   Mover um lead é um gesto de linha: um `select`, uma nota curta e um
+   botão, encostados à direita. Não é um diálogo porque o custo de abrir
+   uma janela a cada mudança de estado é a equipa deixar de mexer no
+   funil — que é o pior resultado possível. */
+
+.interno-row-acts {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  justify-content: flex-end;
+  gap: 0.375rem;
+}
+
+.interno-funnel-move {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  justify-content: flex-end;
+  gap: 0.3125rem;
+}
+
+/* Campos estreitos só existem para caberem numa linha de tabela. */
+.interno-input--small,
+.interno-select--small {
+  width: auto;
+  padding: 0.25rem 0.5rem;
+  border-radius: 0.4375rem;
+  font-size: 0.75rem;
+}
+
+.interno-select--small {
+  min-width: 8.5rem;
+}
+
+.interno-input--small {
+  width: 9rem;
+}
+
+/* ---- Passos de uma operação ----------------------------------
+   Uma operação que faz três coisas mostra-as: o número diz «esta é a
+   ordem», e a marca verde diz que aquele passo ficou feito. Sem cor
+   nenhuma ainda se lê («1 Farmácia criada»), porque o número e a palavra
+   levam a informação — a cor é reforço, nunca o único sinal. */
+
+.interno-steps {
+  display: grid;
+  gap: 0.625rem;
+  margin: 1rem 0 0;
+  padding: 0;
+  list-style: none;
+}
+
+.interno-step {
+  display: flex;
+  align-items: flex-start;
+  gap: 0.625rem;
+  padding: 0.625rem 0.75rem;
+  border: 1px solid var(--color-brand-divider);
+  border-radius: 0.625rem;
+  background: var(--color-brand-bg-alt);
+}
+
+.interno-step-num {
+  display: grid;
+  place-items: center;
+  flex: 0 0 auto;
+  width: 1.375rem;
+  height: 1.375rem;
+  border-radius: 50%;
+  background: #00493a;
+  color: #fff;
+  font-size: 0.6875rem;
+  font-weight: 700;
+  font-variant-numeric: tabular-nums;
+}
+
+.interno-step--ok .interno-step-num {
+  background: var(--color-brand-primary);
+}
+
+.interno-step-text {
+  display: grid;
+  gap: 0.125rem;
+  min-width: 0;
+  font-size: 0.875rem;
+  color: var(--color-brand-deep);
+}
+
+/* Identificador técnico (o `requestId` que liga os registos da trilha):
+   mono e quebrável, para se poder copiar sem se perder na linha. */
+.interno-mono {
+  font-family: ui-monospace, SFMono-Regular, Menlo, Consolas, monospace;
+  font-size: 0.8125rem;
+  word-break: break-all;
+}
+
+/* ---- Inscrição do segundo factor (TOTP) -----------------------
+   O QR e a chave valem o mesmo: quem consegue ler o código usa o QR,
+   quem não consegue escreve a chave. Ficam lado a lado e com o mesmo
+   peso — a chave não é a nota de rodapé do QR. */
+
+.interno-qr-row {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: flex-start;
+  gap: 1rem 1.25rem;
+  margin-top: 1rem;
+}
+
+/* Fundo branco fixo, nos dois temas: um QR em fundo escuro, com os
+   módulos invertidos, é o clássico «a câmara não lê». */
+.interno-qr {
+  flex: 0 0 auto;
+  width: 11.25rem;
+  height: 11.25rem;
+  padding: 0.5rem;
+  border: 1px solid var(--color-brand-divider);
+  border-radius: 0.75rem;
+  background: #fff;
+}
+
+.interno-qr-lado {
+  display: grid;
+  gap: 0.375rem;
+  min-width: 14rem;
+  flex: 1 1 16rem;
+}
+
+/* A chave do autenticador: mono, com espaço entre caracteres e
+   quebrável — lê-se em voz alta ao telefone e copia-se inteira. */
+.interno-secret {
+  display: block;
+  padding: 0.625rem 0.75rem;
+  border: 1px dashed var(--color-brand-divider);
+  border-radius: 0.5rem;
+  background: var(--color-brand-bg-alt);
+  font-size: 0.9375rem;
+  font-weight: 600;
+  letter-spacing: 0.08em;
+  color: var(--color-brand-deep);
+  word-break: break-all;
+  user-select: all;
+}
+
+/* Código de seis dígitos: largo, mono e centrado — o número lê-se de
+   longe e o cursor não dança com os espaços que o autenticador mostra. */
+/* `display: block` porque a etiqueta do projecto é um `<label>` inline com o
+   campo lá dentro: sem isto, o campo (estreito) cabia ao lado do texto da
+   etiqueta em vez de ficar por baixo. */
+.interno-input--code {
+  display: block;
+  max-width: 12rem;
+  margin-top: 0.375rem;
+  padding: 0.625rem 0.75rem;
+  font-family: ui-monospace, SFMono-Regular, Menlo, Consolas, monospace;
+  font-size: 1.25rem;
+  font-weight: 700;
+  letter-spacing: 0.28em;
+  text-align: center;
+}
+
+/* Inscrições por acabar: separadas por uma linha, porque são história
+   antiga e não a tarefa de agora. */
+.interno-mfa-pendentes {
+  display: grid;
+  gap: 0.5rem;
+  margin-top: 1rem;
+  padding-top: 0.875rem;
+  border-top: 1px solid var(--color-brand-divider);
+}
+
+.interno-mfa-lista {
+  display: grid;
+  gap: 0.5rem;
+  margin: 0;
+  padding: 0;
+  list-style: none;
+}
+
+.interno-mfa-lista li {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  justify-content: space-between;
+  gap: 0.5rem;
+  padding: 0.5rem 0.75rem;
+  border: 1px solid var(--color-brand-divider);
+  border-radius: 0.625rem;
+  background: var(--color-brand-bg-alt);
 }
 
 /* ---- Filtros e formulários ----------------------------------- */
@@ -10333,6 +10947,68 @@ html.dark .interno-modal {
    outro («… → "activo"graça_ate: …») e lêem-se como se fossem um só. */
 .interno-audit-diff b {
   display: block;
+}
+
+/* ---- Detalhe da trilha (/interno/auditoria) -------------------
+   A linha do detalhe ocupa a tabela toda e usa o fundo alternativo:
+   sem isso, o antes/depois parece mais uma linha da lista. */
+
+.interno-audit-detail > td {
+  padding: 0;
+  background: var(--color-brand-bg-alt);
+}
+
+.interno-audit-detail-in {
+  display: grid;
+  gap: 1rem;
+  padding: 1rem 1.25rem 1.25rem;
+  border-top: 1px solid var(--color-brand-divider);
+}
+
+.interno-audit-detail-in .interno-dl {
+  margin: 0;
+}
+
+/* O antes/depois em grelha de três colunas: campo, o que estava e o que
+   ficou. Mono porque são valores de máquina (slugs, booleanos, JSON) e
+   `pre-wrap` porque um objecto no `after` parte em várias linhas. */
+.interno-diff-table {
+  width: 100%;
+  border-collapse: collapse;
+  font-family: ui-monospace, SFMono-Regular, Menlo, Consolas, monospace;
+  font-size: 0.6875rem;
+  line-height: 1.55;
+}
+
+.interno-diff-table th {
+  padding: 0.375rem 0.625rem;
+  border-bottom: 1px solid var(--color-brand-divider);
+  text-align: left;
+  font-size: 0.625rem;
+  font-weight: 700;
+  letter-spacing: 0.12em;
+  text-transform: uppercase;
+  color: var(--ink-45v);
+}
+
+.interno-diff-table td {
+  padding: 0.4375rem 0.625rem;
+  border-bottom: 1px solid var(--color-brand-divider);
+  text-align: left;
+  vertical-align: top;
+  white-space: pre-wrap;
+  overflow-wrap: anywhere;
+  color: var(--color-brand-deep);
+}
+
+.interno-diff-table tr:last-child td {
+  border-bottom: 0;
+}
+
+.interno-diff-table td:first-child {
+  white-space: nowrap;
+  font-weight: 600;
+  color: var(--ink-60v);
 }
 
 /* ---- Escolha de plano -----------------------------------------

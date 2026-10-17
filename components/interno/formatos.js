@@ -83,6 +83,38 @@ export function textoPlano(plano) {
   return plano.status === 'activo' ? plano.planoNome : `${plano.planoNome} · ${plano.statusLabel}`
 }
 
+/**
+ * Rótulos do funil de leads. As chaves são os estados da base (CHECK da
+ * 0001) e os valores o que a equipa lê — `onboarded` é «Convertido» porque
+ * «onboarded» não é uma palavra que se diga ao telefone.
+ */
+export const ESTADOS_LEAD = {
+  novo: 'Novo',
+  em_conversa: 'Em conversa',
+  demonstracao: 'Demonstração',
+  acordo: 'Acordo',
+  onboarded: 'Convertido',
+  descartado: 'Descartado',
+}
+
+/** Nome do estado do funil, com rede de segurança para um estado novo. */
+export function estadoLead(estado) {
+  return ESTADOS_LEAD[estado] || estado || '—'
+}
+
+/**
+ * Etiqueta do estado de um lead. O que pede acção salta: um lead novo é
+ * âmbar (ninguém lhe tocou), um acordo está verde, e um descartado é neutro
+ * de propósito — não é erro, é uma decisão tomada.
+ */
+export function pillLead(estado) {
+  if (estado === 'novo') return 'interno-pill interno-pill--warn'
+  if (estado === 'acordo') return 'interno-pill interno-pill--ok'
+  if (estado === 'onboarded') return 'interno-pill interno-pill--plan'
+  if (estado === 'descartado') return 'interno-pill interno-pill--off'
+  return 'interno-pill interno-pill--info'
+}
+
 /** Preço do plano em kwanzas, por mês. Zero é «Grátis», não «0 Kz». */
 export function preco(valor) {
   if (!valor) return 'Grátis'

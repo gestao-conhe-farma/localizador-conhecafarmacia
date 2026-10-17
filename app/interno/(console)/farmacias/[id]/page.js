@@ -6,6 +6,7 @@ import { catalogoPlanos } from '@/lib/plans'
 import SemPermissao from '@/components/interno/SemPermissao'
 import Falha from '@/components/interno/Falha'
 import PharmacyActions from '@/components/interno/PharmacyActions'
+import PharmacyInviteResend from '@/components/interno/PharmacyInviteResend'
 import PlanPanel from '@/components/interno/PlanPanel'
 import {
   dataCurta,
@@ -103,6 +104,10 @@ export default async function FarmaciaFichaPage({ params }) {
     estado: can(s.role, farmacia.active ? 'pharmacy.deactivate' : 'pharmacy.activate'),
     mfa2: s.mfa?.currentLevel === 'aal2',
   }
+  // O reenvio do convite é uma acção da matriz (`account.resend`) e só faz
+  // sentido nas contas com convite por aceitar — a decisão a sério volta a
+  // acontecer na Server Action, que relê a conta.
+  const podeReenviarConvite = can(s.role, 'account.resend')
 
   // As acções de plano vêm da mesma matriz: uma farmácia sem plano só vê o
   // caminho do primeiro plano, e quem não negoceia planos não vê nenhuma.
@@ -301,9 +306,8 @@ export default async function FarmaciaFichaPage({ params }) {
             <div className="interno-empty">
               <b>Esta farmácia não tem conta</b>
               <span>
-                Ninguém entra no portal em nome dela. O convite é enviado pela equipa (fase
-                seguinte) — até lá, a ficha fica pronta e o stock pode continuar a ser alimentado
-                por API.
+                Ninguém entra no portal em nome dela. O convite ao dono nasce na conversão de um
+                lead; esta ficha fica pronta e o stock pode continuar a ser alimentado por API.
               </span>
             </div>
           </div>
@@ -317,6 +321,7 @@ export default async function FarmaciaFichaPage({ params }) {
                   <th>Convite</th>
                   <th>Último acesso</th>
                   <th>Criada</th>
+                  {podeReenviarConvite && <th>Acções</th>}
                 </tr>
               </thead>
               <tbody>
@@ -345,6 +350,19 @@ export default async function FarmaciaFichaPage({ params }) {
                       )}
                     </td>
                     <td>{dataCurta(c.criadaEm)}</td>
+                    {podeReenviarConvite && (
+                      <td>
+                        <PharmacyInviteResend
+                          pharmacyId={farmacia.id}
+                          pharmacyName={farmacia.name}
+                          userId={c.userId}
+                          email={c.email}
+                          nome={c.displayName}
+                          pendente={!c.conviteAceite}
+                          pode={podeReenviarConvite}
+                        />
+                      </td>
+                    )}
                   </tr>
                 ))}
               </tbody>

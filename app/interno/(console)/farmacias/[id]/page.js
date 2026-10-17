@@ -7,6 +7,8 @@ import SemPermissao from '@/components/interno/SemPermissao'
 import Falha from '@/components/interno/Falha'
 import PharmacyActions from '@/components/interno/PharmacyActions'
 import PharmacyInviteResend from '@/components/interno/PharmacyInviteResend'
+import PharmacyInviteRevoke from '@/components/interno/PharmacyInviteRevoke'
+import Notice from '@/components/ui/Notice'
 import PlanPanel from '@/components/interno/PlanPanel'
 import {
   dataCurta,
@@ -53,11 +55,17 @@ function Linha({ rotulo, children }) {
  * As acções do cabeçalho são a única parte interactiva: cada uma autoriza
  * outra vez no servidor e deixa linha na trilha.
  */
-export default async function FarmaciaFichaPage({ params }) {
+export default async function FarmaciaFichaPage({ params, searchParams }) {
   const g = await requirePlatformPage('pharmacy.view')
   if (!g.ok) return <SemPermissao acao={g.acao} rotulo={g.session?.roleLabel} />
 
   const { id } = await params
+  const query = await searchParams
+  // Confirmação da revogação de um convite. Vive no URL porque a linha da
+  // conta apagada desaparece no `router.refresh()` — o aviso (incluindo o de
+  // uma trilha que não registou) ficaria sem sítio onde aparecer.
+  const conviteRevogado = typeof query?.revogado === 'string' ? query.revogado : null
+  const trilhaFalhou = query?.trilha === '0'
   const res = await getPharmacyDetalhe(id)
 
   if (!res.ok) {
@@ -104,10 +112,13 @@ export default async function FarmaciaFichaPage({ params }) {
     estado: can(s.role, farmacia.active ? 'pharmacy.deactivate' : 'pharmacy.activate'),
     mfa2: s.mfa?.currentLevel === 'aal2',
   }
-  // O reenvio do convite é uma acção da matriz (`account.resend`) e só faz
-  // sentido nas contas com convite por aceitar — a decisão a sério volta a
-  // acontecer na Server Action, que relê a conta.
+  // O reenvio e a revogação são acções da matriz (`account.resend` e
+  // `account.revoke`) e só fazem sentido nas contas com convite por aceitar
+  // — a decisão a sério volta a acontecer nas Server Actions, que releem a
+  // conta.
   const podeReenviarConvite = can(s.role, 'account.resend')
+  const podeRevogarConvite = can(s.role, 'account.revoke')
+  const podeAgirContas = podeReenviarConvite || podeRevogarConvite
 
   // As acções de plano vêm da mesma matriz: uma farmácia sem plano só vê o
   // caminho do primeiro plano, e quem não negoceia planos não vê nenhuma.
@@ -301,6 +312,24 @@ export default async function FarmaciaFichaPage({ params }) {
           <h2>Contas da farmácia</h2>
           <span className="interno-sec-head-b">{contas.length} conta(s)</span>
         </div>
+        {conviteRevogado && (
+          <div className="interno-box--pad">
+            <Notice tone={trilhaFalhou ? 'warn' : 'ok'} role="status">
+              {trilhaFalhou ? (
+                <>
+                  O convite de <b>{conviteRevogado}</b> foi revogado e a conta apagada, mas a trilha{' '}
+                  <b>NÃO registou</b> a operação. Avise quem mantém a área interna e registe o caso:
+                  a conta já não existe e o link do convite deixou de abrir.
+                </>
+              ) : (
+                <>
+                  Convite de <b>{conviteRevogado}</b> revogado e registado na trilha. A conta foi
+                  apagada; para voltar a dar acesso, convide a farmácia outra vez.
+                </>
+              )}
+            </Notice>
+          </div>
+        )}
         {contas.length === 0 ? (
           <div className="interno-box--pad">
             <div className="interno-empty">
@@ -321,7 +350,7 @@ export default async function FarmaciaFichaPage({ params }) {
                   <th>Convite</th>
                   <th>Último acesso</th>
                   <th>Criada</th>
-                  {podeReenviarConvite && <th>Acções</th>}
+                  {podeAgirContas && <th>Acções</th>}
                 </tr>
               </thead>
               <tbody>
@@ -350,17 +379,29 @@ export default async function FarmaciaFichaPage({ params }) {
                       )}
                     </td>
                     <td>{dataCurta(c.criadaEm)}</td>
-                    {podeReenviarConvite && (
+                    {podeAgirContas && (
                       <td>
-                        <PharmacyInviteResend
-                          pharmacyId={farmacia.id}
-                          pharmacyName={farmacia.name}
-                          userId={c.userId}
-                          email={c.email}
-                          nome={c.displayName}
-                          pendente={!c.conviteAceite}
-                          pode={podeReenviarConvite}
-                        />
+                        <div className="interno-invite-acts">
+                          <PharmacyInviteResend
+                            pharmacyId={farmacia.id}
+                            pharmacyName={farmacia.name}
+                            userId={c.userId}
+                            email={c.email}
+                            nome={c.displayName}
+                            pendente={!c.conviteAceite}
+                            pode={podeReenviarConvite}
+                          />
+                          <PharmacyInviteRevoke
+                            pharmacyId={farmacia.id}
+                            pharmacyName={farmacia.name}
+                            userId={c.userId}
+                            email={c.email}
+                            nome={c.displayName}
+                            pendente={!c.conviteAceite}
+                            pode={podeRevogarConvite}
+                            mfa2={s.mfa?.currentLevel === 'aal2'}
+                          />
+                        </div>
                       </td>
                     )}
                   </tr>

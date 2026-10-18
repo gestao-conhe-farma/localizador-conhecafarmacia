@@ -1,8 +1,10 @@
 import { redirect } from 'next/navigation'
 import PortalShell from '@/components/portal/PortalShell'
+import PlanExpiryNotice from '@/components/portal/PlanExpiryNotice'
 import { getPharmacySessionVerbose } from '@/lib/pharmacy-session'
 import { getActiveStaff } from '@/lib/staff-session'
 import { STATUS_LABELS, getSubscription } from '@/lib/platform/subscriptions'
+import { unreadAnnouncementCount } from '@/lib/announcements'
 import { PLANS_ENFORCED } from '@/lib/plans'
 
 // Sessão sempre fresca: nada disto pode ser estático.
@@ -38,7 +40,12 @@ export default async function PortalLayout({ children }) {
   // Só dados serializáveis seguem para os componentes cliente — e
   // `PLANS_ENFORCED` tem de vir do servidor (não é NEXT_PUBLIC_*, um
   // cliente leria `undefined`).
-  const sub = await getSubscription(pharmacy.id)
+  // O sino dos avisos (0032) é lido aqui, ao lado do plano: a topbar e a
+  // sidebar recebem o número já pronto, sem um pedido a mais no cliente.
+  const [sub, avisosPorLer] = await Promise.all([
+    getSubscription(pharmacy.id),
+    unreadAnnouncementCount(pharmacy.id),
+  ])
   // `sub.plan.nome` é o plano EM VIGOR (um prazo terminado ou uma suspensão
   // descem ao plano de entrada) — e o rótulo diz porquê, em vez de dizer
   // «Em experiência» de uma experiência que já acabou.
@@ -64,6 +71,11 @@ export default async function PortalLayout({ children }) {
       userSub={profile.user_id}
       staff={staff}
       plan={plan}
+      // Elemento do servidor passado como prop: o `PlanExpiryNotice` lê a
+      // subscrição (módulo de servidor) e não pode entrar no bundle do
+      // cliente que é o `PortalShell`.
+      planAviso={<PlanExpiryNotice sub={sub} />}
+      avisosPorLer={avisosPorLer}
     >
       {children}
     </PortalShell>

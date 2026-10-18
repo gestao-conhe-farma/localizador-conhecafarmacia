@@ -1,7 +1,7 @@
 import Link from 'next/link'
 import Image from 'next/image'
 import PharmacyLoginForm from '@/components/portal/PharmacyLoginForm'
-import { getPharmacySessionVerbose } from '@/lib/pharmacy-session'
+import { getPharmacySession } from '@/lib/pharmacy-session'
 import { redirect } from 'next/navigation'
 
 export const metadata = {
@@ -16,11 +16,9 @@ export const metadata = {
  * só o portal. Vive FORA do route group (dashboard), cujo layout
  * valida a sessão e redireccionaria para aqui em loop.
  */
-export default async function PortalLoginPage({ searchParams }) {
-  const params = await searchParams
-  // Versão verbosa: a mesma sonda que alimenta a caixa de debug abaixo.
-  const sonda = await getPharmacySessionVerbose()
-  if (sonda.session) redirect('/portal')
+export default async function PortalLoginPage() {
+  const session = await getPharmacySession()
+  if (session) redirect('/portal')
 
   return (
     <div className="min-h-dvh grid lg:grid-cols-2 bg-brand-bg">
@@ -97,26 +95,6 @@ export default async function PortalLoginPage({ searchParams }) {
           </div>
 
           <PharmacyLoginForm />
-
-          {/* Caixa de depuração do loop pós-login — efémera, remover quando estabilizar. */}
-          {params?.motivo && (
-            <p
-              className="portal-hint"
-              style={{
-                marginTop: '1rem',
-                padding: '0.75rem 1rem',
-                borderRadius: '0.75rem',
-                border: '1px solid var(--color-brand-divider)',
-                background: 'var(--color-brand-bg-alt)',
-                fontFamily: 'monospace',
-                fontSize: '0.75rem',
-              }}
-            >
-              debug: motivo={params.motivo}
-              {params.detalhe ? ` · detalhe=${params.detalhe}` : ''}
-              {sonda ? ` · sb-cookies=[${sonda.sbCookies.join(', ') || 'nenhuma'}]` : ''}
-            </p>
-          )}
         </div>
       </div>
     </div>

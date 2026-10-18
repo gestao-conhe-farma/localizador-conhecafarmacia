@@ -7,13 +7,19 @@ const ERRORES = {
   SENHA_CURTA: 'A senha tem de ter pelo menos 8 caracteres.',
   SENHA_LONGA: 'A senha não pode ter mais de 72 caracteres.',
   SENHAS_DIFERENTES: 'As duas senhas não coincidem.',
-  SEM_SESSAO: 'O convite expirou. Abra o link do e-mail outra vez ou peça um novo à equipa.',
+  SENHA_IGUAL: 'A senha nova tem de ser diferente da actual.',
+  SEM_SESSAO:
+    'O link expirou. Abra outra vez o link do e-mail ou peça um novo à equipa Conheça Farmácia.',
   SENHA_FALHOU: 'Não foi possível guardar a senha. Tente novamente.',
   FALHA: 'Não foi possível concluir. Tente novamente.',
 }
 
-export default function InvitePasswordForm() {
+export default function InvitePasswordForm({ variante = 'convite' } = {}) {
   const [state, formAction, pending] = useActionState(definirSenhaConvite, { ok: true })
+  // A MESMA acção serve os dois caminhos (convite e reposição): em ambos há
+  // sessão e o pedido é «escolher a senha desta conta». Só o texto muda —
+  // duplicar a acção era duplicar a validação e o `updateUser`.
+  const recuperacao = variante === 'recuperacao'
 
   return (
     <form className="portal-form mt-6" action={formAction}>
@@ -50,7 +56,7 @@ export default function InvitePasswordForm() {
       )}
 
       <button type="submit" className="btn btn-primary" disabled={pending}>
-        {pending ? 'A guardar…' : 'Entrar no portal'}
+        {pending ? 'A guardar…' : recuperacao ? 'Guardar senha e entrar' : 'Entrar no portal'}
       </button>
 
       <p className="portal-hint">

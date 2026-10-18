@@ -1,4 +1,5 @@
 import PharmacyProfileForm from '@/components/portal/PharmacyProfileForm'
+import PortalSettingsNav from '@/components/portal/PortalSettingsNav'
 import { getPharmacySession } from '@/lib/pharmacy-session'
 
 export const metadata = {
@@ -24,8 +25,11 @@ export default async function PortalProfilePage() {
   const accountEmail = session.user?.email || ''
 
   return (
-    <div className="portal-page">
-      <PharmacyProfileForm pharmacy={pharmacy} accountEmail={accountEmail} />
+    <div className="settings-layout">
+      <PortalSettingsNav active="perfil" />
+      <div className="settings-content">
+        <PharmacyProfileForm pharmacy={pharmacy} accountEmail={accountEmail} />
+      </div>
     </div>
   )
 }

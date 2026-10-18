@@ -5,6 +5,7 @@ import { exportAuditCsv } from '@/lib/actions/platform-audit'
 import ConfirmActionModal from '@/components/interno/ConfirmActionModal'
 import Notice from '@/components/ui/Notice'
 import { LinhaResumo } from '@/components/interno/LinhaResumo'
+import { plural } from '@/lib/texto'
 
 /**
  * Exportação da trilha (`audit.export`) — Task 8.2.
@@ -107,7 +108,7 @@ export default function AuditExport({ filtros, pode, mfa2 }) {
 
       {feito && !aberto && (
         <span className="interno-hint" role="status">
-          {feito.linhas} linha(s) exportada(s)
+          {plural(feito.linhas, 'linha exportada', 'linhas exportadas')}
           {feito.truncado ? ` — tecto de ${feito.limite} atingido, estreite os filtros` : ''}.
           Registado na trilha.
         </span>

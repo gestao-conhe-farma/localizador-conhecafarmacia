@@ -1,6 +1,8 @@
 import { NextResponse, after } from 'next/server'
 import { createAdminClient } from '@/lib/supabase/admin'
 import { hasScope, keyFromRequest, parseApiKey, verifyApiKeyHash } from '@/lib/api-keys'
+import { getSubscription } from '@/lib/platform/subscriptions'
+import { ingestLimitFor } from '@/lib/plans'
 import { drainDue } from '@/lib/webhooks'
 import { logError, logWarn } from '@/lib/log'
 
@@ -23,7 +25,10 @@ import { logError, logWarn } from '@/lib/log'
  *   • lote e validade só se aplicam a ENTRADAS (saldo que sobe): numa baixa
  *     a saída segue o FEFO e o lote enviado não é gravado. Nesse caso a
  *     linha devolve `warning: LOTE_IGNORADO`, para não ser um erro silencioso;
- *   • rate-limit por chave (janela fixa, atómico na BD) com Retry-After;
+ *   • rate-limit por chave E por plano (janela fixa, atómico na BD) com
+ *     Retry-After: o plano é o tecto de negócio e a chave o técnico; uma
+ *     chave que já existe continua a sincronizar mesmo num plano sem
+ *     integração (descer de plano não tranca o que está a correr);
  *   • auditoria sem payload e sem dados pessoais (rota, estado, contagens,
  *     duração) — em `api_request_log`;
  *   • o movimento do livro-razão é escrito pela MESMA porta do portal
@@ -102,6 +107,22 @@ function moneyOrNull(v) {
 }
 
 /**
+ * Tecto de pedidos/minuto da ingestão: o menor entre o limite técnico da
+ * chave e o limite de negócio do plano em vigor.
+ *
+ * `ingestPerMinute === 0` quer dizer «este plano não vende integração», não
+ * «zero pedidos». Uma chave que já existe continua a sincronizar — a mesma
+ * promessa de que descer de plano nunca tranca o que já está a correr — e o
+ * que impede integrações novas é o guard de `createApiKey` (apiKeys = 0).
+ * Sem esta excepção, ligar o limite cortaria no deploy as integrações já
+ * instaladas.
+ */
+async function ingestRateLimit(admin, key) {
+  const sub = await getSubscription(key.pharmacy_id, { client: admin })
+  return ingestLimitFor(sub.effectivePlan, key.rate_limit_per_minute || 120, sub.enforced)
+}
+
+/**
  * Autentica a chave e devolve o contexto (chave, farmácia, limites).
  * `scope` é o que a rota exige; a chave sem o scope recebe 403.
  */
@@ -142,9 +163,10 @@ async function authenticate(request, scope, admin) {
   }
 
   // Rate-limit: a conta é atómica e sobrevive ao 429.
+  const limit = await ingestRateLimit(admin, key)
   const { data: rate, error: eRate } = await admin.rpc('api_rate_consume', {
     p_key_id: key.id,
-    p_limit: key.rate_limit_per_minute || 120,
+    p_limit: limit,
     p_window_seconds: WINDOW_SECONDS,
   })
   if (eRate) throw eRate

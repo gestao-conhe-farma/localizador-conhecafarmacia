@@ -29,6 +29,8 @@ const MENSAGENS = {
   SEM_PERMISSAO: 'O seu nível não permite esta acção.',
   SEM_SESSAO: 'A sessão terminou. Entre de novo.',
   NAO_ENCONTRADA: 'Esta farmácia já não existe.',
+  CONTA_SUSPENSA:
+    'Esta conta está suspensa. Reponha o acesso no bloco «Contas da farmácia» — activar a farmácia sozinha não devolve o portal.',
   // A base de dados não confirmou a gravação (trigger, permissão, corrida):
   // dizer «feito» quando não ficou feito era o erro que esta área não pode
   // ter — quem desactiva uma farmácia tem de saber que ela ficou mesmo

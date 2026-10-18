@@ -44,24 +44,24 @@ export default function PharmacyTable({ rows, scope }) {
           <tbody>
             {rows.map((r) => (
               <tr key={r.id}>
-                <td>
+                <td data-rotulo="Farmácia">
                   <Link href={`/interno/farmacias/${r.id}`} className="interno-table-link">
                     {r.name}
                   </Link>
                   <span className="interno-foot-sub">{r.municipio || '—'}</span>
                 </td>
-                <td>
+                <td data-rotulo="Estado">
                   <span className={pillActiva(r.active)}>{r.active ? 'Activa' : 'Inactiva'}</span>
                   <span className="interno-foot-sub">{r.verified ? 'Verificada' : 'Sem selo'}</span>
                 </td>
-                <td>
+                <td data-rotulo="Plano">
                   <span className={pillPlano(r.plano)} title={r.plano.statusLabel}>
                     {textoPlano(r.plano)}
                   </span>
                 </td>
-                <td>{r.contas}</td>
+                <td data-rotulo="Contas">{r.contas}</td>
                 {operacao && (
-                  <td>
+                  <td data-rotulo="Stock confirmado">
                     {r.stockUltimo ? (
                       <>
                         <span>{r.stockConfirmado} em stock</span>
@@ -76,7 +76,7 @@ export default function PharmacyTable({ rows, scope }) {
                   </td>
                 )}
                 {operacao && (
-                  <td>
+                  <td data-rotulo="Reservas">
                     {r.reservasAbertas > 0 ? (
                       <span className="interno-pill interno-pill--info">
                         {r.reservasAbertas} abertas
@@ -87,7 +87,7 @@ export default function PharmacyTable({ rows, scope }) {
                   </td>
                 )}
                 {operacao && (
-                  <td>
+                  <td data-rotulo="Última acção">
                     {r.ultimaAccao ? (
                       <>
                         <span>{describeAction(r.ultimaAccao)}</span>
@@ -98,7 +98,7 @@ export default function PharmacyTable({ rows, scope }) {
                     )}
                   </td>
                 )}
-                <td>
+                <td data-rotulo="Abrir">
                   <Link
                     href={`/interno/farmacias/${r.id}`}
                     className="interno-btn interno-btn--ghost interno-btn--small"

@@ -8,6 +8,8 @@ import Falha from '@/components/interno/Falha'
 import PharmacyActions from '@/components/interno/PharmacyActions'
 import PharmacyInviteResend from '@/components/interno/PharmacyInviteResend'
 import PharmacyInviteRevoke from '@/components/interno/PharmacyInviteRevoke'
+import PharmacyPasswordReset from '@/components/interno/PharmacyPasswordReset'
+import PharmacyAccountSuspension from '@/components/interno/PharmacyAccountSuspension'
 import Notice from '@/components/ui/Notice'
 import PlanPanel from '@/components/interno/PlanPanel'
 import {
@@ -18,6 +20,7 @@ import {
   pillPlano,
   textoPlano,
 } from '@/components/interno/formatos'
+import { plural } from '@/lib/texto'
 
 export const metadata = {
   title: 'Ficha da farmácia — Equipa Conheça Farmácia',
@@ -109,7 +112,11 @@ export default async function FarmaciaFichaPage({ params, searchParams }) {
   const acoes = {
     editar: can(s.role, 'pharmacy.update'),
     verificar: can(s.role, 'pharmacy.verify'),
-    estado: can(s.role, farmacia.active ? 'pharmacy.deactivate' : 'pharmacy.activate'),
+    // Com a conta suspensa, a farmácia fica inactiva até alguém repor o
+    // acesso: esconder «Activar farmácia» evita prometer uma reactivação
+    // que o servidor recusa (`CONTA_SUSPENSA`).
+    estado:
+      !res.suspensao && can(s.role, farmacia.active ? 'pharmacy.deactivate' : 'pharmacy.activate'),
     mfa2: s.mfa?.currentLevel === 'aal2',
   }
   // O reenvio e a revogação são acções da matriz (`account.resend` e
@@ -118,7 +125,19 @@ export default async function FarmaciaFichaPage({ params, searchParams }) {
   // conta.
   const podeReenviarConvite = can(s.role, 'account.resend')
   const podeRevogarConvite = can(s.role, 'account.revoke')
-  const podeAgirContas = podeReenviarConvite || podeRevogarConvite
+  // Repor a senha é o par do convite: quem já entrou não recebe um convite
+  // novo, recebe um link de recuperação (account.reset_password).
+  const podeReporSenha = can(s.role, 'account.reset_password')
+  const podeAgirContas = podeReenviarConvite || podeRevogarConvite || podeReporSenha
+  // A suspensão da CONTA (ban + farmácia/perfis inactivos) é uma operação
+  // completa. A matriz também a dá ao `faturacao`, mas apenas pela via do
+  // pagamento; esta ficha é a via manual, por isso o botão é do superadmin
+  // e do onboarding — e o servidor repete a condição, não confia na UI.
+  const acoesConta = {
+    suspender: can(s.role, 'account.suspend') && s.role !== 'faturacao',
+    repor: can(s.role, 'account.unsuspend') && s.role !== 'faturacao',
+    mfa2: s.mfa?.currentLevel === 'aal2',
+  }
 
   // As acções de plano vêm da mesma matriz: uma farmácia sem plano só vê o
   // caminho do primeiro plano, e quem não negoceia planos não vê nenhuma.
@@ -156,6 +175,12 @@ export default async function FarmaciaFichaPage({ params, searchParams }) {
               {farmacia.verified ? 'Verificada' : 'Sem selo'}
             </span>{' '}
             <span className={pillPlano(plano)}>{textoPlano(plano)}</span>
+            {res.suspensao && (
+              <>
+                {' '}
+                <span className="interno-pill interno-pill--off">Conta suspensa</span>
+              </>
+            )}
           </p>
         </div>
         <div className="interno-head-acts">
@@ -275,7 +300,8 @@ export default async function FarmaciaFichaPage({ params, searchParams }) {
               <>
                 <Linha rotulo="Contas">{contas.length}</Linha>
                 <Linha rotulo="Perfis do balcão">
-                  {res.perfis.length} ({res.perfis.filter((p) => p.active).length} activos)
+                  {plural(res.perfis.length, 'perfil', 'perfis')} no total ·{' '}
+                  {plural(res.perfis.filter((p) => p.active).length, 'activo', 'activos')}
                 </Linha>
                 <Linha rotulo="Chaves de API activas">
                   {res.integracao.chaves.filter((k) => k.active && !k.revokedAt).length}
@@ -310,8 +336,17 @@ export default async function FarmaciaFichaPage({ params, searchParams }) {
       <div className="interno-box">
         <div className="interno-sec-head">
           <h2>Contas da farmácia</h2>
-          <span className="interno-sec-head-b">{contas.length} conta(s)</span>
+          <span className="interno-sec-head-b">{plural(contas.length, 'conta', 'contas')}</span>
         </div>
+        <PharmacyAccountSuspension
+          id={farmacia.id}
+          nome={farmacia.name}
+          suspensao={res.suspensao}
+          contas={contas.length}
+          perfisActivos={res.perfis ? res.perfis.filter((p) => p.active).length : 0}
+          farmaciaActiva={farmacia.active}
+          acoes={acoesConta}
+        />
         {conviteRevogado && (
           <div className="interno-box--pad">
             <Notice tone={trilhaFalhou ? 'warn' : 'ok'} role="status">
@@ -356,19 +391,19 @@ export default async function FarmaciaFichaPage({ params, searchParams }) {
               <tbody>
                 {contas.map((c) => (
                   <tr key={c.userId}>
-                    <td>
+                    <td data-rotulo="E-mail">
                       <span>{c.email || '—'}</span>
                       {c.banido && <span className="interno-pill interno-pill--off">Suspensa</span>}
                     </td>
-                    <td>{c.displayName || '—'}</td>
-                    <td>
+                    <td data-rotulo="Nome">{c.displayName || '—'}</td>
+                    <td data-rotulo="Convite">
                       {c.conviteAceite ? (
                         <span className="interno-pill interno-pill--ok">Aceite</span>
                       ) : (
                         <span className="interno-pill interno-pill--info">Pendente</span>
                       )}
                     </td>
-                    <td>
+                    <td data-rotulo="Último acesso">
                       {c.ultimoAcesso ? (
                         <>
                           <span>{dataCurta(c.ultimoAcesso)}</span>
@@ -378,9 +413,9 @@ export default async function FarmaciaFichaPage({ params, searchParams }) {
                         <span className="interno-foot-sub">nunca entrou</span>
                       )}
                     </td>
-                    <td>{dataCurta(c.criadaEm)}</td>
+                    <td data-rotulo="Criada">{dataCurta(c.criadaEm)}</td>
                     {podeAgirContas && (
-                      <td>
+                      <td data-rotulo="Acções">
                         <div className="interno-invite-acts">
                           <PharmacyInviteResend
                             pharmacyId={farmacia.id}
@@ -400,6 +435,15 @@ export default async function FarmaciaFichaPage({ params, searchParams }) {
                             pendente={!c.conviteAceite}
                             pode={podeRevogarConvite}
                             mfa2={s.mfa?.currentLevel === 'aal2'}
+                          />
+                          <PharmacyPasswordReset
+                            pharmacyId={farmacia.id}
+                            pharmacyName={farmacia.name}
+                            userId={c.userId}
+                            email={c.email}
+                            nome={c.displayName}
+                            confirmada={c.conviteAceite}
+                            pode={podeReporSenha}
                           />
                         </div>
                       </td>
@@ -440,9 +484,9 @@ export default async function FarmaciaFichaPage({ params, searchParams }) {
                 <tbody>
                   {res.perfis.map((p) => (
                     <tr key={p.id}>
-                      <td>{p.name}</td>
-                      <td>{p.role === 'gerente' ? 'Gerente' : 'Balcão'}</td>
-                      <td>
+                      <td data-rotulo="Nome">{p.name}</td>
+                      <td data-rotulo="Papel">{p.role === 'gerente' ? 'Gerente' : 'Balcão'}</td>
+                      <td data-rotulo="Estado">
                         <span
                           className={
                             p.active
@@ -453,7 +497,7 @@ export default async function FarmaciaFichaPage({ params, searchParams }) {
                           {p.active ? 'Activo' : 'Inactivo'}
                         </span>
                       </td>
-                      <td>{dataCurta(p.criadoEm)}</td>
+                      <td data-rotulo="Criado">{dataCurta(p.criadoEm)}</td>
                     </tr>
                   ))}
                 </tbody>
@@ -543,14 +587,14 @@ export default async function FarmaciaFichaPage({ params, searchParams }) {
                   <tbody>
                     {res.operacao.stock.map((i) => (
                       <tr key={i.id}>
-                        <td>
+                        <td data-rotulo="Medicamento">
                           <span>{i.medicamento}</span>
                           <span className="interno-foot-sub">
                             {[i.forma, i.dosagem].filter(Boolean).join(' · ') || '—'}
                           </span>
                         </td>
-                        <td>{i.quantity ?? '—'}</td>
-                        <td>
+                        <td data-rotulo="Qtd">{i.quantity ?? '—'}</td>
+                        <td data-rotulo="Confirmação">
                           <span>{dataCurta(i.confirmedAt)}</span>
                           <span className="interno-foot-sub">{haQuanto(i.confirmedAt)}</span>
                         </td>
@@ -590,19 +634,19 @@ export default async function FarmaciaFichaPage({ params, searchParams }) {
                   <tbody>
                     {res.operacao.reservas.map((r) => (
                       <tr key={r.id}>
-                        <td>{r.medicamento}</td>
+                        <td data-rotulo="Medicamento">{r.medicamento}</td>
                         {scope.contacto && (
-                          <td>
+                          <td data-rotulo="Cliente">
                             <span>{r.requesterName}</span>
                             <span className="interno-foot-sub">{r.requesterPhone}</span>
                           </td>
                         )}
-                        <td>
+                        <td data-rotulo="Estado">
                           <span className="interno-pill interno-pill--info">
                             {RESERVA_ESTADOS[r.status] || r.status}
                           </span>
                         </td>
-                        <td>
+                        <td data-rotulo="Quando">
                           <span>{dataCurta(r.criadaEm)}</span>
                           <span className="interno-foot-sub">{haQuanto(r.criadaEm)}</span>
                         </td>

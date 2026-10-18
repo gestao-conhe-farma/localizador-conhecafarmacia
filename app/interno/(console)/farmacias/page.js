@@ -5,6 +5,7 @@ import { MUNICIPIOS } from '@/lib/constants'
 import { PLAN_ORDER, planInfo } from '@/lib/plans'
 import SemPermissao from '@/components/interno/SemPermissao'
 import Falha from '@/components/interno/Falha'
+import InternoKpis from '@/components/interno/Kpis'
 import PharmacyTable from '@/components/interno/PharmacyTable'
 
 export const metadata = {
@@ -81,6 +82,29 @@ export default async function FarmaciasPage({ searchParams }) {
         <Falha titulo="Não foi possível ler as farmácias" erro={res.error} detalhe={res.detail} />
       ) : (
         <>
+          {/* Os números primeiro, os controlos depois: quem abre a lista
+              quer saber «quantas são» antes de escolher um filtro, e o
+              cartão de filtros empurrava-os para fora do ecrã. */}
+          <InternoKpis
+            items={[
+              {
+                rotulo: 'Farmácias',
+                valor: res.totais.total,
+                nota: `${res.totais.activas} activas · ${res.totais.inativas} inactivas`,
+              },
+              {
+                rotulo: 'Sem selo',
+                valor: res.totais.semSelo,
+                nota: 'dados por confirmar na ficha',
+              },
+              {
+                rotulo: 'A mostrar',
+                valor: res.rows.length,
+                nota: algumFiltro ? 'com os filtros escolhidos' : 'sem filtros',
+              },
+            ]}
+          />
+
           <div className="interno-box">
             <form className="interno-filters" method="get">
               <label className="interno-filter">
@@ -150,7 +174,7 @@ export default async function FarmaciasPage({ searchParams }) {
                 </label>
               )}
 
-              <button type="submit" className="interno-btn interno-btn--small">
+              <button type="submit" className="interno-btn interno-btn--ghost interno-btn--small">
                 Filtrar
               </button>
               {algumFiltro && (
@@ -162,28 +186,6 @@ export default async function FarmaciasPage({ searchParams }) {
                 </Link>
               )}
             </form>
-          </div>
-
-          <div className="interno-grid3">
-            <div className="interno-box interno-box--pad">
-              <span className="interno-sec-head-b">Farmácias</span>
-              <b className="interno-title">{res.totais.total}</b>
-              <span className="interno-foot-sub">
-                {res.totais.activas} activas · {res.totais.inativas} inactivas
-              </span>
-            </div>
-            <div className="interno-box interno-box--pad">
-              <span className="interno-sec-head-b">Sem selo</span>
-              <b className="interno-title">{res.totais.semSelo}</b>
-              <span className="interno-foot-sub">dados por confirmar na ficha</span>
-            </div>
-            <div className="interno-box interno-box--pad">
-              <span className="interno-sec-head-b">A mostrar</span>
-              <b className="interno-title">{res.rows.length}</b>
-              <span className="interno-foot-sub">
-                {algumFiltro ? 'com os filtros acima' : 'sem filtros'}
-              </span>
-            </div>
           </div>
 
           <PharmacyTable rows={res.rows} scope={res.scope} />

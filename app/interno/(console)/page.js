@@ -5,7 +5,9 @@ import { listPharmacies } from '@/lib/actions/platform-pharmacies'
 import { getLeadsResumo } from '@/lib/actions/leads'
 import SemPermissao from '@/components/interno/SemPermissao'
 import Falha from '@/components/interno/Falha'
+import InternoKpis from '@/components/interno/Kpis'
 import { haQuanto, pillPlano, textoPlano } from '@/components/interno/formatos'
+import { plural } from '@/lib/texto'
 
 export const metadata = {
   title: 'Painel — Equipa Conheça Farmácia',
@@ -182,20 +184,12 @@ export default async function InternoPainelPage() {
         </div>
       </div>
 
-      <div className="interno-grid3">
-        {kpis.map((k) => (
-          <div key={k.rotulo} className="interno-box interno-box--pad">
-            <span className="interno-sec-head-b">{k.rotulo}</span>
-            <b className="interno-title">{k.valor}</b>
-            <span className="interno-foot-sub">{k.nota}</span>
-          </div>
-        ))}
-      </div>
+      <InternoKpis items={kpis} />
 
       <div className="interno-box">
         <div className="interno-sec-head">
           <h2>Precisa de atenção</h2>
-          <span className="interno-sec-head-b">{atencao.length} ponto(s)</span>
+          <span className="interno-sec-head-b">{plural(atencao.length, 'ponto', 'pontos')}</span>
         </div>
 
         {atencao.length === 0 ? (
@@ -223,24 +217,24 @@ export default async function InternoPainelPage() {
               <tbody>
                 {atencao.map((a) => (
                   <tr key={a.id}>
-                    <td>
+                    <td data-rotulo="Farmácia">
                       <Link href={a.href} className="interno-table-link">
                         {a.nome}
                       </Link>
                       {a.municipio && <span className="interno-foot-sub">{a.municipio}</span>}
                     </td>
-                    <td>{a.motivo}</td>
-                    <td>
+                    <td data-rotulo="Motivo">{a.motivo}</td>
+                    <td data-rotulo="O que fazer">
                       <span className="interno-foot-sub">{a.nota}</span>
                     </td>
-                    <td>
+                    <td data-rotulo="Plano">
                       {a.plano ? (
                         <span className={pillPlano(a.plano)}>{textoPlano(a.plano)}</span>
                       ) : (
                         <span className="interno-foot-sub">—</span>
                       )}
                     </td>
-                    <td>
+                    <td data-rotulo="Abrir">
                       <Link
                         href={a.href}
                         className="interno-btn interno-btn--ghost interno-btn--small"

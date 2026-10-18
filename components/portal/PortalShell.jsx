@@ -5,7 +5,9 @@ import { useCallback, useEffect, useRef, useState } from 'react'
 import PortalSidebar from '@/components/portal/PortalSidebar'
 import PortalSearch from '@/components/portal/PortalSearch'
 import PortalTour from '@/components/portal/PortalTour'
+import { NavIcon } from '@/components/ui/Icon'
 import ThemeToggle from '@/components/ui/ThemeToggle'
+import { plural } from '@/lib/texto'
 
 /**
  * Shell do portal (padrão da plataforma de gestão): sidebar verde de
@@ -14,9 +16,10 @@ import ThemeToggle from '@/components/ui/ThemeToggle'
  * Fundo e conteúdo partilham a mesma cor (bg-alt); mobile: drawer.
  *
  * O nome do FARMACÊUTICO vive só na sidebar (rodapé) — a top-bar fica
- * com a identidade da farmácia: o nome é a ENTRADA de /portal/perfil
- * (dados da farmácia), separando de vez as duas fichas: farmácia no
- * perfil, farmacêutico com sessão iniciada em /portal/sessao.
+ * com a identidade da farmácia: um ícone de perfil é a ENTRADA de
+ * /portal/perfil (dados da farmácia), com a seta ao lado a dizer que é
+ * clicável. O nome da farmácia fica no `title`/`aria-label`, para não
+ * gastar a top-bar em texto que o ecrã estreito teria de truncar.
  *
  * O tour de onboarding vive aqui — dentro do shell, por cima de tudo,
  * porque navega entre as páginas reais do portal.
@@ -25,8 +28,22 @@ import ThemeToggle from '@/components/ui/ThemeToggle'
  *
  * `plan` (0028) — plano da farmácia, lido no layout: mostra o chip do
  * plano e marca com cadeado o que não está incluído.
+ *
+ * `avisosPorLer` (0032) — quantos avisos da equipa a farmácia ainda não
+ * abriu. Vive no sino da topbar (e no item do menu, via sidebar): o prazo
+ * do plano e os recados da equipa são coisas da farmácia, não de uma
+ * secção, e por isso ficam no shell.
  */
-export default function PortalShell({ pharmacy, userName, userSub, staff, plan, children }) {
+export default function PortalShell({
+  pharmacy,
+  userName,
+  userSub,
+  staff,
+  plan,
+  planAviso = null,
+  avisosPorLer = 0,
+  children,
+}) {
   const [navOpen, setNavOpen] = useState(false)
 
   // Com o drawer aberto o toque na página NÃO navega: os pedidos de fecho
@@ -82,6 +99,7 @@ export default function PortalShell({ pharmacy, userName, userSub, staff, plan, 
         userName={userName}
         staff={staff}
         plan={plan}
+        avisosPorLer={avisosPorLer}
         navOpen={navOpen}
         onClose={closeNav}
       />
@@ -149,6 +167,43 @@ export default function PortalShell({ pharmacy, userName, userSub, staff, plan, 
           <PortalSearch />
 
           <div className="portal-topbar-right">
+            {/* Sino dos avisos da equipa (0032) — leva à página de avisos.
+                Em ecrã estreito o item do menu faz o mesmo caminho; o sino
+                fica na topbar porque é o sinal de «há algo novo» e não se
+                esconde atrás de um menu fechado. */}
+            <Link
+              href="/portal/avisos"
+              className="portal-bell"
+              aria-label={
+                avisosPorLer > 0 ? `Avisos da equipa — ${avisosPorLer} por ler` : 'Avisos da equipa'
+              }
+              title={
+                avisosPorLer > 0
+                  ? `${plural(avisosPorLer, 'aviso por ler', 'avisos por ler')}`
+                  : 'Avisos da equipa'
+              }
+            >
+              <svg
+                width="18"
+                height="18"
+                viewBox="0 0 24 24"
+                fill="none"
+                stroke="currentColor"
+                strokeWidth="1.9"
+                strokeLinecap="round"
+                strokeLinejoin="round"
+                aria-hidden="true"
+              >
+                <path d="M18 8a6 6 0 1 0-12 0c0 7-3 9-3 9h18s-3-2-3-9" />
+                <path d="M10.3 21a2 2 0 0 0 3.4 0" />
+              </svg>
+              {avisosPorLer > 0 && (
+                <span className="portal-bell-badge" aria-hidden="true">
+                  {avisosPorLer > 9 ? '9+' : avisosPorLer}
+                </span>
+              )}
+            </Link>
+
             {/* O nome da farmácia é a ENTRADA de /portal/perfil: aqui
                 vivem os dados da farmácia (morada, contacto, horário).
                 O nome do farmacêutico com sessão iniciada não aparece
@@ -156,10 +211,13 @@ export default function PortalShell({ pharmacy, userName, userSub, staff, plan, 
             <Link
               href="/portal/perfil"
               className="portal-topbar-name"
-              title="Dados da farmácia — perfil público, contacto e horário"
+              title={`Dados da farmácia — ${pharmacy.name}`}
+              aria-label={`Dados da farmácia — ${pharmacy.name}`}
               data-tour="pharmacy-profile"
             >
-              <span className="portal-topbar-name-txt">{pharmacy.name}</span>
+              <span className="portal-topbar-avatar" aria-hidden="true">
+                <NavIcon name="perfil" size={15} />
+              </span>
               <svg
                 width="11"
                 height="11"
@@ -179,6 +237,12 @@ export default function PortalShell({ pharmacy, userName, userSub, staff, plan, 
             <ThemeToggle className="theme-toggle--circ portal-topbar-theme" />
           </div>
         </header>
+
+        {/* Prazo da experiência/graça a terminar (ou terminado): é um
+            aviso da farmácia, por isso aparece em todas as páginas e não
+            só na visão geral. Chega pronto do layout (servidor); com o
+            plano activo é `null`. */}
+        {planAviso}
 
         {children}
       </div>

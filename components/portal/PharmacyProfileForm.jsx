@@ -4,6 +4,7 @@ import Link from 'next/link'
 import { useState } from 'react'
 import { useRouter } from 'next/navigation'
 import { updatePharmacyProfile } from '@/lib/actions/pharmacy-portal'
+import SettingsSection from '@/components/ui/SettingsSection'
 
 const ERRORES = {
   SESSAO_EXPIRADA: 'Sessão expirada — recarregue a página e entre novamente.',
@@ -74,11 +75,7 @@ export default function PharmacyProfileForm({ pharmacy, accountEmail = '' }) {
       </div>
 
       {/* Painel 1 — Identificação: gerida pela equipa CF. */}
-      <div className="portal-box" style={{ marginBottom: '0.875rem' }}>
-        <div className="portal-card-head">
-          <h2>Identificação</h2>
-          <span className="portal-card-hint">Nome e verificação são geridos pela equipa CF</span>
-        </div>
+      <SettingsSection title="Identificação" hint="Nome e verificação são geridos pela equipa CF">
         <div className="portal-card-body">
           <div className="portal-form-grid">
             <label className="portal-label">
@@ -100,13 +97,10 @@ export default function PharmacyProfileForm({ pharmacy, accountEmail = '' }) {
             </label>
           </div>
         </div>
-      </div>
+      </SettingsSection>
 
       {/* Painel 2 — Contacto e localização. */}
-      <div className="portal-box" style={{ marginBottom: '0.875rem' }}>
-        <div className="portal-card-head">
-          <h2>Contacto e localização</h2>
-        </div>
+      <SettingsSection title="Contacto e localização">
         <div className="portal-card-body">
           <div className="portal-form-grid">
             <label className="portal-label">
@@ -168,13 +162,10 @@ export default function PharmacyProfileForm({ pharmacy, accountEmail = '' }) {
             </span>
           </label>
         </div>
-      </div>
+      </SettingsSection>
 
       {/* Painel 3 — Horário de atendimento. */}
-      <div className="portal-box">
-        <div className="portal-card-head">
-          <h2>Horário de atendimento</h2>
-        </div>
+      <SettingsSection title="Horário de atendimento">
         <div className="portal-card-body">
           <label className="portal-label" style={{ marginBottom: 0 }}>
             Horário
@@ -189,7 +180,7 @@ export default function PharmacyProfileForm({ pharmacy, accountEmail = '' }) {
             </span>
           </label>
         </div>
-      </div>
+      </SettingsSection>
 
       <p className="portal-hint" style={{ marginTop: '0.875rem' }}>
         O município é definido pela equipa Conheça Farmácia — se mudou de zona, fale connosco.

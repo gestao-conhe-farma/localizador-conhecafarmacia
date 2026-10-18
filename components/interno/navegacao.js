@@ -3,6 +3,7 @@ import {
   Store,
   ClipboardList,
   CreditCard,
+  Megaphone,
   ScrollText,
   Settings,
   UsersRound,
@@ -19,6 +20,7 @@ import {
 export const ICONES = {
   painel: LayoutDashboard,
   farmacias: Store,
+  avisos: Megaphone,
   leads: ClipboardList,
   planos: CreditCard,
   auditoria: ScrollText,

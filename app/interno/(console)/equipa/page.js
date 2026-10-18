@@ -2,6 +2,7 @@ import { requirePlatformPage } from '@/lib/platform/session'
 import { getTeam } from '@/lib/actions/platform-team'
 import SemPermissao from '@/components/interno/SemPermissao'
 import Falha from '@/components/interno/Falha'
+import InternoKpis from '@/components/interno/Kpis'
 import TeamTable from '@/components/interno/TeamTable'
 
 export const metadata = {
@@ -10,17 +11,17 @@ export const metadata = {
 }
 
 /**
- * GESTÃO DA EQUIPA (`/interno/equipa`, Phase 9 Step 1 do plano).
+ * GESTÃO DA EQUIPA (`/interno/equipa`, Phase 9 Steps 1 e 2 do plano).
  *
- * A secção é de quem pode repor um segundo factor (`team.reset_mfa`,
- * superadmin): é isso que aqui se faz. O nível de cada pessoa aparece em
- * modo de leitura — mudá-lo é `team.manage` (Step 2), que ainda não tem
- * ecrã, e um botão a fingir que não faz nada era pior do que a ausência.
+ * Duas acções sobre OUTRA pessoa, ambas de superadmin: mudar o nível
+ * (`team.manage`) e repor o segundo factor perdido (`team.reset_mfa`). As
+ * duas pedem `aal2` e motivo e deixam linha na trilha; as duas recusam a
+ * própria conta.
  *
  * A reposição não é um atalho de conveniência: é o caminho de quem perdeu o
- * telefone SEM abrir a porta a quem roubou uma sessão. Por isso o servidor
- * recusa a própria conta (o par certo é um colega) e a acção pede `aal2` e
- * motivo, deixando linha na trilha.
+ * telefone SEM abrir a porta a quem roubou uma sessão. E a mudança de nível
+ * também não: é uma autorização. O servidor recusa ainda o último
+ * superadmin, para a área interna nunca ficar sem ninguém que a governe.
  */
 export default async function EquipaPage() {
   const g = await requirePlatformPage('team.reset_mfa')
@@ -52,7 +53,8 @@ export default async function EquipaPage() {
           <h1 className="interno-title">Equipa</h1>
           <p className="interno-sub">
             As pessoas da Equipa Conheça Farmácia, o nível de cada uma e o estado do autenticador.
-            <b> Repor o segundo factor</b> é para quem perdeu o telefone: apaga o autenticador,
+            <b> Mudar o nível</b> altera o que a pessoa pode fazer na área interna;{' '}
+            <b>repor o segundo factor</b> é para quem perdeu o telefone — apaga o autenticador,
             termina as sessões dessa pessoa e deixa-a voltar a entrar com a senha para inscrever um
             novo.
           </p>
@@ -64,22 +66,33 @@ export default async function EquipaPage() {
         </div>
       </div>
 
-      <div className="interno-grid3">
-        <div className="interno-box interno-box--pad">
-          <span className="interno-sec-head-b">Membros</span>
-          <b className="interno-title">{res.total}</b>
-          <span className="interno-foot-sub">contas da Equipa CF</span>
+      <InternoKpis
+        items={[
+          { rotulo: 'Membros', valor: res.total, nota: 'contas da Equipa CF' },
+          {
+            rotulo: 'Com segundo factor',
+            valor: res.ativos,
+            nota: `${res.semFactor} sem autenticador`,
+          },
+          {
+            rotulo: 'Convites por aceitar',
+            valor: res.pendentes,
+            nota: 'ainda sem primeiro acesso',
+          },
+        ]}
+      />
+
+      <div className="interno-box interno-box--pad">
+        <div className="interno-sec-head">
+          <h2>Níveis internos</h2>
+          <span className="interno-sec-head-b">motivo + trilha</span>
         </div>
-        <div className="interno-box interno-box--pad">
-          <span className="interno-sec-head-b">Com segundo factor</span>
-          <b className="interno-title">{res.ativos}</b>
-          <span className="interno-foot-sub">{res.semFactor} sem autenticador</span>
-        </div>
-        <div className="interno-box interno-box--pad">
-          <span className="interno-sec-head-b">Convites por aceitar</span>
-          <b className="interno-title">{res.pendentes}</b>
-          <span className="interno-foot-sub">ainda sem primeiro acesso</span>
-        </div>
+        <p className="interno-dl-note" style={{ borderTop: 0, paddingTop: 0 }}>
+          O nível define o que cada pessoa pode fazer na área interna. A mudança pede o segundo
+          factor e um motivo, e fica em <b>Auditoria</b> com o antes/depois. Ninguém muda o próprio
+          nível, e o último <b>superadmin</b> não sai: promova outra pessoa antes de descer esse
+          nível. O papel legado <b>admin</b> conta como superadmin.
+        </p>
       </div>
 
       <div className="interno-box interno-box--pad">
@@ -98,8 +111,8 @@ export default async function EquipaPage() {
       <TeamTable
         rows={res.rows}
         podeRepor={res.podeRepor}
+        podeGerir={res.podeGerir}
         mfa2={res.mfa2}
-        eu={g.session.user?.id || null}
       />
     </div>
   )

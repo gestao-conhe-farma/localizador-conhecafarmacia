@@ -47,24 +47,69 @@ export default async function InternoLayout({ children }) {
   // Server → Client, e o número é a posição na lista já FILTRADA — um item
   // que o nível não tem não deixa um buraco na numeração.
   const secoes = [
-    { href: '/interno', label: 'Painel', acao: 'pharmacy.view', icone: 'painel' },
-    { href: '/interno/farmacias', label: 'Farmácias', acao: 'pharmacy.view', icone: 'farmacias' },
+    {
+      href: '/interno',
+      label: 'Painel',
+      grupo: 'Operação',
+      acao: 'pharmacy.view',
+      icone: 'painel',
+    },
+    {
+      href: '/interno/farmacias',
+      label: 'Farmácias',
+      grupo: 'Operação',
+      acao: 'pharmacy.view',
+      icone: 'farmacias',
+    },
     // Os leads são a porta de entrada das farmácias: quem os lê vê a
     // secção, e é pela mesma acção que a página autoriza. Quem só vê
     // farmácias não perde nada por não a ter.
-    { href: '/interno/leads', label: 'Leads', acao: 'lead.read', icone: 'leads' },
+    {
+      href: '/interno/leads',
+      label: 'Leads',
+      grupo: 'Operação',
+      acao: 'lead.read',
+      icone: 'leads',
+    },
+    // Avisos (0032): a equipa que fala com as farmácias publica aqui as
+    // mensagens do sino do portal. A mesma acção autoriza o ecrã.
+    {
+      href: '/interno/avisos',
+      label: 'Avisos',
+      grupo: 'Comunicação',
+      acao: 'announcement.publish',
+      icone: 'avisos',
+    },
     // A acção é `plan.change` e não `pharmacy.view`: a secção existe
     // para quem negoceia os planos (superadmin/faturacao). Quem não a
     // tem continua a ver o plano na ficha da farmácia.
-    { href: '/interno/planos', label: 'Planos', acao: 'plan.change', icone: 'planos' },
+    {
+      href: '/interno/planos',
+      label: 'Planos',
+      grupo: 'Negócio',
+      acao: 'plan.change',
+      icone: 'planos',
+    },
     // A trilha é a secção de quem a pode LER (`audit.read`: superadmin e
     // auditoria). O export é outra acção (com MFA e motivo) e vive dentro
     // da página — não é uma secção à parte.
-    { href: '/interno/auditoria', label: 'Auditoria', acao: 'audit.read', icone: 'auditoria' },
+    {
+      href: '/interno/auditoria',
+      label: 'Auditoria',
+      grupo: 'Governança',
+      acao: 'audit.read',
+      icone: 'auditoria',
+    },
     // A equipa é de quem repõe o segundo factor (`team.reset_mfa`): a
     // reposição é o gesto que a secção existe para servir. Mudar níveis é
     // `team.manage` e ainda não tem ecrã — o nível lê-se aqui.
-    { href: '/interno/equipa', label: 'Equipa', acao: 'team.reset_mfa', icone: 'equipa' },
+    {
+      href: '/interno/equipa',
+      label: 'Equipa',
+      grupo: 'Governança',
+      acao: 'team.reset_mfa',
+      icone: 'equipa',
+    },
   ].filter((item) => can(role, item.acao))
 
   // Definições fica FORA do filtro, e é o único item assim: as secções
@@ -73,7 +118,12 @@ export default async function InternoLayout({ children }) {
   // têm uma. O número continua a ser a posição na lista já filtrada.
   const nav = [
     ...secoes,
-    { href: '/interno/definicoes', label: 'Definições', icone: 'definicoes' },
+    {
+      href: '/interno/definicoes',
+      label: 'Definições',
+      grupo: 'Conta',
+      icone: 'definicoes',
+    },
   ].map((item, i) => ({ ...item, num: String(i + 1).padStart(2, '0') }))
 
   return (

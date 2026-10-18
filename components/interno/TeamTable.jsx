@@ -2,7 +2,8 @@
 
 import { useState, useTransition } from 'react'
 import { useRouter } from 'next/navigation'
-import { resetMemberMfa } from '@/lib/actions/platform-team'
+import { resetMemberMfa, setMemberLevel } from '@/lib/actions/platform-team'
+import { PLATFORM_ROLES, ROLE_LABELS } from '@/lib/platform/permissions'
 import { dataCurta, haQuanto } from '@/components/interno/formatos'
 import ConfirmActionModal from '@/components/interno/ConfirmActionModal'
 import Notice from '@/components/ui/Notice'
@@ -41,6 +42,25 @@ const MENSAGENS = {
   FALHA: 'Não foi possível concluir a acção. Tente de novo.',
 }
 
+/**
+ * Erros da mudança de nível. Herdam as mensagens comuns (MFA, motivo,
+ * sessão) e só substituem as que são próprias desta acção — a recusa de
+ * permissão diz «mudar níveis», não «repor o segundo factor».
+ */
+const MENSAGENS_NIVEL = {
+  ...MENSAGENS,
+  SEM_PERMISSAO: 'O seu nível não permite mudar níveis da equipa.',
+  PROPRIO_NIVEL:
+    'Não pode mudar o seu próprio nível: peça a outro superadmin. Promover-se seria contornar a matriz de permissões.',
+  ULTIMO_SUPERADMIN:
+    'Este é o último superadmin da equipa. Promova outra pessoa antes de descer este nível — a área interna não pode ficar sem ninguém que a governe.',
+  NIVEL_INVALIDO: 'Nível desconhecido. Escolha um dos cinco níveis da matriz.',
+  NAO_E_MEMBRO: 'Esta conta não é da Equipa Conheça Farmácia.',
+  CONTA_ILEGIVEL: 'Não foi possível ler a conta no Auth. Tente de novo.',
+  NIVEL_MUDOU:
+    'O nível desta pessoa mudou entretanto. Actualize a página para ver o estado actual e repita.',
+}
+
 function estadoMfa(row) {
   if (row.suspenso) return <span className="interno-pill interno-pill--off">Conta suspensa</span>
   if (row.convitePendente)
@@ -54,12 +74,20 @@ function estadoMfa(row) {
   )
 }
 
-export default function TeamTable({ rows, podeRepor, mfa2 }) {
+export default function TeamTable({ rows, podeRepor, podeGerir, mfa2 }) {
   const router = useRouter()
   const [alvo, setAlvo] = useState(null)
   const [erro, setErro] = useState(null)
   const [aviso, setAviso] = useState(null)
   const [pending, start] = useTransition()
+
+  // Mudança de nível: uma escolha por linha (o `<select>` não muda nada
+  // sozinho) e o mesmo diálogo de confirmação com motivo.
+  const [escolhas, setEscolhas] = useState({})
+  const [alvoNivel, setAlvoNivel] = useState(null)
+  const [erroNivel, setErroNivel] = useState(null)
+  const [avisoNivel, setAvisoNivel] = useState(null)
+  const [pendingNivel, startNivel] = useTransition()
 
   const correr = (motivo) =>
     start(async () => {
@@ -87,11 +115,48 @@ export default function TeamTable({ rows, podeRepor, mfa2 }) {
       }
     })
 
+  const mudarNivel = (motivo) => {
+    const { row, novo } = alvoNivel
+    startNivel(async () => {
+      setErroNivel(null)
+      setAvisoNivel(null)
+      try {
+        const r = await setMemberLevel({ userId: row.userId, role: novo, motivo })
+        if (r?.ok) {
+          setAlvoNivel(null)
+          setEscolhas((prev) => ({ ...prev, [row.userId]: '' }))
+          router.refresh()
+          if (!r.mudou) {
+            setAvisoNivel(`O nível de ${row.nome || row.email || 'membro'} já era ${r.para}.`)
+          } else if (r.auditado === false) {
+            setAvisoNivel(
+              `Nível de ${row.nome || row.email || 'membro'} mudado de ${r.de} para ${r.para}, mas a trilha NÃO registou a operação. Avise quem mantém a área interna e registe o caso — a mudança já vale.`,
+            )
+          } else {
+            setAvisoNivel(
+              `Nível de ${row.nome || row.email || 'membro'} mudado de ${r.de} para ${r.para} e registado na trilha.`,
+            )
+          }
+          return
+        }
+        setErroNivel(MENSAGENS_NIVEL[r?.error] || 'Erro inesperado.')
+      } catch {
+        setErroNivel(MENSAGENS_NIVEL.FALHA)
+      }
+    })
+  }
+
   return (
     <>
       {aviso && (
         <Notice tone={aviso.includes('NÃO registou') ? 'warn' : 'ok'} role="status">
           {aviso}
+        </Notice>
+      )}
+
+      {avisoNivel && (
+        <Notice tone={avisoNivel.includes('NÃO registou') ? 'warn' : 'ok'} role="status">
+          {avisoNivel}
         </Notice>
       )}
 
@@ -114,24 +179,24 @@ export default function TeamTable({ rows, podeRepor, mfa2 }) {
                   <th>Nível</th>
                   <th>Segundo factor</th>
                   <th>Último acesso</th>
-                  {podeRepor && <th aria-label="Acções" />}
+                  {(podeRepor || podeGerir) && <th aria-label="Acções" />}
                 </tr>
               </thead>
               <tbody>
                 {rows.map((row) => (
                   <tr key={row.userId}>
-                    <td>
+                    <td data-rotulo="Pessoa">
                       <b>{row.nome || row.email || 'Sem nome'}</b>
                       {row.nome && row.email && (
                         <span className="interno-foot-sub">{row.email}</span>
                       )}
                       {row.proprio && <span className="interno-foot-sub">é a sua conta</span>}
                     </td>
-                    <td>
+                    <td data-rotulo="Nível">
                       {row.rotulo}
                       {row.legado && <span className="interno-foot-sub">papel legado</span>}
                     </td>
-                    <td>
+                    <td data-rotulo="Segundo factor">
                       {estadoMfa(row)}
                       {row.ultimoDesafio && (
                         <span className="interno-foot-sub">
@@ -139,7 +204,7 @@ export default function TeamTable({ rows, podeRepor, mfa2 }) {
                         </span>
                       )}
                     </td>
-                    <td>
+                    <td data-rotulo="Último acesso">
                       {row.ultimoAcesso ? (
                         <>
                           <span>{dataCurta(row.ultimoAcesso)}</span>
@@ -149,28 +214,71 @@ export default function TeamTable({ rows, podeRepor, mfa2 }) {
                         <span className="interno-foot-sub">nunca entrou</span>
                       )}
                     </td>
-                    {podeRepor && (
-                      <td>
-                        {row.proprio ? (
-                          <span className="interno-foot-sub" title="Peça a outro superadmin">
-                            a sua conta
-                          </span>
-                        ) : row.podeRepor ? (
-                          <button
-                            type="button"
-                            className="interno-btn interno-btn--ghost interno-btn--small"
-                            disabled={pending}
-                            onClick={() => {
-                              setErro(null)
-                              setAviso(null)
-                              setAlvo(row)
-                            }}
-                          >
-                            Repor segundo factor
-                          </button>
-                        ) : (
-                          <span className="interno-foot-sub">—</span>
-                        )}
+                    {(podeRepor || podeGerir) && (
+                      <td data-rotulo="Acções">
+                        <div className="interno-invite-acts">
+                          {row.podeMudarNivel && (
+                            <>
+                              <select
+                                className="interno-select interno-select--small"
+                                aria-label={`Mudar o nível de ${row.nome || row.email || 'membro'}`}
+                                value={escolhas[row.userId] || ''}
+                                disabled={pendingNivel || pending}
+                                onChange={(e) => {
+                                  setErroNivel(null)
+                                  setAvisoNivel(null)
+                                  setEscolhas((prev) => ({
+                                    ...prev,
+                                    [row.userId]: e.target.value,
+                                  }))
+                                }}
+                              >
+                                <option value="">Mudar nível para…</option>
+                                {PLATFORM_ROLES.filter((r) => r !== row.role).map((r) => (
+                                  <option key={r} value={r}>
+                                    {ROLE_LABELS[r]}
+                                  </option>
+                                ))}
+                              </select>
+                              {escolhas[row.userId] && (
+                                <button
+                                  type="button"
+                                  className="interno-btn interno-btn--ghost interno-btn--small"
+                                  disabled={pendingNivel || pending}
+                                  onClick={() => {
+                                    setErroNivel(null)
+                                    setAvisoNivel(null)
+                                    setAlvoNivel({ row, novo: escolhas[row.userId] })
+                                  }}
+                                >
+                                  Mudar para {ROLE_LABELS[escolhas[row.userId]]}
+                                </button>
+                              )}
+                            </>
+                          )}
+                          {podeRepor ? (
+                            row.proprio ? (
+                              <span className="interno-foot-sub" title="Peça a outro superadmin">
+                                a sua conta
+                              </span>
+                            ) : row.podeRepor ? (
+                              <button
+                                type="button"
+                                className="interno-btn interno-btn--ghost interno-btn--small"
+                                disabled={pending || pendingNivel}
+                                onClick={() => {
+                                  setErro(null)
+                                  setAviso(null)
+                                  setAlvo(row)
+                                }}
+                              >
+                                Repor segundo factor
+                              </button>
+                            ) : (
+                              <span className="interno-foot-sub">—</span>
+                            )
+                          ) : null}
+                        </div>
                       </td>
                     )}
                   </tr>
@@ -221,6 +329,38 @@ export default function TeamTable({ rows, podeRepor, mfa2 }) {
           }
           onCancel={() => setAlvo(null)}
           onConfirm={correr}
+        />
+      )}
+
+      {alvoNivel && (
+        <ConfirmActionModal
+          titulo={`Mudar o nível de ${alvoNivel.row.nome || alvoNivel.row.email || 'membro'}?`}
+          descricao="O nível define o que esta pessoa pode fazer na área interna. A mudança passa a valer no pedido seguinte, porque a autorização é relida do papel gravado, não de uma sessão antiga. A própria conta e o último superadmin ficam de fora — o servidor recusa ambos."
+          motivoObrigatorio
+          confirmLabel="Mudar nível"
+          tom={alvoNivel.row.role === 'superadmin' ? 'danger' : 'primary'}
+          pending={pendingNivel}
+          erro={erroNivel}
+          resumo={
+            <>
+              <LinhaResumo rotulo="Membro">{alvoNivel.row.nome || alvoNivel.row.email}</LinhaResumo>
+              <LinhaResumo rotulo="Nível">
+                {alvoNivel.row.rotulo} → {ROLE_LABELS[alvoNivel.novo]}
+              </LinhaResumo>
+              <LinhaResumo rotulo="Trilha">team.manage, com o motivo</LinhaResumo>
+            </>
+          }
+          aviso={
+            !mfa2 ? (
+              <Notice tone="warn">
+                A sua sessão só tem senha. O servidor vai recusar esta acção com
+                <b> MFA_NECESSARIO</b> até confirmar o código do autenticador — saia e volte a
+                entrar antes de continuar.
+              </Notice>
+            ) : null
+          }
+          onCancel={() => setAlvoNivel(null)}
+          onConfirm={mudarNivel}
         />
       )}
     </>

@@ -150,21 +150,21 @@ export default function AuditTable({ rows }) {
             return (
               <Fragment key={r.id}>
                 <tr>
-                  <td>
+                  <td data-rotulo="Quando">
                     <span>{dataHora(r.quando)}</span>
                     <span className="interno-foot-sub">{haQuanto(r.quando)}</span>
                   </td>
-                  <td>
+                  <td data-rotulo="Autor">
                     <span>{r.actorEmail || 'conta apagada'}</span>
                     <span className="interno-foot-sub">
                       {roleLabel(r.actorRole) || r.actorRole || '—'}
                     </span>
                   </td>
-                  <td>
+                  <td data-rotulo="Acção">
                     <code className="interno-audit-action">{r.action}</code>
                     <span className="interno-foot-sub">{r.acaoRotulo}</span>
                   </td>
-                  <td>
+                  <td data-rotulo="Alvo">
                     {r.pharmacyId ? (
                       <Link
                         href={`/interno/farmacias/${r.pharmacyId}`}
@@ -177,14 +177,14 @@ export default function AuditTable({ rows }) {
                     )}
                     {r.recordId && <span className="interno-foot-sub">{r.recordId}</span>}
                   </td>
-                  <td>
+                  <td data-rotulo="Motivo">
                     {r.reason ? (
                       <span className="interno-audit-reason">{r.reason}</span>
                     ) : (
                       <span className="interno-foot-sub">—</span>
                     )}
                   </td>
-                  <td>
+                  <td data-rotulo="Detalhe">
                     <button
                       type="button"
                       className="interno-btn interno-btn--ghost interno-btn--small"

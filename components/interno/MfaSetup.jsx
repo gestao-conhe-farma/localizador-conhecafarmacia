@@ -28,7 +28,7 @@ import { dataHora, haQuanto } from '@/components/interno/formatos'
  * acção revalida a rota, o servidor volta a ler os factores e o ramo «activo»
  * é mais verdadeiro do que qualquer coisa que este componente soubesse.
  */
-export default function MfaSetup({ nivel, verificado, porAcabar = [] }) {
+export default function MfaSetup({ nivel, verificado, porAcabar = [], embedded = false }) {
   const router = useRouter()
   const [inscricao, setInscricao] = useState(null)
   const [codigo, setCodigo] = useState('')
@@ -280,10 +280,15 @@ export default function MfaSetup({ nivel, verificado, porAcabar = [] }) {
   return (
     <>
       <div className="interno-box interno-box--pad">
-        <div className="interno-sec-head">
-          <h2>Inscrever o autenticador</h2>
-          <span className="interno-sec-head-b">TOTP obrigatório</span>
-        </div>
+        {/* Embutido em /interno/definicoes, o título já está FORA do cartão
+            («Segundo factor»): repeti-lo aqui fazia o cartão começar com
+            dois títulos para a mesma coisa. */}
+        {!embedded && (
+          <div className="interno-sec-head">
+            <h2>Inscrever o autenticador</h2>
+            <span className="interno-sec-head-b">TOTP obrigatório</span>
+          </div>
+        )}
 
         <p className="interno-hint">
           O segundo factor é <b>obrigatório</b> para contas da equipa: as acções sensíveis

@@ -2224,20 +2224,33 @@ html.dark .form-note {
   .portal-topbar-name {
     display: inline-flex;
     align-items: center;
-    gap: 0.375rem;
-    padding: 0.375rem 0.625rem;
+    gap: 0.3125rem;
+    padding: 0.1875rem 0.4375rem 0.1875rem 0.1875rem;
     border-radius: 999px;
-    font-size: 0.8125rem;
-    font-weight: 600;
     color: var(--color-brand-deep);
     text-decoration: none;
-    white-space: nowrap;
-    overflow: hidden;
-    text-overflow: ellipsis;
-    max-width: 22rem;
+    flex-shrink: 0;
     transition:
       background 0.15s ease,
       color 0.15s ease;
+  }
+
+  /* Ícone de perfil no lugar do nome: um avatar compacto que segura a
+     top-bar em ecrã estreito e continua a abrir os dados da farmácia. */
+  .portal-topbar-avatar {
+    display: grid;
+    place-items: center;
+    width: 2rem;
+    height: 2rem;
+    flex-shrink: 0;
+    border-radius: 50%;
+    border: 1px solid var(--color-brand-divider);
+    background: var(--color-brand-card);
+    color: var(--color-brand-deep);
+  }
+
+  .portal-topbar-name .portal-topbar-avatar svg {
+    opacity: 0.85;
   }
 
   .portal-topbar-name svg {
@@ -2275,14 +2288,6 @@ html.dark .form-note {
     overflow: hidden;
     text-overflow: ellipsis;
     white-space: nowrap;
-  }
-
-  @media (max-width: 40rem) {
-    .portal-topbar-name {
-      /* Cede espaço à pesquisa: o nome trunca com reticências (o bloco da
-         direita não encolhe, senão sai do ecrã). */
-      max-width: 7rem;
-    }
   }
 
   .portal-ext {
@@ -2326,8 +2331,8 @@ html.dark .form-note {
     gap: 0.25rem;
   }
 
-  /* Grupos «Gestão» / «Farmácia» — o mesmo side-label do mockup
-     padrao-unico.html: micro-rótulo entre os blocos de itens. */
+  /* Grupos «Operação» / «Stock» / «Farmácia» — o mesmo side-label do
+     mockup padrao-unico.html: micro-rótulo entre os blocos de itens. */
   .portal-nav-group {
     display: flex;
     flex-direction: column;
@@ -4071,9 +4076,6 @@ html.dark .form-note {
     @apply flex items-center justify-between gap-4 rounded-2xl border p-4;
     background: var(--color-brand-card);
     border-color: var(--color-brand-divider);
-    box-shadow:
-      0 1px 2px rgb(0 42 50 / 0.04),
-      0 4px 14px rgb(0 42 50 / 0.05);
   }
   .help-replay b {
     color: var(--color-brand-deep);
@@ -4115,9 +4117,6 @@ html.dark .form-note {
     @apply mt-8 p-5 rounded-2xl border;
     background: var(--color-brand-card);
     border-color: var(--color-brand-divider);
-    box-shadow:
-      0 1px 2px rgb(0 42 50 / 0.04),
-      0 4px 14px rgb(0 42 50 / 0.05);
   }
 
   .help-table-scroll {
@@ -4678,37 +4677,24 @@ html.dark .form-note {
     border: 1px solid var(--color-brand-divider);
     border-radius: 1rem;
     background: var(--color-brand-card);
-    box-shadow:
-      0 1px 2px rgb(0 42 50 / 0.04),
-      0 4px 14px rgb(0 42 50 / 0.05);
     text-decoration: none;
     color: inherit;
     transition:
       transform 0.18s ease,
-      box-shadow 0.18s ease,
       border-color 0.18s ease;
   }
 
+  /* Sem sombra (decisão de produto): o cartão é uma superfície plana,
+     separada do fundo pela hairline. O hover levanta 2px e acende a
+     borda — sem halo, para o olho ficar no número. */
   .portal-kpi4:hover {
     transform: translateY(-2px);
-    box-shadow: 0 6px 22px rgb(0 42 50 / 0.09);
-  }
-
-  html.dark .portal-kpi4 {
-    box-shadow:
-      0 1px 2px rgb(0 0 0 / 0.3),
-      0 6px 18px rgb(0 0 0 / 0.25);
+    border-color: color-mix(in srgb, var(--color-brand-deep) 22%, transparent);
   }
 
   html.dark .portal-kpi4:hover {
-    box-shadow: 0 6px 22px rgb(0 0 0 / 0.4);
-  }
-
-  html.dark .portal-kpi4:hover {
-    border-color: var(--color-brand-divider);
-  }
-
-  /* Canto superior direito, do tamanho do ícone dos cartões de
+    border-color: rgb(255 255 255 / 0.22);
+  }    /* Canto superior direito, do tamanho do ícone dos cartões de
      /vendas (.portal-kpi-ic) para a família ser uma só. */
   .portal-kpi4-ic {
     width: 2.375rem;
@@ -5552,15 +5538,6 @@ html.dark .form-note {
     border: 1px solid var(--color-brand-divider);
     border-radius: 1rem;
     overflow: hidden;
-    box-shadow:
-      0 1px 2px rgb(0 42 50 / 0.04),
-      0 4px 14px rgb(0 42 50 / 0.05);
-  }
-
-  html.dark .portal-box {
-    box-shadow:
-      0 1px 2px rgb(0 0 0 / 0.3),
-      0 6px 18px rgb(0 0 0 / 0.25);
   }
 
   /* Nota neutra dentro da caixa (por baixo das tabs). */
@@ -5745,30 +5722,20 @@ html.dark .form-note {
     border: 1px solid var(--color-brand-divider);
     border-radius: 1rem;
     padding: 1rem 1.125rem;
-    box-shadow:
-      0 1px 2px rgb(0 42 50 / 0.04),
-      0 4px 14px rgb(0 42 50 / 0.05);
     text-decoration: none;
     color: inherit;
     transition:
       transform 0.18s ease,
-      box-shadow 0.18s ease,
       border-color 0.18s ease;
   }
 
   .portal-kpi:hover {
     transform: translateY(-2px);
-    box-shadow: 0 6px 22px rgb(0 42 50 / 0.09);
-  }
-
-  html.dark .portal-kpi {
-    box-shadow:
-      0 1px 2px rgb(0 0 0 / 0.3),
-      0 6px 18px rgb(0 0 0 / 0.25);
+    border-color: color-mix(in srgb, var(--color-brand-deep) 22%, transparent);
   }
 
   html.dark .portal-kpi:hover {
-    box-shadow: 0 6px 22px rgb(0 0 0 / 0.4);
+    border-color: rgb(255 255 255 / 0.22);
   }
 
   .portal-kpi-top {
@@ -5878,15 +5845,6 @@ html.dark .form-note {
     border: 1px solid var(--color-brand-divider);
     border-radius: 0.875rem;
     padding: 0.5rem 0.75rem;
-    box-shadow:
-      0 1px 2px rgb(0 42 50 / 0.04),
-      0 4px 14px rgb(0 42 50 / 0.05);
-  }
-
-  html.dark .portal-toolbar {
-    box-shadow:
-      0 1px 2px rgb(0 0 0 / 0.3),
-      0 6px 18px rgb(0 0 0 / 0.25);
   }
 
   /* Filtros (chips) → segmentado do mock: neutro; o activo ganha
@@ -6060,26 +6018,15 @@ html.dark .form-note {
     background: var(--color-brand-card);
     border: 1px solid var(--color-brand-divider);
     border-radius: 1rem;
-    box-shadow:
-      0 1px 2px rgb(0 42 50 / 0.04),
-      0 4px 14px rgb(0 42 50 / 0.05);
     transition:
       transform 0.18s ease,
-      box-shadow 0.18s ease,
       border-color 0.18s ease;
   }
 
   .stock-card:hover,
   .res-card:hover {
     transform: translateY(-2px);
-    box-shadow: 0 6px 22px rgb(0 42 50 / 0.09);
-  }
-
-  html.dark .stock-card,
-  html.dark .res-card {
-    box-shadow:
-      0 1px 2px rgb(0 0 0 / 0.3),
-      0 6px 18px rgb(0 0 0 / 0.25);
+    border-color: color-mix(in srgb, var(--color-brand-deep) 22%, transparent);
   }
 
   .stock-card--in {
@@ -7600,7 +7547,6 @@ html.dark .form-note {
     background: var(--color-brand-card);
     text-decoration: none;
     color: inherit;
-    box-shadow: var(--shadow-soft);
     transition: border-color 0.15s ease;
   }
 
@@ -7898,7 +7844,6 @@ html.dark .form-note {
     border: 1px solid var(--color-brand-divider);
     border-radius: 1rem;
     background: var(--color-brand-card);
-    box-shadow: var(--shadow-soft);
     text-align: center;
   }
 
@@ -8122,9 +8067,6 @@ html.dark .form-note {
     background:
       linear-gradient(180deg, rgb(10 132 79 / 0.05), rgb(10 132 79 / 0) 55%),
       var(--color-brand-card);
-    box-shadow:
-      0 1px 2px rgb(0 42 50 / 0.04),
-      0 4px 14px rgb(0 42 50 / 0.05);
   }
 
   html.dark .portal-id-card {
@@ -9217,7 +9159,6 @@ html.dark .form-note {
   border: 0;
   background: linear-gradient(160deg, #00493a 0%, #013d31 60%, #012b22 100%);
   color: #eef3ef;
-  box-shadow: 0 12px 32px rgb(1 45 38 / 0.25);
 }
 
 /* Anel decorativo do canto (assinatura da variação A). */
@@ -9505,6 +9446,7 @@ html.dark .sess-info-on {
   top: 0;
   height: 100dvh;
   overflow-y: auto;
+  overflow-x: hidden;
   overscroll-behavior: contain;
 }
 
@@ -9556,6 +9498,23 @@ html.dark .sess-info-on {
   letter-spacing: 0.22em;
   text-transform: uppercase;
   color: rgb(255 255 255 / 0.3);
+}
+
+/* Micro-rótulo de grupo entre itens (padrão Vercel/Supabase). Vive como
+   uma linha da grelha, para a sidebar e o drawer partilharem o mesmo
+   markup; o primeiro grupo não ganha respiro em cima. */
+.interno-nav-section {
+  padding: 0.75rem 0.75rem 0.125rem;
+  font-size: 0.625rem;
+  font-weight: 700;
+  letter-spacing: 0.22em;
+  text-transform: uppercase;
+  color: rgb(255 255 255 / 0.3);
+}
+
+.interno-nav > .interno-nav-section:first-child,
+.interno-drawer-nav > .interno-nav-section:first-child {
+  padding-top: 0.125rem;
 }
 
 .interno-nav-item {
@@ -9736,9 +9695,20 @@ html.dark .sess-info-on {
   background: rgb(239 68 68 / 0.1);
 }
 
+/* Texto secundário do CONTEÚDO (tabelas, KPIs, fichas). A regra antiga
+   era branca translúcida — herdada do rodapé da sidebar — e por isso
+   desaparecia sobre os cartões claros. O branco fica só onde o fundo é
+   escuro (sidebar e drawer). */
 .interno-foot-sub {
+  display: inline;
   font-size: 0.75rem;
   line-height: 1.5;
+  color: var(--ink-45v);
+  overflow-wrap: anywhere;
+}
+
+.interno-side .interno-foot-sub,
+.interno-drawer .interno-foot-sub {
   color: rgb(255 255 255 / 0.62);
 }
 
@@ -9925,13 +9895,47 @@ html.dark .interno-tema-rotulo--lua {
     z-index: 40;
     display: flex;
     align-items: center;
-    justify-content: flex-end;
+    justify-content: space-between;
     height: 3.5rem;
     padding: 0 1.5rem;
     background: color-mix(in srgb, var(--color-brand-bg-alt) 80%, transparent);
     backdrop-filter: blur(10px);
     border-bottom: 1px solid color-mix(in srgb, var(--color-brand-divider) 60%, transparent);
   }
+}
+
+/* Contexto da topbar: Interno / secção actual, como o breadcrumb da
+   Vercel. O separador é um chevron, não uma barra — lê-se como caminho. */
+.interno-top-context {
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+  min-width: 0;
+}
+
+.interno-top-crumb {
+  font-size: 0.625rem;
+  font-weight: 700;
+  letter-spacing: 0.18em;
+  text-transform: uppercase;
+  color: var(--ink-45v);
+  flex-shrink: 0;
+}
+
+.interno-top-sep {
+  flex-shrink: 0;
+  color: var(--ink-45v);
+  opacity: 0.7;
+}
+
+.interno-top-current {
+  min-width: 0;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+  font-size: 0.8125rem;
+  font-weight: 600;
+  color: var(--color-brand-deep);
 }
 
 .interno-top-right {
@@ -9953,7 +9957,7 @@ html.dark .interno-tema-rotulo--lua {
 .interno-drawer {
   position: fixed;
   top: 0;
-  right: 0;
+  left: 0;
   z-index: 50;
   display: flex;
   flex-direction: column;
@@ -10080,8 +10084,25 @@ html.dark .interno-tema-rotulo--lua {
   gap: 1rem;
   width: 100%;
   max-width: 78rem;
+  min-width: 0;
   margin: 0 auto;
   padding: clamp(1.25rem, 2.5vw, 2.25rem) clamp(1rem, 2.5vw, 2.5rem) 3rem;
+}
+
+/* Os cartões KPI são a MESMA peça do portal e têm de medir o mesmo: a
+   coluna do portal tem 68rem com 2,25rem de padding de cada lado, ou
+   seja 63,5rem de conteúdo. A página interna é mais larga (as tabelas
+   precisam), por isso é a grelha dos KPI — e não a página — que fica
+   presa àquela medida. Sem isto o `1fr` alargava cada cartão e o número
+   parecia maior aqui do que no portal. */
+.interno-page > .portal-kpi4-grid {
+  max-width: 63.5rem;
+}
+
+/* Uma tabela larga não pode empurrar a grelha da página: o scroll fica
+   no invólucro .interno-table-scroll, não no documento. */
+.interno-page > * {
+  min-width: 0;
 }
 
 .interno-head {
@@ -10090,6 +10111,25 @@ html.dark .interno-tema-rotulo--lua {
   align-items: flex-end;
   justify-content: space-between;
   gap: 1rem;
+  min-width: 0;
+}
+
+/* O bloco de texto tem de poder encolher para as acções (pílula,
+   «Exportar CSV», «Ver farmácias») ficarem na mesma linha à direita.
+   Sem a base flexível, o `flex-wrap` avalia o max-content do parágrafo
+   e empurra-as para baixo. */
+.interno-head > div:first-child {
+  flex: 1 1 26rem;
+  min-width: 0;
+}
+
+.interno-head-acts {
+  /* Cede largura ao título em ecrãs estreitos em vez de sair do cartão:
+     com `flex-shrink: 0` a fila de botões ficava em max-content (374 px na
+     ficha da farmácia) e empurrava a página para scroll horizontal. */
+  flex: 0 1 auto;
+  max-width: 100%;
+  min-width: 0;
 }
 
 .interno-title {
@@ -10108,6 +10148,7 @@ html.dark .interno-tema-rotulo--lua {
   line-height: 1.6;
   color: var(--color-brand-deep-60);
   text-wrap: pretty;
+  overflow-wrap: anywhere;
 }
 
 .interno-sub b {
@@ -10134,20 +10175,15 @@ html.dark .interno-tema-rotulo--lua {
   gap: 1rem;
 }
 
+/* ---- KPIs: a leitura dos cartões do portal (kicker, número, nota)
+   num componente próprio. Antes o número usava .interno-title e crescia
+   como um título de página, e os cartões de 6/7 itens ficavam com
+   alturas e notas diferentes. -------------------------------- */
 .interno-box {
   background: var(--color-brand-card);
   border: 1px solid var(--color-brand-divider);
   border-radius: 1rem;
   overflow: hidden;
-  box-shadow:
-    0 1px 2px rgb(0 42 50 / 0.04),
-    0 4px 14px rgb(0 42 50 / 0.05);
-}
-
-html.dark .interno-box {
-  box-shadow:
-    0 1px 2px rgb(0 0 0 / 0.3),
-    0 6px 18px rgb(0 0 0 / 0.25);
 }
 
 .interno-box--pad {
@@ -10164,8 +10200,16 @@ html.dark .interno-box {
   align-items: baseline;
   justify-content: space-between;
   gap: 0.5rem 1rem;
+  min-width: 0;
   padding-bottom: 0.75rem;
   border-bottom: 1px solid var(--color-brand-divider);
+}
+
+/* Cabeçalho directo de um cartão sem padding: sem esta linha o título
+   encostava à borda esquerda e a régua atravessava o cartão todo. Nos
+   cartões com `--pad` o padding já vem de fora. */
+.interno-box:not(.interno-box--pad) > .interno-sec-head {
+  padding: 1rem 1.125rem 0.75rem;
 }
 
 .interno-sec-head h2 {
@@ -10177,11 +10221,14 @@ html.dark .interno-box {
 }
 
 .interno-sec-head-b {
+  min-width: 0;
+  max-width: 100%;
   font-size: 0.6875rem;
   font-weight: 700;
   letter-spacing: 0.09em;
   text-transform: uppercase;
   color: var(--ink-45v);
+  overflow-wrap: anywhere;
 }
 
 .interno-empty {
@@ -10203,6 +10250,10 @@ html.dark .interno-box {
 .interno-table-scroll {
   max-width: 100%;
   overflow-x: auto;
+  overflow-y: hidden;
+  overscroll-behavior-x: contain;
+  -webkit-overflow-scrolling: touch;
+  scrollbar-width: thin;
 }
 
 .interno-table {
@@ -10230,10 +10281,177 @@ html.dark .interno-box {
   border-bottom: 1px solid var(--color-brand-divider);
   vertical-align: middle;
   color: var(--color-brand-deep);
+  overflow-wrap: anywhere;
+}
+
+/* A segunda linha de uma célula (município, e-mail, data relativa)
+   empilha por baixo do valor principal. */
+.interno-table td > .interno-foot-sub {
+  display: block;
+}
+
+/* A coluna de acções nunca é a que cede espaço: as colunas de dados
+   podem partir, a acção tem de continuar inteira. */
+.interno-table td:last-child:not([colspan]) {
+  white-space: nowrap;
+}
+
+/* Em ecrã estreito a tabela guarda a largura mínima que os conteúdos
+   pedem e o scroll acontece DENTRO do cartão. Sem isto, `width: 100%`
+   espremia as colunas até as palavras se sobreporem. */
+@media (max-width: 60rem) {
+  .interno-table {
+    min-width: 52rem;
+  }
+
+  /* A primeira coluna (o nome / a data) fica presa à esquerda enquanto
+     as restantes deslizam: é o que mantém a linha identificável num
+     ecrã de 390px, em vez de se perder «de quem» é o registo a meio do
+     scroll lateral. O fundo é o do cartão para as células não se
+     sobreporem umas às outras. */
+  .interno-table th:first-child,
+  .interno-table td:first-child {
+    position: sticky;
+    left: 0;
+    z-index: 2;
+    background: var(--color-brand-card);
+  }
+
+  .interno-table th:first-child {
+    background: var(--color-brand-bg-alt);
+  }
 }
 
 .interno-table tbody tr:last-child td {
   border-bottom: 0;
+}
+
+/* ---- Mobile: a linha passa a cartão (padrão Vercel/Geist) ------
+   Abaixo de 40rem uma tabela de 5 colunas é uma pista de aterragem: o
+   scroll lateral obriga a arrastar e as colunas de acções caem fora do
+   ecrã. Aqui cada <tr> vira um cartão empilhado e cada <td> uma linha
+   «rótulo em cima, valor em baixo».
+
+   O rótulo vem de `data-rotulo`, escrito no markup com o MESMO texto do
+   <th> da coluna — uma segunda nomenclatura em CSS (nth-child) ficaria
+   errada assim que uma coluna condicional desaparecesse. O <thead> sai
+   visualmente, mas fica no DOM: os leitores de ecrã continuam a ter a
+   tabela inteira.
+
+   O valor fica por baixo do rótulo, e não ao lado: as células têm
+   spans soltos (data + «há 3 dias», nome + telefone), e um grid de duas
+   colunas punha cada span na sua célula. Empilhado, qualquer conteúdo
+   cai bem — inclusive as pílulas e a fila de botões das acções. */
+@media (max-width: 40rem) {
+  .interno-table-scroll {
+    overflow-x: visible;
+    padding: 0.375rem 0.75rem 0.875rem;
+  }
+
+  .interno-table {
+    display: block;
+    min-width: 0;
+  }
+
+  .interno-table thead {
+    display: none;
+  }
+
+  .interno-table tbody {
+    display: block;
+  }
+
+  .interno-table tbody tr {
+    display: block;
+    padding: 0.25rem 0.875rem 0.375rem;
+    border: 1px solid var(--color-brand-divider);
+    border-radius: 0.75rem;
+    background: var(--color-brand-bg-alt);
+  }
+
+  .interno-table tbody tr + tr {
+    margin-top: 0.625rem;
+  }
+
+  .interno-table td,
+  .interno-table td:first-child {
+    position: static;
+    display: block;
+    padding: 0.5rem 0;
+    border-bottom: 1px solid var(--color-brand-divider);
+    background: transparent;
+    white-space: normal;
+    vertical-align: top;
+  }
+
+  .interno-table td:last-child,
+  .interno-table td:last-of-type {
+    border-bottom: 0;
+  }
+
+  .interno-table td::before {
+    content: attr(data-rotulo);
+    display: block;
+    margin-bottom: 0.125rem;
+    font-size: 0.625rem;
+    font-weight: 700;
+    letter-spacing: 0.09em;
+    line-height: 1.5;
+    text-transform: uppercase;
+    color: var(--ink-45v);
+  }
+
+  /* A primeira célula é o título do cartão: sem rótulo, um degrau
+     acima no corpo de texto. O `:not([colspan])` deixa de fora as
+     linhas de estado vazio, que ocupam a largura toda. */
+  .interno-table tbody tr > td:first-child:not([colspan]) {
+    padding-top: 0.625rem;
+    padding-bottom: 0.625rem;
+    font-size: 0.9375rem;
+    font-weight: 700;
+  }
+
+  .interno-table tbody tr > td:first-child:not([colspan])::before {
+    content: none;
+  }
+
+  /* A segunda linha da célula (município, telefone, «há 3 dias») não
+     herda o negrito do título. */
+  .interno-table tbody tr > td:first-child > .interno-foot-sub {
+    font-size: 0.75rem;
+    font-weight: 400;
+  }
+
+  /* Célula que ocupa a linha toda (o detalhe expandido da auditoria):
+     sem rótulo e com o texto alinhado à esquerda — centrar punha o
+     diff «Campo / Antes / Depois» ao meio, sem leitura possível. */
+  .interno-table td[colspan] {
+    text-align: left;
+  }
+
+  /* As larguras mínimas do funil existem para o scroll lateral; num
+     cartão só voltariam a empurrar a coluna para fora. */
+  .interno-table--leads td,
+  .interno-table--leads th {
+    min-width: 0;
+  }
+
+  .interno-table-acts {
+    min-width: 0;
+  }
+
+  /* As acções deixam de ser uma coluna estreita: passam a ocupar a
+     largura do cartão e a fila de botões quebra em vez de sair. */
+  .interno-table td:last-child:not([colspan]) .interno-invite-acts,
+  .interno-table td:last-child:not([colspan]) .interno-row-acts {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 0.5rem;
+  }
+
+  .interno-table tbody tr:hover td {
+    background: transparent;
+  }
 }
 
 .interno-table tbody tr:hover td {
@@ -10367,6 +10585,65 @@ html.dark .interno-pill--link:focus-visible {
   align-items: center;
   justify-content: flex-end;
   gap: 0.375rem;
+}
+
+/* A linha do funil de leads tem duas decisões diferentes na mesma
+   célula (converter e mover). Empilham-se por acção, com a coluna
+   reservada, em vez de se esmagarem num canto da tabela. */
+.interno-table-acts {
+  min-width: 18rem;
+}
+
+/* O funil tem colunas de texto curto (município, estado, data) e uma
+   de contacto que não pode partir o e-mail a meio. Estas larguras
+   mínimas evitam que o `overflow-wrap` global transforme
+   «teste@example.com» em três linhas numa célula de 80 px. */
+.interno-table--leads th:nth-child(1),
+.interno-table--leads td:nth-child(1) {
+  min-width: 12rem;
+}
+
+.interno-table--leads th:nth-child(4),
+.interno-table--leads td:nth-child(4) {
+  min-width: 11rem;
+}
+
+.interno-table--leads th:nth-child(5),
+.interno-table--leads td:nth-child(5) {
+  min-width: 10rem;
+}
+
+.interno-row-acts--lead {
+  flex-direction: column;
+  align-items: stretch;
+}
+
+.interno-row-acts--lead > .interno-btn {
+  width: 100%;
+}
+
+.interno-row-acts--lead .interno-funnel-move {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) auto;
+  align-items: center;
+  gap: 0.3125rem;
+}
+
+/* O «Mover para…» ocupa a linha inteira; a nota e o botão ficam por
+   baixo. Três colunas no mesmo espaço cortavam o texto do select e o
+   placeholder da nota. */
+.interno-row-acts--lead .interno-funnel-move > .interno-select--small {
+  grid-column: 1 / -1;
+}
+
+.interno-row-acts--lead .interno-select--small,
+.interno-row-acts--lead .interno-input--small {
+  width: 100%;
+  min-width: 0;
+}
+
+.interno-row-acts--lead .interno-funnel-move > .notice {
+  grid-column: 1 / -1;
 }
 
 .interno-funnel-move {
@@ -10560,8 +10837,15 @@ html.dark .interno-pill--link:focus-visible {
 
 .interno-filter {
   display: grid;
+  flex: 1 1 9rem;
   gap: 0.3125rem;
-  min-width: 9rem;
+  min-width: 0;
+}
+
+/* O botão não cresce com os campos: «Filtrar» é uma acção, não mais
+   uma coluna da grelha de filtros. */
+.interno-filters > .interno-btn {
+  flex: 0 0 auto;
 }
 
 .interno-filter-label {
@@ -10746,6 +11030,39 @@ html.dark .interno-btn--danger:hover:not(:disabled) {
   gap: 0.375rem;
 }
 
+/* Faixa de suspensão da conta, no topo do bloco «Contas da farmácia»:
+   estado + o botão que o resolve. Em ecrã estreito o botão desce para não
+   esmagar o motivo. */
+.interno-conta-suspensao {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: flex-start;
+  justify-content: space-between;
+  gap: 0.75rem 1rem;
+  padding: 0.875rem 1.25rem;
+  border-bottom: 1px solid var(--color-brand-divider);
+  background: var(--color-brand-bg-alt);
+}
+
+html.dark .interno-conta-suspensao {
+  background: rgb(255 255 255 / 0.02);
+}
+
+.interno-conta-suspensao-info {
+  display: flex;
+  flex-direction: column;
+  gap: 0.25rem;
+  min-width: 0;
+  font-size: 0.8125rem;
+  line-height: 1.55;
+  color: var(--color-brand-deep-60);
+  text-wrap: pretty;
+}
+
+.interno-conta-suspensao-info b {
+  color: var(--color-brand-deep);
+}
+
 /* Botão DENTRO da faixa verde escura (rodapé da sidebar): o `--ghost`
    herda a cor de tinta da área clara e ficava preto sobre #003528 — texto
    invisível. Aqui a cor é branca sobre a borda de 28% de branco, o mesmo
@@ -10822,10 +11139,25 @@ html.dark .interno-modal {
   color: var(--color-brand-deep);
 }
 
+/* O modal nasce dentro da célula «Acções» da tabela (é de lá que se abre),
+   e essa coluna é `white-space: nowrap` para os botões não partirem. O
+   texto herdava o nowrap e o diálogo saía mais largo do que o ecrã — em
+   mobile aparecia cortado e com scroll lateral. O reset é aqui e não no
+   componente para valer em qualquer sítio onde o modal seja montado. */
+.interno-modal,
+.interno-modal * {
+  white-space: normal;
+}
+
 .interno-modal-body {
   display: grid;
   gap: 0.875rem;
   padding: 1rem 1.25rem;
+}
+
+.interno-modal-body p,
+.interno-modal-body dd {
+  overflow-wrap: anywhere;
 }
 
 .interno-modal-acts {
@@ -11202,5 +11534,549 @@ html.dark .interno-modal {
   .interno-table td {
     padding-right: 0.75rem;
     padding-left: 0.75rem;
+  }
+}
+
+/* ============================================================
+   PORTAL — AVISOS DA EQUIPA E PRAZO DO PLANO (0032)
+   Duas peças novas no shell:
+     • o aviso de experiência/graça a terminar, por cima do conteúdo;
+     • o sino da topbar + a página /portal/avisos.
+   Tudo com as variáveis do portal v2 — nada de cores novas.
+   ============================================================ */
+@layer components {
+  /* Faixa do prazo: alinhada com a largura das páginas (68rem), sem
+     invadir o padding lateral delas. */
+  .portal-plan-alert {
+    padding: 1rem 2.25rem 0;
+  }
+
+  .portal-plan-alert .notice {
+    max-width: 68rem;
+    margin-inline: auto;
+  }
+
+  .portal-plan-alert .notice p + p {
+    margin-top: 0.375rem;
+  }
+
+  .portal-plan-alert .notice a {
+    color: inherit;
+    font-weight: 700;
+    text-decoration: underline;
+    text-underline-offset: 2px;
+  }
+
+  @media (max-width: 60rem) {
+    .portal-plan-alert {
+      padding: 0.875rem 1rem 0;
+    }
+  }
+
+  /* Sino da topbar — mesmo diâmetro do botão de menu/tema, para a linha
+     não ganhar um elemento de outra altura. */
+  .portal-bell {
+    position: relative;
+    display: inline-grid;
+    place-items: center;
+    width: 2.375rem;
+    height: 2.375rem;
+    flex-shrink: 0;
+    border-radius: 50%;
+    border: 1px solid transparent;
+    color: var(--color-brand-deep);
+    text-decoration: none;
+    transition:
+      background 0.15s ease,
+      color 0.15s ease,
+      border-color 0.15s ease;
+  }
+
+  .portal-bell:hover,
+  .portal-bell:focus-visible {
+    background: var(--color-brand-card);
+    border-color: var(--color-brand-divider);
+    color: var(--color-brand-accent);
+  }
+
+  .portal-bell-badge {
+    position: absolute;
+    top: 0.05rem;
+    right: 0.05rem;
+    min-width: 1.0625rem;
+    height: 1.0625rem;
+    padding: 0 0.25rem;
+    border-radius: 999px;
+    background: var(--portal-red);
+    color: #fff;
+    font-size: 0.5625rem;
+    font-weight: 800;
+    line-height: 1;
+    display: grid;
+    place-items: center;
+    border: 2px solid var(--color-brand-bg-alt);
+  }
+
+  @media (max-width: 40rem) {
+    .portal-bell {
+      width: 2rem;
+      height: 2rem;
+    }
+
+    .portal-bell-badge {
+      top: -0.1rem;
+      right: -0.15rem;
+    }
+  }
+
+  /* Item «Avisos» do menu — o contador segue o padrão neutro dos
+     restantes (só o «Atenção» é vermelho). */
+  .portal-nav-badge--info {
+    background: var(--color-brand-bg-alt);
+    color: var(--color-brand-deep-60, rgb(0 73 58 / 0.6));
+  }
+
+  html.dark .portal-nav-badge--info {
+    background: rgb(255 255 255 / 0.08);
+    color: rgb(229 231 235 / 0.62);
+  }
+
+  /* Lista de avisos — cartões separados, com o tom num chip e a data ao
+     lado; o corpo guarda as quebras de linha que a equipa escreveu. */
+  .portal-announce-list {
+    list-style: none;
+    margin: 0;
+    padding: 0;
+    display: flex;
+    flex-direction: column;
+    gap: 0.75rem;
+    max-width: 52rem;
+  }
+
+  .portal-announce {
+    background: var(--color-brand-card);
+    border: 1px solid var(--color-brand-divider);
+    border-radius: 0.875rem;
+    padding: 1.125rem 1.25rem;
+  }
+
+  /* Por ler: um filete de acento à esquerda e o chip «Novo». A cor não é
+     o único sinal — o texto «Novo» e o sub-cabeçalho dizem o mesmo. */
+  .portal-announce--new {
+    border-left: 3px solid var(--color-brand-accent);
+    padding-left: calc(1.25rem - 2px);
+  }
+
+  .portal-announce-top {
+    display: flex;
+    align-items: center;
+    flex-wrap: wrap;
+    gap: 0.5rem;
+    margin-bottom: 0.5rem;
+  }
+
+  .portal-announce-tone {
+    font-size: 0.5625rem;
+    font-weight: 800;
+    letter-spacing: 0.12em;
+    text-transform: uppercase;
+    padding: 0.1875rem 0.5rem;
+    border-radius: 999px;
+  }
+
+  .portal-announce-tone--info {
+    background: color-mix(in srgb, var(--portal-teal) 12%, transparent);
+    color: var(--portal-teal);
+  }
+
+  .portal-announce-tone--warn {
+    background: color-mix(in srgb, var(--portal-warn) 14%, transparent);
+    color: var(--portal-warn);
+  }
+
+  .portal-announce-tone--ok {
+    background: color-mix(in srgb, var(--portal-ok) 14%, transparent);
+    color: var(--portal-ok);
+  }
+
+  .portal-announce-date,
+  .portal-announce-scope {
+    font-size: 0.6875rem;
+    color: var(--ink-45v);
+  }
+
+  .portal-announce-scope::before {
+    content: '·';
+    margin-right: 0.375rem;
+  }
+
+  .portal-announce-new {
+    font-size: 0.5625rem;
+    font-weight: 800;
+    letter-spacing: 0.1em;
+    text-transform: uppercase;
+    color: var(--color-brand-accent);
+  }
+
+  .portal-announce-title {
+    margin: 0 0 0.375rem;
+    font-size: 1rem;
+    font-weight: 700;
+    color: var(--color-brand-deep);
+  }
+
+  .portal-announce-body {
+    margin: 0;
+    font-size: 0.8125rem;
+    line-height: 1.6;
+    color: var(--color-brand-deep-60, rgb(0 73 58 / 0.72));
+    white-space: pre-line;
+  }
+
+  .portal-announce-until {
+    margin: 0.625rem 0 0;
+    font-size: 0.6875rem;
+    color: var(--ink-45v);
+  }
+}
+
+/* ============================================================
+   INTERNO — AVISOS DA EQUIPA (0032)
+   Só o que a tabela e o compositor precisam: um título de secção e um
+   excerto de duas linhas (o corpo inteiro vive no portal e na base).
+   ============================================================ */
+@layer components {
+  .interno-aviso-composer {
+    margin-bottom: 1rem;
+  }
+
+  .interno-section-title {
+    margin: 0 0 0.25rem;
+    font-size: 1rem;
+    font-weight: 700;
+    color: var(--color-brand-deep);
+  }
+
+  .interno-aviso-copy {
+    display: -webkit-box;
+    -webkit-line-clamp: 2;
+    -webkit-box-orient: vertical;
+    overflow: hidden;
+  }
+}
+
+/* ============================================================
+   DEFINIÇÕES — mini-sidebar + secções com o título FORA do cartão
+
+   O padrão é o do Supabase: uma coluna curta com o título da área e
+   grupos de opções (Geral, Segurança, Sessões…) e, à direita, uma
+   secção que começa numa linha de título («General settings») com o
+   cartão das opções por baixo. Usa-se no portal (/perfil, /sessao) e no
+   interno (/definicoes), para as duas áreas lerem a mesma gramática.
+
+   O cartão não tem padding por omissão: os formulários do interno
+   trazem o seu, e o portal usa os corpos de cartão que já existem. A
+   variante `--pad` é para conteúdo simples (dl, formulários soltos).
+   ============================================================ */
+.settings-layout {
+  display: grid;
+  /* O rail encosta à sidebar (pedido de produto, como as settings do
+     Supabase): sem margem centrada nem padding à esquerda. A cor é a
+     MESMA da sidebar, para os dois painéis lerem como um só — a hairline
+     à direita separa-o do conteúdo. */
+  grid-template-columns: minmax(0, 15rem) minmax(0, 1fr);
+  align-items: stretch;
+  gap: 0;
+  width: 100%;
+  max-width: none;
+  margin-inline: 0;
+  padding: 0;
+}
+
+.settings-nav {
+  position: sticky;
+  /* A topbar (3.5rem) é sticky nos dois shells: o rail começa por baixo
+     dela e acompanha o scroll como um painel, não como um bloco solto. */
+  top: 3.5rem;
+  align-self: start;
+  display: grid;
+  align-content: start;
+  gap: 1.35rem;
+  min-width: 0;
+  height: calc(100dvh - 3.5rem);
+  overflow-y: auto;
+  overscroll-behavior: contain;
+  padding: 1.75rem 1rem 2rem 1.25rem;
+  background: var(--color-brand-card);
+  border-right: 1px solid var(--color-brand-divider);
+}
+
+.settings-nav-title {
+  margin: 0;
+  padding: 0 0.625rem;
+  font-size: 0.8125rem;
+  font-weight: 800;
+  letter-spacing: 0.01em;
+  line-height: 1.3;
+  color: var(--color-brand-deep);
+}
+
+.settings-nav-group {
+  display: grid;
+  gap: 0.125rem;
+  min-width: 0;
+}
+
+.settings-nav-label {
+  margin-bottom: 0.25rem;
+  padding: 0 0.625rem;
+  font-size: 0.625rem;
+  font-weight: 800;
+  letter-spacing: 0.1em;
+  line-height: 1.3;
+  text-transform: uppercase;
+  color: var(--ink-45v);
+}
+
+.settings-nav-item {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 0.5rem;
+  padding: 0.45rem 0.625rem;
+  border-radius: 0.5rem;
+  color: var(--ink-60v);
+  font-size: 0.8125rem;
+  font-weight: 550;
+  line-height: 1.3;
+  text-decoration: none;
+  transition:
+    background 0.15s ease,
+    color 0.15s ease;
+}
+
+.settings-nav-item:hover {
+  background: color-mix(in srgb, var(--color-brand-primary) 4%, transparent);
+  color: var(--color-brand-deep);
+}
+
+.settings-nav-item--active {
+  background: color-mix(in srgb, var(--color-brand-primary) 8%, transparent);
+  color: var(--color-brand-deep);
+  font-weight: 700;
+}
+
+html.dark .settings-nav-item:hover {
+  background: color-mix(in srgb, #fff 4%, transparent);
+}
+
+html.dark .settings-nav-item--active {
+  background: color-mix(in srgb, #fff 8%, transparent);
+}
+
+.settings-nav-badge {
+  flex-shrink: 0;
+  padding: 0.1rem 0.375rem;
+  border-radius: 999px;
+  background: color-mix(in srgb, var(--color-brand-accent) 14%, transparent);
+  color: var(--color-brand-primary);
+  font-size: 0.625rem;
+  font-weight: 700;
+  line-height: 1.4;
+}
+
+html.dark .settings-nav-badge {
+  color: #7fd4ab;
+}
+
+.settings-content {
+  display: grid;
+  gap: 1.35rem;
+  width: 100%;
+  max-width: 52rem;
+  min-width: 0;
+  padding: 1.75rem clamp(1.25rem, 3vw, 2.75rem) 3.5rem;
+}
+
+/* O texto do cabeçalho tem de poder encolher para o botão «Guardar»
+   continuar na mesma linha à direita. Sem uma base flexível, o
+   `flex-wrap` avalia o max-content do parágrafo e empurra o botão para
+   baixo antes de o deixar partir. */
+.settings-content .portal-page-head > div:first-child {
+  flex: 1 1 24rem;
+  min-width: 0;
+}
+
+.settings-content .portal-page-head > .btn {
+  flex-shrink: 0;
+}
+
+.settings-section {
+  display: grid;
+  gap: 0.5rem;
+  min-width: 0;
+}
+
+.settings-section-head {
+  display: flex;
+  align-items: baseline;
+  justify-content: space-between;
+  gap: 0.5rem 1rem;
+  flex-wrap: wrap;
+  padding: 0 0.125rem;
+}
+
+.settings-section-head h2 {
+  margin: 0;
+  font-family: var(--font-display), Georgia, serif;
+  font-size: 1.0625rem;
+  font-weight: 600;
+  line-height: 1.3;
+  letter-spacing: -0.005em;
+  color: var(--color-brand-deep);
+}
+
+.settings-section-hint {
+  font-size: 0.75rem;
+  line-height: 1.45;
+  color: var(--ink-45v);
+}
+
+.settings-card {
+  min-width: 0;
+  background: var(--color-brand-card);
+  border: 1px solid var(--color-brand-divider);
+  border-radius: 1rem;
+  overflow: hidden;
+}
+
+/* Sem sombra: nas definições o cartão é uma superfície plana e o peso
+   visual fica no título que vive FORA dele. A sombra fazia o contrário —
+   puxava o olho para a caixa e competia com «Geral», «Segurança», etc.
+   O hero verde de /portal/sessao segue a mesma regra nesta área: o
+   contraste do fundo escuro já o separa da página. */
+.settings-layout .portal-id-card--dark {
+  box-shadow: none;
+}
+
+.settings-card--pad {
+  padding: 1.125rem 1.25rem;
+}
+
+/* O MfaSetup nasceu para viver sozinho numa página e traz o seu próprio
+   cartão. Dentro de um cartão de definições, esse invólucro desaparece
+   (sem borda/fundo/sombra) para não parecer um cartão dentro de outro;
+   o padding mantém-se e o conteúdo alinha com o resto da secção. */
+.settings-card .interno-box {
+  border: 0;
+  border-radius: 0;
+  background: transparent;
+  box-shadow: none;
+}
+
+/* Títulos fora do cartão: as listas começam no topo, sem o padding que
+   tinham quando viviam por baixo de um cabeçalho interno. */
+.settings-card .interno-dl,
+.settings-card .sess-info,
+.settings-card .sess-card-body {
+  padding-top: 0;
+}
+
+/* Os títulos já estão fora do cartão: o cabeçalho da página não precisa
+   da margem que tinha quando era seguido diretamente por cartões. */
+.settings-content .portal-page-head {
+  margin-bottom: 0;
+}
+
+/* Par de cartões (Segurança · Conta) com a mesma altura e a acção no
+   fundo, agora com os títulos fora dos cartões. */
+.settings-pair {
+  display: grid;
+  gap: 1.35rem;
+}
+
+.settings-pair > .settings-section {
+  display: flex;
+  flex-direction: column;
+}
+
+.settings-pair .settings-card {
+  flex: 1;
+  display: flex;
+  flex-direction: column;
+}
+
+/* No interno o título é sans, como o resto da área; no portal fica a
+   serif editorial dos cabeçalhos de cartão. */
+.interno-main .settings-section-head h2 {
+  font-family: var(--font-sans);
+  font-size: 1rem;
+  font-weight: 700;
+  letter-spacing: -0.005em;
+}
+
+@media (min-width: 48rem) {
+  .settings-pair {
+    grid-template-columns: 1fr 1fr;
+  }
+}
+
+@media (max-width: 60rem) {
+  .settings-layout {
+    grid-template-columns: minmax(0, 1fr);
+    gap: 1rem;
+    padding: 1rem 1rem 3rem;
+  }
+
+  /* Telemóvel: o rail vertical não cabe — volta a ser uma fila de
+     separadores, sem fundo nem hairline (o painel encostado à sidebar
+     só existe quando há largura para os dois). */
+  .settings-nav {
+    position: static;
+    display: flex;
+    align-items: center;
+    gap: 0.5rem;
+    height: auto;
+    overflow-x: auto;
+    overflow-y: visible;
+    padding: 0 0 0.25rem;
+    background: transparent;
+    border-right: 0;
+    scrollbar-width: none;
+  }
+
+  .settings-content {
+    max-width: none;
+    padding: 0;
+  }
+
+  .settings-nav::-webkit-scrollbar {
+    display: none;
+  }
+
+  .settings-nav-title,
+  .settings-nav-label {
+    display: none;
+  }
+
+  .settings-nav-group {
+    display: flex;
+    gap: 0.375rem;
+  }
+
+  .settings-nav-item {
+    flex-shrink: 0;
+    padding: 0.4rem 0.75rem;
+    border: 1px solid var(--color-brand-divider);
+    border-radius: 999px;
+    white-space: nowrap;
+  }
+
+  .settings-nav-item--active {
+    border-color: var(--color-brand-deep);
+  }
+
+  .settings-section-head {
+    padding: 0;
   }
 }

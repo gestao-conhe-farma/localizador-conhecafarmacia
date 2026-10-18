@@ -1,6 +1,6 @@
 'use client'
 
-import { useEffect, useRef, useState } from 'react'
+import { Fragment, useEffect, useRef, useState } from 'react'
 import Link from 'next/link'
 import Image from 'next/image'
 import { usePathname } from 'next/navigation'
@@ -13,8 +13,9 @@ import BotaoTema from '@/components/interno/BotaoTema'
 /**
  * DRAWER da área interna — a navegação em mobile/tablet.
  *
- * Espelha o drawer da plataforma de gestão: painel escuro que entra pela
- * direita com mola, overlay, fecha ao navegar, com Esc e no overlay, com o
+ * Espelha o drawer do portal: painel escuro que entra pela ESQUERDA
+ * (o hamburger vive na esquerda da topbar, por isso é de lá que o painel
+ * sai) com mola, overlay, fecha ao navegar, com Esc e no overlay, com o
  * foco preso dentro do painel enquanto está aberto. O corpo não faz scroll
  * por baixo, e o foco volta ao hamburger quando fecha.
  *
@@ -122,9 +123,9 @@ export default function InternoDrawer({
               key="drawer"
               ref={painelRef}
               tabIndex={-1}
-              initial={{ x: '100%' }}
+              initial={{ x: '-100%' }}
               animate={{ x: 0 }}
-              exit={{ x: '100%' }}
+              exit={{ x: '-100%' }}
               transition={{ type: 'spring', stiffness: 320, damping: 34 }}
               className="interno-drawer"
               role="dialog"
@@ -153,23 +154,30 @@ export default function InternoDrawer({
               <p className="interno-drawer-eyebrow">Área interna</p>
 
               <nav className="interno-drawer-nav" aria-label="Navegação mobile">
-                {itens.map((item) => {
+                {itens.map((item, i) => {
                   const Icone = ICONES[item.icone] || ICONES.painel
                   const ativo =
                     pathname === item.href ||
                     (item.href !== '/interno' && pathname.startsWith(item.href + '/'))
+                  const novoGrupo = item.grupo && item.grupo !== itens[i - 1]?.grupo
                   return (
-                    <Link
-                      key={item.href}
-                      href={item.href}
-                      onClick={fechar}
-                      aria-current={ativo ? 'page' : undefined}
-                      className={`interno-nav-item${ativo ? ' interno-nav-item--active' : ''}`}
-                    >
-                      <span className="interno-nav-num">{item.num}</span>
-                      <Icone size={17} aria-hidden="true" />
-                      <span className="interno-nav-text">{item.label}</span>
-                    </Link>
+                    <Fragment key={item.href}>
+                      {novoGrupo && (
+                        <span className="interno-nav-section" aria-hidden="true">
+                          {item.grupo}
+                        </span>
+                      )}
+                      <Link
+                        href={item.href}
+                        onClick={fechar}
+                        aria-current={ativo ? 'page' : undefined}
+                        className={`interno-nav-item${ativo ? ' interno-nav-item--active' : ''}`}
+                      >
+                        <span className="interno-nav-num">{item.num}</span>
+                        <Icone size={17} aria-hidden="true" />
+                        <span className="interno-nav-text">{item.label}</span>
+                      </Link>
+                    </Fragment>
                   )
                 })}
 
@@ -196,7 +204,7 @@ export default function InternoDrawer({
                   <ChevronRight size={15} className="interno-mfa-go" aria-hidden="true" />
                 </Link>
 
-                <BotaoTema variante="drawer" />
+                <BotaoTema />
 
                 <div className="interno-side-user">
                   <span className="interno-avatar">{iniciais(nome, email)}</span>

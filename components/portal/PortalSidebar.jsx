@@ -5,40 +5,32 @@ import Image from 'next/image'
 import { usePathname } from 'next/navigation'
 import { useCallback, useEffect, useRef, useState } from 'react'
 import { getPendingReservationsCount, getAttentionCount } from '@/lib/actions/pharmacy-portal'
+import { getUnreadAnnouncementCount } from '@/lib/actions/pharmacy-announcements'
 import { leaveStaffProfile } from '@/lib/actions/pharmacy-staff'
 import { createClient } from '@/lib/supabase/client'
 import { getRestockAck } from '@/lib/restock'
 import { logWarn } from '@/lib/log'
 import { ChevronIcon, CloseIcon, LockIcon, NavIcon } from '@/components/ui/Icon'
 import ThemeToggle from '@/components/ui/ThemeToggle'
+import { plural } from '@/lib/texto'
 
 const NAV = [
   {
-    group: 'Gestão',
+    // O dia-a-dia do balcão: o que precisa de resposta e o que se lê
+    // primeiro. Os três grupos seguem a organização das plataformas de
+    // gestão (contexto → operação → stock → conta), sem perder a
+    // numeração e a tinta da casa.
+    group: 'Operação',
     items: [
       { href: '/portal', label: 'Visão geral', icon: 'inicio' },
+      // Avisos da equipa (0032) — o mesmo destino do sino da topbar. Em
+      // ecrã estreito é aqui que a farmácia os encontra com o menu aberto.
+      { href: '/portal/avisos', label: 'Avisos', icon: 'avisos', avisos: true },
       {
         href: '/portal/atencao',
         label: 'Atenção',
         icon: 'atencao',
         attention: true,
-      },
-      {
-        // Grupo com submenu (padrão NavLateral do gestão): o cabeçalho
-        // navega para /portal/stock; a seta abre a «Entrada de stock».
-        href: '/portal/stock',
-        label: 'Stock',
-        icon: 'stock',
-        filhos: [{ href: '/portal/entrada', label: 'Entrada de stock' }],
-      },
-      {
-        // O livro-razão do stock (0020) fica ao lado do stock: é o que
-        // se abre quando há uma dúvida sobre o saldo («porque é que
-        // este número está assim?»).
-        href: '/portal/movimentos',
-        label: 'Movimentos',
-        icon: 'movimentos',
-        feature: 'movimentos',
       },
       {
         href: '/portal/reservas',
@@ -54,6 +46,27 @@ const NAV = [
         label: 'Desempenho',
         icon: 'desempenho',
         feature: 'desempenho',
+      },
+    ],
+  },
+  {
+    // Stock e o seu livro-razão ficam juntos: é o bloco que se abre
+    // quando há uma dúvida sobre o saldo («porque é que este número está
+    // assim?»). O cabeçalho navega para /portal/stock; a seta abre a
+    // «Entrada de stock».
+    group: 'Stock',
+    items: [
+      {
+        href: '/portal/stock',
+        label: 'Stock',
+        icon: 'stock',
+        filhos: [{ href: '/portal/entrada', label: 'Entrada de stock' }],
+      },
+      {
+        href: '/portal/movimentos',
+        label: 'Movimentos',
+        icon: 'movimentos',
+        feature: 'movimentos',
       },
     ],
   },
@@ -112,12 +125,21 @@ function iniciais(nome) {
  * porque estão fechados, porque esconder uma função que continua lá
  * deixa a farmácia a procurá-la. A autorização a sério é do servidor.
  */
-export default function PortalSidebar({ pharmacyId, userName, staff, plan, navOpen, onClose }) {
+export default function PortalSidebar({
+  pharmacyId,
+  userName,
+  staff,
+  plan,
+  avisosPorLer = 0,
+  navOpen,
+  onClose,
+}) {
   const pathname = usePathname()
   const [pending, setPending] = useState(0)
   const [pulse, setPulse] = useState(false)
   const [attention, setAttention] = useState(null)
   const [expiry, setExpiry] = useState(0)
+  const [avisos, setAvisos] = useState(avisosPorLer)
   // Menu directo do rodapé (trocar perfil / sair / sessão).
   const [menuAberto, setMenuAberto] = useState(false)
   const menuRef = useRef(null)
@@ -145,11 +167,28 @@ export default function PortalSidebar({ pharmacyId, userName, staff, plan, navOp
     setExpiry(res.expiryCount || 0)
   }, [pharmacyId])
 
-  // Contagens iniciais + em cada navegação (fallback sem realtime)
+  const refreshAvisos = useCallback(async () => {
+    const res = await getUnreadAnnouncementCount()
+    if (res?.ok) setAvisos(res.count)
+  }, [])
+
+  // Contagens iniciais + em cada navegação (fallback sem realtime). Os
+  // avisos também: o layout lê o número no servidor, mas uma navegação
+  // entre páginas do portal não volta a renderizar o layout.
   useEffect(() => {
     refreshCount()
     refreshAttention()
-  }, [pathname, refreshCount, refreshAttention, pharmacyId])
+    refreshAvisos()
+  }, [pathname, refreshCount, refreshAttention, refreshAvisos, pharmacyId])
+
+  // Abrir /portal/avisos marca os avisos como lidos no painel; o painel
+  // avisa por evento para o item do menu perder o número sem esperar por
+  // uma navegação (o sino da topbar atualiza com o router.refresh()).
+  useEffect(() => {
+    const lidos = () => refreshAvisos()
+    window.addEventListener('portal-avisos:lidos', lidos)
+    return () => window.removeEventListener('portal-avisos:lidos', lidos)
+  }, [refreshAvisos])
 
   // Fecha o drawer sempre que a rota muda — e também o menu do fundo
   // (trocar de perfil é uma navegação: o menu não pode seguir o clique).
@@ -210,6 +249,13 @@ export default function PortalSidebar({ pharmacyId, userName, staff, plan, navOp
   // Numeração estrutural (01, 02, …) — a mesma do NavLateral do gestão.
   const flat = grupos.flatMap((g) => g.items)
 
+  // O eyebrow ao lado do logo já diz «Localizador» (o plano de entrada tem
+  // o nome da marca). O chip do plano só acrescenta informação quando o
+  // nome é outro ou há um estado para comunicar — repetir «Localizador»
+  // duas vezes na mesma linha era ruído, não hierarquia.
+  const planoDuplicaMarca = plan?.nome === 'Localizador'
+  const mostrarPlano = Boolean(plan?.nome) && (!planoDuplicaMarca || Boolean(plan?.estadoLabel))
+
   return (
     <>
       {/* Véu por baixo do drawer mobile */}
@@ -247,8 +293,8 @@ export default function PortalSidebar({ pharmacyId, userName, staff, plan, navOp
                 className="portal-logo-white"
               />
             </Link>
-            <p className="portal-side-eyebrow">Portal da farmácia</p>
-            {plan?.nome && (
+            <p className="portal-side-eyebrow">Localizador</p>
+            {mostrarPlano && (
               <p
                 className="portal-side-plan"
                 title={
@@ -257,8 +303,8 @@ export default function PortalSidebar({ pharmacyId, userName, staff, plan, navOp
                     : `Plano ${plan.nome}.`
                 }
               >
-                {plan.nome}
-                {plan.estadoLabel ? <span> · {plan.estadoLabel}</span> : null}
+                {planoDuplicaMarca ? plan.estadoLabel : plan.nome}
+                {!planoDuplicaMarca && plan.estadoLabel ? <span> · {plan.estadoLabel}</span> : null}
               </p>
             )}
           </div>
@@ -301,6 +347,7 @@ export default function PortalSidebar({ pharmacyId, userName, staff, plan, navOp
                     pulse={pulse}
                     attention={attention}
                     expiry={expiry}
+                    avisos={avisos}
                     locked={bloqueado(t.feature)}
                     onClose={onClose}
                   />
@@ -362,7 +409,7 @@ export default function PortalSidebar({ pharmacyId, userName, staff, plan, navOp
 }
 
 /** Item simples — link directo com número, ícone, badges. */
-function NavSimples({ item, num, pending, pulse, attention, expiry, locked, onClose }) {
+function NavSimples({ item, num, pending, pulse, attention, expiry, avisos, locked, onClose }) {
   const pathname = usePathname()
   const active =
     pathname === item.href || (item.href !== '/portal' && pathname.startsWith(item.href + '/'))
@@ -392,7 +439,7 @@ function NavSimples({ item, num, pending, pulse, attention, expiry, locked, onCl
       {item.attention && attention > 0 && (
         <span
           className="portal-nav-badge portal-nav-badge--red"
-          title={`${attention} assunto(s) para hoje`}
+          title={`${plural(attention, 'assunto', 'assuntos')} para hoje`}
         >
           {attention}
         </span>
@@ -400,15 +447,23 @@ function NavSimples({ item, num, pending, pulse, attention, expiry, locked, onCl
       {item.attention && expiry > 0 && (
         <span
           className="portal-nav-badge portal-nav-badge--orange"
-          title={`${expiry} produto(s) com validade a vencer ou expirados`}
+          title={`${plural(expiry, 'produto', 'produtos')} com validade a vencer ou expirados`}
         >
           {expiry}
+        </span>
+      )}
+      {item.avisos && avisos > 0 && (
+        <span
+          className="portal-nav-badge portal-nav-badge--info"
+          title={`${plural(avisos, 'aviso da equipa por ler', 'avisos da equipa por ler')}`}
+        >
+          {avisos > 9 ? '9+' : avisos}
         </span>
       )}
       {item.bell && pending > 0 && (
         <span
           className={`portal-nav-badge portal-nav-badge--amber${pulse ? ' portal-nav-badge--pulse' : ''}`}
-          title={`${pending} reserva(s) por atender`}
+          title={`${plural(pending, 'reserva por atender', 'reservas por atender')}`}
         >
           {pending}
         </span>

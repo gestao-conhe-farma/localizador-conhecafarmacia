@@ -2,11 +2,11 @@
 
 import Link from 'next/link'
 import Image from 'next/image'
+import { Fragment } from 'react'
 import { usePathname } from 'next/navigation'
 import { ChevronRight, LogOut, ShieldAlert, ShieldCheck } from 'lucide-react'
 import { logoutPlatform } from '@/lib/actions/platform-auth'
 import { ICONES, iniciais } from '@/components/interno/navegacao'
-import BotaoTema from '@/components/interno/BotaoTema'
 import InternoDrawer from '@/components/interno/InternoDrawer'
 
 /**
@@ -38,6 +38,14 @@ export default function InternoShell({
   const ativo = (href) =>
     pathname === href || (href !== '/interno' && pathname.startsWith(href + '/'))
 
+  // Contexto da topbar (padrão Vercel): a secção actual lê-se ao lado do
+  // nome da área, em vez de uma faixa vazia quando o MFA já está feito.
+  // `/interno/mfa` não é uma secção da NAV — é a conta.
+  const secaoAtual =
+    pathname === '/interno/mfa'
+      ? 'Segundo factor'
+      : nav.find((item) => ativo(item.href))?.label || 'Painel'
+
   const estadoMfa = mfa2
     ? 'Segundo factor verificado'
     : temFactor
@@ -68,19 +76,26 @@ export default function InternoShell({
         </div>
 
         <nav className="interno-nav" aria-label="Secções da área interna">
-          {nav.map((item) => {
+          {nav.map((item, i) => {
             const Icone = ICONES[item.icone] || ICONES.painel
+            const novoGrupo = item.grupo && item.grupo !== nav[i - 1]?.grupo
             return (
-              <Link
-                key={item.href}
-                href={item.href}
-                className={`interno-nav-item${ativo(item.href) ? ' interno-nav-item--active' : ''}`}
-                aria-current={ativo(item.href) ? 'page' : undefined}
-              >
-                <span className="interno-nav-num">{item.num}</span>
-                <Icone size={16} aria-hidden="true" />
-                <span className="interno-nav-text">{item.label}</span>
-              </Link>
+              <Fragment key={item.href}>
+                {novoGrupo && (
+                  <span className="interno-nav-section" aria-hidden="true">
+                    {item.grupo}
+                  </span>
+                )}
+                <Link
+                  href={item.href}
+                  className={`interno-nav-item${ativo(item.href) ? ' interno-nav-item--active' : ''}`}
+                  aria-current={ativo(item.href) ? 'page' : undefined}
+                >
+                  <span className="interno-nav-num">{item.num}</span>
+                  <Icone size={16} aria-hidden="true" />
+                  <span className="interno-nav-text">{item.label}</span>
+                </Link>
+              </Fragment>
             )
           })}
 
@@ -156,23 +171,28 @@ export default function InternoShell({
             >
               {mfa2 ? <ShieldCheck size={19} /> : <ShieldAlert size={19} />}
             </Link>
-            <BotaoTema variante="escuro" />
           </div>
         </header>
 
-        {/* Topbar desktop — só o estado do segundo factor e o tema, à direita */}
+        {/* Topbar desktop — contexto da secção + estado do segundo factor.
+            O tema vive no rodapé do drawer (como no mobile). A topbar
+            mantém-se mesmo com o aal2 confirmado: o contexto é útil e o
+            estado verde fecha o circuito de confiança. */}
         <header className="interno-top">
+          <div className="interno-top-context">
+            <span className="interno-top-crumb">Interno</span>
+            <ChevronRight size={13} className="interno-top-sep" aria-hidden="true" />
+            <span className="interno-top-current">{secaoAtual}</span>
+          </div>
           <div className="interno-top-right">
-            {!mfa2 && (
-              <Link
-                href="/interno/mfa"
-                className="interno-pill interno-pill--warn interno-pill--link"
-                title={tituloMfa}
-              >
-                Só senha
-              </Link>
-            )}
-            <BotaoTema />
+            <Link
+              href="/interno/mfa"
+              className={`interno-pill ${mfa2 ? 'interno-pill--ok' : 'interno-pill--warn'} interno-pill--link`}
+              title={tituloMfa}
+            >
+              <i aria-hidden="true" />
+              {mfa2 ? 'MFA verificado' : temFactor ? 'Só senha' : 'Sem MFA'}
+            </Link>
           </div>
         </header>
 

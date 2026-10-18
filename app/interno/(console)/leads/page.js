@@ -4,6 +4,7 @@ import { getLeads } from '@/lib/actions/leads'
 import SemPermissao from '@/components/interno/SemPermissao'
 import Falha from '@/components/interno/Falha'
 import LeadFunnelActions from '@/components/interno/LeadFunnelActions'
+import InternoKpis from '@/components/interno/Kpis'
 import { dataCurta, estadoLead, haQuanto, pillLead } from '@/components/interno/formatos'
 
 export const metadata = {
@@ -46,27 +47,27 @@ function Linha({ lead, podeMover, podeConverter }) {
 
   return (
     <tr>
-      <td>
+      <td data-rotulo="Farmácia">
         <b>{lead.farmaciaNome}</b>
         <span className="interno-foot-sub">
           {lead.contacto}
           {lead.papel ? ` · ${lead.papel}` : ''}
         </span>
       </td>
-      <td>{lead.municipio || '—'}</td>
-      <td>
+      <td data-rotulo="Município">{lead.municipio || '—'}</td>
+      <td data-rotulo="Estado">
         <span className={pillLead(lead.estado)}>{estadoLead(lead.estado)}</span>
         {ligado && !convertido && (
           <span className="interno-foot-sub"> farmácia criada, convite por sair</span>
         )}
       </td>
-      <td>
+      <td data-rotulo="Contacto">
         <span className="interno-foot-sub">
           {lead.telefone}
           {lead.email ? ` · ${lead.email}` : ''}
         </span>
       </td>
-      <td>
+      <td data-rotulo="Última mudança">
         {mudanca ? (
           <>
             {haQuanto(mudanca.quando)}
@@ -79,14 +80,14 @@ function Linha({ lead, podeMover, podeConverter }) {
           </span>
         )}
       </td>
-      <td>
+      <td data-rotulo="Entrou">
         {dataCurta(lead.criadoEm)}
         {lead.onboardedEm && (
           <span className="interno-foot-sub"> fechou {haQuanto(lead.onboardedEm)}</span>
         )}
       </td>
-      <td>
-        <div className="interno-row-acts">
+      <td data-rotulo="Acções" className="interno-table-acts">
+        <div className="interno-row-acts interno-row-acts--lead">
           {/* Converter é a acção que CRIA (farmácia + conta + funil): tem
               ecrã próprio, como o primeiro plano — não é um diálogo. */}
           {podeConverter && !convertido && !ligado && (
@@ -169,7 +170,7 @@ export default async function LeadsPage({ searchParams }) {
 
   const tabela = (linhas) => (
     <div className="interno-table-scroll">
-      <table className="interno-table">
+      <table className="interno-table interno-table--leads">
         <thead>
           <tr>
             <th>Farmácia</th>
@@ -207,15 +208,7 @@ export default async function LeadsPage({ searchParams }) {
         </div>
       </div>
 
-      <div className="interno-grid3">
-        {kpis.map((k) => (
-          <div key={k.rotulo} className="interno-box interno-box--pad">
-            <span className="interno-sec-head-b">{k.rotulo}</span>
-            <b className="interno-title">{k.valor}</b>
-            <span className="interno-foot-sub">{k.nota}</span>
-          </div>
-        ))}
-      </div>
+      <InternoKpis items={kpis} />
 
       <div className="interno-box">
         <form className="interno-filters" method="get">
@@ -230,7 +223,7 @@ export default async function LeadsPage({ searchParams }) {
               ))}
             </select>
           </label>
-          <button type="submit" className="interno-btn interno-btn--small">
+          <button type="submit" className="interno-btn interno-btn--ghost interno-btn--small">
             Filtrar
           </button>
           {filtro && (

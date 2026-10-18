@@ -5,6 +5,7 @@ import SemPermissao from '@/components/interno/SemPermissao'
 import Falha from '@/components/interno/Falha'
 import AuditTable from '@/components/interno/AuditTable'
 import AuditExport from '@/components/interno/AuditExport'
+import { plural } from '@/lib/texto'
 
 export const metadata = {
   title: 'Auditoria — Equipa Conheça Farmácia',
@@ -171,7 +172,7 @@ export default async function AuditoriaPage({ searchParams }) {
             <input className="interno-input" type="date" name="ate" defaultValue={filtros.ate} />
           </label>
 
-          <button type="submit" className="interno-btn interno-btn--small">
+          <button type="submit" className="interno-btn interno-btn--ghost interno-btn--small">
             Filtrar
           </button>
           {filtroActivo && (
@@ -189,7 +190,8 @@ export default async function AuditoriaPage({ searchParams }) {
         <div className="interno-sec-head">
           <h2>{filtroActivo ? 'Trilha filtrada' : 'Trilha completa'}</h2>
           <span className="interno-sec-head-b">
-            {total} registo(s){filtroActivo ? ' com estes filtros' : ''}
+            {plural(total, 'registo', 'registos')}
+            {filtroActivo ? ' com estes filtros' : ''}
           </span>
         </div>
 

@@ -4,6 +4,7 @@ import { getSubscriptions, getPlanHistory } from '@/lib/actions/platform-plans'
 import { describeAction } from '@/lib/platform/permissions'
 import SemPermissao from '@/components/interno/SemPermissao'
 import Falha from '@/components/interno/Falha'
+import InternoKpis from '@/components/interno/Kpis'
 import {
   dataHora,
   haQuanto,
@@ -115,7 +116,7 @@ export default async function PlanosPage() {
     {
       rotulo: 'Por atribuir',
       valor: totais.semPlano,
-      nota: 'farmácia(s) sem plano — primeira coisa a fazer',
+      nota: 'sem plano — a primeira coisa a fazer',
     },
     { rotulo: 'Em experiência', valor: totais.trial, nota: 'a correr, dentro do prazo' },
     { rotulo: 'Em graça', valor: totais.graca, nota: 'pagamento atrasado, nada cortado' },
@@ -150,15 +151,7 @@ export default async function PlanosPage() {
         </div>
       </div>
 
-      <div className="interno-grid3">
-        {kpis.map((k) => (
-          <div key={k.rotulo} className="interno-box interno-box--pad">
-            <span className="interno-sec-head-b">{k.rotulo}</span>
-            <b className="interno-title">{k.valor}</b>
-            <span className="interno-foot-sub">{k.nota}</span>
-          </div>
-        ))}
-      </div>
+      <InternoKpis items={kpis} />
 
       {/* ---- Por atribuir: o primeiro plano das farmácias recém-criadas ---- */}
       <div className="interno-box">
@@ -191,23 +184,23 @@ export default async function PlanosPage() {
               <tbody>
                 {semPlano.map((r) => (
                   <tr key={r.id}>
-                    <td>
+                    <td data-rotulo="Farmácia">
                       <Link href={`/interno/farmacias/${r.id}`} className="interno-table-link">
                         {r.name}
                       </Link>
                       <span className="interno-foot-sub">{r.slug}</span>
                     </td>
-                    <td>{r.municipio || '—'}</td>
-                    <td>
+                    <td data-rotulo="Município">{r.municipio || '—'}</td>
+                    <td data-rotulo="Estado">
                       <span className={pillActiva(r.active)}>
                         {r.active ? 'Activa' : 'Inactiva'}
                       </span>
                     </td>
-                    <td>
+                    <td data-rotulo="Criada">
                       {haQuanto(r.criadaEm) || '—'}
                       <span className="interno-foot-sub"> sem plano desde então</span>
                     </td>
-                    <td>
+                    <td data-rotulo="Atribuir">
                       {podeAtribuir ? (
                         <Link
                           href={`/interno/planos/primeiro-plano/${r.id}`}
@@ -259,7 +252,7 @@ export default async function PlanosPage() {
               <tbody>
                 {comPlano.map((r) => (
                   <tr key={r.id}>
-                    <td>
+                    <td data-rotulo="Farmácia">
                       <Link href={`/interno/farmacias/${r.id}`} className="interno-table-link">
                         {r.name}
                       </Link>
@@ -268,16 +261,16 @@ export default async function PlanosPage() {
                         {r.active ? '' : ' · inactiva'}
                       </span>
                     </td>
-                    <td>
+                    <td data-rotulo="Plano">
                       <span className={pillPlano(r.plano)}>{textoPlano(r.plano)}</span>
                     </td>
-                    <td>
+                    <td data-rotulo="Estado">
                       {r.plano.statusLabel}
                       {r.plano.emVigor && r.plano.emVigor !== r.plano.planCode && (
                         <span className="interno-foot-sub"> em vigor: {r.plano.emVigorNome}</span>
                       )}
                     </td>
-                    <td>
+                    <td data-rotulo="Prazo">
                       {r.plano.fimEm ? (
                         <>
                           {prazo(r.plano.fimEm)}
@@ -298,7 +291,7 @@ export default async function PlanosPage() {
                         '—'
                       )}
                     </td>
-                    <td>
+                    <td data-rotulo="Notas internas">
                       {r.notas ? (
                         <span className="interno-foot-sub" title={r.notas}>
                           {r.notas.length > 70 ? `${r.notas.slice(0, 70)}…` : r.notas}
@@ -307,7 +300,7 @@ export default async function PlanosPage() {
                         <span className="interno-foot-sub">—</span>
                       )}
                     </td>
-                    <td>
+                    <td data-rotulo="Alterado">
                       {r.plano.updatedAt ? (
                         <>
                           {dataHora(r.plano.updatedAt)}
@@ -317,7 +310,7 @@ export default async function PlanosPage() {
                         '—'
                       )}
                     </td>
-                    <td>
+                    <td data-rotulo="Abrir">
                       <Link
                         href={`/interno/farmacias/${r.id}`}
                         className="interno-btn interno-btn--ghost interno-btn--small"

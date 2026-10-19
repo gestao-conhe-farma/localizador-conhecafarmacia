@@ -266,43 +266,47 @@ export default function RestockPanel() {
   // Linha destacada por deep-link ?drug= (apaga-se sozinha).
   const [highlightId, setHighlightId] = useState(null)
   useEffect(() => {
-    if (autofocusDone || items === null) return
-    const drugId = searchParams.get('drug')
-    const q = (searchParams.get('q') || '').trim().toLowerCase()
-    // ?drug= (validade): isola pelo id e força «Todos» — o item tem saldo,
-    // o chip «Para repor» escondia-o.
-    if (drugId) {
-      const it = (items || []).find((row) => row.drug_id === drugId)
-      setAutofocusDone(true)
-      if (it) {
-        setFilter('all')
-        setQuery(it.name)
-        setHighlightId(drugId)
-        setTimeout(() => setHighlightId(null), 6000)
+    // Microtask: setState síncrono no corpo do effect é sinalizado pelo
+    // react-hooks/set-state-in-effect (mesmo padrão do AttentionPanel).
+    queueMicrotask(() => {
+      if (autofocusDone || items === null) return
+      const drugId = searchParams.get('drug')
+      const q = (searchParams.get('q') || '').trim().toLowerCase()
+      // ?drug= (validade): isola pelo id e força «Todos» — o item tem saldo,
+      // o chip «Para repor» escondia-o.
+      if (drugId) {
+        const it = (items || []).find((row) => row.drug_id === drugId)
+        setAutofocusDone(true)
+        if (it) {
+          setFilter('all')
+          setQuery(it.name)
+          setHighlightId(drugId)
+          setTimeout(() => setHighlightId(null), 6000)
+          queueMicrotask(() => {
+            document.querySelector(`input[aria-label="Unidades recebidas de ${it.name}"]`)?.focus()
+          })
+        }
+        return
+      }
+      if (!q) {
+        setAutofocusDone(true)
+        return
+      }
+      const matches = (items || []).filter(
+        (it) =>
+          it.name?.toLowerCase().includes(q) ||
+          it.molecule?.toLowerCase().includes(q) ||
+          [it.form, it.dosage].filter(Boolean).join(' ').toLowerCase().includes(q),
+      )
+      if (matches.length === 1) {
+        setAutofocusDone(true)
         queueMicrotask(() => {
-          document.querySelector(`input[aria-label="Unidades recebidas de ${it.name}"]`)?.focus()
+          document
+            .querySelector(`input[aria-label="Unidades recebidas de ${matches[0].name}"]`)
+            ?.focus()
         })
       }
-      return
-    }
-    if (!q) {
-      setAutofocusDone(true)
-      return
-    }
-    const matches = (items || []).filter(
-      (it) =>
-        it.name?.toLowerCase().includes(q) ||
-        it.molecule?.toLowerCase().includes(q) ||
-        [it.form, it.dosage].filter(Boolean).join(' ').toLowerCase().includes(q),
-    )
-    if (matches.length === 1) {
-      setAutofocusDone(true)
-      queueMicrotask(() => {
-        document
-          .querySelector(`input[aria-label="Unidades recebidas de ${matches[0].name}"]`)
-          ?.focus()
-      })
-    }
+    })
   }, [items, searchParams, autofocusDone])
 
   useEffect(() => {

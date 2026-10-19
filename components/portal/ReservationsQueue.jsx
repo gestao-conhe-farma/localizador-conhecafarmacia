@@ -1,7 +1,8 @@
 'use client'
 
-import { useCallback, useEffect, useMemo, useRef, useState } from 'react'
+import { useCallback, useEffect, useMemo, useState } from 'react'
 import { useSearchParams } from 'next/navigation'
+import { AnimatePresence } from 'motion/react'
 import { createClient } from '@/lib/supabase/client'
 import {
   getMyReservations,
@@ -150,6 +151,30 @@ const DOT_COLOR = {
  * envia do WhatsApp da própria farmácia e marcamos client_contacted_at.
  * Realtime: a fila refresca sozinha (canal filtrado por pharmacy_id).
  */
+const DIA_RE = /^\d{4}-\d{2}-\d{2}$/
+
+/** `?dia=` válido (YYYY-MM-DD) ou null. */
+function diaDaUrl(valor) {
+  return DIA_RE.test(valor || '') ? valor : null
+}
+
+/** Mês e dia selecionado para um dia ISO (deep-link `?dia=`). */
+function calDoDia(iso) {
+  const d = new Date(`${iso}T00:00:00`)
+  return { y: d.getFullYear(), m: d.getMonth(), sel: iso }
+}
+
+/** Mês e dia de hoje, em hora local. */
+function calDeHoje() {
+  const d = new Date()
+  const p = (n) => String(n).padStart(2, '0')
+  return {
+    y: d.getFullYear(),
+    m: d.getMonth(),
+    sel: `${d.getFullYear()}-${p(d.getMonth() + 1)}-${p(d.getDate())}`,
+  }
+}
+
 export default function ReservationsQueue() {
   const [rows, setRows] = useState(null)
   const [filter, setFilter] = useState('all')
@@ -169,46 +194,40 @@ export default function ReservationsQueue() {
   const [detailId, setDetailId] = useState(null)
   // Vista lista/calendário (viewtoggle do mock) + pesquisa no cabeçalho.
   const [view, setView] = useState('lista')
-  const [q, setQ] = useState('')
   // Deep-link da pesquisa global da top-bar (`?q=<cliente/medicamento>`).
   const searchParams = useSearchParams()
   const urlQ = searchParams.get('q')
-  useEffect(() => {
-    if (urlQ) setQ(urlQ)
-  }, [urlQ])
+  const [q, setQ] = useState(urlQ || '')
+  const [qDaUrl, setQDaUrl] = useState(urlQ)
   // Deep-link do calendário do dashboard (`?dia=YYYY-MM-DD`): a fila
   // abre filtrada ao movimento desse dia — reservas PEDIDAS ou
   // CONCLUÍDAS nele (a vista de calendário daqui agrupa por criação; o
   // painel do dashboard conta as concluídas — o filtro cobre as duas).
   const urlDia = searchParams.get('dia')
-  const [dia, setDia] = useState(null)
-  useEffect(() => {
-    setDia(/^\d{4}-\d{2}-\d{2}$/.test(urlDia || '') ? urlDia : null)
-  }, [urlDia])
+  const [dia, setDia] = useState(() => diaDaUrl(urlDia))
+  const [diaDaUrlAnterior, setDiaDaUrlAnterior] = useState(urlDia)
   // Menu kebab aberto (id da linha).
   const [kebabId, setKebabId] = useState(null)
-  // Calendário: mês/selector resolvidos depois de montar — Date.now()
-  // no render é impuro (react-hooks/purity), o effect preenche-os.
-  const [cal, setCal] = useState(null) // { y, m, sel }
-  useEffect(() => {
-    const d = new Date()
-    const p = (n) => String(n).padStart(2, '0')
-    setCal({
-      y: d.getFullYear(),
-      m: d.getMonth(),
-      sel: `${d.getFullYear()}-${p(d.getMonth() + 1)}-${p(d.getDate())}`,
-    })
-  }, [])
-  // `?dia=` também selecciona o dia na vista de calendário (e o mês
-  // passa a ser o do dia) — o deep-link abre o dia certo, não «hoje».
-  useEffect(() => {
-    if (!dia) return
-    const d = new Date(`${dia}T00:00:00`)
-    setCal({ y: d.getFullYear(), m: d.getMonth(), sel: dia })
-  }, [dia])
+  // Calendário: { y, m, sel }. Começa em hoje, ou no dia do deep-link
+  // (`?dia=` também muda o mês mostrado). Só é usado na vista de
+  // calendário, que o servidor nunca renderiza — não há desfasamento.
+  const [cal, setCal] = useState(() => (dia ? calDoDia(dia) : calDeHoje()))
 
-  // Links wa.me por reserva (montados no cliente a partir dos dados).
-  const pharmacyNameRef = useRef('')
+  // Sincroniza com a URL durante o render (sem effect): quando o
+  // parâmetro muda, atualiza o estado derivado.
+  if (urlQ !== qDaUrl) {
+    setQDaUrl(urlQ)
+    if (urlQ) setQ(urlQ)
+  }
+  if (urlDia !== diaDaUrlAnterior) {
+    setDiaDaUrlAnterior(urlDia)
+    const novo = diaDaUrl(urlDia)
+    setDia(novo)
+    if (novo) setCal(calDoDia(novo))
+  }
+
+  // Nome da farmácia (vem com as reservas) — usado nas mensagens wa.me.
+  const [pharmacyName, setPharmacyName] = useState('')
 
   /** Mensagem de sucesso que se apaga sozinha (o mesmo toast serve de erro). */
   const flash = (msg) => {
@@ -216,21 +235,31 @@ export default function ReservationsQueue() {
     setTimeout(() => setToast((cur) => (cur === msg ? '' : cur)), 4000)
   }
 
-  const load = useCallback(async () => {
-    const res = await getMyReservations()
+  // Aplica a resposta de getMyReservations (carregamento inicial e realtime).
+  const aplicarResultado = useCallback((res) => {
     if (res.ok) {
       setRows(res.reservations)
-      pharmacyNameRef.current = res.pharmacyName || ''
+      setPharmacyName(res.pharmacyName || '')
     } else {
       setRows([])
       setToast(ERRORES[res.error] || ERRORES.FALHA_CARREGAR)
     }
   }, [])
 
+  const load = useCallback(async () => {
+    aplicarResultado(await getMyReservations())
+  }, [aplicarResultado])
+
+  // Carregamento inicial: a resposta é tratada no callback da promise.
   useEffect(() => {
-    load()
-    // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [])
+    let ativo = true
+    getMyReservations().then((res) => {
+      if (ativo) aplicarResultado(res)
+    })
+    return () => {
+      ativo = false
+    }
+  }, [aplicarResultado])
 
   // Realtime: INSERT/UPDATE em reservations desta farmácia refresca a fila.
   // Debounce 500 ms — a expiração do cron pode tocar muitas linhas de uma vez.
@@ -295,7 +324,7 @@ export default function ReservationsQueue() {
       confirmed_quantity: r.confirmed_quantity,
       requester_name: r.requester_name,
       drugName: r.drugs?.name,
-      pharmacyName: pharmacyNameRef.current,
+      pharmacyName,
       saleUnit: r.stock_sale_options?.unit,
       salePack: r.stock_sale_options?.pack_size,
       saleUnitPrice: r.stock_sale_options?.price,
@@ -1189,19 +1218,22 @@ export default function ReservationsQueue() {
       {/* Pop-up de detalhe — o mesmo padrão do modal de stock. A reserva
           vem sempre de rows (dados mais recentes, incluindo optimistic
           updates), nunca do snapshot do clique. */}
-      {detailId &&
-        (() => {
-          const detail = rows.find((r) => r.id === detailId)
-          return detail ? (
-            <ReservationDetailModal
-              reservation={detail}
-              pharmacyName={pharmacyNameRef.current}
-              busy={busyId === detail.id}
-              onClose={() => setDetailId(null)}
-              onWhatsApp={() => openWhatsApp(detail)}
-            />
-          ) : null
-        })()}
+      <AnimatePresence>
+        {detailId &&
+          (() => {
+            const detail = rows.find((r) => r.id === detailId)
+            return detail ? (
+              <ReservationDetailModal
+                key="res-detail"
+                reservation={detail}
+                pharmacyName={pharmacyName}
+                busy={busyId === detail.id}
+                onClose={() => setDetailId(null)}
+                onWhatsApp={() => openWhatsApp(detail)}
+              />
+            ) : null
+          })()}
+      </AnimatePresence>
     </section>
   )
 }

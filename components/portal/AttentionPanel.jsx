@@ -134,8 +134,8 @@ export default function AttentionPanel({ pharmacyId }) {
     () => (feed ? feed.restock.filter((it) => !isDismissed(it)) : []),
     [feed, isDismissed],
   )
-  const expiry = feed?.expiry || []
-  const stale = feed?.stale || []
+  const expiry = useMemo(() => feed?.expiry || [], [feed])
+  const stale = useMemo(() => feed?.stale || [], [feed])
 
   const total = restock.length + expiry.length + stale.length
 

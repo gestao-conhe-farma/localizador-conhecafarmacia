@@ -59,7 +59,7 @@ export default function SalesReport() {
   const [today, setToday] = useState(null)
 
   useEffect(() => {
-    setToday(new Date().toISOString().slice(0, 10))
+    queueMicrotask(() => setToday(new Date().toISOString().slice(0, 10)))
   }, [])
 
   const load = async (d, sc) => {
@@ -74,8 +74,7 @@ export default function SalesReport() {
   }
 
   useEffect(() => {
-    load(days, scope)
-    // eslint-disable-next-line react-hooks/exhaustive-deps
+    queueMicrotask(() => load(days, scope))
   }, [days, scope])
 
   /**

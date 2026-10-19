@@ -126,6 +126,8 @@ export default function IntegrationPanel() {
   const [tab, setTab] = useState('chaves')
   const [data, setData] = useState(null)
   const [erro, setErro] = useState(null)
+  // Momento de montagem: referência para «expirada» (evita Date.now() no render).
+  const [agora] = useState(() => Date.now())
 
   const carregar = async () => {
     const res = await getIntegrationOverview()
@@ -134,7 +136,10 @@ export default function IntegrationPanel() {
   }
 
   useEffect(() => {
-    carregar()
+    getIntegrationOverview().then((res) => {
+      setData(res)
+      setErro(res.ok ? null : res.error)
+    })
   }, [])
 
   return (
@@ -276,7 +281,7 @@ function Chaves({ data, onChanged }) {
                     <span className="portal-citem-time">
                       {k.revoked_at
                         ? 'revogada'
-                        : k.expires_at && new Date(k.expires_at).getTime() < Date.now()
+                        : k.expires_at && new Date(k.expires_at).getTime() < agora
                           ? 'expirada'
                           : k.expires_at
                             ? `expira ${dia(k.expires_at)}`

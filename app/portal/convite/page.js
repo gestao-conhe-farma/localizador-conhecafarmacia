@@ -49,7 +49,7 @@ export default async function ConvitePage({ searchParams }) {
   const confirmado = params?.convite === '1'
 
   return (
-    <div className="min-h-dvh flex flex-col items-center justify-center gap-8 px-5 py-12 bg-brand-bg">
+    <div className="min-h-dvh flex flex-col items-center justify-center gap-8 px-5 py-12 bg-brand-bg portal-auth">
       <Link href="/" aria-label="Conheça Farmácia">
         <Image
           src="/logo/logo-principal-verde.png"

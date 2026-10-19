@@ -26,7 +26,7 @@ export default async function StaffProfilesPage() {
   if (!session) redirect('/portal/login')
 
   return (
-    <div className="min-h-dvh flex flex-col items-center justify-center gap-7 px-5 py-12 bg-brand-bg">
+    <div className="min-h-dvh flex flex-col items-center justify-center gap-7 px-5 py-12 bg-brand-bg portal-auth">
       {/* Ecrã centrado (modelo A). A marca fica acima do bloco editorial;
           a largura (46rem) é imposta pelo próprio StaffPicker, que também
           traz o eyebrow «Acesso ao balcão» e o título serifado. */}

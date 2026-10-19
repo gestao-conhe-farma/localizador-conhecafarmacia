@@ -211,7 +211,7 @@ export default function PortalTour({ userSub }) {
   // Navega para a página do passo e mede o alvo quando existir.
   useEffect(() => {
     if (stepIdx < 0) return
-    setReady(false)
+    queueMicrotask(() => setReady(false))
     const s = STEPS[stepIdx]
     if (!window.location.pathname.startsWith(s.href)) {
       router.push(s.href)

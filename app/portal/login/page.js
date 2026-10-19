@@ -21,7 +21,7 @@ export default async function PortalLoginPage() {
   if (session) redirect('/portal')
 
   return (
-    <div className="min-h-dvh grid lg:grid-cols-2 bg-brand-bg">
+    <div className="min-h-dvh grid lg:grid-cols-2 bg-brand-bg portal-auth">
       {/* Painel estrutural escuro — a mesma cor da sidebar do portal */}
       <div className="hidden lg:flex flex-col justify-between bg-[#003528] text-white p-12">
         <Link href="/" aria-label="Conheça Farmácia">

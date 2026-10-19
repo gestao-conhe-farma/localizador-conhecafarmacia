@@ -176,9 +176,11 @@ export default function PortalSidebar({
   // avisos também: o layout lê o número no servidor, mas uma navegação
   // entre páginas do portal não volta a renderizar o layout.
   useEffect(() => {
-    refreshCount()
-    refreshAttention()
-    refreshAvisos()
+    queueMicrotask(() => {
+      refreshCount()
+      refreshAttention()
+      refreshAvisos()
+    })
   }, [pathname, refreshCount, refreshAttention, refreshAvisos, pharmacyId])
 
   // Abrir /portal/avisos marca os avisos como lidos no painel; o painel
@@ -193,8 +195,10 @@ export default function PortalSidebar({
   // Fecha o drawer sempre que a rota muda — e também o menu do fundo
   // (trocar de perfil é uma navegação: o menu não pode seguir o clique).
   useEffect(() => {
-    onClose?.()
-    setMenuAberto(false)
+    queueMicrotask(() => {
+      onClose?.()
+      setMenuAberto(false)
+    })
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [pathname])
 
@@ -483,7 +487,7 @@ function NavGrupo({ item, num, pathname, onClose }) {
   const [aberto, setAberto] = useState(grupoAtivo)
 
   useEffect(() => {
-    if (grupoAtivo) setAberto(true)
+    if (grupoAtivo) queueMicrotask(() => setAberto(true))
   }, [grupoAtivo])
 
   // O tour de onboarding pede para abrir o submenu (passo 3 — o alvo

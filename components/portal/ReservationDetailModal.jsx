@@ -3,6 +3,8 @@
 import { useEffect, useState } from 'react'
 import { trackingUrl } from '@/lib/reservation-messages'
 import { CheckIcon } from '@/components/ui/Icon'
+import { motion } from 'motion/react'
+import { modalCardMotion, modalFadeMotion } from '@/components/ui/modalMotion'
 
 /**
  * Pop-up de detalhe da reserva — o mesmo padrão visual do modal de stock
@@ -142,9 +144,15 @@ export default function ReservationDetailModal({
   }
 
   return (
-    <div className="stock-modal" role="dialog" aria-modal="true" aria-labelledby="res-detail-title">
+    <motion.div
+      className="stock-modal"
+      role="dialog"
+      aria-modal="true"
+      aria-labelledby="res-detail-title"
+      {...modalFadeMotion}
+    >
       <div className="stock-modal-scrim" onClick={onClose} aria-hidden="true" />
-      <div className="stock-modal-card res-detail-card">
+      <motion.div className="stock-modal-card res-detail-card" {...modalCardMotion}>
         <div className="portal-section-head" style={{ marginBottom: 0 }}>
           <h3 id="res-detail-title" className="portal-h2">
             {d.name || 'Reserva'}
@@ -301,7 +309,7 @@ export default function ReservationDetailModal({
             </button>
           )}
         </div>
-      </div>
-    </div>
+      </motion.div>
+    </motion.div>
   )
 }

@@ -28,6 +28,8 @@ export default function PendingReservationsCard() {
   const [rows, setRows] = useState(null)
   const [busyId, setBusyId] = useState(null)
   const [confirmingId, setConfirmingId] = useState(null)
+  // Momento de montagem, para a idade dos pedidos (evita Date.now() no render).
+  const [agora] = useState(() => Date.now())
   const [confirmQty, setConfirmQty] = useState('')
   const [rejectingId, setRejectingId] = useState(null)
   const [otherOpen, setOtherOpen] = useState(false)
@@ -101,7 +103,13 @@ export default function PendingReservationsCard() {
     <>
       {rows === null && (
         <div className="portal-rows-empty" role="status">
-          A carregar reservas…
+          <span className="sr-only">A carregar reservas…</span>
+          <span className="portal-skeleton" aria-hidden="true" style={{ height: '0.875rem', width: '55%' }} />
+          <span
+            className="portal-skeleton"
+            aria-hidden="true"
+            style={{ height: '0.875rem', width: '35%', marginTop: '0.5rem' }}
+          />
         </div>
       )}
 
@@ -115,7 +123,7 @@ export default function PendingReservationsCard() {
 
       {pend.map((r) => {
         const d = r.drugs || {}
-        const idade = Date.now() - new Date(r.created_at).getTime()
+        const idade = agora - new Date(r.created_at).getTime()
         const stCls = idade > 48 * 3600 * 1000 ? 'bad' : 'warn'
         const meta = [
           r.requester_name,

@@ -210,6 +210,7 @@ export default function PortalSearch() {
                     type="button"
                     className="portal-search-item"
                     role="option"
+                    aria-selected={false}
                     onClick={() => go(item)}
                   >
                     <b>{item.label}</b>
@@ -219,7 +220,15 @@ export default function PortalSearch() {
               </div>
             ))}
             {meds === null && q.trim() && (
-              <p className="portal-search-empty">A carregar medicamentos e reservas…</p>
+              <div className="portal-search-empty" role="status">
+                <span className="sr-only">A carregar medicamentos e reservas…</span>
+                <span className="portal-skeleton" aria-hidden="true" style={{ height: '0.75rem', width: '70%' }} />
+                <span
+                  className="portal-skeleton"
+                  aria-hidden="true"
+                  style={{ height: '0.75rem', width: '45%', marginTop: '0.5rem' }}
+                />
+              </div>
             )}
           </div>
         </>

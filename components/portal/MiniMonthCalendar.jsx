@@ -140,9 +140,9 @@ function resumoDia(e) {
  * mês. Enter/Espaço escolhem (o mesmo que clicar).
  */
 export default function MiniMonthCalendar({ events = {}, hint = '', today: hojeProp = '' }) {
-  // "Hoje": entra no render (por isso vem por prop ou por efeito) —
-  // react-hooks/purity não deixa chamar Date.now() no render.
-  const [today, setToday] = useState(hojeProp)
+  // "Hoje" vem sempre do servidor (prop `today`): é o único valor
+  // usado no render, sem efeito a resolver a data no cliente.
+  const today = hojeProp
   // Mês em visualização: ano+mês em estado (o ‹ › navega).
   const [cursor, setCursor] = useState(() => mesDe(hojeProp))
   // Dia escolhido ('YYYY-MM-DD') — o painel do dia está sempre visível, como
@@ -151,15 +151,6 @@ export default function MiniMonthCalendar({ events = {}, hint = '', today: hojeP
   // Dia com o foco do teclado (roving tabindex).
   const [foco, setFoco] = useState(null)
   const gridRef = useRef(null)
-
-  // Só quando não há `today` do servidor: resolver "hoje" depois de montar.
-  useEffect(() => {
-    if (hojeProp) return
-    const iso = new Date().toISOString().slice(0, 10)
-    setToday(iso)
-    setCursor(mesDe(iso))
-    setEscolhido((s) => s || iso)
-  }, [hojeProp])
 
   // Andar com as setas pode mudar de mês (borda da semana/mês): o render
   // seguinte traz a célula do dia novo e o foco vai atrás dela.

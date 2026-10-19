@@ -20,6 +20,8 @@ import { CloseIcon } from '@/components/ui/Icon'
 import Notice from '@/components/ui/Notice'
 import StateLabel from '@/components/portal/StateLabel'
 import RestockDrawer from '@/components/portal/RestockDrawer'
+import { AnimatePresence, motion } from 'motion/react'
+import { modalCardMotion, modalFadeMotion } from '@/components/ui/modalMotion'
 
 /**
  * Opções de venda (0012 — fracionamento). Defaults inteligentes pela
@@ -244,14 +246,15 @@ function StockEditModal({ item, saving, onClose, onSave, onSaveOptions, onRetire
   }, [onClose])
 
   return (
-    <div
+    <motion.div
       className="stock-modal"
       role="dialog"
       aria-modal="true"
       aria-labelledby="stock-modal-title"
+      {...modalFadeMotion}
     >
       <div className="stock-modal-scrim" onClick={onClose} aria-hidden="true" />
-      <div className="stock-modal-card">
+      <motion.div className="stock-modal-card" {...modalCardMotion}>
         <div className="portal-section-head" style={{ marginBottom: 0 }}>
           <h3 id="stock-modal-title" className="portal-h2">
             {item.name}
@@ -651,8 +654,8 @@ function StockEditModal({ item, saving, onClose, onSave, onSaveOptions, onRetire
             </button>
           </div>
         </form>
-      </div>
-    </div>
+      </motion.div>
+    </motion.div>
   )
 }
 
@@ -672,14 +675,15 @@ function ConfirmRetire({ item, busy, onCancel, onConfirm }) {
   }, [onCancel])
 
   return (
-    <div
+    <motion.div
       className="stock-modal"
       role="dialog"
       aria-modal="true"
       aria-labelledby="confirm-retire-title"
+      {...modalFadeMotion}
     >
       <div className="stock-modal-scrim" onClick={onCancel} aria-hidden="true" />
-      <div className="stock-modal-card confirm-retire-card">
+      <motion.div className="stock-modal-card confirm-retire-card" {...modalCardMotion}>
         <div className="confirm-retire-icon" aria-hidden="true">
           <CloseIcon size={18} />
         </div>
@@ -704,8 +708,8 @@ function ConfirmRetire({ item, busy, onCancel, onConfirm }) {
             {busy ? 'A retirar…' : 'Retirar do catálogo'}
           </button>
         </div>
-      </div>
-    </div>
+      </motion.div>
+    </motion.div>
   )
 }
 
@@ -726,7 +730,7 @@ export default function StockPanel({ compact = false, isManager = false }) {
   const searchParams = useSearchParams()
   const urlQ = searchParams.get('q')
   useEffect(() => {
-    if (urlQ) setQuery(urlQ)
+    if (urlQ) queueMicrotask(() => setQuery(urlQ))
   }, [urlQ])
   const [filter, setFilter] = useState('all')
   // Deep-link do chip (`?f=in|pending|…`) — as legendas do donut
@@ -734,7 +738,7 @@ export default function StockPanel({ compact = false, isManager = false }) {
   // estado que a cor representa.
   const urlF = searchParams.get('f')
   useEffect(() => {
-    if (urlF) setFilter(FILTER_IDS.includes(urlF) ? urlF : 'all')
+    if (urlF) queueMicrotask(() => setFilter(FILTER_IDS.includes(urlF) ? urlF : 'all'))
   }, [urlF])
   // Ordenação do grid — 'recent' é a de sempre: disponíveis primeiro.
   const [sort, setSort] = useState('recent')
@@ -782,7 +786,7 @@ export default function StockPanel({ compact = false, isManager = false }) {
   }, [])
 
   useEffect(() => {
-    load()
+    queueMicrotask(() => load())
   }, [load])
 
   const filtered = useMemo(() => {
@@ -896,11 +900,13 @@ export default function StockPanel({ compact = false, isManager = false }) {
   // volta a avisar. Nada disto impõe a decisão aos colegas: é por browser.
   const [bannerAcks, setBannerAcks] = useState({})
   useEffect(() => {
+    let stored = {}
     try {
-      setBannerAcks(JSON.parse(window.localStorage.getItem('cf-stock-banner-acks') || '{}'))
+      stored = JSON.parse(window.localStorage.getItem('cf-stock-banner-acks') || '{}')
     } catch {
       /* sem storage: banners sempre visíveis — inofensivo */
     }
+    queueMicrotask(() => setBannerAcks(stored))
   }, [])
   const dismissBanner = (kind, data) => {
     const next = { ...bannerAcks, [kind]: { ...data, ts: Date.now() } }
@@ -924,7 +930,7 @@ export default function StockPanel({ compact = false, isManager = false }) {
     ) {
       const next = { ...bannerAcks }
       delete next.expiry
-      setBannerAcks(next)
+      queueMicrotask(() => setBannerAcks(next))
       try {
         window.localStorage.setItem('cf-stock-banner-acks', JSON.stringify(next))
       } catch {
@@ -938,7 +944,7 @@ export default function StockPanel({ compact = false, isManager = false }) {
     if (staleCount < (a.count || 0)) {
       const next = { ...bannerAcks }
       delete next.stale
-      setBannerAcks(next)
+      queueMicrotask(() => setBannerAcks(next))
       try {
         window.localStorage.setItem('cf-stock-banner-acks', JSON.stringify(next))
       } catch {
@@ -1711,64 +1717,74 @@ export default function StockPanel({ compact = false, isManager = false }) {
         </p>
       )}
 
-      {editing === 'new' && (
-        <div
-          className="stock-modal"
-          role="dialog"
-          aria-modal="true"
-          aria-labelledby="stock-modal-new-title"
-        >
-          <div className="stock-modal-scrim" onClick={() => setEditing(null)} aria-hidden="true" />
-          <div className="stock-modal-card">
-            <div className="portal-section-head" style={{ marginBottom: 0 }}>
-              <h3 id="stock-modal-new-title" className="portal-h2">
-                Novo medicamento
-              </h3>
-              <button
-                type="button"
-                className="btn btn-secondary btn-small"
-                onClick={() => setEditing(null)}
-                aria-label="Fechar"
-              >
-                Fechar
-              </button>
-            </div>
-            <DrugCreateForm
-              embedded
-              onCreated={() => {
-                setEditing(null)
-                load() // o novo fármaco entra já na lista
-              }}
+      <AnimatePresence>
+        {editing === 'new' && (
+          <motion.div
+            key="stock-new"
+            className="stock-modal"
+            role="dialog"
+            aria-modal="true"
+            aria-labelledby="stock-modal-new-title"
+            {...modalFadeMotion}
+          >
+            <div
+              className="stock-modal-scrim"
+              onClick={() => setEditing(null)}
+              aria-hidden="true"
             />
-          </div>
-        </div>
-      )}
+            <motion.div className="stock-modal-card" {...modalCardMotion}>
+              <div className="portal-section-head" style={{ marginBottom: 0 }}>
+                <h3 id="stock-modal-new-title" className="portal-h2">
+                  Novo medicamento
+                </h3>
+                <button
+                  type="button"
+                  className="btn btn-secondary btn-small"
+                  onClick={() => setEditing(null)}
+                  aria-label="Fechar"
+                >
+                  Fechar
+                </button>
+              </div>
+              <DrugCreateForm
+                embedded
+                onCreated={() => {
+                  setEditing(null)
+                  load() // o novo fármaco entra já na lista
+                }}
+              />
+            </motion.div>
+          </motion.div>
+        )}
 
-      {editing && editing !== 'new' && (
-        <StockEditModal
-          item={editing}
-          saving={savingId != null}
-          onClose={() => setEditing(null)}
-          onSave={(patch) => saveFromModal(editing, patch)}
-          onRetire={(it) => {
-            setEditing(null)
-            setConfirming(it)
-          }}
-        />
-      )}
+        {editing && editing !== 'new' && (
+          <StockEditModal
+            key="stock-edit"
+            item={editing}
+            saving={savingId != null}
+            onClose={() => setEditing(null)}
+            onSave={(patch) => saveFromModal(editing, patch)}
+            onRetire={(it) => {
+              setEditing(null)
+              setConfirming(it)
+            }}
+          />
+        )}
 
-      {confirming && (
-        <ConfirmRetire
-          item={confirming}
-          busy={savingId === confirming.drug_id}
-          onCancel={() => setConfirming(null)}
-          onConfirm={() => {
-            const it = confirming
-            setConfirming(null)
-            retire(it)
-          }}
-        />
-      )}
+        {confirming && (
+          <ConfirmRetire
+            key="stock-retire"
+            item={confirming}
+            busy={savingId === confirming.drug_id}
+            onCancel={() => setConfirming(null)}
+            onConfirm={() => {
+              const it = confirming
+              setConfirming(null)
+              retire(it)
+            }}
+          />
+        )}
+      </AnimatePresence>
     </section>
   )
 }

@@ -43,7 +43,7 @@ html.dark {
   --color-brand-divider: #1f2927;
   --color-brand-line: #1f2927;
   --color-brand-deep: #e5e7eb;
-  --color-brand-primary: #005c4a;
+  --color-brand-primary: #00493a;
   --color-brand-accent: #0d995f;
   --color-sidebar: #0a0f0d;
   --color-tooltip-bg: #0f1a14;
@@ -2062,6 +2062,27 @@ html.dark .form-note {
      ============================================================ */
 
   /* ============================================================
+     PORTAL — TEMA DE GESTÃO
+     O portal é uma ferramenta de trabalho, não uma peça editorial:
+     usa a fonte de interface (Inter) em vez da serifa do site e um
+     cinza-frio neutro no claro (o bege rosado do site não entra aqui).
+     Aplica-se ao shell do dashboard e às páginas de acesso (.portal-auth).
+     ============================================================ */
+
+  .portal-shell,
+  .portal-auth {
+    --font-display: var(--font-sans);
+  }
+
+  html:not(.dark) .portal-shell {
+    --color-brand-bg-alt: #f2f4f3;
+  }
+
+  html:not(.dark) .portal-auth {
+    --color-brand-bg: #f2f4f3;
+  }
+
+  /* ============================================================
      PORTAL — SHELL (redesign, padrão da plataforma de gestão)
      Sidebar verde de altura total à esquerda; a top-bar corre DENTRO
      da coluna de conteúdo, ao lado dela. Fundo e conteúdo partilham a
@@ -2677,7 +2698,7 @@ html.dark .form-note {
   }
 
   .btn {
-    @apply inline-flex items-center justify-center gap-2 rounded-full font-semibold text-sm px-4 py-2;
+    @apply inline-flex items-center justify-center gap-2 rounded-lg font-semibold text-sm px-4 py-2;
     border: 1px solid transparent;
     cursor: pointer;
     text-decoration: none;
@@ -2687,7 +2708,7 @@ html.dark .form-note {
       border-color 0.2s ease;
   }
 
-  /* Em noite o verde escuro da marca (--color-brand-primary = #005c4a)
+  /* Em noite o verde escuro da marca (--color-brand-primary = #00493a)
      não se lê sobre os cartões escuros (2,2:1): o texto dos botões
      secundários passa ao mint da paleta nocturna. O hero verde de
      /portal/sessão mantém o branco — a regra dele é mais abaixo e sem
@@ -5536,7 +5557,7 @@ html.dark .form-note {
   .portal-box {
     background: var(--color-brand-card);
     border: 1px solid var(--color-brand-divider);
-    border-radius: 1rem;
+    border-radius: 0.75rem;
     overflow: hidden;
   }
 
@@ -5720,7 +5741,7 @@ html.dark .form-note {
     gap: 0.25rem;
     background: var(--color-brand-card);
     border: 1px solid var(--color-brand-divider);
-    border-radius: 1rem;
+    border-radius: 0.75rem;
     padding: 1rem 1.125rem;
     text-decoration: none;
     color: inherit;
@@ -5818,6 +5839,31 @@ html.dark .form-note {
     letter-spacing: -0.01em;
     color: var(--color-brand-deep);
     margin-top: 0.125rem;
+  }
+
+  /* Estado de carregamento: bloco neutro a pulsar. Com movimento reduzido
+     fica estático, só com o tom. */
+  .portal-skeleton {
+    display: block;
+    border-radius: 0.5rem;
+    background: var(--color-brand-divider);
+    animation: portal-skeleton-pulse 1.4s ease-in-out infinite;
+  }
+
+  @keyframes portal-skeleton-pulse {
+    0%,
+    100% {
+      opacity: 1;
+    }
+    50% {
+      opacity: 0.45;
+    }
+  }
+
+  @media (prefers-reduced-motion: reduce) {
+    .portal-skeleton {
+      animation: none;
+    }
   }
 
   .portal-kpi-s {
@@ -6254,7 +6300,7 @@ html.dark .form-note {
     gap: 0.5rem;
     background: var(--color-brand-bg-alt);
     border: 1px solid var(--color-brand-divider);
-    border-radius: 999px;
+    border-radius: 0.5rem;
     padding: 0.4375rem 0.875rem;
     min-width: 11.875rem;
   }
@@ -6287,7 +6333,7 @@ html.dark .form-note {
     display: inline-flex;
     align-items: center;
     gap: 0.375rem;
-    border-radius: 999px;
+    border-radius: 0.5rem;
     padding: 0.4375rem 0.875rem;
     font-size: 0.7813rem;
     font-weight: 700;
@@ -8959,7 +9005,6 @@ html.dark .form-note {
   position: absolute;
   inset: 0;
   background: rgb(1 36 25 / 0.45);
-  animation: portal-drawer-fade 0.2s ease;
 }
 
 .portal-drawer-card {
@@ -8971,7 +9016,6 @@ html.dark .form-note {
   background: var(--color-brand-card);
   border-left: 1px solid var(--color-brand-divider);
   box-shadow: -18px 0 48px rgb(9 30 20 / 0.18);
-  animation: portal-drawer-in 0.26s cubic-bezier(0.3, 0.9, 0.3, 1);
 }
 
 .portal-drawer-head {
@@ -9031,26 +9075,6 @@ html.dark .form-note {
   gap: 0.625rem;
   padding: 1rem 1.375rem;
   border-top: 1px solid var(--color-brand-divider);
-}
-
-@keyframes portal-drawer-fade {
-  from {
-    opacity: 0;
-  }
-}
-
-@keyframes portal-drawer-in {
-  from {
-    transform: translateX(2rem);
-    opacity: 0;
-  }
-}
-
-@media (prefers-reduced-motion: reduce) {
-  .portal-drawer-scrim,
-  .portal-drawer-card {
-    animation: none;
-  }
 }
 
 /* Botões na cabeça da página (ex.: Stock com 2 acções). */

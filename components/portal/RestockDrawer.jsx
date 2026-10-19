@@ -83,11 +83,13 @@ export default function RestockDrawer({ open, onClose }) {
   // Ao fechar, volta ao estado de pesquisa (reabrir é sempre o mesmo).
   useEffect(() => {
     if (open) return
-    setQ('')
-    setSel(null)
-    setQty('')
-    setLotInput({})
-    setMsg(null)
+    queueMicrotask(() => {
+      setQ('')
+      setSel(null)
+      setQty('')
+      setLotInput({})
+      setMsg(null)
+    })
   }, [open])
 
   const filtered = useMemo(() => {

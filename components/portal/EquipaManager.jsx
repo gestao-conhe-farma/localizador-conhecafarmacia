@@ -45,9 +45,12 @@ const ERRORES = {
 }
 
 const PAPEIS = [
-  { id: 'balcao', label: 'Balcão — atende e regista' },
-  { id: 'gerente', label: 'Gerente — gere equipa e vê desempenho' },
+  { id: 'balcao', nome: 'Balcão', descricao: 'atende e regista' },
+  { id: 'gerente', nome: 'Gerente', descricao: 'gere equipa e vê desempenho' },
 ]
+
+// Papel desconhecido cai em Balcão — o mesmo que a lista mostrava antes.
+const papelDe = (id) => PAPEIS.find((p) => p.id === id) ?? PAPEIS[0]
 
 export default function EquipaManager({ rows, currentId, error }) {
   const router = useRouter()
@@ -183,7 +186,10 @@ export default function EquipaManager({ rows, currentId, error }) {
             </div>
 
             {rows.map((row) => (
-              <div key={row.id} className="portal-rowline portal-rowline--static portal-eq-row">
+              <div
+                key={row.id}
+                className="portal-rowline portal-rowline--static portal-cols-equipa portal-eq-row"
+              >
                 <span className="portal-staff-av" aria-hidden="true">
                   {iniciais(row.name)}
                 </span>
@@ -195,14 +201,16 @@ export default function EquipaManager({ rows, currentId, error }) {
                     {row.id === currentId ? ' · perfil activo aqui' : ''}
                   </span>
                 </div>
-                <div className="portal-cell">
-                  <span className="portal-pill">
-                    {row.role === 'gerente' ? 'Gerente' : 'Balcão'}
-                  </span>
+                <div className="portal-cell portal-eq-cell">
+                  <span className="portal-pill">{papelDe(row.role).nome}</span>
+                  <span className="portal-eq-desc">{papelDe(row.role).descricao}</span>
                 </div>
-                <div className="portal-cell">
+                <div className="portal-cell portal-eq-cell">
                   <span className={`portal-dot-state ${row.active ? '' : 'is-off'}`}>
                     {row.active ? 'Activo' : 'Inactivo'}
+                  </span>
+                  <span className="portal-eq-desc">
+                    {row.active ? 'Entra no balcão' : 'Sem acesso ao balcão'}
                   </span>
                 </div>
                 <div className="portal-cell portal-cell--right">
@@ -228,53 +236,60 @@ export default function EquipaManager({ rows, currentId, error }) {
         hint="Nome, papel e PIN de 4 dígitos — o colega entra depois em «Trocar perfil»."
         onClose={fecharDrawer}
       >
-        <form className="portal-form" onSubmit={criar}>
-          <div className="portal-form-grid portal-form-grid--tight">
-            <label className="portal-label">
-              Nome
-              <input
-                className="portal-input"
-                type="text"
-                value={novo.name}
-                onChange={(e) => setNovo((n) => ({ ...n, name: e.target.value }))}
-                minLength={2}
-                maxLength={80}
-                placeholder="Ex.: Rosa Manuel"
-                required
-                autoFocus
-              />
-            </label>
-            <label className="portal-label">
-              PIN
-              <input
-                className="portal-input portal-input--pin"
-                type="text"
-                inputMode="numeric"
-                maxLength={4}
-                pattern="\d{4}"
-                value={novo.pin}
-                onChange={(e) =>
-                  setNovo((n) => ({ ...n, pin: e.target.value.replace(/\D/g, '').slice(0, 4) }))
-                }
-                placeholder="••••"
-                required
-              />
-            </label>
-            <label className="portal-label">
-              Papel
-              <select
-                className="portal-input"
-                value={novo.role}
-                onChange={(e) => setNovo((n) => ({ ...n, role: e.target.value }))}
-              >
-                {PAPEIS.map((p) => (
-                  <option key={p.id} value={p.id}>
-                    {p.label}
-                  </option>
-                ))}
-              </select>
-            </label>
+        <form className="portal-form portal-eq-form" onSubmit={criar}>
+          <label className="portal-label">
+            Nome
+            <input
+              className="portal-input"
+              type="text"
+              value={novo.name}
+              onChange={(e) => setNovo((n) => ({ ...n, name: e.target.value }))}
+              minLength={2}
+              maxLength={80}
+              placeholder="Ex.: Rosa Manuel"
+              required
+              autoFocus
+            />
+          </label>
+
+          <div className="portal-label">
+            <span id="novo-papel-label">Papel</span>
+            <div className="portal-role-grid" role="radiogroup" aria-labelledby="novo-papel-label">
+              {PAPEIS.map((p) => {
+                const on = novo.role === p.id
+                return (
+                  <button
+                    key={p.id}
+                    type="button"
+                    role="radio"
+                    aria-checked={on}
+                    className={`portal-role-card${on ? ' is-on' : ''}`}
+                    onClick={() => setNovo((n) => ({ ...n, role: p.id }))}
+                  >
+                    <strong>{p.nome}</strong>
+                    <span>{p.descricao}</span>
+                  </button>
+                )
+              })}
+            </div>
           </div>
+
+          <label className="portal-label">
+            PIN de 4 dígitos
+            <input
+              className="portal-input portal-input--pin"
+              type="text"
+              inputMode="numeric"
+              maxLength={4}
+              pattern="\d{4}"
+              value={novo.pin}
+              onChange={(e) =>
+                setNovo((n) => ({ ...n, pin: e.target.value.replace(/\D/g, '').slice(0, 4) }))
+              }
+              placeholder="••••"
+              required
+            />
+          </label>
 
           {formError && (
             <p className="portal-error" role="alert">
@@ -324,7 +339,7 @@ export default function EquipaManager({ rows, currentId, error }) {
                 >
                   {PAPEIS.map((p) => (
                     <option key={p.id} value={p.id}>
-                      {p.label}
+                      {p.nome} — {p.descricao}
                     </option>
                   ))}
                 </select>

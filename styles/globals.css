@@ -2074,7 +2074,10 @@ html.dark .form-note {
     --font-display: var(--font-sans);
   }
 
+  /* Portal no modo claro: só duas cores — branco (#ffffff) para
+     superfícies/inputs e #f2f4f3 para o fundo da página. */
   html:not(.dark) .portal-shell {
+    --color-brand-bg: #ffffff;
     --color-brand-bg-alt: #f2f4f3;
   }
 
@@ -4715,7 +4718,7 @@ html.dark .form-note {
 
   html.dark .portal-kpi4:hover {
     border-color: rgb(255 255 255 / 0.22);
-  }    /* Canto superior direito, do tamanho do ícone dos cartões de
+  } /* Canto superior direito, do tamanho do ícone dos cartões de
      /vendas (.portal-kpi-ic) para a família ser uma só. */
   .portal-kpi4-ic {
     width: 2.375rem;
@@ -7776,11 +7779,12 @@ html.dark .form-note {
     text-wrap: pretty;
   }
 
-  /* Linha da equipa — avatar + nome + papel/estado + editar. */
+  /* Linha da equipa — avatar + nome + papel/estado + editar. A grelha
+     vem de .portal-cols-equipa (a mesma do cabeçalho), por isso as
+     colunas Papel e Estado ficam alinhadas com os respetivos rótulos. */
   .portal-eq-row {
-    grid-template-columns: auto minmax(0, 1fr) auto auto auto;
     align-items: center;
-    gap: 0.75rem;
+    gap: 0.875rem;
   }
 
   .portal-eq-who {
@@ -7788,6 +7792,22 @@ html.dark .form-note {
     flex-direction: column;
     gap: 0.125rem;
     min-width: 0;
+  }
+
+  /* Papel e Estado: rótulo por cima, descrição por baixo, alinhados à
+     esquerda — a descrição é o mesmo texto do seletor de papel. */
+  .portal-eq-cell {
+    display: flex;
+    flex-direction: column;
+    align-items: flex-start;
+    gap: 0.3125rem;
+    min-width: 0;
+  }
+
+  .portal-eq-desc {
+    font-size: 0.6875rem;
+    line-height: 1.35;
+    color: var(--ink-60v);
   }
 
   .portal-staff-hint {
@@ -8052,6 +8072,58 @@ html.dark .form-note {
     font-size: 1.05rem;
     font-weight: 700;
     text-align: center;
+  }
+
+  /* Novo perfil — campos a ocupar a mesma largura; o papel são dois
+     cartões iguais com a descrição à vista (em vez de um select). */
+  .portal-eq-form .portal-input--pin {
+    max-width: none;
+  }
+
+  .portal-role-grid {
+    display: grid;
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+    gap: 0.75rem;
+  }
+
+  .portal-role-card {
+    display: flex;
+    flex-direction: column;
+    align-items: flex-start;
+    gap: 0.25rem;
+    padding: 0.8rem 1rem;
+    border-radius: 0.5rem;
+    border: 1px solid var(--color-brand-line);
+    background: var(--color-brand-bg);
+    color: var(--color-brand-deep);
+    text-align: left;
+    font-size: 0.875rem;
+    font-weight: 600;
+    transition:
+      border-color 0.2s ease,
+      background-color 0.2s ease;
+  }
+
+  .portal-role-card span {
+    font-size: 0.8125rem;
+    font-weight: 400;
+    line-height: 1.4;
+    color: var(--ink-60v);
+  }
+
+  .portal-role-card:hover {
+    border-color: var(--color-brand-accent);
+  }
+
+  .portal-role-card.is-on {
+    border-color: var(--color-brand-accent);
+    background: color-mix(in srgb, var(--color-brand-accent) 10%, transparent);
+    box-shadow: inset 0 0 0 1px var(--color-brand-accent);
+  }
+
+  .portal-role-card:focus-visible {
+    outline: 2px solid var(--color-brand-accent);
+    outline-offset: 2px;
   }
 
   .portal-staff-pin-go {
@@ -8439,7 +8511,7 @@ html.dark .form-note {
 
   /* ---- /portal/equipa — grelha de perfis ------------------ */
   .portal-cols-equipa {
-    grid-template-columns: auto 2fr 1fr 0.9fr auto;
+    grid-template-columns: 2.5rem minmax(0, 2fr) minmax(0, 1fr) minmax(0, 0.9fr) 5rem;
   }
 
   @media (max-width: 60rem) {

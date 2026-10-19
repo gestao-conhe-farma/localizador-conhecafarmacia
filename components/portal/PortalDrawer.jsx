@@ -18,7 +18,15 @@ const EXIT = { duration: 0.22, ease: [0.4, 0, 1, 1] }
  * dentro dele acontece — aqui só se monta o chassi (head, body, foot)
  * e se cuida do fecho.
  */
-export default function PortalDrawer({ open, title, hint, onClose, children, footer }) {
+export default function PortalDrawer({
+  open,
+  title,
+  hint,
+  onClose,
+  children,
+  footer,
+  cardClassName = '',
+}) {
   // Esc fecha — mesmo contrato do StockEditModal.
   useEffect(() => {
     if (!open) return undefined
@@ -49,7 +57,7 @@ export default function PortalDrawer({ open, title, hint, onClose, children, foo
             transition={ENTER}
           />
           <motion.div
-            className="portal-drawer-card"
+            className={`portal-drawer-card${cardClassName ? ` ${cardClassName}` : ''}`}
             initial={{ x: '100%' }}
             animate={{ x: 0, transition: ENTER }}
             exit={{ x: '100%', transition: EXIT }}

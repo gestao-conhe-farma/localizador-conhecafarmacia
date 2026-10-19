@@ -1,5 +1,6 @@
 import { Suspense } from 'react'
 import StockPanel from '@/components/portal/StockPanel'
+import { PortalSectionSkeleton } from '@/components/portal/PortalPageSkeleton'
 import { getActiveStaff } from '@/lib/staff-session'
 
 export const metadata = {
@@ -10,7 +11,7 @@ export const metadata = {
 /**
  * Gestão de stock (ponto 4) + criação de fármacos (ponto 1).
  * O botão "+ Medicamento em falta no catálogo" vive na toolbar do
- * StockPanel e abre o formulário num modal — já não há uma secção
+ * StockPanel e abre o formulário num drawer — já não há uma secção
  * solta no fundo da página.
  *
  * Suspense obrigatório: o StockPanel lê ?q= (deep-link da pesquisa
@@ -23,13 +24,7 @@ export default async function PortalStockPage() {
   const isManager = staff?.role === 'gerente'
   return (
     <div className="portal-page">
-      <Suspense
-        fallback={
-          <div className="empty-state" role="status">
-            <div className="spinner" />
-          </div>
-        }
-      >
+      <Suspense fallback={<PortalSectionSkeleton lines={6} />}>
         <StockPanel isManager={isManager} />
       </Suspense>
     </div>

@@ -315,54 +315,63 @@ export default function EquipaManager({ rows, currentId, error }) {
         onClose={fecharDrawer}
       >
         {editando && (
-          <form className="portal-form" onSubmit={guardar}>
-            <div className="portal-form-grid portal-form-grid--tight">
-              <label className="portal-label">
-                Nome
-                <input
-                  className="portal-input"
-                  type="text"
-                  value={edit.name}
-                  onChange={(e) => setEdit((s) => ({ ...s, name: e.target.value }))}
-                  minLength={2}
-                  maxLength={80}
-                  required
-                  autoFocus
-                />
-              </label>
-              <label className="portal-label">
-                Papel
-                <select
-                  className="portal-input"
-                  value={edit.role}
-                  onChange={(e) => setEdit((s) => ({ ...s, role: e.target.value }))}
-                >
-                  {PAPEIS.map((p) => (
-                    <option key={p.id} value={p.id}>
-                      {p.nome} — {p.descricao}
-                    </option>
-                  ))}
-                </select>
-              </label>
-              <label className="portal-label">
-                Novo PIN (opcional)
-                <input
-                  className="portal-input portal-input--pin"
-                  type="text"
-                  inputMode="numeric"
-                  maxLength={4}
-                  pattern="\d{4}"
-                  value={edit.pin}
-                  onChange={(e) =>
-                    setEdit((s) => ({
-                      ...s,
-                      pin: e.target.value.replace(/\D/g, '').slice(0, 4),
-                    }))
-                  }
-                  placeholder="manter"
-                />
-              </label>
+          <form className="portal-form portal-eq-form" onSubmit={guardar}>
+            <label className="portal-label">
+              Nome
+              <input
+                className="portal-input"
+                type="text"
+                value={edit.name}
+                onChange={(e) => setEdit((s) => ({ ...s, name: e.target.value }))}
+                minLength={2}
+                maxLength={80}
+                required
+                autoFocus
+              />
+            </label>
+            <div className="portal-label">
+              <span id="editar-papel-label">Papel</span>
+              <div
+                className="portal-role-grid"
+                role="radiogroup"
+                aria-labelledby="editar-papel-label"
+              >
+                {PAPEIS.map((p) => {
+                  const on = edit.role === p.id
+                  return (
+                    <button
+                      key={p.id}
+                      type="button"
+                      role="radio"
+                      aria-checked={on}
+                      className={`portal-role-card${on ? ' is-on' : ''}`}
+                      onClick={() => setEdit((s) => ({ ...s, role: p.id }))}
+                    >
+                      <strong>{p.nome}</strong>
+                      <span>{p.descricao}</span>
+                    </button>
+                  )
+                })}
+              </div>
             </div>
+            <label className="portal-label">
+              Novo PIN (opcional)
+              <input
+                className="portal-input portal-input--pin"
+                type="text"
+                inputMode="numeric"
+                maxLength={4}
+                pattern="\d{4}"
+                value={edit.pin}
+                onChange={(e) =>
+                  setEdit((s) => ({
+                    ...s,
+                    pin: e.target.value.replace(/\D/g, '').slice(0, 4),
+                  }))
+                }
+                placeholder="manter"
+              />
+            </label>
 
             <label className="portal-staff-active">
               <input

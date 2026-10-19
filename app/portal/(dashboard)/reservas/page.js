@@ -1,5 +1,6 @@
 import { Suspense } from 'react'
 import ReservationsQueue from '@/components/portal/ReservationsQueue'
+import { PortalSectionSkeleton } from '@/components/portal/PortalPageSkeleton'
 
 export const metadata = {
   title: 'Portal da farmácia — reservas',
@@ -16,13 +17,7 @@ export const metadata = {
 export default function PortalReservationsPage() {
   return (
     <div className="portal-page">
-      <Suspense
-        fallback={
-          <div className="empty-state" role="status">
-            <div className="spinner" />
-          </div>
-        }
-      >
+      <Suspense fallback={<PortalSectionSkeleton lines={5} />}>
         <ReservationsQueue />
       </Suspense>
     </div>

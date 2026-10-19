@@ -192,6 +192,7 @@ export default function RestockDrawer({ open, onClose }) {
   return (
     <PortalDrawer
       open={open}
+      cardClassName="portal-drawer-card--restock"
       title="Nova entrada de stock"
       hint="Pesquise o medicamento, diga o que chegou — o saldo soma sem sair do Stock."
       onClose={onClose}
@@ -253,7 +254,7 @@ export default function RestockDrawer({ open, onClose }) {
           </div>
         </>
       ) : (
-        <form className="portal-form" onSubmit={submeter}>
+        <form className="portal-form portal-restock-form" onSubmit={submeter}>
           <div className="portal-drw-sel">
             <span>
               <b>{sel.name}</b>
@@ -305,80 +306,95 @@ export default function RestockDrawer({ open, onClose }) {
 
           {/* 0016 — estrutura da caixa, só nas formas sólidas. */}
           {selSolid && qty !== '' && (
-            <span className="restock-pack">
-              Caixa com
-              <input
-                type="number"
-                min="1"
-                max="999"
-                inputMode="numeric"
-                className="portal-input portal-input--price"
-                value={selPack.lam ?? sel.pack_laminas ?? ''}
-                onChange={(e) =>
-                  setPacks((p) => ({
-                    ...p,
-                    [sel.drug_id]: { ...p[sel.drug_id], lam: e.target.value },
-                  }))
-                }
-                aria-label={`Lâminas por caixa de ${sel.name}`}
-                disabled={pending}
-              />
-              lâminas ·
-              <input
-                type="number"
-                min="1"
-                max="999"
-                inputMode="numeric"
-                className="portal-input portal-input--price"
-                value={selPack.comp ?? sel.pack_comprimidos ?? ''}
-                onChange={(e) =>
-                  setPacks((p) => ({
-                    ...p,
-                    [sel.drug_id]: { ...p[sel.drug_id], comp: e.target.value },
-                  }))
-                }
-                aria-label={`Comprimidos por lâmina de ${sel.name}`}
-                disabled={pending}
-              />
-              comprimidos/lâmina
-            </span>
+            <div className="restock-entry-section">
+              <span className="restock-entry-title">Estrutura da embalagem</span>
+              <div className="restock-entry-grid restock-entry-grid--pack">
+                <label className="restock-entry-field">
+                  Lâminas por caixa
+                  <input
+                    type="number"
+                    min="1"
+                    max="999"
+                    inputMode="numeric"
+                    className="portal-input restock-entry-input"
+                    value={selPack.lam ?? sel.pack_laminas ?? ''}
+                    onChange={(e) =>
+                      setPacks((p) => ({
+                        ...p,
+                        [sel.drug_id]: { ...p[sel.drug_id], lam: e.target.value },
+                      }))
+                    }
+                    aria-label={`Lâminas por caixa de ${sel.name}`}
+                    disabled={pending}
+                  />
+                </label>
+                <label className="restock-entry-field">
+                  Comprimidos por lâmina
+                  <input
+                    type="number"
+                    min="1"
+                    max="999"
+                    inputMode="numeric"
+                    className="portal-input restock-entry-input"
+                    value={selPack.comp ?? sel.pack_comprimidos ?? ''}
+                    onChange={(e) =>
+                      setPacks((p) => ({
+                        ...p,
+                        [sel.drug_id]: { ...p[sel.drug_id], comp: e.target.value },
+                      }))
+                    }
+                    aria-label={`Comprimidos por lâmina de ${sel.name}`}
+                    disabled={pending}
+                  />
+                </label>
+              </div>
+            </div>
           )}
 
           {/* 0021 — lote + validade: a mercadoria datada entra na sua
               camada; sem lote vai para a camada «por identificar». */}
           {qty !== '' && (
-            <span className="restock-pack">
-              Lote
-              <input
-                type="text"
-                maxLength={40}
-                className="portal-input portal-input--lot"
-                value={(lotInput[sel.drug_id] || {}).num ?? ''}
-                onChange={(e) =>
-                  setLotInput((l) => ({
-                    ...l,
-                    [sel.drug_id]: { ...l[sel.drug_id], num: e.target.value },
-                  }))
-                }
-                placeholder="opcional"
-                aria-label={`Lote recebido de ${sel.name}`}
-                disabled={pending}
-              />
-              Validade
-              <input
-                type="date"
-                className="portal-input portal-input--date"
-                value={(lotInput[sel.drug_id] || {}).exp ?? ''}
-                onChange={(e) =>
-                  setLotInput((l) => ({
-                    ...l,
-                    [sel.drug_id]: { ...l[sel.drug_id], exp: e.target.value },
-                  }))
-                }
-                aria-label={`Validade do lote recebido de ${sel.name}`}
-                disabled={pending}
-              />
-            </span>
+            <div className="restock-entry-section">
+              <span className="restock-entry-title">
+                Lote e validade <span>(opcional)</span>
+              </span>
+              <div className="restock-entry-grid restock-entry-grid--lot">
+                <label className="restock-entry-field">
+                  Número do lote
+                  <input
+                    type="text"
+                    maxLength={40}
+                    className="portal-input restock-entry-input"
+                    value={(lotInput[sel.drug_id] || {}).num ?? ''}
+                    onChange={(e) =>
+                      setLotInput((l) => ({
+                        ...l,
+                        [sel.drug_id]: { ...l[sel.drug_id], num: e.target.value },
+                      }))
+                    }
+                    placeholder="Ex.: L2026-01"
+                    aria-label={`Lote recebido de ${sel.name}`}
+                    disabled={pending}
+                  />
+                </label>
+                <label className="restock-entry-field">
+                  Validade
+                  <input
+                    type="date"
+                    className="portal-input restock-entry-input"
+                    value={(lotInput[sel.drug_id] || {}).exp ?? ''}
+                    onChange={(e) =>
+                      setLotInput((l) => ({
+                        ...l,
+                        [sel.drug_id]: { ...l[sel.drug_id], exp: e.target.value },
+                      }))
+                    }
+                    aria-label={`Validade do lote recebido de ${sel.name}`}
+                    disabled={pending}
+                  />
+                </label>
+              </div>
+            </div>
           )}
 
           {/* Camadas já em stock (0021) — o lote que expira primeiro vem

@@ -20,6 +20,7 @@ import { CloseIcon } from '@/components/ui/Icon'
 import Notice from '@/components/ui/Notice'
 import StateLabel from '@/components/portal/StateLabel'
 import RestockDrawer from '@/components/portal/RestockDrawer'
+import PortalDrawer from '@/components/portal/PortalDrawer'
 import { AnimatePresence, motion } from 'motion/react'
 import { modalCardMotion, modalFadeMotion } from '@/components/ui/modalMotion'
 
@@ -235,41 +236,37 @@ function StockEditModal({ item, saving, onClose, onSave, onSaveOptions, onRetire
   )
   const inStock = item.in_stock
 
-  // Esc fecha; guardar é explícito (ou "marcar como não disponível", que
-  // não precisa de campos — ver onSave no pai).
-  useEffect(() => {
-    const onKey = (e) => {
-      if (e.key === 'Escape') onClose()
-    }
-    window.addEventListener('keydown', onKey)
-    return () => window.removeEventListener('keydown', onKey)
-  }, [onClose])
-
+  // Formulários de edição usam o drawer padrão; o modal centrado fica
+  // reservado à leitura de detalhes da reserva.
   return (
-    <motion.div
-      className="stock-modal"
-      role="dialog"
-      aria-modal="true"
-      aria-labelledby="stock-modal-title"
-      {...modalFadeMotion}
+    <PortalDrawer
+      open
+      cardClassName="portal-drawer-card--stock-edit"
+      title={item.name}
+      hint="Edite saldo, validade, preços e apresentação do medicamento."
+      onClose={onClose}
     >
-      <div className="stock-modal-scrim" onClick={onClose} aria-hidden="true" />
-      <motion.div className="stock-modal-card" {...modalCardMotion}>
-        <div className="portal-section-head" style={{ marginBottom: 0 }}>
-          <h3 id="stock-modal-title" className="portal-h2">
-            {item.name}
-            {item.requires_rx && <span className="rx-badge rx-badge--inline">Receita</span>}
-          </h3>
-          <button
-            type="button"
-            className="btn btn-secondary btn-small"
-            onClick={onClose}
-            aria-label="Fechar sem guardar"
-          >
-            Fechar
-          </button>
-        </div>
-
+      <form
+        className="portal-form portal-stock-edit-form"
+        onSubmit={(e) => {
+          e.preventDefault()
+          onSave({
+            quantity,
+            price,
+            expires_at_input: expiresAt,
+            expires_at: expiresAt || null,
+            available_from_input: availableFrom,
+            available_from: availableFrom || null,
+            packLaminas,
+            packComprimidos,
+            sale_options: opts,
+            origin,
+            brand,
+            image_path: imagePath,
+          })
+        }}
+      >
+        {item.requires_rx && <span className="rx-badge rx-badge--inline">Receita médica</span>}
         <p className="stock-modal-state">
           Estado: <b>{inStock ? 'disponível' : 'não disponível'}</b>
           {inStock
@@ -277,385 +274,364 @@ function StockEditModal({ item, saving, onClose, onSave, onSaveOptions, onRetire
             : ' — pode guardar já, ou preencher para quando voltar a haver stock.'}
         </p>
 
-        <form
-          className="portal-form"
-          onSubmit={(e) => {
-            e.preventDefault()
-            onSave({
-              quantity,
-              price,
-              expires_at_input: expiresAt,
-              expires_at: expiresAt || null,
-              available_from_input: availableFrom,
-              available_from: availableFrom || null,
-              packLaminas,
-              packComprimidos,
-              sale_options: opts,
-              origin,
-              brand,
-              image_path: imagePath,
-            })
-          }}
-        >
-          {/* Sectores no padrão dos grupos da sidebar — o que é do
+        {/* Sectores no padrão dos grupos da sidebar — o que é do
               fármaco, do saldo, do dinheiro e da apresentação. */}
-          <div className="modal-sector">Medicamento</div>
-          <p className="stock-modal-info">
-            {[item.molecule, item.form, item.dosage].filter(Boolean).join(' · ') ||
-              'Sem detalhes no catálogo.'}
-          </p>
-          <p className="portal-hint">
-            Ficha do catálogo partilhado — para corrigir nome ou gramagem, fale com a equipa Conheça
-            Farmácia.
-          </p>
+        <div className="modal-sector">Medicamento</div>
+        <p className="stock-modal-info">
+          {[item.molecule, item.form, item.dosage].filter(Boolean).join(' · ') ||
+            'Sem detalhes no catálogo.'}
+        </p>
+        <p className="portal-hint">
+          Ficha do catálogo partilhado — para corrigir nome ou gramagem, fale com a equipa Conheça
+          Farmácia.
+        </p>
 
-          <div className="modal-sector">Stock</div>
-          <div className="portal-form-grid portal-form-grid--three">
+        <div className="modal-sector">Stock</div>
+        <div className="portal-form-grid portal-form-grid--three">
+          <label className="portal-label">
+            {`Saldo em ${pluralUnit(defaultSaleUnit(item))}`}
+            <input
+              type="number"
+              min="0"
+              className="portal-input"
+              placeholder="Ex.: 12"
+              value={quantity}
+              onChange={(e) => setQuantity(e.target.value)}
+            />
+          </label>
+          <label className="portal-label">
+            Validade
+            <input
+              type="date"
+              className="portal-input"
+              value={expiresAt}
+              onChange={(e) => setExpiresAt(e.target.value)}
+            />
+          </label>
+          <label className="portal-label">
+            Disponível a partir de
+            <input
+              type="date"
+              className="portal-input"
+              min={todayIso()}
+              value={availableFrom}
+              onChange={(e) => setAvailableFrom(e.target.value)}
+            />
+          </label>
+        </div>
+
+        <div className="modal-sector">Preços e formas de venda</div>
+        <div className="portal-form-grid portal-form-grid--three">
+          <label className="portal-label">
+            Preço (Kz)
+            <input
+              type="number"
+              min="0"
+              step="0.01"
+              className="portal-input"
+              placeholder="Ex.: 2500"
+              value={price}
+              onChange={(e) => setPrice(e.target.value)}
+            />
+          </label>
+          {/* Estrutura da caixa (0016) — só nas formas sólidas. */}
+          {isSolidForm(item.form) && (
             <label className="portal-label">
-              {`Saldo em ${pluralUnit(defaultSaleUnit(item))}`}
+              Lâminas por caixa
               <input
                 type="number"
-                min="0"
+                min="1"
+                max="999"
                 className="portal-input"
-                placeholder="Ex.: 12"
-                value={quantity}
-                onChange={(e) => setQuantity(e.target.value)}
+                placeholder="Ex.: 10"
+                value={packLaminas}
+                onChange={(e) => setPackLaminas(e.target.value)}
               />
             </label>
-            <label className="portal-label">
-              Validade
-              <input
-                type="date"
-                className="portal-input"
-                value={expiresAt}
-                onChange={(e) => setExpiresAt(e.target.value)}
-              />
-            </label>
-            <label className="portal-label">
-              Disponível a partir de
-              <input
-                type="date"
-                className="portal-input"
-                min={todayIso()}
-                value={availableFrom}
-                onChange={(e) => setAvailableFrom(e.target.value)}
-              />
-            </label>
-          </div>
-
-          <div className="modal-sector">Preços e formas de venda</div>
-          <div className="portal-form-grid portal-form-grid--three">
-            <label className="portal-label">
-              Preço (Kz)
-              <input
-                type="number"
-                min="0"
-                step="0.01"
-                className="portal-input"
-                placeholder="Ex.: 2500"
-                value={price}
-                onChange={(e) => setPrice(e.target.value)}
-              />
-            </label>
-            {/* Estrutura da caixa (0016) — só nas formas sólidas. */}
-            {isSolidForm(item.form) && (
-              <label className="portal-label">
-                Lâminas por caixa
-                <input
-                  type="number"
-                  min="1"
-                  max="999"
-                  className="portal-input"
-                  placeholder="Ex.: 10"
-                  value={packLaminas}
-                  onChange={(e) => setPackLaminas(e.target.value)}
-                />
-              </label>
-            )}
-            {isSolidForm(item.form) && (
-              <label className="portal-label">
-                Comprimidos por lâmina
-                <input
-                  type="number"
-                  min="1"
-                  max="999"
-                  className="portal-input"
-                  placeholder="Ex.: 10"
-                  value={packComprimidos}
-                  onChange={(e) => setPackComprimidos(e.target.value)}
-                />
-              </label>
-            )}
-          </div>
-          {isSolidForm(item.form) && (lamN || compN) && (
-            <p className="portal-hint">
-              {lamN && compN
-                ? `1 caixa = ${lamN} lâminas = ${lamN * compN} comprimidos.`
-                : lamN
-                  ? `1 caixa = ${lamN} lâminas.`
-                  : `1 lâmina = ${compN} comprimidos.`}
-            </p>
           )}
+          {isSolidForm(item.form) && (
+            <label className="portal-label">
+              Comprimidos por lâmina
+              <input
+                type="number"
+                min="1"
+                max="999"
+                className="portal-input"
+                placeholder="Ex.: 10"
+                value={packComprimidos}
+                onChange={(e) => setPackComprimidos(e.target.value)}
+              />
+            </label>
+          )}
+        </div>
+        {isSolidForm(item.form) && (lamN || compN) && (
+          <p className="portal-hint">
+            {lamN && compN
+              ? `1 caixa = ${lamN} lâminas = ${lamN * compN} comprimidos.`
+              : lamN
+                ? `1 caixa = ${lamN} lâminas.`
+                : `1 lâmina = ${compN} comprimidos.`}
+          </p>
+        )}
 
-          <div className="modal-sector">Apresentação</div>
-          {/* Origem e marca (0013) — a origem pesa na decisão em Angola.
+        <div className="modal-sector">Apresentação</div>
+        {/* Origem e marca (0013) — a origem pesa na decisão em Angola.
               Marca livre ("Panadol", "Ben-u-ron"), origem da lista. */}
-          <div className="portal-form-grid portal-form-grid--three">
-            <label className="portal-label">
-              Origem
-              <select
-                className="portal-input"
-                value={origin}
-                onChange={(e) => setOrigin(e.target.value)}
-              >
-                <option value="">— não indicada —</option>
-                {ORIGINS.map((o) => (
-                  <option key={o} value={o}>
-                    {o}
-                  </option>
-                ))}
-              </select>
-            </label>
-            <label className="portal-label">
-              Marca
-              <input
-                type="text"
-                className="portal-input"
-                placeholder="Ex.: Ben-u-ron"
-                maxLength={80}
-                value={brand}
-                onChange={(e) => setBrand(e.target.value)}
-              />
-            </label>
-            <label className="portal-label">
-              Foto da embalagem
-              {imageUrl && (
-                <span className="stock-img-preview">
-                  <img
-                    src={imageUrl}
-                    alt={`Embalagem de ${item.name}`}
-                    className="stock-img-preview-img"
-                  />
-                  <button
-                    type="button"
-                    className="stock-img-preview-remove"
-                    disabled={removing || saving}
-                    title="Remover a foto deste medicamento"
-                    onClick={async () => {
-                      setRemoving(true)
-                      try {
-                        // Apaga do Storage e limpa o path. O item só perde a
-                        // foto no Localizador após «Guardar» — mas remover
-                        // aqui evita subir o modal para nada.
-                        await createClient()
-                          .storage.from('drug-images')
-                          .remove([imagePath])
-                          .catch(() => {})
-                        setImagePath('')
-                        setFileMsg('Foto removida — guarda para aplicar.')
-                      } finally {
-                        setRemoving(false)
-                      }
-                    }}
-                  >
-                    {removing ? '…' : <CloseIcon />}
-                  </button>
-                </span>
-              )}
-              <input
-                type="file"
-                accept="image/jpeg,image/png,image/webp"
-                className="portal-input"
-                disabled={uploading}
-                onChange={(e) => {
-                  const f = e.target.files?.[0]
-                  e.target.value = '' // permite reescolher o mesmo ficheiro
-                  handleImageFile(f)
-                }}
-              />
-              {/* Câmara directa no telemóvel — abre a app da câmara
-                  (câmara traseira) sem passar pela galeria. */}
-              <input
-                type="file"
-                accept="image/jpeg,image/png,image/webp"
-                capture="environment"
-                className="portal-input portal-input--camera"
-                disabled={uploading}
-                onChange={(e) => {
-                  const f = e.target.files?.[0]
-                  e.target.value = ''
-                  handleImageFile(f)
-                }}
-              />
-              {uploading && <span className="portal-hint">A carregar…</span>}
-              {!uploading && fileMsg && <span className="portal-hint">{fileMsg}</span>}
-            </label>
-          </div>
-
-          {/* Formas de venda (0012) — só faz sentido com
-              stock; para item esgotado as opções esperam a reposição. */}
-          <div className="sale-opts">
-            <div className="sale-opts-head">
-              <b>Formas de venda</b>
-              <span className="sale-opts-hint">
-                A farmácia decide se vende por lâmina, por caixa ou ambas — só as formas marcadas
-                «ofereço» aparecem ao cliente. Ex.: lâmina 100 Kz · caixa com 10 lâminas 950 Kz. O
-                saldo conta-se na unidade marcada como padrão.
+        <div className="portal-form-grid portal-form-grid--three">
+          <label className="portal-label">
+            Origem
+            <select
+              className="portal-input"
+              value={origin}
+              onChange={(e) => setOrigin(e.target.value)}
+            >
+              <option value="">— não indicada —</option>
+              {ORIGINS.map((o) => (
+                <option key={o} value={o}>
+                  {o}
+                </option>
+              ))}
+            </select>
+          </label>
+          <label className="portal-label">
+            Marca
+            <input
+              type="text"
+              className="portal-input"
+              placeholder="Ex.: Ben-u-ron"
+              maxLength={80}
+              value={brand}
+              onChange={(e) => setBrand(e.target.value)}
+            />
+          </label>
+          <label className="portal-label">
+            Foto da embalagem
+            {imageUrl && (
+              <span className="stock-img-preview">
+                <img
+                  src={imageUrl}
+                  alt={`Embalagem de ${item.name}`}
+                  className="stock-img-preview-img"
+                />
+                <button
+                  type="button"
+                  className="stock-img-preview-remove"
+                  disabled={removing || saving}
+                  title="Remover a foto deste medicamento"
+                  onClick={async () => {
+                    setRemoving(true)
+                    try {
+                      // Apaga do Storage e limpa o path. O item só perde a
+                      // foto no Localizador após «Guardar» — mas remover
+                      // aqui evita subir o modal para nada.
+                      await createClient()
+                        .storage.from('drug-images')
+                        .remove([imagePath])
+                        .catch(() => {})
+                      setImagePath('')
+                      setFileMsg('Foto removida — guarda para aplicar.')
+                    } finally {
+                      setRemoving(false)
+                    }
+                  }}
+                >
+                  {removing ? '…' : <CloseIcon />}
+                </button>
               </span>
-            </div>
-            {opts.length === 0 ? (
-              <button
-                type="button"
-                className="portal-chip sale-opts-add"
-                onClick={() => setOpts(suggestOptions(item.form))}
-              >
-                + Sugerir formas de venda
-              </button>
-            ) : (
-              <>
-                {opts.map((o, i) => (
-                  <div key={i} className="sale-opts-row">
-                    <select
-                      className="portal-input sale-opts-unit"
-                      value={o.unit}
-                      onChange={(e) =>
-                        setOpts((list) =>
-                          list.map((x, j) => (j === i ? { ...x, unit: e.target.value } : x)),
-                        )
-                      }
-                      aria-label="Forma de venda"
-                    >
-                      {UNITS.map((u) => (
-                        <option key={u.id} value={u.id}>
-                          {u.label}
-                        </option>
-                      ))}
-                    </select>
-                    <label className="sale-opts-pack">
-                      contém
-                      <input
-                        type="number"
-                        min="1"
-                        className="portal-input portal-input--price"
-                        value={o.packSize}
-                        disabled={o.isDefault}
-                        onChange={(e) =>
-                          setOpts((list) =>
-                            list.map((x, j) => (j === i ? { ...x, packSize: e.target.value } : x)),
-                          )
-                        }
-                      />
-                    </label>
+            )}
+            <input
+              type="file"
+              accept="image/jpeg,image/png,image/webp"
+              className="portal-input"
+              disabled={uploading}
+              onChange={(e) => {
+                const f = e.target.files?.[0]
+                e.target.value = '' // permite reescolher o mesmo ficheiro
+                handleImageFile(f)
+              }}
+            />
+            {/* Câmara directa no telemóvel — abre a app da câmara
+                  (câmara traseira) sem passar pela galeria. */}
+            <input
+              type="file"
+              accept="image/jpeg,image/png,image/webp"
+              capture="environment"
+              className="portal-input portal-input--camera"
+              disabled={uploading}
+              onChange={(e) => {
+                const f = e.target.files?.[0]
+                e.target.value = ''
+                handleImageFile(f)
+              }}
+            />
+            {uploading && <span className="portal-hint">A carregar…</span>}
+            {!uploading && fileMsg && <span className="portal-hint">{fileMsg}</span>}
+          </label>
+        </div>
+
+        {/* Formas de venda (0012) — só faz sentido com
+              stock; para item esgotado as opções esperam a reposição. */}
+        <div className="sale-opts">
+          <div className="sale-opts-head">
+            <b>Formas de venda</b>
+            <span className="sale-opts-hint">
+              A farmácia decide se vende por lâmina, por caixa ou ambas — só as formas marcadas
+              «ofereço» aparecem ao cliente. Ex.: lâmina 100 Kz · caixa com 10 lâminas 950 Kz. O
+              saldo conta-se na unidade marcada como padrão.
+            </span>
+          </div>
+          {opts.length === 0 ? (
+            <button
+              type="button"
+              className="portal-chip sale-opts-add"
+              onClick={() => setOpts(suggestOptions(item.form))}
+            >
+              + Sugerir formas de venda
+            </button>
+          ) : (
+            <>
+              {opts.map((o, i) => (
+                <div key={i} className="sale-opts-row">
+                  <select
+                    className="portal-input sale-opts-unit"
+                    value={o.unit}
+                    onChange={(e) =>
+                      setOpts((list) =>
+                        list.map((x, j) => (j === i ? { ...x, unit: e.target.value } : x)),
+                      )
+                    }
+                    aria-label="Forma de venda"
+                  >
+                    {UNITS.map((u) => (
+                      <option key={u.id} value={u.id}>
+                        {u.label}
+                      </option>
+                    ))}
+                  </select>
+                  <label className="sale-opts-pack">
+                    contém
                     <input
                       type="number"
-                      min="0"
-                      step="0.01"
+                      min="1"
                       className="portal-input portal-input--price"
-                      placeholder="Preço Kz"
-                      value={o.price}
+                      value={o.packSize}
+                      disabled={o.isDefault}
                       onChange={(e) =>
                         setOpts((list) =>
-                          list.map((x, j) => (j === i ? { ...x, price: e.target.value } : x)),
+                          list.map((x, j) => (j === i ? { ...x, packSize: e.target.value } : x)),
                         )
                       }
-                      aria-label="Preço desta forma"
                     />
-                    <label className="sale-opts-default">
-                      <input
-                        type="radio"
-                        name="sale-opts-default"
-                        checked={o.isDefault}
-                        onChange={() =>
-                          setOpts((list) =>
-                            list.map((x, j) => ({
-                              ...x,
-                              isDefault: j === i,
-                              packSize: j === i ? 1 : x.packSize,
-                            })),
-                          )
-                        }
-                      />
-                      padrão
-                    </label>
-                    <label className="sale-opts-active">
-                      <input
-                        type="checkbox"
-                        checked={o.active}
-                        onChange={(e) =>
-                          setOpts((list) =>
-                            list.map((x, j) => (j === i ? { ...x, active: e.target.checked } : x)),
-                          )
-                        }
-                      />
-                      ofereço
-                    </label>
-                    <button
-                      type="button"
-                      className="sale-opts-rm"
-                      aria-label="Remover forma de venda"
-                      onClick={() => setOpts((list) => list.filter((_, j) => j !== i))}
-                    >
-                      ×
-                    </button>
-                  </div>
-                ))}
-                {opts.length < 4 && (
+                  </label>
+                  <input
+                    type="number"
+                    min="0"
+                    step="0.01"
+                    className="portal-input portal-input--price"
+                    placeholder="Preço Kz"
+                    value={o.price}
+                    onChange={(e) =>
+                      setOpts((list) =>
+                        list.map((x, j) => (j === i ? { ...x, price: e.target.value } : x)),
+                      )
+                    }
+                    aria-label="Preço desta forma"
+                  />
+                  <label className="sale-opts-default">
+                    <input
+                      type="radio"
+                      name="sale-opts-default"
+                      checked={o.isDefault}
+                      onChange={() =>
+                        setOpts((list) =>
+                          list.map((x, j) => ({
+                            ...x,
+                            isDefault: j === i,
+                            packSize: j === i ? 1 : x.packSize,
+                          })),
+                        )
+                      }
+                    />
+                    padrão
+                  </label>
+                  <label className="sale-opts-active">
+                    <input
+                      type="checkbox"
+                      checked={o.active}
+                      onChange={(e) =>
+                        setOpts((list) =>
+                          list.map((x, j) => (j === i ? { ...x, active: e.target.checked } : x)),
+                        )
+                      }
+                    />
+                    ofereço
+                  </label>
                   <button
                     type="button"
-                    className="portal-chip sale-opts-add"
-                    onClick={() =>
-                      setOpts((list) => [
-                        ...list,
-                        { unit: 'caixa', packSize: '', price: '', isDefault: false, active: true },
-                      ])
-                    }
+                    className="sale-opts-rm"
+                    aria-label="Remover forma de venda"
+                    onClick={() => setOpts((list) => list.filter((_, j) => j !== i))}
                   >
-                    + adicionar forma de venda
+                    ×
                   </button>
-                )}
-              </>
-            )}
-          </div>
+                </div>
+              ))}
+              {opts.length < 4 && (
+                <button
+                  type="button"
+                  className="portal-chip sale-opts-add"
+                  onClick={() =>
+                    setOpts((list) => [
+                      ...list,
+                      { unit: 'caixa', packSize: '', price: '', isDefault: false, active: true },
+                    ])
+                  }
+                >
+                  + adicionar forma de venda
+                </button>
+              )}
+            </>
+          )}
+        </div>
 
-          <div className="stock-modal-actions">
-            {/* Alternar o estado a partir do modal também guarda os campos. */}
-            <button
-              type="button"
-              className={`portal-toggle${inStock ? '' : ' portal-toggle--on'}`}
-              disabled={saving}
-              onClick={() =>
-                onSave({
-                  quantity,
-                  price,
-                  expires_at_input: expiresAt,
-                  expires_at: expiresAt || null,
-                  available_from_input: availableFrom,
-                  available_from: availableFrom || null,
-                  in_stock: !inStock,
-                })
-              }
-              aria-pressed={inStock}
-            >
-              Marcar como {inStock ? 'não disponível' : 'disponível'}
-            </button>
-            <button type="submit" className="btn btn-primary" disabled={saving}>
-              {saving ? 'A guardar…' : 'Guardar'}
-            </button>
-            {/* Retirar (0014): Remove o medicamento do catálogo da farmácia
+        <div className="stock-modal-actions">
+          {/* Alternar o estado a partir do modal também guarda os campos. */}
+          <button
+            type="button"
+            className={`portal-toggle${inStock ? '' : ' portal-toggle--on'}`}
+            disabled={saving}
+            onClick={() =>
+              onSave({
+                quantity,
+                price,
+                expires_at_input: expiresAt,
+                expires_at: expiresAt || null,
+                available_from_input: availableFrom,
+                available_from: availableFrom || null,
+                in_stock: !inStock,
+              })
+            }
+            aria-pressed={inStock}
+          >
+            Marcar como {inStock ? 'não disponível' : 'disponível'}
+          </button>
+          <button type="submit" className="btn btn-primary" disabled={saving}>
+            {saving ? 'A guardar…' : 'Guardar'}
+          </button>
+          {/* Retirar (0014): Remove o medicamento do catálogo da farmácia
                 — vai para a Lixeira (restaurável). Abre a confirmação
                 estilizada (ConfirmRetire). */}
-            <button
-              type="button"
-              className="stock-retire-btn"
-              disabled={saving}
-              onClick={() => onRetire(item)}
-            >
-              Retirar do catálogo
-            </button>
-          </div>
-        </form>
-      </motion.div>
-    </motion.div>
+          <button
+            type="button"
+            className="stock-retire-btn"
+            disabled={saving}
+            onClick={() => onRetire(item)}
+          >
+            Retirar do catálogo
+          </button>
+        </div>
+      </form>
+    </PortalDrawer>
   )
 }
 
@@ -1717,46 +1693,24 @@ export default function StockPanel({ compact = false, isManager = false }) {
         </p>
       )}
 
-      <AnimatePresence>
-        {editing === 'new' && (
-          <motion.div
-            key="stock-new"
-            className="stock-modal"
-            role="dialog"
-            aria-modal="true"
-            aria-labelledby="stock-modal-new-title"
-            {...modalFadeMotion}
-          >
-            <div
-              className="stock-modal-scrim"
-              onClick={() => setEditing(null)}
-              aria-hidden="true"
-            />
-            <motion.div className="stock-modal-card" {...modalCardMotion}>
-              <div className="portal-section-head" style={{ marginBottom: 0 }}>
-                <h3 id="stock-modal-new-title" className="portal-h2">
-                  Novo medicamento
-                </h3>
-                <button
-                  type="button"
-                  className="btn btn-secondary btn-small"
-                  onClick={() => setEditing(null)}
-                  aria-label="Fechar"
-                >
-                  Fechar
-                </button>
-              </div>
-              <DrugCreateForm
-                embedded
-                onCreated={() => {
-                  setEditing(null)
-                  load() // o novo fármaco entra já na lista
-                }}
-              />
-            </motion.div>
-          </motion.div>
-        )}
+      {editing === 'new' && (
+        <PortalDrawer
+          open
+          title="Novo medicamento"
+          hint="Adicione o medicamento ao catálogo; o gerente valida antes de ficar visível aos clientes."
+          onClose={() => setEditing(null)}
+        >
+          <DrugCreateForm
+            embedded
+            onCreated={() => {
+              setEditing(null)
+              load() // o novo fármaco entra já na lista
+            }}
+          />
+        </PortalDrawer>
+      )}
 
+      <AnimatePresence>
         {editing && editing !== 'new' && (
           <StockEditModal
             key="stock-edit"

@@ -385,8 +385,8 @@ export default async function DesempenhoPage({ searchParams }) {
         </div>
       )}
 
-      {/* Comparação lado a lado — escolhe dois perfis e vê as métricas
-          face a face (só gerentes — são colegas a serem comparados). */}
+      {/* Comparação lado a lado — escolhe dois a cinco perfis e vê as
+          métricas face a face (só gerentes — são colegas a serem comparados). */}
       {isManager && rows.length > 1 && <StaffCompare rows={rows} />}
 
       <p className="portal-hint">

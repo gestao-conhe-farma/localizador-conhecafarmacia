@@ -253,13 +253,6 @@ export default function PortalSidebar({
   // Numeração estrutural (01, 02, …) — a mesma do NavLateral do gestão.
   const flat = grupos.flatMap((g) => g.items)
 
-  // O eyebrow ao lado do logo já diz «Localizador» (o plano de entrada tem
-  // o nome da marca). O chip do plano só acrescenta informação quando o
-  // nome é outro ou há um estado para comunicar — repetir «Localizador»
-  // duas vezes na mesma linha era ruído, não hierarquia.
-  const planoDuplicaMarca = plan?.nome === 'Localizador'
-  const mostrarPlano = Boolean(plan?.nome) && (!planoDuplicaMarca || Boolean(plan?.estadoLabel))
-
   return (
     <>
       {/* Véu por baixo do drawer mobile */}
@@ -298,19 +291,6 @@ export default function PortalSidebar({
               />
             </Link>
             <p className="portal-side-eyebrow">Localizador</p>
-            {mostrarPlano && (
-              <p
-                className="portal-side-plan"
-                title={
-                  plan.enforced
-                    ? `Plano ${plan.nome} — os itens com cadeado precisam de um plano superior.`
-                    : `Plano ${plan.nome}.`
-                }
-              >
-                {planoDuplicaMarca ? plan.estadoLabel : plan.nome}
-                {!planoDuplicaMarca && plan.estadoLabel ? <span> · {plan.estadoLabel}</span> : null}
-              </p>
-            )}
           </div>
           {/* Só visível no mobile, quando a sidebar é drawer: cobre o botão
               ☰ da top-bar, por isso precisa de fechar próprio. */}

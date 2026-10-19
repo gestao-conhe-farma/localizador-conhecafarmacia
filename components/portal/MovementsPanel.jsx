@@ -188,107 +188,128 @@ export default function MovementsPanel() {
         </p>
       )}
 
-      <div className="portal-toolbar">
-        <div className="portal-chips" role="group" aria-label="Filtrar por tipo">
+      <div className="portal-box portal-mov-box">
+        <div className="portal-sec-head portal-mov-tools">
+          <h2>Histórico de movimentos</h2>
+          <label className="portal-sec-search portal-mov-search">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
+              <circle cx="11" cy="11" r="7" />
+              <path d="m21 21-4.3-4.3" />
+            </svg>
+            <input
+              type="search"
+              placeholder="Pesquisar medicamento…"
+              value={q}
+              onChange={(e) => setQ(e.target.value)}
+              aria-label="Pesquisar movimentos por medicamento"
+            />
+          </label>
+        </div>
+        <div
+          className="portal-undertabs portal-mov-tabs"
+          role="group"
+          aria-label="Filtrar por tipo"
+        >
           {TIPOS.map((t) => (
             <button
               key={String(t.id)}
               type="button"
-              className={`portal-chip${tipo === t.id ? ' portal-chip--active' : ''}`}
               aria-pressed={tipo === t.id}
+              className={`portal-undertab${tipo === t.id ? ' active' : ''}`}
               onClick={() => setTipo(t.id)}
             >
               {t.label}
             </button>
           ))}
         </div>
-        <div className="portal-sec-tools">
-          <input
-            className="portal-input portal-sec-search"
-            type="search"
-            placeholder="Pesquisar medicamento…"
-            value={q}
-            onChange={(e) => setQ(e.target.value)}
-            aria-label="Pesquisar movimentos por medicamento"
-          />
-        </div>
-      </div>
 
-      {loading && (
-        <div className="empty-state" role="status">
-          <div className="spinner" />
-        </div>
-      )}
+        {loading && (
+          <div className="empty-state" role="status">
+            <div className="spinner" />
+          </div>
+        )}
 
-      {!loading && data && !data.ok && (
-        <div className="empty-state">
-          <p className="empty-sub">{ERRORES[data.error] || ERRORES.FALHA_CARREGAR}</p>
-        </div>
-      )}
+        {!loading && data && !data.ok && (
+          <div className="empty-state">
+            <p className="empty-sub">{ERRORES[data.error] || ERRORES.FALHA_CARREGAR}</p>
+          </div>
+        )}
 
-      {!loading && data?.ok && rows.length === 0 && (
-        <div className="portal-box">
+        {!loading && data?.ok && rows.length === 0 && (
           <div className="portal-rows-empty">
             <b>Sem movimentos neste filtro</b>
             Assim que houver entradas, vendas ou uma importação, o histórico aparece aqui.
           </div>
-        </div>
-      )}
+        )}
 
-      {!loading && rows.length > 0 && (
-        <div className="portal-box portal-box--pad">
-          <div className="portal-feed">
-            {rows.map((m) => {
-              const meta = META[m.movement_type] || { label: m.movement_type, badge: '' }
-              const d = Number(m.quantity_delta || 0)
-              return (
-                <div key={m.id} className="portal-citem">
-                  <div className="portal-citem-top">
-                    <b className="portal-citem-name">{m.drug_label || 'Medicamento'}</b>
-                    <span className="portal-citem-time">{quando(m.created_at)}</span>
-                  </div>
-                  <div className="portal-citem-meta">
-                    <span className={`portal-badge ${meta.badge}`}>{meta.label}</span>
-                    {d !== 0 && (
-                      <span className={`portal-st ${d > 0 ? 'portal-st--ok' : 'portal-st--mut'}`}>
-                        {d > 0 ? `+${nInt(d)}` : `−${nInt(Math.abs(d))}`}
-                      </span>
-                    )}
-                    {m.quantity_before != null && m.quantity_after != null && d !== 0 && (
-                      <span className="sub">
-                        saldo {nInt(m.quantity_before)} → {nInt(m.quantity_after)}
-                      </span>
-                    )}
-                    <span className="sub">{FONTES[m.source] || m.source}</span>
-                  </div>
-                  <div className="portal-citem-foot">
-                    {m.reason && <span>{m.reason}</span>}
-                    {m.actor_label ? <span className="sub">por {m.actor_label}</span> : null}
-                  </div>
-                </div>
-              )
-            })}
-          </div>
+        {!loading && rows.length > 0 && (
+          <>
+            <div className="portal-table-scroll portal-mov-table">
+              <div className="portal-rowhead portal-cols-mov" aria-hidden="true">
+                <span>Quando</span>
+                <span>Medicamento</span>
+                <span>Tipo</span>
+                <span>Variação</span>
+                <span>Origem</span>
+              </div>
 
-          <div className="portal-pgbar">
-            <span className="portal-pginfo">
-              A mostrar {rows.length} de {total} movimentos · mais recentes no topo
-            </span>
-            {podeMais && (
-              <span className="portal-pgbtns">
-                <button
-                  type="button"
-                  className="btn btn-secondary btn-small"
-                  disabled={more}
-                  onClick={() => carregar({ append: true })}
-                >
-                  {more ? 'A carregar…' : 'Carregar mais'}
-                </button>
+              {rows.map((m) => {
+                const meta = META[m.movement_type] || { label: m.movement_type, badge: '' }
+                const d = Number(m.quantity_delta || 0)
+                return (
+                  <div key={m.id} className="portal-rowline portal-rowline--static portal-cols-mov">
+                    <span className="portal-cell portal-citem-time">{quando(m.created_at)}</span>
+                    <div className="portal-cell">
+                      <b>{m.drug_label || 'Medicamento'}</b>
+                      {(m.reason || m.actor_label) && (
+                        <span className="sub portal-cell-mob">
+                          {[m.reason, m.actor_label ? `por ${m.actor_label}` : null]
+                            .filter(Boolean)
+                            .join(' · ')}
+                        </span>
+                      )}
+                    </div>
+                    <div className="portal-cell">
+                      <span className={`portal-badge ${meta.badge}`}>{meta.label}</span>
+                    </div>
+                    <div className="portal-cell">
+                      {d !== 0 && (
+                        <span className={`portal-st ${d > 0 ? 'portal-st--ok' : 'portal-st--mut'}`}>
+                          {d > 0 ? `+${nInt(d)}` : `−${nInt(Math.abs(d))}`}
+                        </span>
+                      )}
+                      {m.quantity_before != null && m.quantity_after != null && d !== 0 && (
+                        <span className="sub">
+                          saldo {nInt(m.quantity_before)} → {nInt(m.quantity_after)}
+                        </span>
+                      )}
+                    </div>
+                    <span className="portal-cell sub">{FONTES[m.source] || m.source}</span>
+                  </div>
+                )
+              })}
+            </div>
+
+            <div className="portal-pgbar portal-mov-pgbar">
+              <span className="portal-pginfo">
+                A mostrar {rows.length} de {total} movimentos · mais recentes no topo
               </span>
-            )}
-          </div>
-        </div>
-      )}
+              {podeMais && (
+                <span className="portal-pgbtns">
+                  <button
+                    type="button"
+                    className="btn btn-secondary btn-small"
+                    disabled={more}
+                    onClick={() => carregar({ append: true })}
+                  >
+                    {more ? 'A carregar…' : 'Carregar mais'}
+                  </button>
+                </span>
+              )}
+            </div>
+          </>
+        )}
+      </div>
     </section>
   )
 }

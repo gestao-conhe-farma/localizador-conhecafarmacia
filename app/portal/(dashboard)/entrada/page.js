@@ -1,5 +1,6 @@
 import { Suspense } from 'react'
 import RestockPanel from '@/components/portal/RestockPanel'
+import { PortalSectionSkeleton } from '@/components/portal/PortalPageSkeleton'
 
 export const metadata = {
   title: 'Portal da farmácia — entrada de stock',
@@ -20,13 +21,7 @@ export const metadata = {
 export default function PortalRestockPage() {
   return (
     <div className="portal-page">
-      <Suspense
-        fallback={
-          <div className="empty-state" role="status">
-            <div className="spinner" />
-          </div>
-        }
-      >
+      <Suspense fallback={<PortalSectionSkeleton lines={5} />}>
         <RestockPanel />
       </Suspense>
     </div>

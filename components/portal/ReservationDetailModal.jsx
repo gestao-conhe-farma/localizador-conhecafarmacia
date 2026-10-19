@@ -267,7 +267,7 @@ export default function ReservationDetailModal({
           </div>
         </div>
 
-        <div className="stock-modal-actions">
+        <div className="res-detail-actions">
           {/* «Avisar cliente» — mensagem por estado (confirmação/pronta),
               nas reservas activas e também nas encerradas com telefone
               (o atendente pode precisar de retomar o contacto). */}
@@ -275,7 +275,7 @@ export default function ReservationDetailModal({
             r.requester_phone && (
               <button
                 type="button"
-                className="btn-mini res-wa-btn"
+                className="res-detail-action res-wa-btn"
                 disabled={busy}
                 onClick={onWhatsApp}
               >
@@ -287,7 +287,7 @@ export default function ReservationDetailModal({
           {r.requester_phone && (
             <a
               href={`tel:${String(r.requester_phone).replace(/[^\d+]/g, '')}`}
-              className="btn-mini res-details-btn"
+              className="res-detail-action"
             >
               Ligar ao cliente
             </a>
@@ -298,7 +298,7 @@ export default function ReservationDetailModal({
               Só para pendentes/confirmadas: nas concluídas/recusadas não
               faz sentido «contactar com a reserva». */}
           {['pendente', 'confirmada', 'pronta'].includes(r.status) && r.requester_phone && (
-            <button type="button" className="btn-mini res-details-btn" onClick={copyContact}>
+            <button type="button" className="res-detail-action" onClick={copyContact}>
               {copiedMsg ? (
                 <>
                   <CheckIcon /> Copiada

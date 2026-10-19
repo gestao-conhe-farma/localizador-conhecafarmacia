@@ -19,12 +19,12 @@ export interface TooltipContentProps {
 export function TooltipContent({ title, rows, children }: TooltipContentProps) {
   return (
     <div className="overflow-hidden">
-      <div className="px-3 py-2.5">
-        {title && (
-          <div className="mb-2 text-left font-medium text-chart-tooltip-foreground text-xs">
-            {title}
-          </div>
-        )}
+      {title && (
+        <div className="border-border/70 border-b px-3.5 py-2 text-left font-medium text-chart-tooltip-foreground text-xs">
+          {title}
+        </div>
+      )}
+      <div className="px-3.5 py-2.5">
         <div className="space-y-1.5">
           {rows.map((row) => (
             <div

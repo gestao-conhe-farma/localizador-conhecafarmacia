@@ -9,6 +9,7 @@ const ERRORES_BASE = {
   TELEFONE_INVALIDO: 'Telefone inválido — 9 a 15 dígitos (ex.: 923000000).',
   QUANTIDADE_INVALIDA: 'Quantidade entre 1 e 10.',
   INDISPONIVEL: 'Este item já não está disponível — refresque a pesquisa.',
+  NAO_RESERVAVEL: 'Este produto só está disponível no balcão — passe na farmácia.',
   OPCAO_INVALIDA: 'Forma de venda já não disponível — escolha outra.',
   LIMITE_ATINGIDO: 'Muitas reservas seguidas. Tente novamente mais tarde.',
   FALHA_CRIAR: 'Não foi possível criar a reserva. Tente novamente.',
@@ -107,7 +108,16 @@ export default function ReserveModal({ item, onClose, onCreated }) {
           </button>
         </div>
 
-        {created ? (
+        {/* Reserva opcional por produto (0038): sem reserva, só balcão. */}
+        {item.reservable === false && !created ? (
+          <div className="res-success">
+            <p className="res-success-title">Disponível só no balcão</p>
+            <p className="res-success-sub">
+              Este produto não aceita reservas no Localizador — passe na {item.pharmacy_name} para
+              o levar na hora.
+            </p>
+          </div>
+        ) : created ? (
           <div className="res-success">
             <p className="res-success-title">
               A {created.pharmacyName} vai responder em até 72 horas.

@@ -151,8 +151,9 @@ export default function PharmacyStock({ slug, initialItems = null }) {
         <div className="empty-state">
           <p className="empty-title">Ainda sem stock confirmado</p>
           <p className="empty-sub">
-            Esta farmácia não tem medicamentos confirmados nas últimas 72 horas — ou o endereço não
-            corresponde a uma farmácia parceira activa.
+            Esta farmácia não tem produtos confirmados agora — medicamentos nas últimas 72 h,
+            parafarmácia nos últimos 30 dias — ou o endereço não corresponde a uma farmácia parceira
+            activa.
           </p>
           <Link href="/pesquisa" className="btn btn-primary">
             Ir para a pesquisa
@@ -335,6 +336,11 @@ export default function PharmacyStock({ slug, initialItems = null }) {
                         </div>
                         <div className="crit-side">
                           <PriceWithOptions item={it} fmt={fmtKz} />
+                          {it.reservable === false ? (
+                            <span className="btn-mini" title="Só disponível no balcão">
+                            Só no balcão
+                            </span>
+                          ) : (
                           <button
                             type="button"
                             className="btn-mini btn-mini--wa"
@@ -343,6 +349,7 @@ export default function PharmacyStock({ slug, initialItems = null }) {
                           >
                             Reservar
                           </button>
+                          )}
                           {it.pharmacy_whatsapp && (
                             <a
                               href={`https://wa.me/${it.pharmacy_whatsapp.replace(/\D/g, '')}?text=${encodeURIComponent(
@@ -427,6 +434,11 @@ export default function PharmacyStock({ slug, initialItems = null }) {
                               </div>
                               <div className="stock-side">
                                 <PriceWithOptions item={it} fmt={fmtKz} />
+                                {it.reservable === false ? (
+                                  <span className="btn-mini" title="Só disponível no balcão">
+                                  Só no balcão
+                                  </span>
+                                ) : (
                                 <button
                                   type="button"
                                   className="btn-mini btn-mini--wa"
@@ -435,6 +447,7 @@ export default function PharmacyStock({ slug, initialItems = null }) {
                                 >
                                   Reservar
                                 </button>
+                                )}
                                 {it.pharmacy_whatsapp && (
                                   <a
                                     href={`https://wa.me/${it.pharmacy_whatsapp.replace(/\D/g, '')}?text=${encodeURIComponent(

@@ -6,6 +6,7 @@ import StaffCompare from '@/components/portal/StaffCompare'
 import StaffShareDonut from '@/components/portal/StaffShareDonut'
 import { PlanBlocked } from '@/components/portal/PlanGate'
 import { allow, getSubscription } from '@/lib/platform/subscriptions'
+import { KINDS } from '@/lib/constants'
 
 export const metadata = {
   title: 'Portal da farmácia — desempenho',
@@ -50,7 +51,9 @@ export default async function DesempenhoPage({ searchParams }) {
   const isManager = staff.role === 'gerente'
   const params = await searchParams
   const dias = JANELAS.some((j) => j.id === Number(params?.dias)) ? Number(params.dias) : 30
-  const report = await getPerformanceReport({ days: dias })
+  const cat = KINDS.some((k) => k.id === params?.cat) ? params.cat : 'all'
+  const catQuery = cat === 'all' ? '' : `&cat=${cat}`
+  const report = await getPerformanceReport({ days: dias, kind: cat })
 
   if (!report.ok) {
     // O plano pode ter mudado entre a leitura acima e o relatório: o
@@ -107,10 +110,27 @@ export default async function DesempenhoPage({ searchParams }) {
           {JANELAS.map((j) => (
             <Link
               key={j.id}
-              href={`/portal/desempenho?dias=${j.id}`}
+              href={`/portal/desempenho?dias=${j.id}${catQuery}`}
               className={`portal-chip${dias === j.id ? ' portal-chip--active' : ''}`}
             >
               {j.label}
+            </Link>
+          ))}
+        </div>
+        <div className="portal-chips" role="group" aria-label="Escolher categoria">
+          <Link
+            href={`/portal/desempenho?dias=${dias}`}
+            className={`portal-chip${cat === 'all' ? ' portal-chip--active' : ''}`}
+          >
+            Todas
+          </Link>
+          {KINDS.map((k) => (
+            <Link
+              key={k.id}
+              href={`/portal/desempenho?dias=${dias}&cat=${k.id}`}
+              className={`portal-chip${cat === k.id ? ' portal-chip--active' : ''}`}
+            >
+              {k.label}
             </Link>
           ))}
         </div>

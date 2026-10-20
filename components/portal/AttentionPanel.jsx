@@ -19,6 +19,7 @@ import {
   getPendingReservationsCount,
 } from '@/lib/actions/pharmacy-portal'
 import { getRestockAck, setRestockAck } from '@/lib/restock'
+import { kindLabel } from '@/lib/constants'
 import { expiryStatus, monthYear } from '@/lib/expiry'
 import Notice from '@/components/ui/Notice'
 
@@ -78,7 +79,8 @@ function restockPackSuffix(it) {
  *  • REPOSIÇÃO — saíram do Localizador quando uma reserva concluída
  *    esgotou o stock (trigger 0006).
  *  • VALIDADE — expirados / 30 / 60 / 90 dias (lib/expiry).
- *  • STALE — confirmado há mais de 5 dias.
+ *  • STALE — sem reconfirmar há 48 h (medicamentos) ou 25 dias (resto),
+ *    com o limite de visibilidade de cada categoria no aviso.
  * A lógica (acks por browser, save por fármaco, deep-links ?q=/ ?drug=,
  * filtro no URL) é a mesma de sempre — mudou só a roupa.
  */
@@ -205,8 +207,9 @@ export default function AttentionPanel({ pharmacyId }) {
             b: 'Desactualizado:',
             t: (
               <>
-                Confirmado há mais de 5 dias: sai de <b>confirmado</b> no Localizador. Um clique
-                volta a pôr o produto no ar.
+                Medicamentos caem do ar às <b>72 h</b> sem reconfirmar (aviso às 48 h);
+                parafarmácia aos <b>30 dias</b> (aviso aos 25). Um clique volta a pôr o produto no
+                ar.
               </>
             ),
           }
@@ -219,7 +222,10 @@ export default function AttentionPanel({ pharmacyId }) {
   const notaKey = nota ? nota.b : ''
   useEffect(() => {
     if (!notaKey) return
-    setHintVisible(true)
+    // Microtask: setState síncrono no corpo do effect é a cascata que o
+    // react-hooks/set-state-in-effect sinaliza (o mesmo padrão do
+    // StockPanel na sincronização com o URL).
+    queueMicrotask(() => setHintVisible(true))
     const t = setTimeout(() => setHintVisible(false), 6000)
     return () => clearTimeout(t)
   }, [typeFilter, notaKey])
@@ -342,7 +348,7 @@ export default function AttentionPanel({ pharmacyId }) {
     {
       k: 'Stock desactualizado',
       n: stale.length,
-      d: 'confirmado há mais de 5 dias',
+      d: 'medicamentos 48 h · outros 25 d',
       ic: 'gray',
       svg: (
         <svg
@@ -488,6 +494,10 @@ export default function AttentionPanel({ pharmacyId }) {
           <span className="portal-atr-meta">
             {metaBase}
             {it.quantity != null && ` · ${it.quantity} em prateleira`}
+            {/* Categoria no aviso: o prazo de frescura muda com ela —
+                parafarmácia aguenta 30 dias, o medicamento 72 h. */}
+            {it.drugKind && it.drugKind !== 'medicamento' &&
+              ` · ${kindLabel(it.drugKind).toLowerCase()}`}
           </span>
         </div>
         <span className="portal-st portal-st--mut">

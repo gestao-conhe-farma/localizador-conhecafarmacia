@@ -152,17 +152,25 @@ Toca em **Guardar** — tudo fica visível no Localizador imediatamente.
 
 - **Validade a vencer (90/60/30 dias)** — avisa com tempo. Se chegou lote
   novo, corrige a validade; se não há reposição, marca «Já não disponível».
-- **Stock desactualizado (mais de 5 dias)** — confirma que ainda está na
-  prateleira e toca em **Reconfirmar agora**. Um clique.
+- **Stock desactualizado** — medicamentos avisam às **48 h** sem reconfirmar
+  (caem do ar às **72 h**); a parafarmácia avisa aos **25 dias** (cai aos
+  **30**). Confirma que ainda está na prateleira e toca em **Reconfirmar
+  agora**. Um clique.
 
 ---
 
-## 7. Medicamento novo + validação do gerente
+## 7. Produto novo + validação do gerente
 
-Se um medicamento que a farmácia vende **não existe no catálogo**, cria-o:
+Se um produto que a farmácia vende **não existe no catálogo**, cria-o:
 em **Stock**, botão **+ Adicionar medicamento**. Escreve o nome como
-aparece na caixa, a molécula (DCI), a forma, a dosagem e se exige
-**receita médica**.
+aparece na caixa e escolhe a **Categoria**. Se for **Medicamento**, pede
+a molécula (DCI), a forma, a dosagem e se exige **receita médica**; se for
+**parafarmácia** (bebé, higiene, beleza, outros), esses campos desaparecem
+e só decides se **aceita reservas** — desligado, o cliente vê **Só no
+balcão** e não consegue reservar.
+
+A categoria muda a frescura: medicamentos caem do Localizador às **72 h**
+sem reconfirmação, os restantes aos **30 dias**.
 
 **Fluxo de validação:** o medicamento criado entra com a marca
 **«Aguarda validação»** — só a tua farmácia o vê. O **gerente** abre o
@@ -251,7 +259,8 @@ estão no **Guia do gestor**.
 | Não temos o produto               | Reservas                            | Recusar + motivo (com texto, o cliente lê)                        |
 | Produto esgotou                   | Atenção                             | «Repor na entrada» quando chegar mercadoria                       |
 | Chegou fornecedor                 | Stock → Entrada de stock            | Escrever unidades → Somar                                         |
-| Medicamento não está no catálogo  | Stock → + Adicionar medicamento     | Criar → o gerente valida e publica                                |
+| Cliente quer reservar mas a farmácia não aceita | Reservas → nome do medicamento → ⋯ | Desligar «Aceita reservas» e explicar que atende só no balcão |
+| Medicamento não está no catálogo  | Stock → + Adicionar medicamento     | Criar → o gerente valida e publica · o item novo nasce com «Aceita reservas» ligado; desligue no Stock (⋯) se for só venda directa |
 | Saldo não bate                    | Movimentos                          | Ver o que mexeu no produto                                        |
 | Mudou preço/validade/marca        | Stock → nome do medicamento         | Preencher no modal → Guardar                                      |
 | Mudou de turno / outro colega     | Fundo do menu (nome do perfil)      | Trocar perfil → cartão → PIN                                      |

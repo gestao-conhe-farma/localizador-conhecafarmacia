@@ -4,6 +4,7 @@ import { useEffect, useMemo, useState } from 'react'
 import { getSalesReport } from '@/lib/actions/pharmacy-portal'
 import { logWarn } from '@/lib/log'
 import { fmtKz } from '@/lib/reservation-format'
+import { KINDS } from '@/lib/constants'
 import { AreaChart, Area } from '@/components/charts/area-chart'
 import { Grid } from '@/components/charts/grid'
 import { XAxis } from '@/components/charts/x-axis'
@@ -54,6 +55,7 @@ export default function SalesReport() {
   const [report, setReport] = useState(null)
   const [days, setDays] = useState(30)
   const [scope, setScope] = useState('all')
+  const [kind, setKind] = useState('all')
   const [loading, setLoading] = useState(true)
   // Resolvido após montar (evita Date.now() impuro no render).
   const [today, setToday] = useState(null)
@@ -62,9 +64,9 @@ export default function SalesReport() {
     queueMicrotask(() => setToday(new Date().toISOString().slice(0, 10)))
   }, [])
 
-  const load = async (d, sc) => {
+  const load = async (d, sc, k) => {
     setLoading(true)
-    const res = await getSalesReport({ days: d, mine: sc === 'mine' })
+    const res = await getSalesReport({ days: d, mine: sc === 'mine', kind: k })
     setLoading(false)
     if (res.ok) setReport(res)
     else {
@@ -74,8 +76,8 @@ export default function SalesReport() {
   }
 
   useEffect(() => {
-    queueMicrotask(() => load(days, scope))
-  }, [days, scope])
+    queueMicrotask(() => load(days, scope, kind))
+  }, [days, scope, kind])
 
   /**
    * Série contínua: os dias da janela sem vendas entram com zero —
@@ -153,6 +155,19 @@ export default function SalesReport() {
               onClick={() => setScope(e.id)}
             >
               {e.label}
+            </button>
+          ))}
+        </div>
+        <div className="portal-chips" role="group" aria-label="Escolher categoria">
+          {[{ id: 'all', label: 'Todas' }, ...KINDS].map((k) => (
+            <button
+              key={k.id}
+              type="button"
+              className={`portal-chip${kind === k.id ? ' portal-chip--active' : ''}`}
+              aria-pressed={kind === k.id}
+              onClick={() => setKind(k.id)}
+            >
+              {k.label}
             </button>
           ))}
         </div>

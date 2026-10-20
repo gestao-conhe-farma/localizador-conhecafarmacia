@@ -1,7 +1,8 @@
 'use client'
 
 import { useState } from 'react'
-import { createDrug } from '@/lib/actions/pharmacy-portal'
+import { createDrug, setStockReservable } from '@/lib/actions/pharmacy-portal'
+import { KINDS } from '@/lib/constants'
 
 const ERRORES = {
   SESSAO_EXPIRADA: 'Sessão expirada — recarregue a página.',
@@ -29,25 +30,43 @@ export default function DrugCreateForm({ embedded = false, onCreated } = {}) {
   const [open, setOpen] = useState(false)
   const [saving, setSaving] = useState(false)
   const [feedback, setFeedback] = useState(null) // { type, text }
+  // Categoria (0038): medicamentos têm receita/dose; parafarmácia
+  // (bebé, higiene…) tem o interruptor de reserva.
+  const [kind, setKind] = useState('medicamento')
 
   const submit = async (e) => {
     e.preventDefault()
     setSaving(true)
     setFeedback(null)
     const fd = new FormData(e.currentTarget)
+    const cleanKind = KINDS.some((k) => k.id === fd.get('kind')) ? fd.get('kind') : 'medicamento'
     const res = await createDrug({
       name: fd.get('name'),
       molecule: fd.get('molecule'),
       form: fd.get('form'),
       dosage: fd.get('dosage'),
-      requiresRx: fd.get('requiresRx') === 'on',
+      requiresRx: cleanKind === 'medicamento' && fd.get('requiresRx') === 'on',
+      kind: cleanKind,
     })
+    // Reserva opcional (0038): a farmácia decide na criação se o produto
+    // de parafarmácia aceita reservas — omissão: aceita.
+    // Só numa criação nova: se o produto já existia, o interruptor do
+    // formulário não deve mudar a configuração que a farmácia já tem.
+    if (
+      res.ok &&
+      !res.existed &&
+      res.drugId &&
+      cleanKind !== 'medicamento' &&
+      fd.get('reservable') !== 'on'
+    ) {
+      await setStockReservable({ drugId: res.drugId, reservable: false })
+    }
     setSaving(false)
     if (res.ok) {
       setFeedback({
         type: 'ok',
         text: res.existed
-          ? 'Este medicamento já existe no catálogo — procure-o na lista de stock.'
+          ? 'Este produto já existe no catálogo — procure-o na lista de stock.'
           : (
             <>
               Adicionado ao catálogo — já aparece na lista de stock com a marca{' '}
@@ -57,6 +76,9 @@ export default function DrugCreateForm({ embedded = false, onCreated } = {}) {
           ),
       })
       e.target.reset()
+      // O select é controlado: reset() não lhe chega — volta ao medicamento
+      // para o próximo produto não nascer com a categoria do anterior.
+      setKind('medicamento')
       // No modal do stock, sucesso fecha o popup (a mensagem ia ficar
       // presa dentro dele — a lista já mostra o fármaco para marcar stock).
       if (embedded && onCreated) onCreated()
@@ -71,7 +93,7 @@ export default function DrugCreateForm({ embedded = false, onCreated } = {}) {
     return (
       <section className="portal-section">
         <button type="button" className="btn btn-secondary btn-small" onClick={() => setOpen(true)}>
-          + Medicamento em falta no catálogo
+          + Produto em falta no catálogo
         </button>
       </section>
     )
@@ -83,7 +105,7 @@ export default function DrugCreateForm({ embedded = false, onCreated } = {}) {
           cartão já traz título e botão fechar seus. */}
       {!embedded && (
         <div className="portal-section-head">
-          <h2 className="portal-h2">Novo medicamento</h2>
+          <h2 className="portal-h2">Novo produto</h2>
           <button
             type="button"
             className="btn btn-secondary btn-small"
@@ -101,21 +123,58 @@ export default function DrugCreateForm({ embedded = false, onCreated } = {}) {
             <input name="name" className="portal-input" required placeholder="Ex.: Varfarina" />
           </label>
           <label className="portal-label">
-            Molécula (DCI)
-            <input name="molecule" className="portal-input" placeholder="Ex.: varfarina sódica" />
+            Categoria
+            <select
+              name="kind"
+              className="portal-input"
+              value={kind}
+              onChange={(e) => setKind(e.target.value)}
+            >
+              {KINDS.map((k) => (
+                <option key={k.id} value={k.id}>
+                  {k.id === 'medicamento' ? 'Medicamento' : `Parafarmácia — ${k.label.toLowerCase()}`}
+                </option>
+              ))}
+            </select>
           </label>
-          <label className="portal-label">
-            Forma farmacêutica
-            <input name="form" className="portal-input" placeholder="Ex.: comprimido" />
-          </label>
-          <label className="portal-label">
-            Gramagem / dosagem
-            <input name="dosage" className="portal-input" placeholder="Ex.: 5 mg · cx 30 comp." />
-          </label>
-          <label className="portal-label portal-label--check">
-            <input name="requiresRx" type="checkbox" />
-            Exige receita médica
-          </label>
+          {/* Só o medicamento usa os campos clínicos; um produto de
+              parafarmácia não tem molécula nem dosagem — ficam vazios
+              (a CHECK da BD aceita-os a null). */}
+          {kind === 'medicamento' && (
+            <>
+              <label className="portal-label">
+                Molécula (DCI)
+                <input
+                  name="molecule"
+                  className="portal-input"
+                  placeholder="Ex.: varfarina sódica"
+                />
+              </label>
+              <label className="portal-label">
+                Forma farmacêutica
+                <input name="form" className="portal-input" placeholder="Ex.: comprimido" />
+              </label>
+              <label className="portal-label">
+                Gramagem / dosagem
+                <input
+                  name="dosage"
+                  className="portal-input"
+                  placeholder="Ex.: 5 mg · cx 30 comp."
+                />
+              </label>
+            </>
+          )}
+          {kind === 'medicamento' ? (
+            <label className="portal-label portal-label--check">
+              <input name="requiresRx" type="checkbox" />
+              Exige receita médica
+            </label>
+          ) : (
+            <label className="portal-label portal-label--check">
+              <input name="reservable" type="checkbox" defaultChecked />
+              Aceita reservas no Localizador
+            </label>
+          )}
         </div>
 
         {feedback && (

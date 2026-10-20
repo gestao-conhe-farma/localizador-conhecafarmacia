@@ -69,22 +69,19 @@ export default function DrugSearch() {
   const inputRef = useRef(null)
   const debounceRef = useRef(null)
 
-  // Stats do hero — contagens reais (farmácias activas + stock confirmado nas últimas 72 h)
+  // Stats do hero — contagens reais (farmácias activas + itens visíveis
+  // no Localizador; a janela depende da categoria desde a 0038).
   useEffect(() => {
     let alive = true
     ;(async () => {
       try {
         const supabase = createClient()
-        const since = new Date(Date.now() - 72 * 3600 * 1000).toISOString()
         const [ph, st] = await Promise.all([
           supabase
             .from('pharmacies')
             .select('slug', { count: 'exact', head: true })
             .eq('active', true),
-          supabase
-            .from('stock_confirmed')
-            .select('stock_item_id', { count: 'exact', head: true })
-            .gte('confirmed_at', since),
+          supabase.from('stock_confirmed').select('stock_item_id', { count: 'exact', head: true }),
         ])
         if (!alive) return
         setStats({ pharmacies: ph.count ?? 0, items: st.count ?? 0 })
@@ -269,7 +266,8 @@ export default function DrugSearch() {
         <div className="search-container">
           <p className="kicker">Localizador de Medicamentos · Luanda</p>
           <h1 className="search-hero-title">
-            Encontre o medicamento <em>confirmado</em> há menos de 72 horas.
+            Encontre o produto <em>confirmado</em> pela farmácia — medicamentos há menos de 72
+            horas, parafarmácia até 30 dias.
           </h1>
           <p className="search-hero-sub">
             Pesquise por nome ou molécula. Cada resultado vem de uma farmácia parceira que confirmou
@@ -446,11 +444,11 @@ export default function DrugSearch() {
               </div>
               <div className="stat">
                 <b>{stats ? stats.items : '—'}</b>
-                <span>medicamentos confirmados agora</span>
+                <span>produtos confirmados agora</span>
               </div>
               <div className="stat">
-                <b>72 h</b>
-                <span>idade máxima do stock</span>
+                <b>72 h–30 d</b>
+                <span>frescura por categoria</span>
               </div>
               <div className="stat">
                 <b>{MUNICIPIOS.length}</b>
@@ -478,7 +476,7 @@ export default function DrugSearch() {
               <div className="empty-state">
                 <p className="empty-title">
                   {onlyOpen && hasResults ? (
-                    'Nenhuma das farmácias com este medicamento está aberta agora'
+                    'Nenhuma das farmácias com este produto está aberta agora'
                   ) : (
                     <>
                       Sem stock confirmado para <b>{query}</b>
@@ -492,7 +490,7 @@ export default function DrugSearch() {
                       WhatsApp antes de sair.
                     </>
                   ) : (
-                    'Não há farmácias parceiras com este medicamento confirmado nas últimas 72 horas. Estamos a crescer a rede — volte em breve.'
+                    'Não há farmácias parceiras com este produto confirmado agora — medicamentos nas últimas 72 h, parafarmácia nos últimos 30 dias. Estamos a crescer a rede — volte em breve.'
                   )}
                 </p>
               </div>
@@ -502,7 +500,7 @@ export default function DrugSearch() {
               <>
                 <div className="results-head">
                   <span className="results-count">
-                    <strong>{visible.length}</strong> medicamento{visible.length !== 1 && 's'} em{' '}
+                    <strong>{visible.length}</strong> produto{visible.length !== 1 && 's'} em{' '}
                     <strong>{totalPharmacies}</strong> farmácia
                     {totalPharmacies !== 1 && 's'}
                     {municipio && <> em {municipio}</>}
@@ -632,6 +630,11 @@ export default function DrugSearch() {
                                 WhatsApp
                               </a>
                             )}
+                            {p.reservable === false ? (
+                              <span className="btn-mini" title="Só disponível no balcão">
+                              Só no balcão
+                              </span>
+                            ) : (
                             <button
                               type="button"
                               className="btn-mini btn-mini--wa"
@@ -640,6 +643,7 @@ export default function DrugSearch() {
                             >
                               Reservar
                             </button>
+                            )}
                           </div>
                         </div>
                       )

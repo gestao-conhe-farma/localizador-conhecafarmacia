@@ -24,22 +24,30 @@ contas diferentes. A divisão acima é só sobre **quando** se usa cada parte.
 
 ---
 
-## 2. Criar fármacos que faltam no catálogo (e validá-los)
+## 2. Criar produtos que faltam no catálogo (e validá-los)
 
-Se um medicamento que a tua farmácia vende **não existe no catálogo**,
-podes criá-lo directamente do portal:
+Se um produto que a tua farmácia vende **não existe no catálogo**, podes
+criá-lo directamente do portal:
 
 1. Vai a **Stock**.
 2. Toca em **+ Adicionar medicamento** (no cabeçalho da página).
 3. Preenche:
    - **Nome** — como aparece na caixa (ex.: «Aspirina 500 mg»);
-   - **Forma** — comprimido, cápsula, xarope, injetável…;
-   - **Dosagem** — ex.: 500 mg;
-   - **Receita médica** — liga se a venda exige receita;
+   - **Categoria** — **Medicamento** ou parafarmácia (**Bebé**, **Higiene**,
+     **Beleza**, **Outros**). Muda os campos pedidos e a frescura;
+   - **Forma** — comprimido, cápsula, xarope, injetável… (só medicamento);
+   - **Dosagem** — ex.: 500 mg (só medicamento);
+   - **Receita médica** — liga se a venda exige receita (só medicamento);
+   - **Aceita reservas** — nos produtos de parafarmácia: desliga se só
+     vendes ao balcão (o cliente vê «Só no balcão» e não reserva);
    - **Prioridade** — marca os **medicamentos críticos** (insulinas,
      anti-epilépticos, etc.): no Localizador aparecem em destaque no painel
      de críticos da página da farmácia.
 4. Guarda.
+
+> **Frescura por categoria:** um medicamento sem confirmação cai do
+> Localizador ao fim de **72 h**; os restantes aguentam **30 dias**. A
+> venda concluída renova a frescura — só o produto parado cai do ar.
 
 **O que acontece depois:** o fármaco entra com a marca **«Aguarda
 validação»** — não aparece no Localizador de imediato e só a tua farmácia

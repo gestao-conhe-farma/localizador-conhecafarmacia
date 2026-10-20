@@ -13,6 +13,7 @@ import {
 import { createClient } from '@/lib/supabase/client'
 import { compressDrugImage } from '@/lib/image-compress'
 import { countExpiryBuckets, expiryStatus, expirySummary, monthYear } from '@/lib/expiry'
+import { kindLabel, KINDS } from '@/lib/constants'
 import DrugCreateForm from '@/components/portal/DrugCreateForm'
 import { setSaleOptions, validatePendingDrug } from '@/lib/actions/pharmacy-portal'
 import { unitLabel } from '@/lib/sale-options'
@@ -186,6 +187,9 @@ function StockEditModal({ item, saving, onClose, onSave, onSaveOptions, onRetire
   const [imagePath, setImagePath] = useState(item.image_path || '')
   const [uploading, setUploading] = useState(false)
   const [removing, setRemoving] = useState(false)
+  // Reserva opcional por produto (0038) — só faz sentido mostrar o
+  // interruptor em não-medicamentos; medicamentos reservam sempre.
+  const [reservable, setReservable] = useState(item.reservable !== false)
   // URL público da foto actual — deriva do path no bucket (o mesmo que a
   // view stock_confirmed expõe ao Localizador).
   const supabaseUrl = createClient().supabaseUrl
@@ -243,7 +247,7 @@ function StockEditModal({ item, saving, onClose, onSave, onSaveOptions, onRetire
       open
       cardClassName="portal-drawer-card--stock-edit"
       title={item.name}
-      hint="Edite saldo, validade, preços e apresentação do medicamento."
+      hint="Edite saldo, validade, preços e apresentação do produto."
       onClose={onClose}
     >
       <form
@@ -263,10 +267,24 @@ function StockEditModal({ item, saving, onClose, onSave, onSaveOptions, onRetire
             origin,
             brand,
             image_path: imagePath,
+            reservable,
           })
         }}
       >
         {item.requires_rx && <span className="rx-badge rx-badge--inline">Receita médica</span>}
+        {item.kind && item.kind !== 'medicamento' && (
+          <span className="portal-chip">{kindLabel(item.kind)}</span>
+        )}
+        {item.kind && item.kind !== 'medicamento' && (
+          <label className="portal-label portal-label--check">
+            <input
+              type="checkbox"
+              checked={reservable}
+              onChange={(e) => setReservable(e.target.checked)}
+            />
+            Aceita reservas no Localizador
+          </label>
+        )}
         <p className="stock-modal-state">
           Estado: <b>{inStock ? 'disponível' : 'não disponível'}</b>
           {inStock
@@ -276,7 +294,7 @@ function StockEditModal({ item, saving, onClose, onSave, onSaveOptions, onRetire
 
         {/* Sectores no padrão dos grupos da sidebar — o que é do
               fármaco, do saldo, do dinheiro e da apresentação. */}
-        <div className="modal-sector">Medicamento</div>
+        <div className="modal-sector">Produto</div>
         <p className="stock-modal-info">
           {[item.molecule, item.form, item.dosage].filter(Boolean).join(' · ') ||
             'Sem detalhes no catálogo.'}
@@ -708,6 +726,9 @@ export default function StockPanel({ compact = false, isManager = false }) {
     if (urlQ) queueMicrotask(() => setQuery(urlQ))
   }, [urlQ])
   const [filter, setFilter] = useState('all')
+  // Categoria (0038): Todos | Medicamentos | Bebé | … — combina-se com o
+  // filtro de estado. `?cat=` partilha/recarrega com a categoria.
+  const [kindFilter, setKindFilter] = useState('all')
   // Deep-link do chip (`?f=in|pending|…`) — as legendas do donut
   // «Stock no Localizador» do dashboard abrem o stock já filtrado pelo
   // estado que a cor representa.
@@ -715,6 +736,11 @@ export default function StockPanel({ compact = false, isManager = false }) {
   useEffect(() => {
     if (urlF) queueMicrotask(() => setFilter(FILTER_IDS.includes(urlF) ? urlF : 'all'))
   }, [urlF])
+  const urlCat = searchParams.get('cat')
+  useEffect(() => {
+    if (urlCat)
+      queueMicrotask(() => setKindFilter(KINDS.some((k) => k.id === urlCat) ? urlCat : 'all'))
+  }, [urlCat])
   // Ordenação do grid — 'recent' é a de sempre: disponíveis primeiro.
   const [sort, setSort] = useState('recent')
   const [savingId, setSavingId] = useState(null)
@@ -749,7 +775,7 @@ export default function StockPanel({ compact = false, isManager = false }) {
   // effect é sinalizado pelo react-hooks/set-state-in-effect.
   useEffect(() => {
     queueMicrotask(() => setPage(0))
-  }, [query, filter, sort])
+  }, [query, filter, sort, kindFilter])
 
   // Carregamento único — o effect inicial e o refetch pós-criação
   // ("Adicionar ao Catálogo") partilham-no, para o fármaco recém-criado
@@ -768,6 +794,8 @@ export default function StockPanel({ compact = false, isManager = false }) {
     if (!items) return []
     const q = query.trim().toLowerCase()
     const rows = items.filter((it) => {
+      // Categoria (0038) — aplica-se a todos os estados, incluindo Lixeira.
+      if (kindFilter !== 'all' && (it.kind || 'medicamento') !== kindFilter) return false
       // Retirados (0014) só aparecem no chip Lixeira — nunca na lista
       // normal, nem em «Todos», nem em «Não disponível».
       const retirado = Boolean(it.retired_at)
@@ -821,7 +849,7 @@ export default function StockPanel({ compact = false, isManager = false }) {
       },
     }[sort]
     return [...rows].sort(cmp)
-  }, [items, query, filter, sort])
+  }, [items, query, filter, sort, kindFilter])
 
   // Contagens dos chips — sobre a lista COMPLETA (não a filtrada), para
   // funcionarem como atalhos de "quantos há em cada estado".
@@ -853,18 +881,33 @@ export default function StockPanel({ compact = false, isManager = false }) {
   const pageItems = filtered.slice(safePage * PAGE_SIZE, (safePage + 1) * PAGE_SIZE)
   const pgFrom = filtered.length === 0 ? 0 : safePage * PAGE_SIZE + 1
   const pgTo = Math.min(filtered.length, (safePage + 1) * PAGE_SIZE)
-  // Itens desactualizados — a CONTAGEM, para o banner voltar quando a
-  // situação piora (o fecho (X) guarda a baseline, não dispensa para sempre).
-  const staleCount = (items || []).filter(
-    (it) =>
-      it.in_stock &&
-      it.confirmed_at &&
-      now - new Date(it.confirmed_at).getTime() > 5 * 24 * 3600 * 1000,
-  ).length
+  // Itens desactualizados (0038) — a CONTAGEM, para o banner voltar quando
+  // a situação piora (o fecho (X) guarda a baseline, não dispensa para
+  // sempre). Limites preventivos: medicamentos avisam às 48 h (caem do ar
+  // às 72 h), as outras categorias aos 25 dias (caem aos 30 dias).
+  const staleByKind = (items || []).reduce(
+    (acc, it) => {
+      if (!it.in_stock || !it.confirmed_at) return acc
+      const age = now - new Date(it.confirmed_at).getTime()
+      const limit =
+        (it.kind || 'medicamento') === 'medicamento' ? 48 * 3600 * 1000 : 25 * 24 * 3600 * 1000
+      if (age > limit) acc[(it.kind || 'medicamento') === 'medicamento' ? 'med' : 'other'] += 1
+      return acc
+    },
+    { med: 0, other: 0 },
+  )
+  const staleCount = staleByKind.med + staleByKind.other
   const stale = staleCount > 0
 
   // Aviso de validade a 90 / 60 / 30 dias (e já expirados). Só conta o que
   // está marcado como "temos" — validade de produto que já não há não interessa.
+  // Categorias com stock (0038) — os chips só mostram o que existe.
+  const kindsPresent = useMemo(() => {
+    const set = new Set()
+    for (const it of items || []) set.add(it.kind || 'medicamento')
+    return KINDS.filter((k) => set.has(k.id))
+  }, [items])
+
   const expiryBuckets = useMemo(() => countExpiryBuckets(items), [items])
   const expiryMessage = expirySummary(expiryBuckets)
 
@@ -968,6 +1011,7 @@ export default function StockPanel({ compact = false, isManager = false }) {
       // envia sempre; os toggles da fila/atenção nunca).
       ...(patch.packLaminas !== undefined && { packLaminas: patch.packLaminas }),
       ...(patch.packComprimidos !== undefined && { packComprimidos: patch.packComprimidos }),
+      ...(patch.reservable !== undefined && { reservable: patch.reservable }),
     })
     setSavingId(null)
     if (res.ok) {
@@ -1124,8 +1168,8 @@ export default function StockPanel({ compact = false, isManager = false }) {
         <div>
           <h1 className="portal-page-title">Stock</h1>
           <p className="portal-page-sub">
-            <b>{stockCount}</b> de {items ? items.length : '…'} medicamentos marcados como
-            “disponível” — visível no Localizador agora.
+            <b>{stockCount}</b> de {items ? items.length : '…'} produtos disponíveis — visíveis no
+            Localizador agora.
           </p>
         </div>
         <div className="portal-page-head-acts">
@@ -1152,15 +1196,24 @@ export default function StockPanel({ compact = false, isManager = false }) {
           onDismiss={() => dismissBanner('stale', { count: staleCount })}
           dismissLabel="Dispensar este lembrete (volta se a situação piorar)"
         >
-          {staleCount === 1 ? (
+          {staleByKind.med > 0 && staleByKind.other === 0 ? (
             <>
-              O seu stock está desactualizado — actualize para voltar a aparecer como{' '}
-              <b>confirmado</b> no Localizador.
+              {staleByKind.med === 1
+                ? 'Um medicamento sem reconfirmar há 2 dias — cai do Localizador às 72 h. '
+                : `${staleByKind.med} medicamentos sem reconfirmar há 2 dias — caem do Localizador às 72 h. `}
+              Actualize para os manter <b>confirmados</b>.
+            </>
+          ) : staleByKind.other > 0 && staleByKind.med === 0 ? (
+            <>
+              {staleByKind.other === 1
+                ? 'Um produto sem reconfirmar há 25 dias — cai do Localizador aos 30 dias. '
+                : `${staleByKind.other} produtos sem reconfirmar há 25 dias — caem do Localizador aos 30 dias. `}
+              Actualize para os manter visíveis.
             </>
           ) : (
             <>
-              {staleCount} produtos com stock desactualizado — actualize para voltarem a aparecer
-              como <b>confirmados</b> no Localizador.
+              {staleCount} produtos por reconfirmar — medicamentos caem do ar às{' '}
+              <b>72 h</b>, parafarmácia aos <b>30 dias</b>. Actualize para os manter visíveis.
             </>
           )}
         </Notice>
@@ -1283,7 +1336,7 @@ export default function StockPanel({ compact = false, isManager = false }) {
             <span className="portal-kpi4-txt">
               <span className="portal-kpi4-k">Desactualizados</span>
               <span className="portal-kpi4-n">{staleCount}</span>
-              <span className="portal-kpi4-d">sem reconfirmar há mais de 5 dias</span>
+              <span className="portal-kpi4-d">medicamentos 48 h · outros 25 d</span>
             </span>
             {staleCount > 0 ? (
               <span className="portal-st portal-st--warn">
@@ -1367,6 +1420,41 @@ export default function StockPanel({ compact = false, isManager = false }) {
               </button>
             ))}
           </div>
+          {/* Categoria (0038) — Todos + só as que existem no stock. */}
+          {kindsPresent.length > 1 && (
+            <div className="portal-chips" role="group" aria-label="Filtrar por categoria">
+              <button
+                key="all"
+                type="button"
+                className={`portal-chip${kindFilter === 'all' ? ' portal-chip--active' : ''}`}
+                aria-pressed={kindFilter === 'all'}
+                onClick={() => {
+                  setKindFilter('all')
+                  const url = new URL(window.location.href)
+                  url.searchParams.delete('cat')
+                  window.history.replaceState(null, '', url)
+                }}
+              >
+                Todas
+              </button>
+              {kindsPresent.map((k) => (
+                <button
+                  key={k.id}
+                  type="button"
+                  className={`portal-chip${kindFilter === k.id ? ' portal-chip--active' : ''}`}
+                  aria-pressed={kindFilter === k.id}
+                  onClick={() => {
+                    setKindFilter(k.id)
+                    const url = new URL(window.location.href)
+                    url.searchParams.set('cat', k.id)
+                    window.history.replaceState(null, '', url)
+                  }}
+                >
+                  {k.label}
+                </button>
+              ))}
+            </div>
+          )}
           {items === null && (
             <div className="empty-state" role="status">
               <div className="spinner" />
@@ -1374,12 +1462,12 @@ export default function StockPanel({ compact = false, isManager = false }) {
           )}
           {items !== null && filtered.length === 0 && (
             <div className="portal-rows-empty">
-              <b>{query ? 'Nada encontrado' : 'Sem medicamentos'}</b>
+              <b>{query ? 'Nada encontrado' : 'Sem produtos'}</b>
               {query ? (
                 `Nada encontrado para “${query}” — experimente outro nome ou forma farmacêutica.`
               ) : (
                 <>
-                  Sem medicamentos no catálogo. Use <b>+ Adicionar medicamento</b> para criar o
+                  Sem produtos no catálogo. Use <b>+ Adicionar medicamento</b> para criar o
                   primeiro.
                 </>
               )}
@@ -1597,9 +1685,23 @@ export default function StockPanel({ compact = false, isManager = false }) {
                             Aguarda validação
                           </span>
                         )}
+                        {it.reservable === false && (
+                          <span
+                            className="portal-chip"
+                            title="O cliente vê «Só no balcão» — este produto não aceita reservas no Localizador."
+                          >
+                            {' '}
+                            Só no balcão
+                          </span>
+                        )}
                       </b>
                       <span className="sub">
-                        {[it.form, it.dosage].filter(Boolean).join(' · ')}
+                        {[
+                          [it.form, it.dosage].filter(Boolean).join(' · '),
+                          it.kind && it.kind !== 'medicamento' ? kindLabel(it.kind) : '',
+                        ]
+                          .filter(Boolean)
+                          .join(' · ')}
                         {it.in_stock && !coming && it.confirmed_at
                           ? ` · confirmado ${timeAgo(it.confirmed_at, now)}`
                           : ''}
@@ -1708,8 +1810,8 @@ export default function StockPanel({ compact = false, isManager = false }) {
       {editing === 'new' && (
         <PortalDrawer
           open
-          title="Novo medicamento"
-          hint="Adicione o medicamento ao catálogo; o gerente valida antes de ficar visível aos clientes."
+          title="Novo produto"
+          hint="Adicione o produto ao catálogo (medicamento ou parafarmácia); o gerente valida antes de ficar visível aos clientes."
           onClose={() => setEditing(null)}
         >
           <DrugCreateForm

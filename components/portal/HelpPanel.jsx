@@ -301,8 +301,9 @@ const TOPICS = [
             usa <b>Corrigir na entrada</b>; se não há reposição, marca <b>Já não disponível</b>.
           </li>
           <li>
-            <b>Stock desactualizado (mais de 5 dias)</b> — confirma que ainda está na prateleira e
-            toca em <b>Reconfirmar agora</b>. Um clique.
+            <b>Stock desactualizado</b> — medicamentos avisam às 48 h sem reconfirmar (caem do ar
+            às 72 h) e a parafarmácia aos 25 dias (cai aos 30). Confirma que ainda está na
+            prateleira e toca em <b>Reconfirmar agora</b>. Um clique.
           </li>
         </ul>
         <p className="help-tip">
@@ -315,14 +316,21 @@ const TOPICS = [
   {
     id: 'novo-medicamento',
     icon: 'stock',
-    title: 'Medicamento novo + validação do gerente',
+    title: 'Produto novo + validação do gerente',
     badge: 'Só o gerente valida',
     body: (
       <>
         <p>
-          Se um medicamento que a farmácia vende <b>não existe no catálogo</b>, cria-o: em{' '}
-          <b>Stock</b>, botão <b>+ Adicionar medicamento</b>. Escreve o nome como aparece na caixa,
-          a molécula (DCI), a forma, a dosagem e se exige <b>receita médica</b>.
+          Se um produto que a farmácia vende <b>não existe no catálogo</b>, cria-o: em{' '}
+          <b>Stock</b>, botão <b>+ Adicionar medicamento</b>. Escreve o nome como aparece na caixa e
+          escolhe a <b>Categoria</b>: se for <b>Medicamento</b>, pede a molécula (DCI), a forma, a
+          dosagem e se exige <b>receita médica</b>; se for <b>parafarmácia</b> (bebé, higiene,
+          beleza, outros), esses campos desaparecem e só decide se <b>aceita reservas</b>.
+        </p>
+        <p>
+          A categoria muda a <b>frescura</b>: um medicamento cai do Localizador ao fim de{' '}
+          <b>72 h</b> sem reconfirmação; os restantes aguentam <b>30 dias</b>. No <b>Stock</b>, o
+          filtro por categoria mostra só os produtos de cada uma.
         </p>
         <Notice band>
           <b>Fluxo de validação:</b> o medicamento criado entra com a marca{' '}
@@ -333,7 +341,9 @@ const TOPICS = [
         </Notice>
         <p className="help-tip">
           Enquanto está pendente, já podes marcar o stock dele — quando o gerente publica, o produto
-          aparece logo no Localizador com o stock registado.
+          aparece logo no Localizador com o stock registado. Para desligar reservas num produto que
+          já existe, abre-o no Stock e desmarca <b>Aceita reservas no Localizador</b>: no Localizador
+          passa a dizer <b>Só no balcão</b>.
         </p>
       </>
     ),
@@ -539,9 +549,14 @@ const CHEATSHEET = [
     'Trocar perfil → cartão → PIN',
   ],
   [
+    'Cliente quer reservar mas a farmácia não aceita',
+    'Reservas → nome do medicamento → ⋯',
+    'Desligar «Aceita reservas» e explicar que atende só no balcão',
+  ],
+  [
     'Medicamento não está no catálogo',
     'Stock → + Adicionar medicamento',
-    'Criar → o gerente valida e publica',
+    'Criar → o gerente valida e publica · o item novo nasce com «Aceita reservas» ligado; desligue no Stock (⋯) se for só venda directa',
   ],
   ['Saldo não bate', 'Movimentos', 'Ver o que mexeu no produto'],
   ['Novo colega / PIN perdido', 'Equipa (gerente)', 'Criar perfil ou repor PIN'],

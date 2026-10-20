@@ -109,14 +109,15 @@ export default function StaffPicker({ pharmacyName, accountName }) {
     if (!s) pinRef.current?.blur()
   }
 
-  const submeter = (e) => {
-    e.preventDefault()
-    if (!selected || pending) return
+  // Entrada no perfil com um PIN explícito — o 4.º dígito digitado
+  // submete sozinho; o botão Entrar continua disponível (e o Enter).
+  const entrar = (pinValue) => {
+    if (!selected || pending || pinValue.length !== 4) return
     setError(null)
     setErrorInfo(null)
     startTransition(async () => {
       try {
-        const res = await enterStaffProfile({ staffId: selected.id, pin })
+        const res = await enterStaffProfile({ staffId: selected.id, pin: pinValue })
         // Sucesso = redirect do servidor (NEXT_REDIRECT) — não volta aqui.
         if (res && !res.ok) {
           setError(res.error || 'FALHA_ENTRAR')
@@ -128,6 +129,17 @@ export default function StaffPicker({ pharmacyName, accountName }) {
         setError('FALHA_ENTRAR')
       }
     })
+  }
+
+  const submeter = (e) => {
+    e.preventDefault()
+    entrar(pin)
+  }
+
+  const aoDigitarPin = (e) => {
+    const next = e.target.value.replace(/\D/g, '').slice(0, 4)
+    setPin(next)
+    entrar(next)
   }
 
   const criarPrimeiro = (e) => {
@@ -347,7 +359,8 @@ export default function StaffPicker({ pharmacyName, accountName }) {
                 pattern="\d{4}"
                 placeholder="••••"
                 value={pin}
-                onChange={(e) => setPin(e.target.value.replace(/\D/g, '').slice(0, 4))}
+                onChange={aoDigitarPin}
+                disabled={pending}
               />
               <p className="sr-only" aria-live="polite">
                 {pin.length} de 4 dígitos introduzidos

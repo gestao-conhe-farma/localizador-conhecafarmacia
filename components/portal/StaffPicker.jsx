@@ -344,17 +344,13 @@ export default function StaffPicker({ pharmacyName, accountName }) {
             })}
           </div>
 
-          {/* PIN — painel centrado: quem entra e as 4 caixas do modelo B
-              (o 4.º dígito submete sozinho). */}
+          {/* PIN — zona simples sem cartão (modelo B): só quem entra e as
+              4 caixas (o 4.º dígito submete sozinho), sem explicações. */}
           {selected && (
-            <form className="portal-staff-pin-card" onSubmit={submeter}>
-              <div className="portal-staff-pin-who">
-                <span className="portal-staff-av portal-staff-av--lg" aria-hidden="true">
-                  {iniciais(selected.name)}
-                </span>
-                <span className="portal-staff-pin-who-meta">
-                  <b>{selected.name}</b>
-                  <span>{selected.role === 'gerente' ? 'Gerente' : 'Balcão'}</span>
+            <form className="portal-staff-pin-plain" onSubmit={submeter}>
+              <div className="portal-staff-pin-plain-head" id="pin-label">
+                <span>
+                  PIN — <b>{selected.name}</b>
                 </span>
                 <button
                   type="button"
@@ -365,10 +361,6 @@ export default function StaffPicker({ pharmacyName, accountName }) {
                   ✕
                 </button>
               </div>
-
-              <label className="portal-staff-pin-label" id="pin-label">
-                Introduza o PIN
-              </label>
               <div
                 className="portal-staff-pin-boxes"
                 role="group"
@@ -411,14 +403,10 @@ export default function StaffPicker({ pharmacyName, accountName }) {
               )}
 
               {pending && (
-                <p className="portal-staff-pin-note" role="status">
+                <p className="portal-staff-pin-plain-status" role="status">
                   A entrar…
                 </p>
               )}
-              <p className="portal-staff-pin-note">
-                Após 5 tentativas erradas, o perfil bloqueia temporariamente (1 min, depois o
-                dobro). Tentativas erradas ficam registadas em log.
-              </p>
             </form>
           )}
 

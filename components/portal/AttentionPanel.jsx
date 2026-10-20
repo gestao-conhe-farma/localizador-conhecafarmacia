@@ -149,6 +149,9 @@ export default function AttentionPanel({ pharmacyId }) {
   // lado do rótulo, nunca colorida. O activo vive no URL (?tipo=)
   // para partilhar/recarregar sem perder o filtro.
   const [typeFilter, setTypeFilter] = useState(filterFromUrl)
+  // Caixa de aviso («Como repor:» / «Validade:» / «Desactualizado:»):
+  // desaparece 6 s depois de aparecer — é ajuda de passagem, não conteúdo.
+  const [hintVisible, setHintVisible] = useState(true)
   const tabs = [
     { id: 'all', label: 'Todos', n: total },
     { id: 'restock', label: 'Reposição', n: restock.length },
@@ -202,6 +205,16 @@ export default function AttentionPanel({ pharmacyId }) {
         : restock.length > 0
           ? { b: 'Como repor:', t: RESTOCK_HINT }
           : null
+
+  // O temporizador recomeça quando a nota muda (filtro ou chegada do
+  // feed): a contagem dos 6 s vale a partir de a ajuda estar visível.
+  const notaKey = nota ? `${nota.b}${nota.t}` : ''
+  useEffect(() => {
+    if (!notaKey) return
+    setHintVisible(true)
+    const t = setTimeout(() => setHintVisible(false), 6000)
+    return () => clearTimeout(t)
+  }, [typeFilter, notaKey])
 
   /** Guarda por fármaco — o mesmo caminho do StockPanel, com todos os campos. */
   const save = async (it, patch) => {
@@ -571,7 +584,7 @@ export default function AttentionPanel({ pharmacyId }) {
           ))}
         </div>
 
-        {nota && total > 0 && (
+        {nota && total > 0 && hintVisible && (
           <div className="portal-box-note">
             <Notice>
               <b>{nota.b}</b> {nota.t}

@@ -8140,10 +8140,45 @@ html.dark .form-note {
     margin: 0;
   }
 
+  /* Zona do PIN sem cartão (modelo B): só quem entra e as 4 caixas,
+     alinhada à esquerda, sem fundo nem bordo. */
+  .portal-staff-pin-plain {
+    display: grid;
+    justify-items: start;
+    gap: 0.875rem;
+    width: 100%;
+    max-width: 28.75rem;
+    margin: 0;
+    padding: 0;
+    text-align: left;
+  }
+
+  .portal-staff-pin-plain-head {
+    display: flex;
+    align-items: center;
+    gap: 0.75rem;
+    width: 100%;
+    font-size: 0.875rem;
+    color: var(--ink-60v);
+  }
+
+  .portal-staff-pin-plain-head b {
+    font-family: var(--font-display);
+    font-size: 0.9375rem;
+    font-weight: 600;
+    color: var(--color-brand-deep);
+  }
+
+  .portal-staff-pin-plain-status {
+    font-size: 0.8125rem;
+    color: var(--ink-60v);
+    margin: 0;
+  }
+
   /* 4 caixas do PIN (modelo B): avanço automático, uma por dígito. */
   .portal-staff-pin-boxes {
     display: flex;
-    justify-content: center;
+    justify-content: flex-start;
     gap: 0.625rem;
   }
 

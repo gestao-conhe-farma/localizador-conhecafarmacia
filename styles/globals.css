@@ -7713,11 +7713,11 @@ html.dark .form-note {
   .portal-staff-screen > * {
     width: 100%;
     max-width: 46rem;
-    margin-inline: auto;
+    margin-inline: 0;
   }
 
   .portal-staff-head {
-    text-align: center;
+    text-align: left;
   }
 
   .portal-staff-eyebrow {
@@ -7749,7 +7749,7 @@ html.dark .form-note {
     font-size: 0.9375rem;
     line-height: 1.55;
     color: var(--ink-60v);
-    margin: 0.5rem auto 0;
+    margin: 0.5rem 0 0;
     max-width: 56ch;
     text-wrap: pretty;
   }
@@ -7984,13 +7984,10 @@ html.dark .form-note {
   }
 
   /* Grelha de perfis do modelo A: cartões de 13,5rem, até 3 por fila
-     (1 no telemóvel). `auto-fit` + `justify-content: center` em vez do
-     `auto-fill` do mock: com 1 ou 2 perfis reais (o caso normal numa
-     farmácia), os cartões ficam centrados na coluna em vez de encostados
-     à esquerda. */
+     (1 no telemóvel), alinhados à esquerda da coluna. */
   .portal-staff-grid--pick {
     grid-template-columns: repeat(auto-fit, minmax(13.5rem, 13.5rem));
-    justify-content: center;
+    justify-content: start;
   }
 
   @media (max-width: 40rem) {
@@ -8070,7 +8067,7 @@ html.dark .form-note {
        isto o cartão encolhia ao conteúdo em vez dos 460px do modelo. */
     width: 100%;
     max-width: 28.75rem;
-    margin: 0 auto;
+    margin: 0;
     padding: 1.875rem;
     border: 1px solid var(--color-brand-divider);
     border-radius: 1rem;
@@ -8230,7 +8227,7 @@ html.dark .form-note {
   .portal-staff-panel {
     width: 100%;
     max-width: 28.75rem;
-    margin: 0 auto;
+    margin: 0;
     text-align: left;
   }
 
@@ -8239,7 +8236,7 @@ html.dark .form-note {
     font-size: 0.75rem;
     line-height: 1.5;
     color: var(--ink-45v);
-    text-align: center;
+    text-align: left;
     text-wrap: balance;
     border-top: 1px dashed var(--color-brand-divider);
     padding-top: 0.875rem;

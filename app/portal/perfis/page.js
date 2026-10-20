@@ -27,11 +27,11 @@ export default async function StaffProfilesPage() {
 
   return (
     <div className="min-h-dvh flex flex-col items-center justify-center gap-7 px-5 py-12 bg-brand-bg portal-auth">
-      {/* Ecrã centrado (modelo A). A marca fica acima do bloco editorial;
-          a largura (46rem) é imposta pelo próprio StaffPicker, que também
-          traz o eyebrow «Acesso ao balcão» e o título serifado. */}
-      <div className="w-full">
-        <div className="flex flex-col items-center text-center">
+      {/* Coluna de 46rem centrada na página, com o conteúdo alinhado à
+          esquerda (modelo A): a marca fica acima do título serifado do
+          StaffPicker. */}
+      <div className="w-full max-w-[46rem] mx-auto flex flex-col gap-6">
+        <div className="flex flex-col items-start text-left">
           {/* Logo com as duas versões (padrão do portal): no escuro o
               verde desaparece sobre o fundo escuro — troca para o branco. */}
           <Link href="/" aria-label="Conheça Farmácia">

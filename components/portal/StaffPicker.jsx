@@ -190,15 +190,10 @@ export default function StaffPicker({ pharmacyName, accountName }) {
 
   return (
     <div className="portal-staff-screen">
-      {/* Cabeçalho editorial (modelo A): eyebrow, título serif grande e
-          uma linha que explica o gesto — tocar no perfil revela o PIN. */}
+      {/* Cabeçalho editorial (modelo A), alinhado à esquerda: só o título
+          serif — sem eyebrow nem linha explicativa. */}
       <header className="portal-staff-head">
-        <p className="portal-staff-eyebrow">Acesso ao balcão</p>
         <h1 className="portal-staff-title">Quem está ao balcão?</h1>
-        <p className="portal-staff-lead">
-          Toque num perfil para revelar o PIN — as vendas, reservas e entradas deste dispositivo
-          ficam em seu nome.
-        </p>
       </header>
 
       {/* Perfil já activo — continuar é o caminho mais curto. */}
@@ -436,8 +431,7 @@ export default function StaffPicker({ pharmacyName, accountName }) {
       )}
 
       <footer className="portal-staff-screen-foot">
-        {pharmacyName} · sessão iniciada como <b>{accountName}</b> — cada dispositivo guarda o seu
-        perfil por 24 h.
+        {pharmacyName} · sessão iniciada como <b>{accountName}</b>
       </footer>
     </div>
   )

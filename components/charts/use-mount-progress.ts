@@ -12,7 +12,11 @@ export function useMountProgress(
 ) {
   const progress = useMotionValue(0);
   const transitionRef = useRef(enterTransition);
-  transitionRef.current = enterTransition;
+  // Escrita no efeito (não no render): o ref é lido pelo efeito de
+  // animação abaixo, que corre depois deste por ordem de declaração.
+  useEffect(() => {
+    transitionRef.current = enterTransition;
+  });
 
   // replayKey intentionally retriggers enter when motion settings change
   // biome-ignore lint/correctness/useExhaustiveDependencies: replayKey

@@ -43,6 +43,19 @@ export function useAnimatedSeriesPath({
   const [animatedPoints, setAnimatedPoints] = useState<
     SeriesPathPoint[] | null
   >(null);
+  // A reposição «sem animação mostra o alvo» vive no render (comparação
+  // com os inputs anteriores): setState síncrono no efeito seria cascata.
+  const animActive =
+    enabled &&
+    !reducedMotion &&
+    chartPhase === "ready" &&
+    durationMs > 0 &&
+    renderData.length > 0;
+  const [wasAnimActive, setWasAnimActive] = useState(animActive);
+  if (wasAnimActive !== animActive) {
+    setWasAnimActive(animActive);
+    if (!animActive) setAnimatedPoints(null);
+  }
   const displayedPointsRef = useRef<SeriesPathPoint[] | null>(null);
   const animatingRef = useRef(false);
 
@@ -88,7 +101,6 @@ export function useAnimatedSeriesPath({
 
     if (!shouldAnimate) {
       animatingRef.current = false;
-      setAnimatedPoints(null);
       displayedPointsRef.current = targetPoints;
       prevTransitionSignatureRef.current = transitionSignature;
       return;

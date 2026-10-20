@@ -1,3 +1,4 @@
+import { timingSafeEqual } from 'node:crypto'
 import { NextResponse } from 'next/server'
 import { drainDue, pruneDeliveries } from '@/lib/webhooks'
 
@@ -39,11 +40,16 @@ export const runtime = 'nodejs'
 export const dynamic = 'force-dynamic'
 export const maxDuration = 60
 
+/** Comparação do segredo em tempo constante: `===` em strings aborta no
+ *  primeiro byte diferente e entrega a distância de Hamming a quem medir
+ *  o tempo de resposta. Comprimentos diferentes chumbam sem comparar. */
 function autorizado(request) {
-  const secret = process.env.CRON_SECRET
+  const secret = process.env.CRON_SECRET || ''
   if (!secret) return false
   const header = request.headers.get('authorization') || ''
-  return header === `Bearer ${secret}`
+  const a = Buffer.from(header)
+  const b = Buffer.from(`Bearer ${secret}`)
+  return a.length === b.length && timingSafeEqual(a, b)
 }
 
 async function correr(request) {

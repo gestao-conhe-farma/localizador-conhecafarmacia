@@ -1,7 +1,7 @@
 "use client";
 
 import { type MotionValue, motion } from "motion/react";
-import { type RefObject, useId } from "react";
+import { type RefObject, useCallback, useId, useSyncExternalStore } from "react";
 
 // Hover-highlight overlay: re-strokes the base path `d`, clipped to a vertical
 // band whose x/width spring to track the hovered point, so only the segment
@@ -34,7 +34,27 @@ export function HighlightSegment({
   width,
 }: HighlightSegmentProps) {
   const clipId = useId();
-  if (!(visible && pathRef.current)) {
+  // O `d` do traço-base vive no DOM (o traço anima por MotionValues, não
+  // há prop com o valor). Lê-se via snapshot externo em vez de
+  // `pathRef.current` no render: a snapshot é re-lida a cada render
+  // (dados novos) e a subscrição aos springs refresca-a no hover.
+  const subscribeD = useCallback(
+    (notify: () => void) => {
+      const offX = x.on("change", notify);
+      const offW = width.on("change", notify);
+      return () => {
+        offX();
+        offW();
+      };
+    },
+    [x, width]
+  );
+  const d = useSyncExternalStore(
+    subscribeD,
+    () => (visible ? (pathRef.current?.getAttribute("d") ?? null) : null),
+    () => null
+  );
+  if (!visible || d == null) {
     return null;
   }
   return (
@@ -47,7 +67,7 @@ export function HighlightSegment({
       <motion.path
         animate={{ opacity: 1 }}
         clipPath={`url(#${clipId})`}
-        d={pathRef.current.getAttribute("d") || ""}
+        d={d}
         exit={{ opacity: 0 }}
         fill="none"
         initial={{ opacity: 0 }}

@@ -318,6 +318,7 @@ export default function ReservationsQueue() {
   const openWhatsApp = (r) => {
     const msg = buildReservationMessage({
       id: r.id,
+      accessToken: r.access_token ?? null,
       status: r.status,
       reason: r.reason,
       quantity: r.quantity,

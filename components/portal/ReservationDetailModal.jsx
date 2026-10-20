@@ -113,7 +113,7 @@ export default function ReservationDetailModal({
 
   const copyLink = async () => {
     try {
-      await navigator.clipboard.writeText(trackingUrl(r.id))
+      await navigator.clipboard.writeText(trackingUrl(r.id, r.access_token))
       setCopied(true)
       setTimeout(() => setCopied(false), 2000)
     } catch (_) {
@@ -128,7 +128,7 @@ export default function ReservationDetailModal({
     opt?.price != null
       ? `Valor estimado: ${fmtKz((r.confirmed_quantity ?? r.quantity) * Number(opt.price))} (a confirmar no balcão).`
       : '',
-    `Link da reserva: ${trackingUrl(r.id)}`,
+    `Link da reserva: ${trackingUrl(r.id, r.access_token)}`,
   ]
     .filter(Boolean)
     .join(' ')
@@ -254,7 +254,7 @@ export default function ReservationDetailModal({
         <div className="res-detail-section">
           <b>Link de acompanhamento do cliente</b>
           <div className="res-detail-link">
-            <code>{trackingUrl(r.id)}</code>
+            <code>{trackingUrl(r.id, r.access_token)}</code>
             <button type="button" className="btn-mini res-details-btn" onClick={copyLink}>
               {copied ? (
                 <>

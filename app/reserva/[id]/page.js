@@ -7,10 +7,11 @@ export const metadata = {
 }
 
 /**
- * Acompanhamento público da reserva — URL não-listado partilhado pela
- * farmácia no WhatsApp (link vem nos templates de confirmação).
- * Renderização client-side: a policy "reservations public read by id"
- * (migração 0011) deixa ler apenas a reserva do id no URL, sem login.
+ * Acompanhamento público da reserva — URL não-listado com token
+ * partilhado pela farmácia no WhatsApp (/reserva/[id]?t=[token]).
+ * Renderização client-side via RPC get_reservation_status (migração
+ * 0035): sem token válido nada é devolvido — a tabela não tem leitura
+ * pública.
  */
 export default async function ReservationTrackPage({ params }) {
   const { id } = await params

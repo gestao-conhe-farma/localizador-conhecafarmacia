@@ -2,6 +2,9 @@ import nextCoreWebVitals from 'eslint-config-next/core-web-vitals'
 
 // eslint-config-next 16 exporta já flat configs — sem FlatCompat.
 const eslintConfig = [
+  // Dumps vendored (extensões de browser capturadas, snapshots de design):
+  // código de terceiros só para referência, nunca corre na app.
+  { ignores: ['_design/**', '.agents/**'] },
   ...nextCoreWebVitals,
   {
     rules: {

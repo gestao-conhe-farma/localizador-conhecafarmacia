@@ -1,6 +1,6 @@
 'use client'
 
-import { useEffect, useState } from 'react'
+import { useEffect, useMemo, useState } from 'react'
 import Notice from '@/components/ui/Notice'
 import { LinhaResumo } from '@/components/interno/LinhaResumo'
 import { preco, prazo, textoPlano } from '@/components/interno/formatos'
@@ -107,6 +107,20 @@ export default function PlanActionModal({
   const faltaMotivo = motivo.trim().length < 3
   const diasNum = Number(dias)
   const prazoInvalido = cfg.comPrazo && (!Number.isInteger(diasNum) || diasNum < 1 || diasNum > 365)
+  // O relógio lê-se uma vez na montagem (estado inicial); o memo deriva
+  // o prazo de forma pura a partir daí (estável enquanto se escreve).
+  const [aberturaIso] = useState(() => new Date(Date.now()).toISOString())
+  const prazoTexto = useMemo(
+    () =>
+      cfg.comPrazo && !prazoInvalido
+        ? prazo(
+            new Date(
+              new Date(aberturaIso).getTime() + diasNum * 86400000,
+            ).toISOString(),
+          )
+        : null,
+    [cfg.comPrazo, prazoInvalido, diasNum, aberturaIso],
+  )
 
   const escolhido = planos.find((p) => p.code === planCode) || null
   const vaiPara = planoActual?.temPlano ? textoPlano(planoActual) : 'Sem plano'
@@ -141,9 +155,7 @@ export default function PlanActionModal({
             </LinhaResumo>
             {cfg.comPrazo && (
               <LinhaResumo rotulo={cfg.comPrazo}>
-                {prazoInvalido
-                  ? '—'
-                  : prazo(new Date(Date.now() + diasNum * 86400000).toISOString())}
+                {prazoInvalido ? '—' : prazoTexto}
               </LinhaResumo>
             )}
             {modo === 'suspender' && (

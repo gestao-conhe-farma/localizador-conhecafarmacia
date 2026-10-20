@@ -25,7 +25,7 @@ export default function AppFooter() {
             <Link href="/pesquisa">Pesquisar</Link>
             <Link href="/farmacia">Farmácias</Link>
             <Link href="/sobre">Sobre</Link>
-            <a href="/#farmacias">É farmácia?</a>
+            <Link href="/#farmacias">É farmácia?</Link>
             <a
               href="https://wa.me/244925696002?text=Olá,%20Conheça%20Farmácia"
               target="_blank"

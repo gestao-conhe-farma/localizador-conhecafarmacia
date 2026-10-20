@@ -37,19 +37,22 @@ export function useChartPhaseOrchestrator({
   const [revealEpoch, setRevealEpoch] = useState(0);
   const [concealEpoch, setConcealEpoch] = useState(0);
   const [isLoaded, setIsLoaded] = useState(() => chartStatus === "ready");
-  const prevStatusRef = useRef(chartStatus);
+  // A máquina de fases vive no render (transições puras sobre os inputs
+  // anteriores): setState síncrono no efeito seria cascata de renders.
+  // Os callbacks `notify*` (eventos) e o timer do reveal continuam a
+  // escrever estado a partir de efeitos/eventos, como antes.
   const phaseRef = useRef(chartPhase);
-  phaseRef.current = chartPhase;
-
-  // biome-ignore lint/complexity/noExcessiveCognitiveComplexity: status transition branches for animation durations
   useEffect(() => {
-    const prevStatus = prevStatusRef.current;
-    if (prevStatus === chartStatus) {
-      return;
-    }
-    prevStatusRef.current = chartStatus;
+    phaseRef.current = chartPhase;
+  });
 
-    if (chartStatus === "ready" && prevStatus === "loading") {
+  // 1. Transições por mudança de estado dos dados (loading ↔ ready).
+  const [prevStatus, setPrevStatus] = useState(chartStatus);
+  if (prevStatus !== chartStatus) {
+    const from = prevStatus;
+    setPrevStatus(chartStatus);
+
+    if (chartStatus === "ready" && from === "loading") {
       setIsLoaded(false);
       if (animationDuration <= 0) {
         if (yDomainTweenDuration <= 0) {
@@ -61,10 +64,9 @@ export function useChartPhaseOrchestrator({
       } else {
         setChartPhase("exiting");
       }
-      return;
     }
 
-    if (chartStatus === "loading" && prevStatus === "ready") {
+    if (chartStatus === "loading" && from === "ready") {
       setIsLoaded(false);
       if (animationDuration <= 0) {
         if (yDomainTweenDuration <= 0) {
@@ -78,31 +80,45 @@ export function useChartPhaseOrchestrator({
         setChartPhase("exitingReady");
       }
     }
-  }, [
-    animationDuration,
-    chartStatus,
-    skeletonData,
-    targetData,
-    yDomainTweenDuration,
-  ]);
+  }
 
-  // biome-ignore lint/correctness/useExhaustiveDependencies: revealSignature replays enter
-  useEffect(() => {
-    if (skipEnterReveal) {
-      return;
+  // 2. Replay do reveal (montagem/assinatura) com a fase em repouso.
+  const [prevRevealDeps, setPrevRevealDeps] = useState<null | {
+    a: number;
+    s: ChartStatus;
+    sig: string;
+    skip: boolean;
+  }>(null);
+  if (
+    prevRevealDeps === null ||
+    prevRevealDeps.a !== animationDuration ||
+    prevRevealDeps.s !== chartStatus ||
+    prevRevealDeps.sig !== revealSignature ||
+    prevRevealDeps.skip !== skipEnterReveal
+  ) {
+    setPrevRevealDeps({
+      a: animationDuration,
+      s: chartStatus,
+      sig: revealSignature,
+      skip: skipEnterReveal,
+    });
+    if (!skipEnterReveal && chartStatus === "ready" && chartPhase === "ready") {
+      setChartPhase("revealing");
+      setIsLoaded(false);
     }
-    if (chartStatus !== "ready") {
-      return;
-    }
-    if (phaseRef.current !== "ready") {
-      return;
-    }
+  }
 
-    setChartPhase("revealing");
-    setIsLoaded(false);
-  }, [animationDuration, chartStatus, revealSignature, skipEnterReveal]);
-
-  useEffect(() => {
+  // 3. Dados a desenhar derivados da fase (o ramo "loading" sem estado
+  //    loading mantém os anteriores, como antes).
+  const [prevPhaseSync, setPrevPhaseSync] = useState({
+    phase: chartPhase,
+    status: chartStatus,
+  });
+  if (
+    prevPhaseSync.phase !== chartPhase ||
+    prevPhaseSync.status !== chartStatus
+  ) {
+    setPrevPhaseSync({ phase: chartPhase, status: chartStatus });
     switch (chartPhase) {
       case "loading":
         if (chartStatus === "loading") {
@@ -122,7 +138,7 @@ export function useChartPhaseOrchestrator({
       default:
         break;
     }
-  }, [chartPhase, chartStatus, skeletonData, targetData]);
+  }
 
   /** Loading pulse exit finished — tween grid to ready spacing next. */
   const notifyLoadingPulseComplete = useCallback(() => {
@@ -151,18 +167,24 @@ export function useChartPhaseOrchestrator({
     }
   }, []);
 
+  // 4. Entrada em "revealing": bump de época imediato no render; a
+  //    conclusão ("ready") é síncrona sem animação ou via timer.
+  const [prevRevealing, setPrevRevealing] = useState(chartPhase);
+  if (prevRevealing !== chartPhase) {
+    setPrevRevealing(chartPhase);
+    if (chartPhase === "revealing") {
+      setRevealEpoch((epoch) => epoch + 1);
+      if (animationDuration <= 0) {
+        setChartPhase("ready");
+        setIsLoaded(true);
+      }
+    }
+  }
+
   useEffect(() => {
-    if (chartPhase !== "revealing") {
+    if (chartPhase !== "revealing" || animationDuration <= 0) {
       return;
     }
-
-    setRevealEpoch((epoch) => epoch + 1);
-    if (animationDuration <= 0) {
-      setChartPhase("ready");
-      setIsLoaded(true);
-      return;
-    }
-
     const timer = window.setTimeout(() => {
       setChartPhase("ready");
       setIsLoaded(true);

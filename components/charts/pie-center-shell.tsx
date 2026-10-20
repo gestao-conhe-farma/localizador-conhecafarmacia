@@ -46,27 +46,28 @@ export function PieCenterShell({
     animateEntrance ? 0 : centerValue
   );
 
+  // Atualizações de valor aplicam-se no render (o NumberFlow anima
+  // a transição); o efeito só arma o reveal de entrada via rAF.
+  const [prevCenterValue, setPrevCenterValue] = useState(centerValue);
+  if (prevCenterValue !== centerValue) {
+    setPrevCenterValue(centerValue);
+    setFlowTotal(centerValue);
+  }
+
   useEffect(() => {
-    if (!animateEntrance) {
-      setFlowTotal(centerValue);
+    if (!animateEntrance || introStartedRef.current) {
       return;
     }
-
-    if (!introStartedRef.current) {
-      introStartedRef.current = true;
-      setFlowTotal(0);
-      let innerRaf = 0;
-      const outerRaf = requestAnimationFrame(() => {
-        innerRaf = requestAnimationFrame(() => setFlowTotal(centerValue));
-      });
-      return () => {
-        cancelAnimationFrame(outerRaf);
-        cancelAnimationFrame(innerRaf);
-        introStartedRef.current = false;
-      };
-    }
-
-    setFlowTotal(centerValue);
+    introStartedRef.current = true;
+    let innerRaf = 0;
+    const outerRaf = requestAnimationFrame(() => {
+      innerRaf = requestAnimationFrame(() => setFlowTotal(centerValue));
+    });
+    return () => {
+      cancelAnimationFrame(outerRaf);
+      cancelAnimationFrame(innerRaf);
+      introStartedRef.current = false;
+    };
   }, [animateEntrance, centerValue]);
 
   const data: PieData[] = useMemo(

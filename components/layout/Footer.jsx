@@ -30,11 +30,11 @@ export default function Footer({
           <div className="footer-links">
             <h4>Navegação</h4>
             <ul>
-              <li><a href="/pesquisa" className="text-white/70 hover:text-brand-accent transition-colors text-sm">Pesquisar medicamentos</a></li>
-              <li><a href="/#o-problema" className="text-white/70 hover:text-brand-accent transition-colors text-sm">O problema</a></li>
-              <li><a href="/#como-funciona" className="text-white/70 hover:text-brand-accent transition-colors text-sm">Como funciona</a></li>
-              <li><a href="/#farmacias" className="text-white/70 hover:text-brand-accent transition-colors text-sm">Farmácias</a></li>
-              <li><a href="/#faq" className="text-white/70 hover:text-brand-accent transition-colors text-sm">FAQ</a></li>
+              <li><Link href="/pesquisa" className="text-white/70 hover:text-brand-accent transition-colors text-sm">Pesquisar medicamentos</Link></li>
+              <li><Link href="/#o-problema" className="text-white/70 hover:text-brand-accent transition-colors text-sm">O problema</Link></li>
+              <li><Link href="/#como-funciona" className="text-white/70 hover:text-brand-accent transition-colors text-sm">Como funciona</Link></li>
+              <li><Link href="/#farmacias" className="text-white/70 hover:text-brand-accent transition-colors text-sm">Farmácias</Link></li>
+              <li><Link href="/#faq" className="text-white/70 hover:text-brand-accent transition-colors text-sm">FAQ</Link></li>
             </ul>
           </div>
 

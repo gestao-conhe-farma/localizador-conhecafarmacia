@@ -266,12 +266,34 @@ const PieChartCore = memo(function PieChartCore({
 
   const effectiveIsLoaded = geometryScrubbing || isLoaded;
 
+  // A entrada repete-se quando a config de transição muda: o reset
+  // (`isLoaded=false`) é transição pura no render, o timer fica no efeito.
+  const [prevEnterDeps, setPrevEnterDeps] = useState<{
+    transition: typeof enterTransition;
+    stagger: typeof enterStaggerScale;
+    scrubbing: typeof geometryScrubbing;
+  } | null>(null);
+  if (
+    prevEnterDeps === null ||
+    prevEnterDeps.transition !== enterTransition ||
+    prevEnterDeps.stagger !== enterStaggerScale ||
+    prevEnterDeps.scrubbing !== geometryScrubbing
+  ) {
+    setPrevEnterDeps({
+      transition: enterTransition,
+      stagger: enterStaggerScale,
+      scrubbing: geometryScrubbing,
+    });
+    if (!geometryScrubbing) {
+      setIsLoaded(false);
+    }
+  }
+
   // biome-ignore lint/correctness/useExhaustiveDependencies: enterTransition
   useEffect(() => {
     if (geometryScrubbing) {
       return;
     }
-    setIsLoaded(false);
     const timer = setTimeout(() => {
       setIsLoaded(true);
     }, 100);

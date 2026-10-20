@@ -51,14 +51,25 @@ export interface TooltipBoxProps {
 // Inner-only-on-visible so `useSpring` initializes at the cursor's actual x/y
 // instead of (0, 0) on first hover.
 export function TooltipBox(props: TooltipBoxProps) {
-  const [mounted, setMounted] = useState(false);
+  // O portal precisa do nó real (só existe no cliente após commit):
+  // lê-se a ref no efeito e guarda-se em estado (sem cascata — só
+  // atualiza quando o nó muda).
+  const [container, setContainer] = useState<HTMLDivElement | null>(null);
+  const seenContainerRef = useRef<HTMLDivElement | null>(null);
+  const { containerRef } = props;
 
+  // Sem deps de propósito: apanha remontagens do contentor; o guard
+  // seenContainerRef impede ciclos (só escreve quando o nó muda).
+  // eslint-disable-next-line react-hooks/exhaustive-deps
   useEffect(() => {
-    setMounted(true);
-  }, []);
+    const node = containerRef.current;
+    if (node !== seenContainerRef.current) {
+      seenContainerRef.current = node;
+      setContainer(node);
+    }
+  });
 
-  const container = props.containerRef.current;
-  if (!(mounted && container)) {
+  if (!container) {
     return null;
   }
   if (!props.visible) {
@@ -91,12 +102,13 @@ function TooltipBoxInner({
   const effectiveSpring = springConfig ?? tooltipBoxSpring;
 
   const tooltipRef = useRef<HTMLDivElement>(null);
-  const tooltipWidthRef = useRef(180);
-  const tooltipHeightRef = useRef(80);
+  // Tamanho medido do painel (a leitura faz-se no layout effect,
+  // nunca com a ref durante o render).
+  const [measuredSize, setMeasuredSize] = useState({ w: 180, h: 80 });
   const [staticPosition, setStaticPosition] = useState({ left: x, top: y });
 
-  const tw = tooltipWidthRef.current;
-  const th = tooltipHeightRef.current;
+  const tw = measuredSize.w;
+  const th = measuredSize.h;
   const shouldFlipX = x + tw + offset > containerWidth;
   const targetX = shouldFlipX ? x - offset - tw : x + offset;
   const targetY = Math.max(
@@ -119,16 +131,13 @@ function TooltipBoxInner({
       return;
     }
     const el = tooltipRef.current;
-    const w = el.offsetWidth;
-    const h = el.offsetHeight;
-    if (w > 0) {
-      tooltipWidthRef.current = w;
-    }
-    if (h > 0) {
-      tooltipHeightRef.current = h;
-    }
-    const w2 = tooltipWidthRef.current;
-    const h2 = tooltipHeightRef.current;
+    const w = el.offsetWidth > 0 ? el.offsetWidth : measuredSize.w;
+    const h = el.offsetHeight > 0 ? el.offsetHeight : measuredSize.h;
+    setMeasuredSize((prev) =>
+      prev.w === w && prev.h === h ? prev : { w, h }
+    );
+    const w2 = w;
+    const h2 = h;
     const flip = x + w2 + offset > containerWidth;
     const tx = flip ? x - offset - w2 : x + offset;
     const ty = Math.max(
@@ -156,6 +165,7 @@ function TooltipBoxInner({
     animate,
     animatedLeft,
     animatedTop,
+    measuredSize,
   ]);
 
   const prevFlipRef = useRef(shouldFlipX);

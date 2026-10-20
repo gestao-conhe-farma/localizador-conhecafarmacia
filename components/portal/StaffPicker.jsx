@@ -15,13 +15,12 @@ import { logWarn } from '@/lib/log'
  * Modelo editorial A (_design/portal-reimaginado/A-editorial.html):
  * eyebrow + título serif grande + lead; grelha de cartões brancos
  * (avatar, nome serif, papel e chip de estado) e o PIN revelado SOBRE o
- * perfil escolhido, num painel centrado com pontos de PIN e teclado
- * numérico — nenhum campo à mostra até ser preciso. «Em uso» marca o
- * perfil que já está activo neste dispositivo.
+ * perfil escolhido, num painel centrado com uma caixa de PIN — nenhum
+ * campo à mostra até ser preciso. «Em uso» marca o perfil que já está
+ * activo neste dispositivo.
  *
- * O <input> real continua lá (invisível mas focado): quem escreve no
- * teclado físico ou no leitor do balcão digita directamente; o teclado
- * em ecrã é o caminho principal em tablet.
+ * O campo usa `inputMode="numeric"`: no telemóvel abre o teclado
+ * numérico, no PC escreve-se no teclado físico (ou no leitor do balcão).
  *
  * Vários dispositivos podem ficar em perfis diferentes ao mesmo tempo —
  * cada um tem o seu cookie (24 h), assinado pelo servidor depois de o
@@ -31,6 +30,7 @@ import { logWarn } from '@/lib/log'
 const ERRORES = {
   SESSAO_EXPIRADA: 'Sessão expirada — recarregue a página e entre novamente.',
   PIN_ERRADO: 'PIN incorrecto. Tente de novo.',
+  PIN_BLOQUEADO: 'Demasiadas tentativas. Aguarde antes de tentar novamente.',
   PIN_INVALIDO: 'O PIN tem 4 dígitos.',
   PIN_CONFIRMACAO: 'A confirmação não coincide com o PIN.',
   NOME_INVALIDO: 'O nome tem de ter 2 a 80 caracteres.',
@@ -41,7 +41,13 @@ const ERRORES = {
   FALHA_LISTAR: 'Não foi possível carregar os perfis.',
 }
 
-const TECLAS = ['1', '2', '3', '4', '5', '6', '7', '8', '9']
+/** "90 s" → "2 min"; "45 s" fica como está — espera do bloqueio do PIN. */
+function formatEspera(sec) {
+  const s = Number(sec) || 0
+  if (s < 60) return `${s} s`
+  const m = Math.ceil(s / 60)
+  return m >= 60 ? '1 hora' : `${m} min`
+}
 
 function iniciais(nome) {
   const parts = String(nome || '')
@@ -62,11 +68,13 @@ export default function StaffPicker({ pharmacyName, accountName }) {
   const [selected, setSelected] = useState(null)
   const [pin, setPin] = useState('')
   const [error, setError] = useState(null)
+  // Detalhe do erro (retryAfterSec no bloqueio, restantes no PIN errado).
+  const [errorInfo, setErrorInfo] = useState(null)
   const [pending, startTransition] = useTransition()
   // Primeira arranque: farmácia sem nenhum perfil → criar gerente aqui.
   const [primeiro, setPrimeiro] = useState({ name: '', pin: '', confirm: '' })
-  // O campo real do PIN: invisível, mas com o foco — o teclado físico
-  // (e os leitores do balcão) escrevem directamente nele.
+  // O campo do PIN recebe o foco ao abrir o painel — teclado físico,
+  // leitores do balcão e teclado numérico do telemóvel escrevem nele.
   const pinRef = useRef(null)
 
   useEffect(() => {
@@ -88,41 +96,32 @@ export default function StaffPicker({ pharmacyName, accountName }) {
     }
   }, [])
 
-  // Painel do PIN aberto: devolve o foco ao campo real, para quem
-  // escreve no teclado físico (o teclado em ecrã devolve-o a seguir a
-  // cada toque, via focar()).
+  // Painel do PIN aberto: foco directo no campo.
   useEffect(() => {
     if (selected) pinRef.current?.focus()
   }, [selected])
-
-  const focar = () => pinRef.current?.focus()
 
   const escolher = (s) => {
     setSelected(s)
     setPin('')
     setError(null)
+    setErrorInfo(null)
     if (!s) pinRef.current?.blur()
-  }
-
-  const digitar = (d) => {
-    setPin((p) => (p.length < 4 ? p + d : p))
-    focar()
-  }
-
-  const apagar = () => {
-    setPin((p) => p.slice(0, -1))
-    focar()
   }
 
   const submeter = (e) => {
     e.preventDefault()
     if (!selected || pending) return
     setError(null)
+    setErrorInfo(null)
     startTransition(async () => {
       try {
         const res = await enterStaffProfile({ staffId: selected.id, pin })
         // Sucesso = redirect do servidor (NEXT_REDIRECT) — não volta aqui.
-        if (res && !res.ok) setError(res.error || 'FALHA_ENTRAR')
+        if (res && !res.ok) {
+          setError(res.error || 'FALHA_ENTRAR')
+          setErrorInfo(res)
+        }
       } catch (err) {
         if (err?.digest?.startsWith('NEXT_REDIRECT')) throw err
         logWarn('perfis', 'Entrada no perfil falhou', { message: err?.message })
@@ -312,9 +311,8 @@ export default function StaffPicker({ pharmacyName, accountName }) {
             })}
           </div>
 
-          {/* PIN — painel centrado do modelo: quem entra, pontos, teclado
-              numérico e «Entrar»; o campo real fica escondido mas com o
-              foco (teclado físico e leitores continuam a funcionar). */}
+          {/* PIN — painel centrado do modelo: quem entra, caixa do PIN e
+              «Entrar». */}
           {selected && (
             <form className="portal-staff-pin-card" onSubmit={submeter}>
               <div className="portal-staff-pin-who">
@@ -335,78 +333,35 @@ export default function StaffPicker({ pharmacyName, accountName }) {
                 </button>
               </div>
 
-              <p className="portal-staff-pin-label" id="pin-label">
+              <label className="portal-staff-pin-label" htmlFor="pin-campo">
                 Introduza o PIN
-              </p>
-              <span className="portal-staff-pin-dots" aria-hidden="true">
-                <i className={pin.length > 0 ? 'is-on' : undefined} />
-                <i className={pin.length > 1 ? 'is-on' : undefined} />
-                <i className={pin.length > 2 ? 'is-on' : undefined} />
-                <i className={pin.length > 3 ? 'is-on' : undefined} />
-              </span>
-              <p className="sr-only" aria-live="polite">
-                {pin.length} de 4 dígitos introduzidos
-              </p>
-
+              </label>
               <input
+                id="pin-campo"
                 ref={pinRef}
-                className="portal-input--pin-ghost"
+                className="portal-input portal-input--pin portal-staff-pin-input"
                 type="password"
                 inputMode="numeric"
                 autoComplete="off"
                 maxLength={4}
                 pattern="\d{4}"
-                aria-labelledby="pin-label"
+                placeholder="••••"
                 value={pin}
                 onChange={(e) => setPin(e.target.value.replace(/\D/g, '').slice(0, 4))}
               />
-
-              <div className="portal-staff-keys">
-                {TECLAS.map((d) => (
-                  <button
-                    key={d}
-                    type="button"
-                    className="portal-staff-key"
-                    // Sem o preventDefault o botão rouba o foco ao campo
-                    // do PIN e o teclado físico deixaria de escrever.
-                    onMouseDown={(e) => e.preventDefault()}
-                    onClick={() => digitar(d)}
-                  >
-                    {d}
-                  </button>
-                ))}
-                <button
-                  type="button"
-                  className="portal-staff-key portal-staff-key--fn"
-                  onMouseDown={(e) => e.preventDefault()}
-                  onClick={() => {
-                    setPin('')
-                    focar()
-                  }}
-                >
-                  Limpar
-                </button>
-                <button
-                  type="button"
-                  className="portal-staff-key"
-                  onMouseDown={(e) => e.preventDefault()}
-                  onClick={() => digitar('0')}
-                >
-                  0
-                </button>
-                <button
-                  type="button"
-                  className="portal-staff-key portal-staff-key--fn"
-                  onMouseDown={(e) => e.preventDefault()}
-                  onClick={apagar}
-                >
-                  Apagar
-                </button>
-              </div>
+              <p className="sr-only" aria-live="polite">
+                {pin.length} de 4 dígitos introduzidos
+              </p>
 
               {error && (
                 <p className="portal-error" role="alert">
-                  {ERRORES[error] || 'Erro inesperado.'}
+                  {error === 'PIN_BLOQUEADO' && errorInfo?.retryAfterSec
+                    ? `Demasiadas tentativas — aguarde ${formatEspera(errorInfo.retryAfterSec)} antes de tentar de novo.`
+                    : ERRORES[error] || 'Erro inesperado.'}
+                  {error === 'PIN_ERRADO' &&
+                    errorInfo?.restantes != null &&
+                    errorInfo.restantes <= 2 &&
+                    ` ${errorInfo.restantes > 0 ? `Restam ${errorInfo.restantes} tentativa${errorInfo.restantes === 1 ? '' : 's'} antes do bloqueio temporário.` : 'A próxima falha bloqueia temporariamente.'}`}
                 </p>
               )}
 
@@ -418,7 +373,8 @@ export default function StaffPicker({ pharmacyName, accountName }) {
                 {pending ? 'A entrar…' : 'Entrar'}
               </button>
               <p className="portal-staff-pin-note">
-                PIN errado é registado em log, sem bloqueio de conta.
+                Após 5 tentativas erradas, o perfil bloqueia temporariamente (1 min, depois o
+                dobro). Tentativas erradas ficam registadas em log.
               </p>
             </form>
           )}

@@ -1,7 +1,7 @@
 "use client";
 
 import { motion, useSpring } from "motion/react";
-import { memo, useEffect, useMemo, useState } from "react";
+import { memo, useEffect, useMemo, useRef, useState } from "react";
 import { createPortal } from "react-dom";
 import {
   resolveTooltipBoxMotion,
@@ -358,15 +358,24 @@ const ChartTooltipInner = memo(function ChartTooltipInner({
 
 export function ChartTooltip(props: ChartTooltipProps) {
   const { containerRef } = useChartStable();
-  const [mounted, setMounted] = useState(false);
+  // O portal precisa do nó real (só existe no cliente após commit):
+  // lê-se a ref no efeito e guarda-se em estado (sem cascata — só
+  // atualiza quando o nó muda).
+  const [container, setContainer] = useState<HTMLDivElement | null>(null);
+  const seenContainerRef = useRef<HTMLDivElement | null>(null);
 
-  // Only render portals on client side after mount
+  // Sem deps de propósito: apanha remontagens do contentor; o guard
+  // seenContainerRef impede ciclos (só escreve quando o nó muda).
+  // eslint-disable-next-line react-hooks/exhaustive-deps
   useEffect(() => {
-    setMounted(true);
-  }, []);
+    const node = containerRef.current;
+    if (node !== seenContainerRef.current) {
+      seenContainerRef.current = node;
+      setContainer(node);
+    }
+  });
 
-  const container = containerRef.current;
-  if (!(mounted && container)) {
+  if (!container) {
     return null;
   }
 
@@ -410,10 +419,9 @@ function DatePillTrackerInner({
     animatedX.set(xWithMargin);
   }
 
-  // biome-ignore lint/correctness/useExhaustiveDependencies: we need to jump the animatedX when the visible prop changes
   useEffect(() => {
     animatedX.set(xWithMargin);
-  }, [animatedX, visible]);
+  }, [animatedX, visible, xWithMargin]);
 
   return (
     <motion.div

@@ -1,23 +1,41 @@
 import { NextResponse } from 'next/server'
 import { createAdminClient } from '@/lib/supabase/admin'
 
-// Rate limiting simples em memória por IP (por instância serverless).
-// Suficiente para o volume esperado de uma landing; para escala real,
-// migrar para Upstash Redis ou similar.
-const WINDOW_MS = 60 * 60 * 1000 // 1 hora
+// Rate limiting ATÓMICO na BD (migração 0037, `lead_rate_consume`):
+// janela fixa por IP, incremento num upsert — sobrevive a N
+// instâncias serverless e a restarts, ao contrário do Map em memória
+// que aqui vivia antes (cada instância contava sozinha: bastava
+// espalhar submissões para contornar o limite).
+//
+// O Map em memória fica só como FALLBACK para quando a 0037 ainda não
+// foi aplicada ou a BD falha — com log, nunca silencioso.
+const WINDOW_SECONDS = 60 * 60 // 1 hora
 const MAX_PER_WINDOW = 5
-const hits = new Map()
+const fallbackHits = new Map()
 
-function rateLimited(ip) {
+function fallbackRateLimited(ip) {
   const now = Date.now()
-  const entry = hits.get(ip) || { count: 0, start: now }
-  if (now - entry.start > WINDOW_MS) {
+  const entry = fallbackHits.get(ip) || { count: 0, start: now }
+  if (now - entry.start > WINDOW_SECONDS * 1000) {
     entry.count = 0
     entry.start = now
   }
   entry.count += 1
-  hits.set(ip, entry)
+  fallbackHits.set(ip, entry)
   return entry.count > MAX_PER_WINDOW
+}
+
+/**
+ * IP do cliente: `x-real-ip` primeiro — a Vercel escreve-o com o IP
+ * real da ligação (o cliente não o forja: o edge sobrepõe o que vier
+ * no pedido). Só depois o primeiro de `x-forwarded-for`, que o
+ * cliente PODE prefixar com lixo («fake, real»).
+ */
+function clientIp(request) {
+  const real = (request.headers.get('x-real-ip') || '').trim()
+  if (real) return real
+  const fwd = (request.headers.get('x-forwarded-for') || '').split(',')[0]?.trim()
+  return fwd || 'unknown'
 }
 
 function clean(v, max = 200) {
@@ -41,15 +59,13 @@ export async function POST(request) {
     return NextResponse.json({ ok: true })
   }
 
-  const ip =
-    request.headers.get('x-forwarded-for')?.split(',')[0]?.trim() ||
-    request.headers.get('x-real-ip') ||
-    'unknown'
+  const ip = clientIp(request)
 
-  if (rateLimited(ip)) {
+  const tooMany = await exceedsLimit(ip)
+  if (tooMany) {
     return NextResponse.json(
       { error: 'Muitas submissões. Tente novamente mais tarde ou fale connosco por WhatsApp.' },
-      { status: 429 }
+      { status: 429, headers: { 'Retry-After': String(WINDOW_SECONDS) } },
     )
   }
 
@@ -105,4 +121,24 @@ export async function POST(request) {
   }
 
   return NextResponse.json({ ok: true })
+}
+
+/**
+ * Verdadeiro quando o IP já esgotou a janela. Caminho principal: RPC
+ * atómico; fallback em memória (pré-0037 ou BD em baixo), com log.
+ */
+async function exceedsLimit(ip) {
+  try {
+    const supabase = createAdminClient()
+    const { data, error } = await supabase.rpc('lead_rate_consume', {
+      p_ip: ip,
+      p_limit: MAX_PER_WINDOW,
+      p_window_seconds: WINDOW_SECONDS,
+    })
+    if (error) throw error
+    return data?.allowed === false
+  } catch (err) {
+    console.error('[leads] rate RPC falhou, fallback em memória', { message: err?.message })
+    return fallbackRateLimited(ip)
+  }
 }

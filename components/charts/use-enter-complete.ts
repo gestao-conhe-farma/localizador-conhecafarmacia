@@ -12,16 +12,25 @@ export function useEnterComplete(mountProgress: MotionValue<number>): boolean {
   const [complete, setComplete] = useState(() => mountProgress.get() >= 1);
 
   useEffect(() => {
-    if (mountProgress.get() >= 1) {
-      setComplete(true);
-      return;
-    }
+    // Verificação inicial em microtarefa (não síncrona no efeito) +
+    // subscrição: fecha a corrida «completou entre o render e o efeito»
+    // sem setState em cascata.
+    let alive = true;
+    void Promise.resolve().then(() => {
+      if (alive && mountProgress.get() >= 1) {
+        setComplete(true);
+      }
+    });
 
-    return mountProgress.on("change", (value) => {
+    const off = mountProgress.on("change", (value) => {
       if (value >= 1) {
         setComplete(true);
       }
     });
+    return () => {
+      alive = false;
+      off();
+    };
   }, [mountProgress]);
 
   return complete;

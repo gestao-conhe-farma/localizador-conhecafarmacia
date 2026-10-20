@@ -46,6 +46,8 @@ export function usePathStrokeMetrics(
 ): PathStrokeMetrics {
   const [metrics, setMetrics] = useState<PathStrokeMetrics>(EMPTY_METRICS);
 
+  /* eslint-disable react-hooks/exhaustive-deps -- `deps` traz as dependências
+     do chamador por desenho (ver docstring); `pathRef` é estável. */
   useEffect(() => {
     const path = pathRef.current;
     if (!path) {
@@ -58,7 +60,8 @@ export function usePathStrokeMetrics(
         ? prev
         : { pathD: d, pathLength: len }
     );
-  }, deps);
+  }, [...deps, pathRef]);
+  /* eslint-enable react-hooks/exhaustive-deps */
 
   return metrics;
 }

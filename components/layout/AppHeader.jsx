@@ -1,6 +1,6 @@
 'use client'
 
-import { useEffect, useState } from 'react'
+import { useState } from 'react'
 import Link from 'next/link'
 import Image from 'next/image'
 import { usePathname } from 'next/navigation'
@@ -17,10 +17,14 @@ export default function AppHeader() {
   const [navOpen, setNavOpen] = useState(false)
   const pathname = usePathname()
 
-  // Fecha o menu mobile em cada navegação
-  useEffect(() => {
-    setNavOpen(false)
-  }, [pathname])
+  // Fecha o menu mobile em cada navegação — ajuste durante o render
+  // (padrão «You Might Not Need An Effect»): setState síncrono no
+  // efeito seria cascata de renders.
+  const [prevPath, setPrevPath] = useState(pathname)
+  if (prevPath !== pathname) {
+    setPrevPath(pathname)
+    if (navOpen) setNavOpen(false)
+  }
 
   const isActive = (href) =>
     pathname === href || pathname.startsWith(href + '/')

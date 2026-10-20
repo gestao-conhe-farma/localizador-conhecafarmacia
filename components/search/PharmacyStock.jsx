@@ -103,9 +103,13 @@ export default function PharmacyStock({ slug, initialItems = null }) {
 
   useEffect(() => {
     // Hidratado pelo servidor — nada a fazer (mas refetch leve se o utilizador
-    // navegar de volta e os dados tiverem >5 min, mantendo a frescura da 72h)
+    // navegar de volta e os dados tiverem >5 min, mantendo a frescura da 72h).
+    // O fetch corre em continuação assíncrona: setState síncrono no corpo
+    // do efeito é cascata de renders (o refetch resolve e grava depois).
     if (initialItems) return
-    refetch()
+    ;(async () => {
+      await refetch()
+    })()
   }, [slug, initialItems, refetch])
 
   // T12: refresca sem reload quando a farmácia guarda stock no portal
@@ -472,9 +476,9 @@ export default function PharmacyStock({ slug, initialItems = null }) {
                 <p className="search-cta-sub">
                   Junte-se às parceiras do lançamento do Localizador — gratuitamente.
                 </p>
-                <a href="/#farmacias" className="btn btn-primary">
-                  Quero participar
-                </a>
+              <Link href="/#farmacias" className="btn btn-primary">
+                Quero participar
+              </Link>
               </div>
             </>
           )}

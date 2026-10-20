@@ -1,6 +1,7 @@
 'use client'
 
 import { useEffect, useState } from 'react'
+import { useSearchParams } from 'next/navigation'
 import { createClient } from '@/lib/supabase/client'
 import { CloseIcon, CheckIcon } from '@/components/ui/Icon'
 import { trackingUrl } from '@/lib/reservation-messages'
@@ -49,35 +50,39 @@ import { originCode } from '@/lib/origin-flags'
 import { fmtKz, estimateTotal, quantityDesc, quantityLine } from '@/lib/reservation-format'
 import { packStructureText } from '@/lib/sale-options'
 
+const UUID_RE = /^[0-9a-f-]{36}$/i
+
 /**
- * Estado da reserva para o cliente — leitura directa por id (RLS da
- * migração 0011). Recusas mostram sempre o caminho seguinte: procurar
- * no Localizador ou falar com a farmácia pelo WhatsApp dela.
+ * Estado da reserva para o cliente — pós-0035, via RPC
+ * `get_reservation_status(id, token)` com o token do URL (?t=).
+ *
+ * Sem token válido, nada é devolvido: o id sozinho já não abre nada,
+ * porque a policy pública de leitura foi removida. O RPC nunca devolve
+ * requester_phone — só os dados da própria reserva.
  */
 export default function ReservationStatus({ reservationId }) {
+  const searchParams = useSearchParams()
+  const token = searchParams.get('t') || ''
   const [r, setR] = useState(null)
   const [error, setError] = useState('')
   // Lightbox da foto da embalagem — tocar na miniatura abre em grande.
   const [zoom, setZoom] = useState(false)
   // Feedback do «Copiar mensagem».
   const [copied, setCopied] = useState(false)
+  // Validação do link durante o render (não no efeito): setState
+  // síncrono no corpo do efeito causa renders em cascata (lint).
+  const linkOk = UUID_RE.test(reservationId || '') && UUID_RE.test(token || '')
 
   useEffect(() => {
-    if (!/^[0-9a-f-]{36}$/i.test(reservationId || '')) {
-      setError('Link de acompanhamento inválido.')
-      return
-    }
+    if (!linkOk) return
     const supabase = createClient()
     let alive = true
 
     const fetchOnce = async () => {
-      const { data, error: e } = await supabase
-        .from('reservations')
-        .select(
-          'id, status, quantity, confirmed_quantity, reason, notes, created_at, resolved_at, requester_name, sale_option_id, drugs(name, form, dosage), pharmacies(name, phone, whatsapp, address, municipio), stock_sale_options(unit, pack_size, price), stock_items(origin, brand, image_path, pack_laminas, pack_comprimidos)',
-        )
-        .eq('id', reservationId)
-        .maybeSingle()
+      const { data, error: e } = await supabase.rpc('get_reservation_status', {
+        p_id: reservationId,
+        p_token: token,
+      })
       if (!alive) return
       if (e) {
         setError('Não foi possível carregar a reserva.')
@@ -87,29 +92,27 @@ export default function ReservationStatus({ reservationId }) {
         setError('Reserva não encontrada — confirme o link que recebeu.')
         return
       }
-      setR(data)
+      // O RPC devolve chaves achatadas (drug/pharmacy/sale_option/
+      // stock_item); o resto do componente fala o dialecto antigo dos
+      // embeds (drugs/pharmacies/stock_sale_options/stock_items).
+      setR({
+        ...data,
+        drugs: data.drug || null,
+        pharmacies: data.pharmacy || null,
+        stock_sale_options: data.sale_option || null,
+        stock_items: data.stock_item || null,
+      })
     }
 
     fetchOnce()
-    // Realtime leve: o estado muda quando a farmácia mexe — sem F5.
-    const channel = supabase
-      .channel(`reserva-${reservationId}`)
-      .on(
-        'postgres_changes',
-        {
-          event: 'UPDATE',
-          schema: 'public',
-          table: 'reservations',
-          filter: `id=eq.${reservationId}`,
-        },
-        () => fetchOnce(),
-      )
-      .subscribe()
+    // Sem Realtime para anon (a tabela não tem SELECT público): polling
+    // leve a cada 20 s — o estado muda quando a farmácia mexe.
+    const timer = setInterval(fetchOnce, 20000)
     return () => {
       alive = false
-      supabase.removeChannel(channel)
+      clearInterval(timer)
     }
-  }, [reservationId])
+  }, [reservationId, token, linkOk])
 
   // Esc fecha o lightbox.
   useEffect(() => {
@@ -121,10 +124,13 @@ export default function ReservationStatus({ reservationId }) {
     return () => window.removeEventListener('keydown', onKey)
   }, [zoom])
 
-  if (error) {
+  const shownError = !linkOk
+    ? 'Link de acompanhamento inválido — abra o link completo que recebeu da farmácia.'
+    : error
+  if (shownError) {
     return (
       <div className="res-track-card">
-        <p className="res-track-estado res-track-estado--erro">{error}</p>
+        <p className="res-track-estado res-track-estado--erro">{shownError}</p>
         <a href="/pesquisa" className="btn btn-primary">
           Ir ao Localizador
         </a>
@@ -167,7 +173,7 @@ export default function ReservationStatus({ reservationId }) {
     `Olá! Tenho uma reserva de ${drugDesc} — ${quantityDesc(r)}.`,
     waTotal != null ? `Valor estimado: ${fmtKz(waTotal)} (a confirmar no balcão).` : '',
     `Levantamento em nome de ${r.requester_name}.`,
-    `Link da reserva: ${trackingUrl(r.id)}`,
+    `Link da reserva: ${trackingUrl(r.id, token)}`,
   ]
     .filter(Boolean)
     .join(' ')

@@ -1,6 +1,6 @@
 "use client";
 
-import { memo, useEffect, useMemo, useState } from "react";
+import { memo, useEffect, useMemo, useRef, useState } from "react";
 import { createPortal } from "react-dom";
 import { cn } from "@/lib/utils";
 import { useChart, useChartStable } from "./chart-context";
@@ -558,14 +558,24 @@ function appendProjectionTailTicks(
 
 export function XAxis(props: XAxisProps) {
   const { containerRef } = useChartStable();
-  const [mounted, setMounted] = useState(false);
+  // O portal precisa do nó real (só existe no cliente após commit):
+  // lê-se a ref no efeito e guarda-se em estado (sem cascata — só
+  // atualiza quando o nó muda).
+  const [container, setContainer] = useState<HTMLDivElement | null>(null);
+  const seenContainerRef = useRef<HTMLDivElement | null>(null);
 
+  // Sem deps de propósito: apanha remontagens do contentor; o guard
+  // seenContainerRef impede ciclos (só escreve quando o nó muda).
+  // eslint-disable-next-line react-hooks/exhaustive-deps
   useEffect(() => {
-    setMounted(true);
-  }, []);
+    const node = containerRef.current;
+    if (node !== seenContainerRef.current) {
+      seenContainerRef.current = node;
+      setContainer(node);
+    }
+  });
 
-  const container = containerRef.current;
-  if (!(mounted && container)) {
+  if (!container) {
     return null;
   }
 

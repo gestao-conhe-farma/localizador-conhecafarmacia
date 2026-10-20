@@ -123,7 +123,7 @@ export default function ReserveModal({ item, onClose, onCreated }) {
               <input
                 readOnly
                 className="portal-input"
-                value={`${typeof window !== 'undefined' ? window.location.origin : ''}/reserva/${created.reservationId}`}
+                value={`${typeof window !== 'undefined' ? window.location.origin : ''}/reserva/${created.reservationId}${created.accessToken ? `?t=${encodeURIComponent(created.accessToken)}` : ''}`}
                 onFocus={(e) => e.target.select()}
                 aria-label="Link de acompanhamento da reserva"
               />
@@ -132,14 +132,14 @@ export default function ReserveModal({ item, onClose, onCreated }) {
                 className="btn btn-primary btn-small"
                 onClick={() => {
                   navigator.clipboard
-                    ?.writeText(`${window.location.origin}/reserva/${created.reservationId}`)
+                    ?.writeText(`${window.location.origin}/reserva/${created.reservationId}${created.accessToken ? `?t=${encodeURIComponent(created.accessToken)}` : ''}`)
                     .catch(() => {})
                 }}
               >
                 Copiar
               </button>
             </div>
-            <a href={`/reserva/${created.reservationId}`} className="btn btn-secondary">
+            <a href={`/reserva/${created.reservationId}${created.accessToken ? `?t=${encodeURIComponent(created.accessToken)}` : ''}`} className="btn btn-secondary">
               Acompanhar agora
             </a>
           </div>

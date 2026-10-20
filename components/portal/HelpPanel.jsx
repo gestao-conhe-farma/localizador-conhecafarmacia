@@ -112,8 +112,8 @@ const TOPICS = [
           </li>
         </ol>
         <p className="help-tip">
-          PIN errado é apenas registado em log (para o gerente ver tentativas suspeitas) —{' '}
-          <b>não há bloqueio de conta</b>.
+          PIN errado é registado em log (para o gerente ver tentativas suspeitas) — após 5
+          falhas seguidas o perfil <b>bloqueia temporariamente</b> (1 min, depois o dobro).
         </p>
       </>
     ),

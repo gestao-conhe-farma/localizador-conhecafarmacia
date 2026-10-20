@@ -20,10 +20,10 @@ export default function Header() {
       {/* Utility bar — barra superior escura, como no principal */}
       <div className="utility-bar">
         <div className="utility-bar-container">
-          <a className="utility-brand" href="/">
+          <Link className="utility-brand" href="/">
             <span className="utility-dot" />
             Lançamento 2026 · Luanda
-          </a>
+          </Link>
           <div className="utility-links">
             <a href="#farmacias">Farmácias</a>
             <a href="#como-funciona">Como funciona</a>

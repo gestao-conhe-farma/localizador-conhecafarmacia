@@ -308,7 +308,9 @@ export default function PortalTour({ userSub }) {
 
   // Mede a carta depois de cada render (só actualiza quando muda de
   // tamanho, por isso não há ciclo). Antes do return para respeitar a
-  // ordem dos hooks.
+  // ordem dos hooks. Sem deps de propósito: [cardH] falharia medições
+  // cuja mudança ainda não está no estado.
+  // eslint-disable-next-line react-hooks/exhaustive-deps
   useLayoutEffect(() => {
     const h = cardRef.current?.offsetHeight || 0
     if (h && h !== cardH) setCardH(h)

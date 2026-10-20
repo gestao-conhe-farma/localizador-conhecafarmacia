@@ -103,10 +103,9 @@ export default function DrugSearch() {
   // leva ao Paracetamol. O cliente pesquisa pelo que tem na cabeça.
   useEffect(() => {
     const q = query.trim()
-    if (q.length < 2) {
-      setSuggestions([])
-      return
-    }
+    // Query curta: nada a sugerir (a limpeza vive no onChange, em
+    // contexto de evento — setState síncrono no efeito é cascata).
+    if (q.length < 2) return
     clearTimeout(debounceRef.current)
     debounceRef.current = setTimeout(async () => {
       try {
@@ -305,7 +304,9 @@ export default function DrugSearch() {
               placeholder="Insulina, carbamazepina, salbutamol…"
               value={query}
               onChange={(e) => {
-                setQuery(e.target.value)
+                const v = e.target.value
+                setQuery(v)
+                if (v.trim().length < 2) setSuggestions([])
                 setShowSuggest(true)
               }}
               onFocus={() => setShowSuggest(true)}
@@ -319,6 +320,7 @@ export default function DrugSearch() {
                 className="search-clear"
                 onClick={() => {
                   setQuery('')
+                  setSuggestions([])
                   setResults(null)
                   setError('')
                   inputRef.current?.focus()
@@ -655,9 +657,9 @@ export default function DrugSearch() {
                 Junte-se às parceiras do lançamento e seja encontrado por quem precisa —
                 gratuitamente.
               </p>
-              <a href="/#farmacias" className="btn btn-primary">
+              <Link href="/#farmacias" className="btn btn-primary">
                 Quero participar
-              </a>
+              </Link>
             </div>
           </div>
         </div>

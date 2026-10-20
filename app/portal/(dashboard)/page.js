@@ -272,8 +272,7 @@ function dataCurta(iso) {
 export default async function PortalOverviewPage() {
   const { session, reason, detail } = await getPharmacySessionVerbose()
   if (!session) {
-    // Mesmo conduta do layout — e nunca desestruturar null (era o crash).
-    console.log('[portal-debug] visão geral sem sessão:', reason, detail || '')
+    // Mesma conduta do layout — e nunca desestruturar null (era o crash).
     const qs = new URLSearchParams({ motivo: reason })
     if (detail) qs.set('detalhe', detail)
     redirect(`/portal/login?${qs.toString()}`)

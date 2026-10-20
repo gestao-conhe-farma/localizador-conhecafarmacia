@@ -153,7 +153,7 @@ export default async function StaffSessionPage() {
             <div className="sess-card-body">
               <p className="sess-card-text">
                 O PIN abre este perfil neste dispositivo. Tentativas erradas ficam registadas em log
-                — não há bloqueio de conta.
+                — após 5 falhas seguidas há bloqueio temporário.
               </p>
               <div className="sess-card-act">
                 <ChangePinDrawer />

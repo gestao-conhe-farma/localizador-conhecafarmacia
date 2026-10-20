@@ -13,15 +13,19 @@ export function useTheme() {
 }
 
 export default function ThemeProvider({ children }) {
-  const [theme, setTheme] = useState('light')
+  // Tema inicial lido no primeiro render (lazy initializer): evita o
+  // flash de tema errado e o setState síncrono no efeito. O efeito só
+  // sincroniza o DOM — o único trabalho legítimo dele aqui.
+  const [theme, setTheme] = useState(() => {
+    if (typeof window === 'undefined') return 'light'
+    const stored = localStorage.getItem('theme')
+    if (stored === 'dark' || stored === 'light') return stored
+    return window.matchMedia('(prefers-color-scheme: dark)').matches ? 'dark' : 'light'
+  })
 
   useEffect(() => {
-    const stored = localStorage.getItem('theme')
-    const prefersDark = window.matchMedia('(prefers-color-scheme: dark)').matches
-    const initial = stored || (prefersDark ? 'dark' : 'light')
-    setTheme(initial)
-    document.documentElement.classList.toggle('dark', initial === 'dark')
-  }, [])
+    document.documentElement.classList.toggle('dark', theme === 'dark')
+  }, [theme])
 
   const toggleTheme = () => {
     const next = theme === 'dark' ? 'light' : 'dark'

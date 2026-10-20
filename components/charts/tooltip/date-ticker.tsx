@@ -1,7 +1,7 @@
 "use client";
 
 import { motion, useSpring } from "motion/react";
-import { memo, useMemo, useRef } from "react";
+import { memo, useMemo, useState } from "react";
 
 const TICKER_ITEM_HEIGHT = 24;
 /** Full scroll stacks are skipped above this count — single label + instant updates. */
@@ -74,8 +74,9 @@ const DateTickerInner = memo(function DateTickerInner({
     return 0;
   }, [currentIndex, parsedLabels.length, monthSegments]);
 
-  // Track previous month index
-  const prevMonthIndexRef = useRef(-1);
+  // O salto do mês aplica-se no render (sem animar): guarda-se o último
+  // índice em estado em vez de ler/escrever a ref durante o render.
+  const [prevMonthIndex, setPrevMonthIndex] = useState(-1);
 
   // Animated Y offsets
   const dayY = useSpring(0, { stiffness: 400, damping: 35 });
@@ -83,13 +84,12 @@ const DateTickerInner = memo(function DateTickerInner({
 
   dayY.set(-currentIndex * TICKER_ITEM_HEIGHT);
 
-  if (currentMonthIndex >= 0) {
-    const isFirstRender = prevMonthIndexRef.current === -1;
-    const monthChanged = prevMonthIndexRef.current !== currentMonthIndex;
-    if (isFirstRender || monthChanged) {
-      monthY.set(-currentMonthIndex * TICKER_ITEM_HEIGHT);
-      prevMonthIndexRef.current = currentMonthIndex;
-    }
+  if (
+    currentMonthIndex >= 0 &&
+    (prevMonthIndex === -1 || prevMonthIndex !== currentMonthIndex)
+  ) {
+    setPrevMonthIndex(currentMonthIndex);
+    monthY.set(-currentMonthIndex * TICKER_ITEM_HEIGHT);
   }
 
   return (

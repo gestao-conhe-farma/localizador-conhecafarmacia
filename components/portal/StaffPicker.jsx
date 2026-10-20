@@ -15,12 +15,13 @@ import { logWarn } from '@/lib/log'
  * Modelo editorial A (_design/portal-reimaginado/A-editorial.html):
  * eyebrow + título serif grande + lead; grelha de cartões brancos
  * (avatar, nome serif, papel e chip de estado) e o PIN revelado SOBRE o
- * perfil escolhido, num painel centrado com uma caixa de PIN — nenhum
- * campo à mostra até ser preciso. «Em uso» marca o perfil que já está
- * activo neste dispositivo.
+ * perfil escolhido, num painel centrado com 4 caixas de PIN (modelo B)
+ * — nenhum campo à mostra até ser preciso. «Em uso» marca o perfil que
+ * já está activo neste dispositivo.
  *
- * O campo usa `inputMode="numeric"`: no telemóvel abre o teclado
+ * As caixas usam `inputMode="numeric"`: no telemóvel abre o teclado
  * numérico, no PC escreve-se no teclado físico (ou no leitor do balcão).
+ * O 4.º dígito submete sozinho, com avanço e recuo automáticos.
  *
  * Vários dispositivos podem ficar em perfis diferentes ao mesmo tempo —
  * cada um tem o seu cookie (24 h), assinado pelo servidor depois de o
@@ -73,9 +74,9 @@ export default function StaffPicker({ pharmacyName, accountName }) {
   const [pending, startTransition] = useTransition()
   // Primeira arranque: farmácia sem nenhum perfil → criar gerente aqui.
   const [primeiro, setPrimeiro] = useState({ name: '', pin: '', confirm: '' })
-  // O campo do PIN recebe o foco ao abrir o painel — teclado físico,
-  // leitores do balcão e teclado numérico do telemóvel escrevem nele.
-  const pinRef = useRef(null)
+  // As 4 caixas do PIN — o foco avança sozinho; teclado físico,
+  // leitores do balcão e teclado numérico do telemóvel escrevem nelas.
+  const pinBoxRefs = useRef([])
 
   useEffect(() => {
     let alive = true
@@ -96,9 +97,9 @@ export default function StaffPicker({ pharmacyName, accountName }) {
     }
   }, [])
 
-  // Painel do PIN aberto: foco directo no campo.
+  // Painel do PIN aberto: foco directo na primeira caixa.
   useEffect(() => {
-    if (selected) pinRef.current?.focus()
+    if (selected) pinBoxRefs.current[0]?.focus()
   }, [selected])
 
   const escolher = (s) => {
@@ -106,11 +107,11 @@ export default function StaffPicker({ pharmacyName, accountName }) {
     setPin('')
     setError(null)
     setErrorInfo(null)
-    if (!s) pinRef.current?.blur()
+    if (!s && document.activeElement instanceof HTMLElement) document.activeElement.blur()
   }
 
   // Entrada no perfil com um PIN explícito — o 4.º dígito digitado
-  // submete sozinho; o botão Entrar continua disponível (e o Enter).
+  // ou colado submete sozinho.
   const entrar = (pinValue) => {
     if (!selected || pending || pinValue.length !== 4) return
     setError(null)
@@ -136,10 +137,35 @@ export default function StaffPicker({ pharmacyName, accountName }) {
     entrar(pin)
   }
 
-  const aoDigitarPin = (e) => {
-    const next = e.target.value.replace(/\D/g, '').slice(0, 4)
+  const focarCaixa = (i) => pinBoxRefs.current[i]?.focus()
+
+  const aoDigitarDigito = (i, raw) => {
+    const digitos = raw.replace(/\D/g, '')
+    if (!digitos) {
+      setPin((p) => p.slice(0, i))
+      return
+    }
+    const next = (pin.slice(0, i) + digitos).slice(0, 4)
     setPin(next)
-    entrar(next)
+    if (next.length === 4) entrar(next)
+    else focarCaixa(i + 1)
+  }
+
+  const aoTeclarDigito = (i, e) => {
+    if (e.key === 'Backspace' && !pin[i] && i > 0) {
+      e.preventDefault()
+      setPin((p) => p.slice(0, i - 1))
+      focarCaixa(i - 1)
+    }
+  }
+
+  const aoColarPin = (e) => {
+    const texto = (e.clipboardData?.getData('text') || '').replace(/\D/g, '').slice(0, 4)
+    if (!texto) return
+    e.preventDefault()
+    setPin(texto)
+    if (texto.length === 4) entrar(texto)
+    else focarCaixa(texto.length)
   }
 
   const criarPrimeiro = (e) => {
@@ -323,8 +349,8 @@ export default function StaffPicker({ pharmacyName, accountName }) {
             })}
           </div>
 
-          {/* PIN — painel centrado do modelo: quem entra, caixa do PIN e
-              «Entrar». */}
+          {/* PIN — painel centrado: quem entra e as 4 caixas do modelo B
+              (o 4.º dígito submete sozinho). */}
           {selected && (
             <form className="portal-staff-pin-card" onSubmit={submeter}>
               <div className="portal-staff-pin-who">
@@ -345,23 +371,34 @@ export default function StaffPicker({ pharmacyName, accountName }) {
                 </button>
               </div>
 
-              <label className="portal-staff-pin-label" htmlFor="pin-campo">
+              <label className="portal-staff-pin-label" id="pin-label">
                 Introduza o PIN
               </label>
-              <input
-                id="pin-campo"
-                ref={pinRef}
-                className="portal-input portal-input--pin portal-staff-pin-input"
-                type="password"
-                inputMode="numeric"
-                autoComplete="off"
-                maxLength={4}
-                pattern="\d{4}"
-                placeholder="••••"
-                value={pin}
-                onChange={aoDigitarPin}
-                disabled={pending}
-              />
+              <div
+                className="portal-staff-pin-boxes"
+                role="group"
+                aria-labelledby="pin-label"
+              >
+                {[0, 1, 2, 3].map((i) => (
+                  <input
+                    key={i}
+                    ref={(el) => {
+                      pinBoxRefs.current[i] = el
+                    }}
+                    className="portal-input portal-staff-pin-box"
+                    type="password"
+                    inputMode="numeric"
+                    autoComplete="off"
+                    maxLength={1}
+                    aria-label={`Dígito ${i + 1} do PIN`}
+                    value={pin[i] || ''}
+                    onChange={(e) => aoDigitarDigito(i, e.target.value)}
+                    onKeyDown={(e) => aoTeclarDigito(i, e)}
+                    onPaste={aoColarPin}
+                    disabled={pending}
+                  />
+                ))}
+              </div>
               <p className="sr-only" aria-live="polite">
                 {pin.length} de 4 dígitos introduzidos
               </p>
@@ -378,13 +415,11 @@ export default function StaffPicker({ pharmacyName, accountName }) {
                 </p>
               )}
 
-              <button
-                type="submit"
-                className="btn btn-primary portal-staff-pin-go"
-                disabled={pending || pin.length !== 4}
-              >
-                {pending ? 'A entrar…' : 'Entrar'}
-              </button>
+              {pending && (
+                <p className="portal-staff-pin-note" role="status">
+                  A entrar…
+                </p>
+              )}
               <p className="portal-staff-pin-note">
                 Após 5 tentativas erradas, o perfil bloqueia temporariamente (1 min, depois o
                 dobro). Tentativas erradas ficam registadas em log.

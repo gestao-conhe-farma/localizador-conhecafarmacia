@@ -8143,6 +8143,22 @@ html.dark .form-note {
     margin: 0;
   }
 
+  /* 4 caixas do PIN (modelo B): avanço automático, uma por dígito. */
+  .portal-staff-pin-boxes {
+    display: flex;
+    justify-content: center;
+    gap: 0.625rem;
+  }
+
+  .portal-staff-pin-box {
+    width: 3.25rem;
+    height: 3.75rem;
+    padding: 0;
+    text-align: center;
+    font-size: 1.5rem;
+    font-weight: 700;
+  }
+
   .portal-staff-pin-note {
     font-size: 0.75rem;
     color: var(--ink-60v);
@@ -8207,10 +8223,6 @@ html.dark .form-note {
   .portal-role-card:focus-visible {
     outline: 2px solid var(--color-brand-accent);
     outline-offset: 2px;
-  }
-
-  .portal-staff-pin-go {
-    width: 100%;
   }
 
   /* Painel do «primeiro perfil» (farmácia sem equipa): mesma largura do

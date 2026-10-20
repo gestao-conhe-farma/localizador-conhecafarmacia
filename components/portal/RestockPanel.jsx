@@ -657,9 +657,14 @@ export default function RestockPanel() {
         {filtered.length === 0 && (
           <div className="portal-rows-empty">
             <b>{filter === 'restock' && !query ? 'Nada a repor' : 'Nada encontrado'}</b>
-            {filter === 'restock' && !query
-              ? 'Nenhum produto esgotado neste momento — mude para «Todos» para registar entrada em qualquer medicamento.'
-              : 'Tente outro termo de pesquisa ou mude de filtro.'}
+            {filter === 'restock' && !query ? (
+              <>
+                Nenhum produto esgotado neste momento — mude para <b>Todos</b> para registar
+                entrada em qualquer medicamento.
+              </>
+            ) : (
+              'Tente outro termo de pesquisa ou mude de filtro.'
+            )}
           </div>
         )}
 
@@ -970,7 +975,7 @@ export default function RestockPanel() {
               ))}
             </ul>
             <p className="portal-hint">
-              O histórico completo do stock vive na página Stock (coluna «Confirmado»).
+              O histórico completo do stock vive na página Stock (coluna <b>Confirmado</b>).
             </p>
           </div>
         </div>

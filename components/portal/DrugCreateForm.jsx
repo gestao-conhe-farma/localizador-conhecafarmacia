@@ -48,7 +48,13 @@ export default function DrugCreateForm({ embedded = false, onCreated } = {}) {
         type: 'ok',
         text: res.existed
           ? 'Este medicamento já existe no catálogo — procure-o na lista de stock.'
-          : 'Adicionado ao catálogo — já aparece na lista de stock com a marca «Aguarda validação»; pode marcar o stock dele já. Fica visível aos clientes depois de o gerente validar.',
+          : (
+            <>
+              Adicionado ao catálogo — já aparece na lista de stock com a marca{' '}
+              <b>Aguarda validação</b>; pode marcar o stock dele já. Fica visível aos clientes
+              depois de o gerente validar.
+            </>
+          ),
       })
       e.target.reset()
       // No modal do stock, sucesso fecha o popup (a mensagem ia ficar

@@ -53,7 +53,13 @@ const STEPS = [
     href: '/portal',
     target: '[data-tour="staff-menu"]',
     title: 'Quem está ao balcão',
-    body: 'No fundo do menu está o perfil activo — tudo o que registar fica em nome dele. Tocar no nome abre o menu com «Trocar perfil» (escolha + PIN) e «Sair do perfil». O PIN e os seus dados vivem na página Sessão, na navegação.',
+    body: (
+      <>
+        No fundo do menu está o perfil activo — tudo o que registar fica em nome dele. Tocar no
+        nome abre o menu com <b>Trocar perfil</b> (escolha + PIN) e <b>Sair do perfil</b>. O PIN e
+        os seus dados vivem na página Sessão, na navegação.
+      </>
+    ),
     placement: 'top',
     inNav: true,
   },
@@ -71,7 +77,13 @@ const STEPS = [
     href: '/portal/stock',
     target: '[data-tour="stock-sub"]',
     title: 'A entrada de stock vive aqui',
-    body: 'Dentro do menu Stock fica a Entrada de stock — toque na seta para abrir. Chegou mercadoria? Escolha o medicamento, escreva quantas unidades chegaram e toque «Somar»: o produto volta a aparecer no Localizador.',
+    body: (
+      <>
+        Dentro do menu Stock fica a Entrada de stock — toque na seta para abrir. Chegou
+        mercadoria? Escolha o medicamento, escreva quantas unidades chegaram e toque <b>Somar</b>:
+        o produto volta a aparecer no Localizador.
+      </>
+    ),
     placement: 'right',
     openSubmenu: true,
     inNav: true,
@@ -80,7 +92,13 @@ const STEPS = [
     href: '/portal/stock',
     target: '[data-tour="nova-entrada"]',
     title: 'Registo rápido, em painel lateral',
-    body: 'O botão «+ Nova entrada» abre um painel lateral: pesquisa o medicamento, escreve a quantidade, escolhe a unidade e «Somar» — sem sair do Stock. Para detalhes (preços, estrutura da caixa), use a página completa no submenu.',
+    body: (
+      <>
+        O botão <b>+ Nova entrada</b> abre um painel lateral: pesquisa o medicamento, escreve a
+        quantidade, escolhe a unidade e <b>Somar</b> — sem sair do Stock. Para detalhes (preços,
+        estrutura da caixa), use a página completa no submenu.
+      </>
+    ),
     placement: 'bottom',
   },
 ]

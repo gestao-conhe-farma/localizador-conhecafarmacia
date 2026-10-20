@@ -240,7 +240,9 @@ export default async function LeadsPage({ searchParams }) {
       {filtro ? (
         <div className="interno-box">
           <div className="interno-sec-head">
-            <h2>Leads em «{estadoLead(filtro)}»</h2>
+            <h2>
+              Leads em <b>{estadoLead(filtro)}</b>
+            </h2>
             <span className="interno-sec-head-b">{rows.length}</span>
           </div>
           {rows.length === 0 ? (
@@ -288,8 +290,8 @@ export default async function LeadsPage({ searchParams }) {
                 <div className="interno-empty">
                   <b>O funil está vazio</b>
                   <span>
-                    Quando a equipa mover um lead («Em conversa», «Acordo»…), ele aparece aqui até
-                    ser convertido ou descartado.
+                    Quando a equipa mover um lead (<b>Em conversa</b>, <b>Acordo</b>…), ele aparece
+                    aqui até ser convertido ou descartado.
                   </span>
                 </div>
               </div>

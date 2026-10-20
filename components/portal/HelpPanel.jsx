@@ -77,7 +77,7 @@ const TOPICS = [
           ver o que se passou — dali podes <b>abrir a fila filtrada a esse dia</b>.
         </p>
         <p className="help-tip">
-          Serve para o «o que se passou no dia 12?»: chega-te ao detalhe sem procurar página a
+          Serve para <b>o que se passou no dia 12?</b>: chega-te ao detalhe sem procurar página a
           página. As setas do teclado andam entre dias.
         </p>
       </>
@@ -176,7 +176,7 @@ const TOPICS = [
       <>
         <p>
           Quando uma reserva concluída leva as últimas unidades, o produto sai do Localizador e
-          aparece em Atenção com o aviso «Vendeu · repor».
+          aparece em Atenção com o aviso <b>Vendeu · repor</b>.
         </p>
         <ol className="help-ol">
           <li>
@@ -210,11 +210,11 @@ const TOPICS = [
             Abre <b>Stock</b> no menu e toca na <b>seta</b> para abrir a <b>Entrada de stock</b>.
           </li>
           <li>
-            A lista vem já com os produtos <b>esgotados primeiro</b> (chip «Para repor»). Usa a
-            pesquisa ou o chip «Todos» para qualquer medicamento.
+            A lista vem já com os produtos <b>esgotados primeiro</b> (chip <b>Para repor</b>). Usa
+            a pesquisa ou o chip <b>Todos</b> para qualquer medicamento.
           </li>
           <li>
-            Na linha do medicamento vês o <b>saldo actual</b> («12 em stock»).
+            Na linha do medicamento vês o <b>saldo actual</b> (<b>12 em stock</b>).
           </li>
           <li>
             Escreve quantas chegaram em <b>Chegaram</b> e escolhe a <b>unidade</b> ao lado — caixas,
@@ -228,7 +228,7 @@ const TOPICS = [
           <li>O saldo actualiza na hora e o produto volta a aparecer no Localizador.</li>
         </ol>
         <p className="help-tip">
-          Atalho rápido: no próprio <b>Stock</b>, o botão <b>«+ Nova entrada»</b> abre um{' '}
+          Atalho rápido: no próprio <b>Stock</b>, o botão <b>+ Nova entrada</b> abre um{' '}
           <b>painel lateral</b> — pesquisa, quantidade, unidade, <b>Somar</b> — sem sair da página.
           A página completa (com preços e estrutura da caixa) continua em Stock → seta →{' '}
           <b>Entrada de stock</b>.
@@ -258,7 +258,7 @@ const TOPICS = [
           </li>
           <li>
             <b>Disponível a partir de</b> — se a mercadoria só chega dia X, marca aqui: o cliente vê
-            «chega dia X».
+            <b>chega dia X</b>.
           </li>
           <li>
             <b>Preço</b> — usado quando não há formas de venda.
@@ -279,8 +279,8 @@ const TOPICS = [
           <li>
             <b>Retirar do catálogo</b> — para o que a farmácia <b>deixou de vender</b>: botão
             vermelho no fundo do modal, confirma, e o medicamento sai do Localizador e das listas —
-            fica na <b>Lixeira</b> (chip no Stock), de onde pode ser restaurado. «Não disponível» é
-            «não tenho agora»; retirado é «não vendo mais».
+            fica na <b>Lixeira</b> (chip no Stock), de onde pode ser restaurado. <b>Não
+            disponível</b> é <b>não tenho agora</b>; retirado é <b>não vendo mais</b>.
           </li>
         </ul>
         <p>
@@ -298,7 +298,7 @@ const TOPICS = [
         <ul className="help-ul">
           <li>
             <b>Validade a vencer (90/60/30 dias)</b> — se chegou lote novo, corrige a validade ou
-            usa «Corrigir na entrada»; se não há reposição, marca «Já não disponível».
+            usa <b>Corrigir na entrada</b>; se não há reposição, marca <b>Já não disponível</b>.
           </li>
           <li>
             <b>Stock desactualizado (mais de 5 dias)</b> — confirma que ainda está na prateleira e
@@ -326,7 +326,7 @@ const TOPICS = [
         </p>
         <Notice band>
           <b>Fluxo de validação:</b> o medicamento criado entra com a marca{' '}
-          <b>«Aguarda validação»</b> — só a tua farmácia o vê. O <b>gerente</b> abre o filtro{' '}
+          <b>Aguarda validação</b> — só a tua farmácia o vê. O <b>gerente</b> abre o filtro{' '}
           <b>Aguarda validação</b> no Stock e, no menu <b>⋯</b> da linha, escolhe{' '}
           <b>Validar e publicar</b> (fica visível aos clientes) ou <b>Recusar fármaco</b> (só é
           possível enquanto não tiver stock nem reservas). Só o gerente pode validar.
@@ -369,9 +369,9 @@ const TOPICS = [
         </p>
         <ul className="help-ul">
           <li>
-            <b>Horário de atendimento</b> — escreve as horas («Seg–Sáb · 07:30–19:00» ou «Todos os
-            dias · 24 horas»). É deste texto que saem o selo <b>Aberto agora</b> e o filtro «só
-            abertas agora» da busca.
+            <b>Horário de atendimento</b> — escreve as horas (<b>Seg–Sáb · 07:30–19:00</b> ou{' '}
+            <b>Todos os dias · 24 horas</b>). É deste texto que saem o selo <b>Aberto agora</b> e o
+            filtro <b>só abertas agora</b> da busca.
           </li>
           <li>
             <b>Guardar</b> (no topo da página) — as alterações aparecem logo no Localizador.
@@ -526,8 +526,8 @@ const CHEATSHEET = [
     'Escrever nome, molécula ou telefone → Enter',
   ],
   ['Não temos o produto', 'Reservas', 'Recusar + motivo (com texto, o cliente lê)'],
-  ['Produto esgotou', 'Atenção', '«Repor na entrada» quando chegar mercadoria'],
-  ['Chegou fornecedor', 'Stock → «+ Nova entrada»', 'Painel lateral: qtd + unidade → Somar'],
+  ['Produto esgotou', 'Atenção', 'Repor na entrada quando chegar mercadoria'],
+  ['Chegou fornecedor', 'Stock → + Nova entrada', 'Painel lateral: qtd + unidade → Somar'],
   [
     'Entrada completa (preços)',
     'Stock → seta → Entrada de stock',
@@ -540,7 +540,7 @@ const CHEATSHEET = [
   ],
   [
     'Medicamento não está no catálogo',
-    'Stock → «+ Adicionar medicamento»',
+    'Stock → + Adicionar medicamento',
     'Criar → o gerente valida e publica',
   ],
   ['Saldo não bate', 'Movimentos', 'Ver o que mexeu no produto'],
@@ -624,7 +624,8 @@ export default function HelpPanel() {
         {filtered.length === 0 && (
           <div className="portal-rows-empty">
             <b>Nada encontrado</b>
-            Nada para «{query}» — tenta outra palavra, ou fala connosco: suporte@conhecafarmacia.com
+            Nada para <b>{query}</b> — tenta outra palavra, ou fala connosco:
+            suporte@conhecafarmacia.com
           </div>
         )}
 
@@ -691,7 +692,7 @@ export default function HelpPanel() {
           <b>Rever o tour de boas-vindas</b>
           <p>
             Os 5 passos essenciais, com destaques sobre as páginas reais: reservas, perfil do
-            balcão, atenção e entrada de stock (submenu + «Nova entrada»).
+            balcão, atenção e entrada de stock (submenu + <b>Nova entrada</b>).
           </p>
           {tourMsg && <p className="help-replay-msg">{tourMsg}</p>}
         </div>

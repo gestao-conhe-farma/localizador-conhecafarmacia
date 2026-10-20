@@ -477,14 +477,23 @@ export default function DrugSearch() {
             {!loading && !error && results !== null && !hasVisible && (
               <div className="empty-state">
                 <p className="empty-title">
-                  {onlyOpen && hasResults
-                    ? 'Nenhuma das farmácias com este medicamento está aberta agora'
-                    : `Sem stock confirmado para «${query}»`}
+                  {onlyOpen && hasResults ? (
+                    'Nenhuma das farmácias com este medicamento está aberta agora'
+                  ) : (
+                    <>
+                      Sem stock confirmado para <b>{query}</b>
+                    </>
+                  )}
                 </p>
                 <p className="empty-sub">
-                  {onlyOpen && hasResults
-                    ? 'Desactive o filtro «só abertas agora» para ver todas — ou confirme por WhatsApp antes de sair.'
-                    : 'Não há farmácias parceiras com este medicamento confirmado nas últimas 72 horas. Estamos a crescer a rede — volte em breve.'}
+                  {onlyOpen && hasResults ? (
+                    <>
+                      Desactive o filtro <b>só abertas agora</b> para ver todas — ou confirme por
+                      WhatsApp antes de sair.
+                    </>
+                  ) : (
+                    'Não há farmácias parceiras com este medicamento confirmado nas últimas 72 horas. Estamos a crescer a rede — volte em breve.'
+                  )}
                 </p>
               </div>
             )}

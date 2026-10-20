@@ -144,7 +144,9 @@ export default function PharmacyProfileForm({ pharmacy, accountEmail = '' }) {
                 defaultValue={pharmacy.whatsapp || ''}
                 placeholder="2449XXXXXXXX"
               />
-              <span className="portal-hint">Usado nos botões «falar com a farmácia»</span>
+              <span className="portal-hint">
+                Usado nos botões <b>falar com a farmácia</b>
+              </span>
             </label>
           </div>
           <label className="portal-label" style={{ marginBottom: 0 }}>
@@ -157,8 +159,8 @@ export default function PharmacyProfileForm({ pharmacy, accountEmail = '' }) {
               placeholder="https://maps.app.goo.gl/…"
             />
             <span className="portal-hint">
-              No Google Maps: pesquise a farmácia → «Partilhar» → copie o link e cole aqui. Sem
-              link, usamos a morada para o cliente encontrar.
+              No Google Maps: pesquise a farmácia → <b>Partilhar</b> → copie o link e cole aqui.
+              Sem link, usamos a morada para o cliente encontrar.
             </span>
           </label>
         </div>
@@ -176,7 +178,7 @@ export default function PharmacyProfileForm({ pharmacy, accountEmail = '' }) {
               placeholder="Seg–Sáb · 07:30–19:00"
             />
             <span className="portal-hint">
-              Texto livre — aparece no Localizador e alimenta a indicação «aberto agora».
+              Texto livre — aparece no Localizador e alimenta a indicação <b>aberto agora</b>.
             </span>
           </label>
         </div>

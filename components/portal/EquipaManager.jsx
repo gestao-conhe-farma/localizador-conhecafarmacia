@@ -233,7 +233,11 @@ export default function EquipaManager({ rows, currentId, error }) {
       <PortalDrawer
         open={drawer === 'novo'}
         title="Novo perfil"
-        hint="Nome, papel e PIN de 4 dígitos — o colega entra depois em «Trocar perfil»."
+        hint={
+          <>
+            Nome, papel e PIN de 4 dígitos — o colega entra depois em <b>Trocar perfil</b>.
+          </>
+        }
         onClose={fecharDrawer}
       >
         <form className="portal-form portal-eq-form" onSubmit={criar}>

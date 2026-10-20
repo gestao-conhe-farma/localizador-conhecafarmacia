@@ -45,8 +45,11 @@ function asDateInput(v) {
   return v ? String(v).slice(0, 10) : ''
 }
 
-const RESTOCK_HINT =
-  'Repondo, o produto volta a aparecer no Localizador imediatamente (confirme que o lote está na prateleira). «Repor na entrada» soma as unidades recebidas ao saldo; «Repor sem qtd.» apenas religa o produto.'
+const RESTOCK_HINT = (
+  <>
+    <b>Repor na entrada</b> soma ao saldo; <b>Repor sem qtd.</b> só religa o produto.
+  </>
+)
 
 /**
  * Estrutura da caixa no aviso de reposição (0016) — o que o atendente
@@ -200,7 +203,12 @@ export default function AttentionPanel({ pharmacyId }) {
       : typeFilter === 'stale'
         ? {
             b: 'Desactualizado:',
-            t: 'Confirmado há mais de 5 dias: sai de «confirmado» no Localizador. Um clique volta a pôr o produto no ar.',
+            t: (
+              <>
+                Confirmado há mais de 5 dias: sai de <b>confirmado</b> no Localizador. Um clique
+                volta a pôr o produto no ar.
+              </>
+            ),
           }
         : restock.length > 0
           ? { b: 'Como repor:', t: RESTOCK_HINT }
@@ -208,7 +216,7 @@ export default function AttentionPanel({ pharmacyId }) {
 
   // O temporizador recomeça quando a nota muda (filtro ou chegada do
   // feed): a contagem dos 6 s vale a partir de a ajuda estar visível.
-  const notaKey = nota ? `${nota.b}${nota.t}` : ''
+  const notaKey = nota ? nota.b : ''
   useEffect(() => {
     if (!notaKey) return
     setHintVisible(true)

@@ -198,7 +198,7 @@ export default function PortalSearch() {
           <div className="portal-search-pop" role="listbox" aria-label="Resultados da pesquisa">
             {groups.length === 0 && (
               <p className="portal-search-empty">
-                Nada para «{q}» — tente o nome do medicamento, o cliente ou a página.
+                Nada para <b>{q}</b> — tente o nome do medicamento, o cliente ou a página.
               </p>
             )}
             {groups.map((g) => (

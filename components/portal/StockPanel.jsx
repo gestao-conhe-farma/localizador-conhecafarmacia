@@ -475,9 +475,8 @@ function StockEditModal({ item, saving, onClose, onSave, onSaveOptions, onRetire
           <div className="sale-opts-head">
             <b>Formas de venda</b>
             <span className="sale-opts-hint">
-              A farmácia decide se vende por lâmina, por caixa ou ambas — só as formas marcadas
-              «ofereço» aparecem ao cliente. Ex.: lâmina 100 Kz · caixa com 10 lâminas 950 Kz. O
-              saldo conta-se na unidade marcada como padrão.
+              Só as formas marcadas como <b>ofereço</b> aparecem ao cliente. Ex.: lâmina 100 Kz ·
+              caixa com 10 lâminas 950 Kz.
             </span>
           </div>
           {opts.length === 0 ? (
@@ -1153,9 +1152,17 @@ export default function StockPanel({ compact = false, isManager = false }) {
           onDismiss={() => dismissBanner('stale', { count: staleCount })}
           dismissLabel="Dispensar este lembrete (volta se a situação piorar)"
         >
-          {staleCount === 1
-            ? 'O seu stock está desactualizado — actualize para voltar a aparecer como «confirmado» no Localizador.'
-            : `${staleCount} produtos com stock desactualizado — actualize para voltarem a aparecer como «confirmados» no Localizador.`}
+          {staleCount === 1 ? (
+            <>
+              O seu stock está desactualizado — actualize para voltar a aparecer como{' '}
+              <b>confirmado</b> no Localizador.
+            </>
+          ) : (
+            <>
+              {staleCount} produtos com stock desactualizado — actualize para voltarem a aparecer
+              como <b>confirmados</b> no Localizador.
+            </>
+          )}
         </Notice>
       )}
 
@@ -1368,9 +1375,14 @@ export default function StockPanel({ compact = false, isManager = false }) {
           {items !== null && filtered.length === 0 && (
             <div className="portal-rows-empty">
               <b>{query ? 'Nada encontrado' : 'Sem medicamentos'}</b>
-              {query
-                ? `Nada encontrado para “${query}” — experimente outro nome ou forma farmacêutica.`
-                : 'Sem medicamentos no catálogo. Use «+ Adicionar medicamento» para criar o primeiro.'}
+              {query ? (
+                `Nada encontrado para “${query}” — experimente outro nome ou forma farmacêutica.`
+              ) : (
+                <>
+                  Sem medicamentos no catálogo. Use <b>+ Adicionar medicamento</b> para criar o
+                  primeiro.
+                </>
+              )}
             </div>
           )}{' '}
           {!compact && pageItems.length > 0 && (

@@ -605,10 +605,17 @@ html.dark .cf-rx {
   font-size: 11.5px;
 }
 
+/* Quatro cartões por fila na largura máxima (como pedido); a prateleira
+   dentro da página da farmácia fica com 3, porque partilha a linha com a
+   lateral do Modelo B. */
 .pcard-grid {
   display: grid;
-  grid-template-columns: repeat(3, 1fr);
+  grid-template-columns: repeat(4, 1fr);
   gap: 18px;
+}
+
+.store-grid .pcard-grid {
+  grid-template-columns: repeat(3, 1fr);
 }
 
 /* ---------- hero editorial (E / D) ---------- */
@@ -1901,8 +1908,19 @@ html.dark .res-err {
   }
 }
 
-@media (max-width: 880px) {
+@media (max-width: 1180px) {
   .pcard-grid {
+    grid-template-columns: repeat(3, 1fr);
+  }
+
+  .store-grid .pcard-grid {
+    grid-template-columns: 1fr 1fr;
+  }
+}
+
+@media (max-width: 880px) {
+  .pcard-grid,
+  .store-grid .pcard-grid {
     grid-template-columns: 1fr 1fr;
   }
 
@@ -2003,7 +2021,8 @@ html.dark .res-err {
 }
 
 @media (max-width: 560px) {
-  .pcard-grid {
+  .pcard-grid,
+  .store-grid .pcard-grid {
     grid-template-columns: 1fr;
   }
 

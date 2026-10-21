@@ -16,7 +16,9 @@
     "start": "next start",
     "lint": "eslint .",
     "lint:fix": "eslint . --fix",
-    "format": "npx prettier --write ."
+    "format": "npx prettier --write .",
+    "geocode": "node --disable-warning=MODULE_TYPELESS_PACKAGE_JSON --env-file=.env.local scripts/geocode-pharmacies.mjs",
+    "geocode:apply": "node --disable-warning=MODULE_TYPELESS_PACKAGE_JSON --env-file=.env.local scripts/geocode-pharmacies.mjs --apply"
   },
   "dependencies": {
     "@fontsource-variable/fraunces": "^5.3.0",
@@ -37,6 +39,8 @@
     "clsx": "^2.1.1",
     "d3-array": "^3.2.4",
     "d3-shape": "^3.2.0",
+    "framer-motion": "^14.5.0",
+    "gsap": "^3.15.0",
     "lucide-react": "^0.500.0",
     "motion": "^14.0.0",
     "next": "^16.2.11",

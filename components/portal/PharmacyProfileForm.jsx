@@ -12,6 +12,8 @@ const ERRORES = {
   EMAIL_INVALIDO: 'O email da farmácia não parece válido (ex.: geral@farmacia.com).',
   MAPS_URL_INVALIDO:
     'O link do Google Maps deve começar por https:// — cole o link partilhado do Maps.',
+  COORDENADAS_INVALIDAS:
+    'Coordenadas inválidas. Latitude entre -90 e 90 e longitude entre -180 e 180 (ex.: -8,838 / 13,234).',
   FALHA_GUARDAR: 'Não foi possível guardar. Tente novamente.',
 }
 
@@ -47,6 +49,8 @@ export default function PharmacyProfileForm({ pharmacy, accountEmail = '' }) {
       whatsapp: fd.get('whatsapp') || '',
       openingHours: fd.get('openingHours') || '',
       mapsUrl: fd.get('mapsUrl') || '',
+      lat: fd.get('lat') || '',
+      lng: fd.get('lng') || '',
     })
     setSaving(false)
     if (res.ok) {
@@ -146,6 +150,31 @@ export default function PharmacyProfileForm({ pharmacy, accountEmail = '' }) {
               />
               <span className="portal-hint">
                 Usado nos botões <b>falar com a farmácia</b>
+              </span>
+            </label>
+            <label className="portal-label">
+              Latitude
+              <input
+                name="lat"
+                className="portal-input"
+                inputMode="decimal"
+                defaultValue={pharmacy.lat ?? ''}
+                placeholder="-8,838"
+              />
+            </label>
+            <label className="portal-label">
+              Longitude
+              <input
+                name="lng"
+                className="portal-input"
+                inputMode="decimal"
+                defaultValue={pharmacy.lng ?? ''}
+                placeholder="13,234"
+              />
+              <span className="portal-hint">
+                Abra a farmácia no Google Maps, clique com o botão direito sobre o alfinete e
+                copie as coordenadas. É o que coloca o alfinete no mapa e permite ordenar por
+                distância. Vazio = centro do município.
               </span>
             </label>
           </div>

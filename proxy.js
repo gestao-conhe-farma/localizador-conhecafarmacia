@@ -32,7 +32,10 @@ export async function proxy(request) {
     `default-src 'self'`,
     `script-src 'self' 'nonce-${nonce}'${isDev ? " 'unsafe-eval'" : ''} https://vercel.live`,
     `style-src 'self' 'unsafe-inline'`,
-    `img-src 'self' data: blob: https://*.supabase.co https://vercel.live`,
+    // tile.openstreetmap.org: as tiles do mapa da página da farmácia
+    // (components/search/MiniMap.jsx). Sem este host na lista, a CSP
+    // bloqueia as imagens e o mapa fica em branco.
+    `img-src 'self' data: blob: https://*.supabase.co https://tile.openstreetmap.org https://vercel.live`,
     `media-src 'self' blob: https://*.supabase.co`,
     `font-src 'self'`,
     // `wss://*.supabase.co` é obrigatório: o cliente Realtime (sino de

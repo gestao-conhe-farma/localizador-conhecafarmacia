@@ -7,6 +7,9 @@ import { usePharmacyStockRealtime } from '@/lib/use-pharmacy-stock-realtime'
 import { openStatus } from '@/lib/opening-hours'
 import { logError } from '@/lib/log'
 import ProductCard from '@/components/search/ProductCard'
+import MiniMap from '@/components/search/MiniMap'
+import { useUserLocation } from '@/lib/use-user-location'
+import { distanceKm, formatDistance, pharmacyPosition } from '@/lib/geo'
 import { directionsHref, freshness, kindLabel, whatsappHref } from '@/lib/product-utils'
 
 const ICON_SEARCH = (
@@ -49,6 +52,8 @@ export default function PharmacyStock({ slug, initialItems = null }) {
   const [error, setError] = useState(false)
   const [query, setQuery] = useState('')
   const [tab, setTab] = useState('Tudo')
+  // Posição do visitante: só é pedida quando ele carrega no botão.
+  const { location, status: locStatus, request: requestLocation } = useUserLocation()
 
   const refetch = useCallback(async () => {
     try {
@@ -101,6 +106,12 @@ export default function PharmacyStock({ slug, initialItems = null }) {
 
   const tabs = useMemo(() => buildTabs(items || []), [items])
   const status = pharmacy ? openStatus(pharmacy.opening_hours) : null
+  // Posição no mapa: coordenadas próprias ou, na falta delas, o centro do
+  // município — sempre etiquetado como aproximado.
+  const mapPos = pharmacy ? pharmacyPosition(pharmacy) : null
+  const distance =
+    location && mapPos ? distanceKm(location, mapPos) : null
+  const distanceLabel = distance != null ? formatDistance(distance) : null
 
   const visible = useMemo(() => {
     const q = query.trim().toLowerCase()
@@ -244,14 +255,53 @@ export default function PharmacyStock({ slug, initialItems = null }) {
               : 'A carregar dados da farmácia…'}
           </p>
 
-          <div className="mini-map" aria-hidden="true">
-            <span className="ring" />
-            <span className="pin">
-              <i />
-              {pharmacy ? pharmacy.name : 'Farmácia'}
-            </span>
-            <span className="cap">{pharmacy?.municipio || 'Luanda'}</span>
+          {mapPos ? (
+            <MiniMap
+              lat={mapPos.lat}
+              lng={mapPos.lng}
+              label={pharmacy?.name}
+              footnote={mapPos.approximate ? 'Zona aproximada' : null}
+            />
+          ) : (
+            <p className="location-note" style={{ marginTop: 12 }}>
+              Esta farmácia ainda não tem coordenadas no mapa — use «Abrir no mapa» com a morada.
+            </p>
+          )}
+
+          <div className="location-row">
+            {distanceLabel ? (
+              <>
+                <span
+                  className="dist-pill"
+                  title={
+                    mapPos?.approximate
+                      ? 'Distância aproximada — a farmácia ainda não tem coordenadas exactas'
+                      : 'Distância em linha recta'
+                  }
+                >
+                  {mapPos?.approximate ? '≈' : ''} {distanceLabel}
+                </span>
+                <span style={{ fontSize: 10.5 }}>
+                  {mapPos?.approximate ? 'centro do município' : 'em linha recta'}
+                </span>
+              </>
+            ) : (
+              <button
+                type="button"
+                className="cf-btn cf-btn--quiet cf-btn--sm"
+                onClick={requestLocation}
+                disabled={locStatus === 'asking'}
+              >
+                {locStatus === 'asking' ? 'A obter…' : 'Ver a distância até mim'}
+              </button>
+            )}
           </div>
+          {locStatus === 'PERMISSAO' && (
+            <p className="location-note">
+              Sem permissão de localização — autorize nas definições do browser para ver a
+              distância. A sua posição nunca é enviada para o servidor.
+            </p>
+          )}
 
           <div className="store-badges">
             {status && (

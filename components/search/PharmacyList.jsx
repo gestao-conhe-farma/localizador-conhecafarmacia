@@ -5,6 +5,8 @@ import Link from 'next/link'
 import { createClient } from '@/lib/supabase/client'
 import { openStatus } from '@/lib/opening-hours'
 import { logError, logWarn } from '@/lib/log'
+import { useUserLocation } from '@/lib/use-user-location'
+import { distanceKm, formatDistance, pharmacyPosition, sortByDistance } from '@/lib/geo'
 
 const MUNICIPIOS = [
   'Belas',
@@ -40,9 +42,10 @@ const ICON_SEARCH = (
  * tipográfica — nome, município e quantos produtos estão confirmados —
  * em vez de uma foto que não temos. A acção leva à prateleira.
  */
-function StoreCard({ pharmacy, count }) {
+function StoreCard({ pharmacy, count, distance, approximate = false }) {
   const status = openStatus(pharmacy.opening_hours)
   const open = status?.open
+  const distLabel = distance != null ? formatDistance(distance) : null
   return (
     <Link
       href={`/farmacia/${pharmacy.slug}`}
@@ -88,6 +91,22 @@ function StoreCard({ pharmacy, count }) {
             {status ? (open ? 'Aberta' : 'Fechada') : 'Horário'}
           </span>
         </div>
+
+        {distLabel && (
+          <div className="location-row">
+            <span
+              className="dist-pill"
+              title={
+                approximate
+                  ? 'Distância aproximada — a farmácia ainda não tem coordenadas exactas'
+                  : 'Distância em linha recta'
+              }
+            >
+              {approximate ? '≈' : ''} {distLabel}
+            </span>
+            {approximate && <span style={{ fontSize: 10.5 }}>centro do município</span>}
+          </div>
+        )}
       </div>
 
       <span className={`pcard-cta${count === 0 ? ' pcard-cta--quiet' : ''}`}>
@@ -104,6 +123,9 @@ export default function PharmacyList() {
   const [onlyOpen, setOnlyOpen] = useState(false)
   const [query, setQuery] = useState('')
   const [error, setError] = useState(false)
+  // Posição do visitante (só depois de ele pedir) e o filtro «perto de mim».
+  const { location, status: locStatus, request: requestLocation } = useUserLocation()
+  const [nearMe, setNearMe] = useState(false)
 
   useEffect(() => {
     let alive = true
@@ -112,7 +134,7 @@ export default function PharmacyList() {
         const supabase = createClient()
         const phRes = await supabase
           .from('pharmacies')
-          .select('slug, name, municipio, address, phone, whatsapp, opening_hours, verified')
+          .select('slug, name, municipio, address, phone, whatsapp, opening_hours, verified, lat, lng')
           .eq('active', true)
           .order('name')
         if (phRes.error) throw phRes.error
@@ -161,10 +183,26 @@ export default function PharmacyList() {
           (p.address || '').toLowerCase().includes(q)),
     )
     // Com stock primeiro, depois ordem alfabética.
-    return [...list].sort(
+    const byStock = [...list].sort(
       (a, b) => (counts[b.slug] || 0) - (counts[a.slug] || 0) || a.name.localeCompare(b.name, 'pt'),
     )
-  }, [pharmacies, counts, municipio, onlyOpen, query])
+    // «Perto de mim» ganha à ordem por stock: quem pediu distância quer a
+    // mais próxima primeiro, mesmo que tenha menos produtos.
+    return nearMe && location ? sortByDistance(byStock, location, pharmacyPosition) : byStock
+  }, [pharmacies, counts, municipio, onlyOpen, query, nearMe, location])
+
+  const toggleNear = async () => {
+    if (nearMe) {
+      setNearMe(false)
+      return
+    }
+    if (location) {
+      setNearMe(true)
+      return
+    }
+    const coords = await requestLocation()
+    if (coords) setNearMe(true)
+  }
 
   const withStock = visible.filter((p) => (counts[p.slug] || 0) > 0).length
 
@@ -220,8 +258,38 @@ export default function PharmacyList() {
               >
                 Abertas agora
               </button>
+              <button
+                type="button"
+                className={`cf-chip${nearMe ? ' cf-chip--on' : ''}`}
+                aria-pressed={nearMe}
+                onClick={toggleNear}
+                disabled={locStatus === 'asking'}
+                title="Ordenar pela distância à sua localização actual"
+              >
+                {locStatus === 'asking' ? 'A obter…' : 'Perto de mim'}
+              </button>
             </div>
           </div>
+
+          {locStatus === 'PERMISSAO' && (
+            <p className="location-note">
+              Sem permissão de localização — a lista continua ordenada por stock. Pode autorizar
+              nas definições do browser e tentar de novo.
+            </p>
+          )}
+          {(locStatus === 'INDISPONIVEL' || locStatus === 'TEMPO' || locStatus === 'SEM_SUPORTE') && (
+            <p className="location-note">
+              Não foi possível obter a localização neste dispositivo. A rede continua disponível
+              por ordem de stock.
+            </p>
+          )}
+          {nearMe && location && (
+            <p className="location-note">
+              Distâncias em linha recta a partir de si, calculadas no browser — a sua posição não
+              é enviada para nenhum servidor. O «≈» marca as farmácias que ainda não têm
+              coordenadas próprias (usamos o centro do município).
+            </p>
+          )}
 
           <div className="shelf-head" style={{ borderBottom: 0, marginTop: 18 }}>
             <div className="cf-field-wrap">
@@ -295,9 +363,18 @@ export default function PharmacyList() {
 
           {!error && pharmacies !== null && visible.length > 0 && (
             <div className="pcard-grid" style={{ marginTop: 26 }}>
-              {visible.map((p) => (
-                <StoreCard key={p.slug} pharmacy={p} count={counts[p.slug] || 0} />
-              ))}
+              {visible.map((p) => {
+                const pos = nearMe && location ? pharmacyPosition(p) : null
+                return (
+                  <StoreCard
+                    key={p.slug}
+                    pharmacy={p}
+                    count={counts[p.slug] || 0}
+                    distance={pos ? distanceKm(location, pos) : null}
+                    approximate={Boolean(pos?.approximate)}
+                  />
+                )
+              })}
             </div>
           )}
 

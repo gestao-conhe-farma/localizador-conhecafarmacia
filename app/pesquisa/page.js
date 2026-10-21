@@ -17,7 +17,7 @@ export default function PesquisaPage() {
   return (
     <>
       <AppHeader />
-      <main className="search-page">
+      <main className="cf-shop">
         <DrugSearch />
       </main>
       <AppFooter />

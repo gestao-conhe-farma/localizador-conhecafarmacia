@@ -17,7 +17,7 @@ export default function FarmaciasPage() {
   return (
     <>
       <AppHeader />
-      <main className="search-page">
+      <main className="cf-shop">
         <PharmacyList />
       </main>
       <AppFooter />

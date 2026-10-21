@@ -21,7 +21,7 @@ export async function generateMetadata({ params }) {
   }
   return {
     title: name,
-    description: `Stock confirmado em tempo real na ${name} — medicamentos críticos, preços e contacto directo. Localizador de Medicamentos da Conheça Farmácia.`,
+    description: `Prateleira confirmada pela ${name} — produtos, preços de balcão, horário e contacto directo. Localizador de Medicamentos da Conheça Farmácia.`,
     robots: { index: false, follow: false },
   }
 }
@@ -33,7 +33,7 @@ export default async function FarmaciaPage({ params }) {
   return (
     <>
       <AppHeader />
-      <main>
+      <main className="cf-shop">
         <PharmacyStock slug={slug} initialItems={initialItems} />
       </main>
       <AppFooter />

@@ -3,16 +3,17 @@
 import { useEffect, useMemo, useRef, useState } from 'react'
 import Link from 'next/link'
 import { createClient } from '@/lib/supabase/client'
-import { isOpenNow } from '@/lib/opening-hours'
+import { isOpenNow, openStatus } from '@/lib/opening-hours'
 import { logError, logWarn } from '@/lib/log'
-import ReserveModal from '@/components/search/ReserveModal'
+import ProductCard from '@/components/search/ProductCard'
 import {
-  formatOptionLabel,
-  formatPerBase,
-  comparableOption,
-  perBasePrice,
-  unitLabel,
-} from '@/lib/sale-options'
+  defaultOption,
+  freshness,
+  priceOf,
+  productHref,
+  quantityText,
+} from '@/lib/product-utils'
+import { fmtKzPublic as fmtKz } from '@/lib/reservation-format'
 
 const MUNICIPIOS = [
   'Belas',
@@ -26,26 +27,97 @@ const MUNICIPIOS = [
   'Viana',
 ]
 
-import { fmtKzPublic as fmtKz } from '@/lib/reservation-format'
+const SUGESTOES = ['paracetamol', 'soro fisiológico', 'fraldas', 'insulina', 'amoxicilina']
 
-/** Código do país da origem (0013) — «PT», «IN»… em selo de texto. */
-import { ORIGIN_CODES, originCode } from '@/lib/origin-flags'
+const ICON_SEARCH = (
+  <svg
+    width="18"
+    height="18"
+    viewBox="0 0 24 24"
+    fill="none"
+    stroke="currentColor"
+    strokeWidth="2"
+    strokeLinecap="round"
+    strokeLinejoin="round"
+    aria-hidden="true"
+  >
+    <circle cx="11" cy="11" r="8" />
+    <line x1="21" y1="21" x2="16.65" y2="16.65" />
+  </svg>
+)
 
-// Ordem fixa dos chips de origem — a mesma da lista oficial do portal.
-const ORIGIN_ORDER = Object.keys(ORIGIN_CODES)
-
-/** Placeholder SVG (data-URI) para itens sem foto — inicial do fármaco. */
-const drugPlaceholder = (name) => {
-  const letter = (name || '?').trim().charAt(0).toUpperCase()
-  const svg = `<svg xmlns='http://www.w3.org/2000/svg' width='52' height='52'><rect width='52' height='52' rx='10' fill='%23f0eee9'/><text x='26' y='34' font-family='Georgia,serif' font-size='24' fill='%2300493a' text-anchor='middle'>${letter}</text></svg>`
-  return `data:image/svg+xml,${svg}`
+/**
+ * Ordena as farmácias de um produto e calcula o intervalo de preço e o
+ * item que representa o cartão. Recalculado depois dos filtros locais,
+ * para o cartão nunca mostrar o preço de uma farmácia já escondida.
+ */
+function summarize(items) {
+  const sorted = [...items].sort(
+    (a, b) =>
+      (defaultOption(a)?.price ?? a.price ?? Infinity) -
+        (defaultOption(b)?.price ?? b.price ?? Infinity) ||
+      new Date(b.confirmed_at) - new Date(a.confirmed_at),
+  )
+  const prices = sorted
+    .map((it) => defaultOption(it)?.price ?? it.price)
+    .filter((p) => p != null)
+    .map(Number)
+  const priceLabel =
+    prices.length === 0
+      ? null
+      : Math.min(...prices) === Math.max(...prices)
+        ? fmtKz(Math.min(...prices))
+        : `${fmtKz(Math.min(...prices)).replace(' Kz', '')} – ${fmtKz(Math.max(...prices))}`
+  return { items: sorted, cheapest: sorted[0], priceLabel }
 }
 
-function timeAgo(iso) {
-  const s = Math.max(0, (Date.now() - new Date(iso).getTime()) / 1000)
-  if (s < 3600) return `há ${Math.max(1, Math.round(s / 60))} min`
-  if (s < 86400) return `há ${Math.round(s / 3600)} h`
-  return `há ${Math.round(s / 86400)} d`
+/** Junta as linhas de stock por produto — a lista compara farmácias. */
+function groupByDrug(rows) {
+  const byDrug = new Map()
+  for (const row of rows || []) {
+    if (!byDrug.has(row.drug_id)) {
+      byDrug.set(row.drug_id, {
+        drug_id: row.drug_id,
+        drug_name: row.drug_name,
+        drug_form: row.drug_form,
+        drug_dosage: row.drug_dosage,
+        drug_molecule: row.drug_molecule,
+        drug_kind: row.drug_kind,
+        drug_requires_rx: row.drug_requires_rx,
+        items: [],
+      })
+    }
+    byDrug.get(row.drug_id).items.push(row)
+  }
+  return [...byDrug.values()]
+    .map((g) => ({ ...g, ...summarize(g.items) }))
+    .sort(
+      (a, b) =>
+        String(a.drug_name).localeCompare(String(b.drug_name), 'pt') ||
+        String(a.drug_dosage || '').localeCompare(String(b.drug_dosage || ''), 'pt'),
+    )
+}
+
+/**
+ * Query única da busca — usada na primeira visita (sem termo) e em cada
+ * pesquisa. Vive fora do componente para o efeito de arranque não depender
+ * de uma função recriada a cada render.
+ */
+async function fetchGroups(term, municipio) {
+  const supabase = createClient()
+  let req = supabase
+    .from('stock_confirmed')
+    .select('*')
+    .order('drug_name')
+    .order('pharmacy_name')
+    .limit(200)
+  if (term) {
+    req = req.or(`drug_name.ilike.%${term}%,drug_molecule.ilike.%${term}%,brand.ilike.%${term}%`)
+  }
+  if (municipio) req = req.eq('pharmacy_municipio', municipio)
+  const { data, error } = await req
+  if (error) throw error
+  return groupByDrug(data)
 }
 
 export default function DrugSearch() {
@@ -54,39 +126,28 @@ export default function DrugSearch() {
   const [showSuggest, setShowSuggest] = useState(false)
   const [activeIdx, setActiveIdx] = useState(-1)
   const [municipio, setMunicipio] = useState('')
-  const [results, setResults] = useState(null) // null = ainda não pesquisou
+  const [groups, setGroups] = useState(null)
   const [loading, setLoading] = useState(false)
   const [error, setError] = useState('')
   const [stats, setStats] = useState(null)
   const [onlyOpen, setOnlyOpen] = useState(false)
-  // Filtro por origem (0013): '' = todas; valor = só itens dessa origem.
-  // Pós-filtro local — a query já traz origin de todas as farmácias, não
-  // vale novo pedido para refinar.
-  const [originFilter, setOriginFilter] = useState('')
-  // Item com modal de reserva aberto (null = fechado).
-  const [reserving, setReserving] = useState(null)
   const boxRef = useRef(null)
   const inputRef = useRef(null)
   const debounceRef = useRef(null)
 
-  // Stats do hero — contagens reais (farmácias activas + itens visíveis
-  // no Localizador; a janela depende da categoria desde a 0038).
+  // Contagens reais do hero — farmácias activas e produtos visíveis.
   useEffect(() => {
     let alive = true
     ;(async () => {
       try {
         const supabase = createClient()
         const [ph, st] = await Promise.all([
-          supabase
-            .from('pharmacies')
-            .select('slug', { count: 'exact', head: true })
-            .eq('active', true),
+          supabase.from('pharmacies').select('slug', { count: 'exact', head: true }).eq('active', true),
           supabase.from('stock_confirmed').select('stock_item_id', { count: 'exact', head: true }),
         ])
         if (!alive) return
         setStats({ pharmacies: ph.count ?? 0, items: st.count ?? 0 })
       } catch (err) {
-        // stats são informativas — falham com log, sem bloquear a página
         logWarn('drug-search', 'Stats do hero falharam', { message: err?.message })
       }
     })()
@@ -95,33 +156,17 @@ export default function DrugSearch() {
     }
   }, [])
 
-  // Autocomplete: nomes de medicamentos E marcas enquanto se escreve
-  // (mín. 2 chars). Marcas vêm dos stock_items (0013) — "Ben-u-ron"
-  // leva ao Paracetamol. O cliente pesquisa pelo que tem na cabeça.
+  // Sugestões: nomes de produtos E marcas — "Ben-u-ron" leva ao paracetamol.
   useEffect(() => {
     const q = query.trim()
-    // Query curta: nada a sugerir (a limpeza vive no onChange, em
-    // contexto de evento — setState síncrono no efeito é cascata).
     if (q.length < 2) return
     clearTimeout(debounceRef.current)
     debounceRef.current = setTimeout(async () => {
       try {
         const supabase = createClient()
         const [{ data: drugs }, { data: brands }] = await Promise.all([
-          supabase
-            .from('drugs')
-            .select('id, name, form, dosage')
-            .eq('active', true)
-            .ilike('name', `%${q}%`)
-            .limit(8),
-          // Marcas distintas com stock confirmado. Falha suave (0013
-          // por aplicar): sem sugestões de marca, a de nomes segue.
-          supabase
-            .from('stock_confirmed')
-            .select('brand')
-            .ilike('brand', `%${q}%`)
-            .neq('brand', null)
-            .limit(30),
+          supabase.from('drugs').select('id, name, form, dosage').eq('active', true).ilike('name', `%${q}%`).limit(8),
+          supabase.from('stock_confirmed').select('brand').ilike('brand', `%${q}%`).limit(30),
         ])
         const brandList = [...new Set((brands || []).map((b) => b.brand))]
           .filter(Boolean)
@@ -137,7 +182,6 @@ export default function DrugSearch() {
     return () => clearTimeout(debounceRef.current)
   }, [query])
 
-  // Fecha o autocomplete ao clicar fora
   useEffect(() => {
     const onClick = (e) => {
       if (boxRef.current && !boxRef.current.contains(e.target)) setShowSuggest(false)
@@ -146,62 +190,47 @@ export default function DrugSearch() {
     return () => document.removeEventListener('click', onClick)
   }, [])
 
-  const runSearch = async (term) => {
-    const q = (term ?? query).trim()
-    if (!q) return
+  const runSearch = async (term, muni = municipio) => {
+    const q = String(term ?? query).trim()
     setShowSuggest(false)
     inputRef.current?.blur()
     setLoading(true)
     setError('')
     try {
-      const supabase = createClient()
-      // Busca por nome, molécula OU marca (ilike em ambas) — pesquisar
-      // "Ben-u-ron" tem de encontrar o Paracetamol com essa marca.
-      const orFilter = `drug_name.ilike.%${q}%,drug_molecule.ilike.%${q}%,brand.ilike.%${q}%`
-      let req = supabase
-        .from('stock_confirmed')
-        .select('*')
-        .or(orFilter)
-        .order('drug_name')
-        .order('pharmacy_name')
-        .limit(200)
-      if (municipio) req = req.eq('pharmacy_municipio', municipio)
-      const { data, error: err } = await req
-      if (err) throw err
-
-      // Agrupar por medicamento
-      const byDrug = new Map()
-      for (const row of data || []) {
-        const key = row.drug_id
-        if (!byDrug.has(key)) {
-          byDrug.set(key, {
-            drug_id: row.drug_id,
-            drug_name: row.drug_name,
-            drug_form: row.drug_form,
-            drug_dosage: row.drug_dosage,
-            drug_requires_rx: row.drug_requires_rx,
-            pharmacies: [],
-          })
-        }
-        byDrug.get(key).pharmacies.push(row)
-      }
-      // Ordenar farmácias de cada medicamento: preço ascendente (sem preço
-      // vai para o fim), desempate pela confirmação mais recente
-      for (const r of byDrug.values()) {
-        r.pharmacies.sort(
-          (a, b) =>
-            (a.price ?? Infinity) - (b.price ?? Infinity) ||
-            new Date(b.confirmed_at) - new Date(a.confirmed_at),
-        )
-      }
-      setResults([...byDrug.values()])
+      setGroups(await fetchGroups(q, muni))
     } catch (err) {
       logError('drug-search', 'Pesquisa falhou', { message: err?.message })
       setError('Não foi possível concluir a pesquisa. Verifique a ligação e tente novamente.')
-      setResults([])
+      setGroups([])
     } finally {
       setLoading(false)
     }
+  }
+
+  // Primeira visita: mostra o que está confirmado agora, em vez de uma
+  // página vazia à espera que o cliente escreva.
+  useEffect(() => {
+    let alive = true
+    ;(async () => {
+      try {
+        const initial = await fetchGroups('', '')
+        if (alive) setGroups(initial)
+      } catch (err) {
+        logError('drug-search', 'Carga inicial falhou', { message: err?.message })
+        if (alive) {
+          setError('Não foi possível carregar os produtos confirmados. Tente novamente.')
+          setGroups([])
+        }
+      }
+    })()
+    return () => {
+      alive = false
+    }
+  }, [])
+
+  const chooseMunicipio = (m) => {
+    setMunicipio(m)
+    runSearch(query, m)
   }
 
   const onKeyDown = (e) => {
@@ -228,145 +257,99 @@ export default function DrugSearch() {
     }
   }
 
-  const hasResults = results && results.length > 0
+  // Filtro local: "abertas agora" não pede novo fetch (o horário já veio).
+  const visible = useMemo(() => {
+    if (!groups) return null
+    if (!onlyOpen) return groups
+    return groups
+      .map((g) => {
+        const live = summarize(g.items.filter((it) => isOpenNow(it.pharmacy_opening_hours)))
+        return live.items.length === 0 ? null : { ...g, ...live }
+      })
+      .filter(Boolean)
+  }, [groups, onlyOpen])
 
-  // Origens presentes nos resultados (ordem fixa da lista oficial, só as
-  // que têm stock confirmado agora) — alimenta os chips do filtro.
-  const originsAvailable = useMemo(() => {
-    const present = new Set()
-    for (const r of results || []) for (const p of r.pharmacies) if (p.origin) present.add(p.origin)
-    return ORIGIN_ORDER.filter((o) => present.has(o))
-  }, [results])
-
-  // Filtros locais (sem novo pedido): "só abertas agora" remove farmácias
-  // fechadas/desconhecidas; origem remove itens de outras procedências.
-  // Grupos esvaziados desaparecem.
-  const shown = useMemo(() => {
-    if (!results) return null
-    return results
-      .map((r) => ({
-        ...r,
-        pharmacies: r.pharmacies.filter(
-          (p) =>
-            (!onlyOpen || isOpenNow(p.pharmacy_opening_hours)) &&
-            (!originFilter || p.origin === originFilter),
-        ),
-      }))
-      .filter((r) => r.pharmacies.length > 0)
-  }, [results, onlyOpen, originFilter])
-
-  const visible = shown || []
-  const hasVisible = visible.length > 0
-  const totalPharmacies = visible.reduce((acc, r) => acc + r.pharmacies.length, 0)
+  const totalPharmacies = (visible || []).reduce((n, g) => n + g.items.length, 0)
+  const title = query.trim()
+    ? query.trim().charAt(0).toUpperCase() + query.trim().slice(1)
+    : 'Confirmado agora'
 
   return (
     <>
-      {/* Hero — kicker editorial + título serif (Modelo F) */}
-      <section className="search-hero">
-        <div className="search-container">
-          <p className="kicker">Localizador de Medicamentos · Luanda</p>
-          <h1 className="search-hero-title">
-            Encontre o produto <em>confirmado</em> pela farmácia — medicamentos há menos de 72
-            horas, parafarmácia até 30 dias.
-          </h1>
-          <p className="search-hero-sub">
-            Pesquise por nome ou molécula. Cada resultado vem de uma farmácia parceira que confirmou
-            o stock recentemente.
-          </p>
+      <section className="shop-hero">
+        <div className="cf-wrap shop-hero-grid">
+          <div>
+            <p className="cf-kicker">O que precisa, onde está</p>
+            <h1>
+              Procure o produto.
+              <br />
+              Nós dizemos <em>quem o tem.</em>
+            </h1>
+            <p>
+              Em vez de abrir sete farmácias para descobrir que nenhuma tem o que procura, comece
+              pelo produto. A lista compara preço, frescura e portas abertas entre as farmácias da
+              rede.
+            </p>
+          </div>
+          <aside>
+            <b className="cf-num">{stats ? stats.items : '—'}</b>
+            produtos confirmados agora
+            {stats ? `, em ${stats.pharmacies} farmácia${stats.pharmacies === 1 ? '' : 's'}` : ''}.
+            Preços de balcão, em kwanzas — sem taxas nem entrega.
+          </aside>
         </div>
-      </section>
 
-      {/* Busca + filtros — zona de "header" da página */}
-      <section className="search-filter-section">
-        <div className="search-container">
-          <div className="search-box" ref={boxRef}>
-            <span className="search-box-icon" aria-hidden="true">
-              <svg
-                width="20"
-                height="20"
-                viewBox="0 0 24 24"
-                fill="none"
-                stroke="currentColor"
-                strokeWidth="2"
-                strokeLinecap="round"
-                strokeLinejoin="round"
-              >
-                <circle cx="11" cy="11" r="8" />
-                <line x1="21" y1="21" x2="16.65" y2="16.65" />
-              </svg>
-            </span>
-            <input
-              ref={inputRef}
-              type="text"
-              className="search-input"
-              placeholder="Insulina, carbamazepina, salbutamol…"
-              value={query}
-              onChange={(e) => {
-                const v = e.target.value
-                setQuery(v)
-                if (v.trim().length < 2) setSuggestions([])
-                setShowSuggest(true)
-              }}
-              onFocus={() => setShowSuggest(true)}
-              onKeyDown={onKeyDown}
-              aria-label="Nome do medicamento"
-              autoComplete="off"
-            />
-            {query && (
-              <button
-                type="button"
-                className="search-clear"
-                onClick={() => {
-                  setQuery('')
-                  setSuggestions([])
-                  setResults(null)
-                  setError('')
-                  inputRef.current?.focus()
+        <div className="cf-wrap">
+          <div className="shop-search" ref={boxRef}>
+            <div className="cf-field-wrap">
+              <span className="cf-ico" aria-hidden="true">
+                {ICON_SEARCH}
+              </span>
+              <label className="cf-sr" htmlFor="q">
+                Procurar produto
+              </label>
+              <input
+                id="q"
+                ref={inputRef}
+                className="cf-field"
+                type="search"
+                value={query}
+                placeholder="paracetamol, soro, fraldas…"
+                autoComplete="off"
+                onChange={(e) => {
+                  const v = e.target.value
+                  setQuery(v)
+                  if (v.trim().length < 2) setSuggestions([])
+                  setShowSuggest(true)
                 }}
-                aria-label="Limpar pesquisa"
-              >
-                <svg
-                  width="16"
-                  height="16"
-                  viewBox="0 0 24 24"
-                  fill="none"
-                  stroke="currentColor"
-                  strokeWidth="2"
-                  strokeLinecap="round"
-                  strokeLinejoin="round"
-                >
-                  <line x1="18" y1="6" x2="6" y2="18" />
-                  <line x1="6" y1="6" x2="18" y2="18" />
-                </svg>
-              </button>
-            )}
-            <button type="button" className="search-go" onClick={() => runSearch()}>
-              Pesquisar
+                onFocus={() => setShowSuggest(true)}
+                onKeyDown={onKeyDown}
+              />
+            </div>
+            <button type="button" className="cf-btn cf-btn--primary" onClick={() => runSearch()}>
+              Procurar
             </button>
 
             {showSuggest && suggestions.length > 0 && (
-              <div className="suggest-list" role="listbox">
+              <div className="suggest" role="listbox">
                 {suggestions.map((s, i) => (
                   <button
                     key={s.kind === 'brand' ? `brand-${s.name}` : s.id}
                     type="button"
                     role="option"
                     aria-selected={i === activeIdx}
-                    className={`suggest-item${i === activeIdx ? ' suggest-item--active' : ''}`}
+                    className={`suggest-item${i === activeIdx ? ' suggest-item--on' : ''}`}
                     onMouseDown={(e) => e.preventDefault()}
                     onClick={() => {
                       setQuery(s.name)
                       runSearch(s.name)
                     }}
                   >
-                    <span className="suggest-name">
-                      {s.kind === 'brand' && <span className="origin-code">M</span>}
-                      {s.name}
-                    </span>
+                    <span className="suggest-name">{s.name}</span>
                     <span className="suggest-meta">
                       {s.kind === 'brand'
-                        ? 'marca — ver farmácias com esta marca'
-                        : [s.form, s.dosage].filter(Boolean).join(' · ')}
+                        ? 'marca'
+                        : [s.form, s.dosage].filter(Boolean).join(' · ') || 'produto'}
                     </span>
                   </button>
                 ))}
@@ -374,12 +357,27 @@ export default function DrugSearch() {
             )}
           </div>
 
-          {/* Filtro por município + abertas agora */}
-          <div className="chip-row" role="group" aria-label="Filtrar por município">
+          <div className="shop-suggest">
+            <span>Sugestões:</span>
+            {SUGESTOES.map((s) => (
+              <button
+                key={s}
+                type="button"
+                onClick={() => {
+                  setQuery(s)
+                  runSearch(s)
+                }}
+              >
+                {s}
+              </button>
+            ))}
+          </div>
+
+          <div className="sh-toolbar" role="group" aria-label="Filtrar por município">
             <button
               type="button"
-              className={`chip${municipio === '' ? ' chip--active' : ''}`}
-              onClick={() => setMunicipio('')}
+              className={`cf-chip${municipio === '' ? ' cf-chip--on' : ''}`}
+              onClick={() => chooseMunicipio('')}
             >
               Todos
             </button>
@@ -387,293 +385,157 @@ export default function DrugSearch() {
               <button
                 key={m}
                 type="button"
-                className={`chip${municipio === m ? ' chip--active' : ''}`}
-                onClick={() => setMunicipio(m)}
+                className={`cf-chip${municipio === m ? ' cf-chip--on' : ''}`}
+                onClick={() => chooseMunicipio(m)}
               >
                 {m}
               </button>
             ))}
           </div>
-          <div className="chip-row" style={{ marginTop: '0.6rem' }}>
-            <button
-              type="button"
-              className={`chip${onlyOpen ? ' chip--active' : ''}`}
-              aria-pressed={onlyOpen}
-              onClick={() => setOnlyOpen((o) => !o)}
-            >
-              Só abertas agora
-            </button>
-          </div>
-          {/* Origem (0013) — chips com bandeira, só as origens com stock
-              confirmado nesta pesquisa. Pós-filtro local, sem novo pedido. */}
-          {originsAvailable.length > 0 && (
-            <div className="chip-row" style={{ marginTop: '0.6rem' }}>
-              <button
-                type="button"
-                className={`chip${originFilter === '' ? ' chip--active' : ''}`}
-                onClick={() => setOriginFilter('')}
-              >
-                Todas as origens
-              </button>
-              {originsAvailable.map((o) => (
-                <button
-                  key={o}
-                  type="button"
-                  className={`chip${originFilter === o ? ' chip--active' : ''}`}
-                  aria-pressed={originFilter === o}
-                  onClick={() => setOriginFilter(originFilter === o ? '' : o)}
-                >
-                  {originCode(o) && <span className="origin-code">{originCode(o)}</span>} {o}
-                </button>
-              ))}
-            </div>
-          )}
         </div>
       </section>
 
-      {/* Resultados — zona de conteúdo com fundo alternativo */}
-      <section className="search-results-section">
-        <div className="search-container">
-          {/* Stats strip — visível apenas antes da primeira pesquisa,
-              para dar espaço e destaque aos resultados */}
-          {results === null && !loading && (
-            <div className="stats-strip">
-              <div className="stat">
-                <b>{stats ? stats.pharmacies : '—'}</b>
-                <span>farmácias parceiras</span>
-              </div>
-              <div className="stat">
-                <b>{stats ? stats.items : '—'}</b>
-                <span>produtos confirmados agora</span>
-              </div>
-              <div className="stat">
-                <b>72 h–30 d</b>
-                <span>frescura por categoria</span>
-              </div>
-              <div className="stat">
-                <b>{MUNICIPIOS.length}</b>
-                <span>municípios cobertos</span>
-              </div>
+      <section className="sh-section">
+        <div className="cf-wrap">
+          <div className="sh-bar">
+            <div className="sh-bar-l">
+              <h2>{title}</h2>
+              <span className="sh-bar-sub">
+                {visible === null
+                  ? 'a carregar…'
+                  : `${totalPharmacies} farmácia${totalPharmacies === 1 ? '' : 's'} confirmam · ${
+                      visible.length
+                    } apresenta${visible.length === 1 ? 'ção' : 'ções'}`}
+                {municipio ? ` · ${municipio}` : ''}
+              </span>
+            </div>
+            <div className="sh-filters" role="group" aria-label="Filtros">
+              <button
+                type="button"
+                className={`cf-chip${!onlyOpen ? ' cf-chip--on' : ''}`}
+                onClick={() => setOnlyOpen(false)}
+              >
+                Todas
+              </button>
+              <button
+                type="button"
+                className={`cf-chip${onlyOpen ? ' cf-chip--on' : ''}`}
+                aria-pressed={onlyOpen}
+                onClick={() => setOnlyOpen((o) => !o)}
+              >
+                Abertas agora
+              </button>
+            </div>
+          </div>
+
+          {error && (
+            <div className="sh-empty" role="alert">
+              <p className="sh-empty-title">Algo falhou</p>
+              <p className="sh-empty-sub">{error}</p>
             </div>
           )}
 
-          <div className="mt-2">
-            {loading && (
-              <div className="empty-state" role="status">
-                <div className="spinner" />
-                <p className="text-sm text-brand-deep/50 mt-3">A pesquisar…</p>
-              </div>
-            )}
+          {!error && visible === null && (
+            <div className="sh-empty" role="status">
+              <div className="sh-spinner" />
+              <p className="sh-empty-sub">A procurar stock confirmado…</p>
+            </div>
+          )}
 
-            {!loading && error && (
-              <div className="empty-state" role="alert">
-                <p className="empty-title">Algo falhou</p>
-                <p className="empty-sub">{error}</p>
-              </div>
-            )}
+          {!error && visible !== null && visible.length === 0 && (
+            <div className="sh-empty">
+              <p className="sh-empty-title">
+                {onlyOpen
+                  ? 'Nenhuma destas farmácias está aberta agora'
+                  : `Sem stock confirmado para «${query.trim() || municipio}»`}
+              </p>
+              <p className="sh-empty-sub">
+                {onlyOpen
+                  ? 'Desactive o filtro para ver todas — ou confirme por WhatsApp antes de sair.'
+                  : 'Medicamentos confirmados nas últimas 72 h e parafarmácia nos últimos 30 dias. Experimente o princípio activo sem dosagem, ou veja as farmácias da rede.'}
+              </p>
+              <p style={{ marginTop: 16 }}>
+                <Link className="cf-btn cf-btn--ghost" href="/farmacia">
+                  Ver farmácias
+                </Link>
+              </p>
+            </div>
+          )}
 
-            {!loading && !error && results !== null && !hasVisible && (
-              <div className="empty-state">
-                <p className="empty-title">
-                  {onlyOpen && hasResults ? (
-                    'Nenhuma das farmácias com este produto está aberta agora'
-                  ) : (
-                    <>
-                      Sem stock confirmado para <b>{query}</b>
-                    </>
-                  )}
-                </p>
-                <p className="empty-sub">
-                  {onlyOpen && hasResults ? (
-                    <>
-                      Desactive o filtro <b>só abertas agora</b> para ver todas — ou confirme por
-                      WhatsApp antes de sair.
-                    </>
-                  ) : (
-                    'Não há farmácias parceiras com este produto confirmado agora — medicamentos nas últimas 72 h, parafarmácia nos últimos 30 dias. Estamos a crescer a rede — volte em breve.'
-                  )}
-                </p>
-              </div>
-            )}
+          {!error && visible !== null && visible.length > 0 && (
+            <div className="e-groups">
+              {visible.map((g) => (
+                <article key={g.drug_id} className="e-group">
+                  <div>
+                    <ProductCard
+                      item={g.cheapest}
+                      flat
+                      ctaLabel="Ver ficha completa"
+                      priceLabel={g.priceLabel || undefined}
+                    />
+                    <p className="e-summary">
+                      {g.drug_requires_rx ? 'Sujeito a receita médica. ' : ''}
+                      {g.drug_molecule ? `Princípio activo: ${g.drug_molecule}. ` : ''}
+                      {g.items.length === 1
+                        ? 'Uma farmácia tem este produto confirmado agora.'
+                        : `${g.items.length} farmácias confirmaram este produto — compare frescura e preço antes de sair.`}
+                    </p>
+                  </div>
 
-            {!loading && hasVisible && (
-              <>
-                <div className="results-head">
-                  <span className="results-count">
-                    <strong>{visible.length}</strong> produto{visible.length !== 1 && 's'} em{' '}
-                    <strong>{totalPharmacies}</strong> farmácia
-                    {totalPharmacies !== 1 && 's'}
-                    {municipio && <> em {municipio}</>}
-                    {onlyOpen && <> · abertas agora</>}
-                    {originFilter && <> · origem {originFilter}</>}
-                  </span>
-                </div>
-
-                {visible.map((r) => (
-                  <section key={r.drug_id} className="drug-block">
-                    <div className="results-head">
-                      <h2 className="drug-title">{r.drug_name}</h2>
-                      <span className="results-count">
-                        {[r.drug_form, r.drug_dosage].filter(Boolean).join(' · ')}
-                        {' — '}
-                        <strong>{r.pharmacies.length}</strong> farmácia
-                        {r.pharmacies.length !== 1 && 's'}
-                        {r.drug_requires_rx && (
-                          <span className="rx-badge rx-badge--inline">Receita médica</span>
-                        )}
-                      </span>
+                  <div className="e-rows">
+                    <div className="e-head">
+                      <span>Farmácia</span>
+                      <span>Horário</span>
+                      <span>Confirmação</span>
+                      <span style={{ textAlign: 'right' }}>Preço</span>
+                      <span />
                     </div>
-
-                    {r.pharmacies.map((p, pi) => {
-                      // Opções de venda (0012): etiquetas por forma de venda.
-                      // Melhor preço só compara a MESMA unidade (a default).
-                      const opts = p.sale_options || []
-                      const baseOpt = opts.find((o) => o.is_default)
-                      const baseLabel = baseOpt ? unitLabel(baseOpt.unit) : null
-                      // Preço normalizado (Kz por unidade-base): compara
-                      // lâmina com caixa de forma justa — quem tem o menor
-                      // Kz/un. leva o selo, mesmo com unidades diferentes.
-                      const cmpPer = perBasePrice(comparableOption(opts))
-                      const bestPer = perBasePrice(comparableOption(r.pharmacies[0]?.sale_options))
-                      const sameUnit = bestPer != null && cmpPer != null && r.pharmacies.length > 1
+                    {g.items.map((it) => {
+                      const st = openStatus(it.pharmacy_opening_hours)
+                      const price = priceOf(it)
                       return (
-                        <div key={p.stock_item_id} className="drug-card">
-                          <div className="drug-card-main">
-                            <Link href={`/farmacia/${p.pharmacy_slug}`} className="drug-card-name">
-                              {p.pharmacy_name}
+                        <div key={it.stock_item_id} className="e-row">
+                          <div className="e-who">
+                            <b>{it.pharmacy_name}</b>
+                            <span>
+                              {[it.pharmacy_municipio, quantityText(it)].filter(Boolean).join(' · ')}
+                            </span>
+                          </div>
+                          <span className="e-hrs">
+                            <i className={`cf-dot${st && !st.open ? ' cf-dot--off' : ''}`} />
+                            {st ? st.label : it.pharmacy_opening_hours || 'Horário não indicado'}
+                          </span>
+                          <span className="e-fresh">
+                            <i className="cf-dot" />
+                            {freshness(it.confirmed_at) || 'agora'}
+                          </span>
+                          <span className="e-price price">{price.label}</span>
+                          <span className="e-go">
+                            <Link className="cf-btn cf-btn--ghost" href={productHref(it.stock_item_id)}>
+                              {it.reservable === false ? 'Ver ficha' : 'Reservar'}
                             </Link>
-                            {pi === 0 && sameUnit && cmpPer <= bestPer && (
-                              <span
-                                className="best-price"
-                                title={`Preço mais baixo por ${baseLabel || 'unidade'} entre as farmácias com stock`}
-                              >
-                                Melhor preço
-                              </span>
-                            )}
-                            {/* Origem/marca (0013) — pesa na decisão do
-                                cliente; bandeira emoji por país. */}
-                            {(p.origin || p.brand) && (
-                              <div className="drug-card-origin">
-                                {p.brand && (
-                                  <span className="origin-tag origin-tag--brand">{p.brand}</span>
-                                )}
-                                {p.origin && (
-                                  <span className="origin-tag">
-                                    {originCode(p.origin) && (
-                                      <span className="origin-code">{originCode(p.origin)}</span>
-                                    )}{' '}
-                                    {p.origin}
-                                  </span>
-                                )}
-                              </div>
-                            )}
-                            <div className="drug-card-meta">
-                              {p.pharmacy_municipio}
-                              {p.pharmacy_address ? ` · ${p.pharmacy_address}` : ''} ·{' '}
-                              <span className="fresh">confirmado {timeAgo(p.confirmed_at)}</span>
-                            </div>
-                          </div>
-
-                          {/* Foto da embalagem (0013) — a caixa real que
-                              está na prateleira. Sem foto: um placeholder
-                              com a inicial, em vez de sumir (o cliente
-                              vê que a farmácia ainda não fotografou). */}
-                          <img
-                            src={
-                              p.image_path
-                                ? `${process.env.NEXT_PUBLIC_SUPABASE_URL}/storage/v1/object/public/drug-images/${p.image_path}`
-                                : drugPlaceholder(r.drug_name)
-                            }
-                            alt={
-                              p.image_path
-                                ? `Embalagem de ${r.drug_name} — ${p.pharmacy_name}`
-                                : `${r.drug_name} — sem foto da embalagem`
-                            }
-                            loading="lazy"
-                            className="drug-card-img"
-                          />
-
-                          <div className="drug-card-side">
-                            {opts.length > 0 ? (
-                              <div className="sale-tags">
-                                {opts.map((o) => {
-                                  const per = formatPerBase(o, baseLabel)
-                                  return (
-                                    <span key={o.id} className="sale-tag">
-                                      {formatOptionLabel(o, baseLabel)}
-                                      {o.price != null && <b> · {fmtKz(o.price)}</b>}
-                                      {per && <i> {per}</i>}
-                                    </span>
-                                  )
-                                })}
-                              </div>
-                            ) : (
-                              p.price != null && <span className="price">{fmtKz(p.price)}</span>
-                            )}
-                            {p.pharmacy_phone && (
-                              <a
-                                href={`tel:${p.pharmacy_phone.replace(/\s/g, '')}`}
-                                className="btn-mini btn-mini--phone"
-                              >
-                                Ligar
-                              </a>
-                            )}
-                            {p.pharmacy_whatsapp && (
-                              <a
-                                href={`https://wa.me/${p.pharmacy_whatsapp.replace(/\D/g, '')}?text=${encodeURIComponent(
-                                  `Olá! Vi no Localizador da Conheça Farmácia que têm ${r.drug_name} em stock. Podem confirmar, por favor?`,
-                                )}`}
-                                target="_blank"
-                                rel="noopener noreferrer"
-                                className="btn-mini btn-mini--wa"
-                              >
-                                WhatsApp
-                              </a>
-                            )}
-                            {p.reservable === false ? (
-                              <span className="btn-mini" title="Só disponível no balcão">
-                              Só no balcão
-                              </span>
-                            ) : (
-                            <button
-                              type="button"
-                              className="btn-mini btn-mini--wa"
-                              title="Reservar e levantar na farmácia"
-                              onClick={() => setReserving(p)}
-                            >
-                              Reservar
-                            </button>
-                            )}
-                          </div>
+                          </span>
                         </div>
                       )
                     })}
-                  </section>
-                ))}
-              </>
-            )}
-
-            {results === null && !loading && !error && (
-              <div className="empty-state">
-                <p className="empty-sub">
-                  Escreva o nome do medicamento acima para ver as farmácias com stock confirmado.
-                </p>
-              </div>
-            )}
-
-            {/* CTA para farmácias */}
-            {reserving && <ReserveModal item={reserving} onClose={() => setReserving(null)} />}
-
-            <div className="search-cta">
-              <p className="search-cta-title">É farmácia e não aparece na lista?</p>
-              <p className="search-cta-sub">
-                Junte-se às parceiras do lançamento e seja encontrado por quem precisa —
-                gratuitamente.
-              </p>
-              <Link href="/#farmacias" className="btn btn-primary">
-                Quero participar
-              </Link>
+                  </div>
+                </article>
+              ))}
             </div>
+          )}
+
+          <div className="sh-cta">
+            <div>
+              <h3>Não encontra o que procura?</h3>
+              <p>
+                O Localizador só mostra o que foi confirmado pela farmácia — 72 h para
+                medicamentos, 30 dias para parafarmácia. Se o produto não aparece, pode existir sem
+                confirmação: ligue para a farmácia ou veja a rede completa.
+              </p>
+            </div>
+            <Link className="cf-btn cf-btn--primary" href="/farmacia">
+              Ver farmácias
+            </Link>
           </div>
         </div>
       </section>

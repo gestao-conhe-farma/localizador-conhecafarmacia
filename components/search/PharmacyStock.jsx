@@ -1,6 +1,6 @@
 'use client'
 
-import { useCallback, useEffect, useMemo, useState } from 'react'
+import { useCallback, useEffect, useMemo, useRef, useState } from 'react'
 import Link from 'next/link'
 import { fetchPharmacyStockClient, pharmacyFromStockRow } from '@/lib/stock'
 import { usePharmacyStockRealtime } from '@/lib/use-pharmacy-stock-realtime'
@@ -9,6 +9,7 @@ import { logError } from '@/lib/log'
 import ProductCard from '@/components/search/ProductCard'
 import ProductModal from '@/components/search/ProductModal'
 import { useProductSheet } from '@/components/search/useProductSheet'
+import { useStuckBar } from '@/components/search/useStuckBar'
 import MiniMap from '@/components/search/MiniMap'
 import { useUserLocation } from '@/lib/use-user-location'
 import { distanceKm, formatDistance, pharmacyPosition } from '@/lib/geo'
@@ -28,6 +29,22 @@ const ICON_SEARCH = (
   >
     <circle cx="11" cy="11" r="8" />
     <line x1="21" y1="21" x2="16.65" y2="16.65" />
+  </svg>
+)
+
+const ICON_CLOSE = (
+  <svg
+    width="13"
+    height="13"
+    viewBox="0 0 24 24"
+    fill="none"
+    stroke="currentColor"
+    strokeWidth="2.4"
+    strokeLinecap="round"
+    aria-hidden="true"
+  >
+    <line x1="6" y1="6" x2="18" y2="18" />
+    <line x1="18" y1="6" x2="6" y2="18" />
   </svg>
 )
 
@@ -59,6 +76,10 @@ export default function PharmacyStock({ slug, initialItems = null }) {
   const { openId, open: openProduct, swap: swapProduct, close: closeProduct } = useProductSheet()
   // Posição do visitante: só é pedida quando ele carrega no botão.
   const { location, status: locStatus, request: requestLocation } = useUserLocation()
+  // A caixa «Procurar aqui» fica presa ao topo quando se rola a prateleira:
+  // o cliente filtra sem voltar atrás. O ref é da caixa original.
+  const shelfSearchRef = useRef(null)
+  const shelfStuck = useStuckBar(shelfSearchRef)
 
   const refetch = useCallback(async () => {
     try {
@@ -402,7 +423,7 @@ export default function PharmacyStock({ slug, initialItems = null }) {
                 {freshest ? ` · actualizado há ${freshest}` : ''}
               </p>
             </div>
-            <div className="cf-field-wrap">
+            <div className="cf-field-wrap" ref={shelfSearchRef}>
               <span className="cf-ico" aria-hidden="true">
                 {ICON_SEARCH}
               </span>
@@ -474,6 +495,43 @@ export default function PharmacyStock({ slug, initialItems = null }) {
           )}
         </div>
       </div>
+
+      {/* Barra compacta fixa da prateleira — o mesmo padrão da pesquisa:
+          entra quando a caixa original desaparece por baixo do header e
+          filtra os produtos no sítio, sem devolver o cliente ao topo. */}
+      {shelfStuck && (
+        <div className="sh-quick sh-quick--shelf" role="search" aria-label="Filtrar prateleira">
+          <div className="cf-wrap sh-quick-inner">
+            <div className="cf-field-wrap sh-quick-field">
+              <label className="cf-sr" htmlFor="q-shelf-quick">
+                Procurar nesta prateleira
+              </label>
+              <input
+                id="q-shelf-quick"
+                className="cf-field"
+                type="search"
+                value={query}
+                placeholder="Procurar aqui"
+                autoComplete="off"
+                onChange={(e) => setQuery(e.target.value)}
+              />
+              {query ? (
+                <button
+                  type="button"
+                  className="search-clear"
+                  aria-label="Limpar filtro"
+                  onClick={() => setQuery('')}
+                >
+                  {ICON_CLOSE}
+                </button>
+              ) : null}
+            </div>
+            <span className="sh-quick-count">
+              {visible.length} produto{visible.length === 1 ? '' : 's'}
+            </span>
+          </div>
+        </div>
+      )}
 
       {openId && (
         <ProductModal stockItemId={openId} onClose={closeProduct} onOpenItem={swapProduct} />

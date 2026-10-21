@@ -138,6 +138,9 @@ export default function ProductSheet({
   const [busy, setBusy] = useState(false)
   const [error, setError] = useState('')
   const [created, setCreated] = useState(null)
+  // «Copiar link»: confirmação curta no próprio botão (sem toast).
+  const [copied, setCopied] = useState(false)
+  const copyTimer = useRef(null)
   const panelRef = useRef(null)
 
   const opts = activeOptions(item)
@@ -204,6 +207,40 @@ export default function ProductSheet({
     lng: item.pharmacy_lng,
     maps_url: item.pharmacy_maps_url,
   })
+
+  /** Link da ficha aberta — no cartão é o URL com `?produto=`; na rota
+   *  /produto/[id] é a própria página. Lido no clique, não no render. */
+  const copyLink = async () => {
+    if (typeof window === 'undefined') return
+    const url = window.location.href
+    let ok = false
+    try {
+      await navigator.clipboard.writeText(url)
+      ok = true
+    } catch {
+      // Contexto sem Clipboard API (http antigo) — cópia pelo textarea.
+      try {
+        const el = document.createElement('textarea')
+        el.value = url
+        el.setAttribute('readonly', '')
+        el.style.position = 'fixed'
+        el.style.opacity = '0'
+        document.body.appendChild(el)
+        el.select()
+        ok = document.execCommand('copy')
+        document.body.removeChild(el)
+      } catch {
+        ok = false
+      }
+    }
+    // Sem cópia não há confirmação falsa: o botão fica como está.
+    if (!ok) return
+    setCopied(true)
+    clearTimeout(copyTimer.current)
+    copyTimer.current = setTimeout(() => setCopied(false), 2200)
+  }
+
+  useEffect(() => () => clearTimeout(copyTimer.current), [])
 
   const startReserve = () => {
     setError('')
@@ -383,6 +420,16 @@ export default function ProductSheet({
                   )}
                 </>
               )}
+              <button
+                type="button"
+                className={`cf-btn cf-btn--ghost pdp-share${copied ? ' pdp-share--done' : ''}`}
+                onClick={copyLink}
+              >
+                {copied ? 'Link copiado' : 'Copiar link'}
+              </button>
+              <span className="cf-sr" role="status">
+                {copied ? 'Link copiado para a área de transferência.' : ''}
+              </span>
             </div>
             {/* O aviso de receita é um bloco próprio, com o mesmo respiro que
                 o botão tem até às informações de lâminas e caixa (.sh-filters /

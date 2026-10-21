@@ -9,6 +9,7 @@ import { logError, logWarn } from '@/lib/log'
 import ProductCard from '@/components/search/ProductCard'
 import ProductModal from '@/components/search/ProductModal'
 import { useProductSheet } from '@/components/search/useProductSheet'
+import { useStuckBar } from '@/components/search/useStuckBar'
 import { defaultOption, freshness, priceOf, productHref, quantityText } from '@/lib/product-utils'
 import { fmtKzPublic as fmtKz } from '@/lib/reservation-format'
 
@@ -144,8 +145,6 @@ export default function DrugSearch() {
   // Modo pesquisa: o texto do hero recolhe e a caixa+filtros ficam no centro,
   // para os resultados terem o palco. Voltamos ao hero quando se limpa.
   const [searchMode, setSearchMode] = useState(false)
-  // Caixa do hero fora do topo do ecrã → barra compacta fixa nos resultados.
-  const [stuck, setStuck] = useState(false)
   // Ficha aberta em cartão sobre a lista — o id vive no URL (?produto=),
   // por isso o link é partilhável e o «voltar» do browser fecha o cartão.
   const { openId, open: openSheet, swap: swapSheet, close: closeSheet } = useProductSheet()
@@ -155,6 +154,8 @@ export default function DrugSearch() {
   const heroRef = useRef(null)
   const userActed = useRef(false)
   const reduced = useReducedMotion()
+  // Caixa do hero fora do topo do ecrã → barra compacta fixa nos resultados.
+  const stuck = useStuckBar(boxRef)
 
   // Sugestões: nomes de produtos E marcas — "Ben-u-ron" leva ao paracetamol.
   useEffect(() => {
@@ -195,37 +196,6 @@ export default function DrugSearch() {
     return () => document.removeEventListener('click', onClick)
   }, [])
 
-  // Refinar sem voltar ao hero: quando a caixa grande sai por cima do ecrã
-  // (debaixo do header), entra uma barra compacta fixa com o mesmo termo.
-  // O cálculo corre num rAF por scroll — mede a posição real, por isso
-  // também acerta quando a lista muda de altura debaixo dos pés.
-  useEffect(() => {
-    // Sem pesquisa activa não há barra — o estado é reposto pelas acções
-    // que saem do modo pesquisa (limpar / termo vazio).
-    if (!searchMode) return
-    let raf = 0
-    const check = () => {
-      raf = 0
-      const el = boxRef.current
-      if (!el) return
-      // 72px = header fixo + folga: só conta quando a caixa já está
-      // mesmo escondida por baixo do header. `scrollY > 80` evita um
-      // flash durante a recolha suave do hero logo após pesquisar.
-      setStuck(window.scrollY > 80 && el.getBoundingClientRect().bottom <= 72)
-    }
-    const onScroll = () => {
-      if (!raf) raf = requestAnimationFrame(check)
-    }
-    check()
-    window.addEventListener('scroll', onScroll, { passive: true })
-    window.addEventListener('resize', onScroll)
-    return () => {
-      window.removeEventListener('scroll', onScroll)
-      window.removeEventListener('resize', onScroll)
-      if (raf) cancelAnimationFrame(raf)
-    }
-  }, [searchMode, groups])
-
   const load = async (term, muni = municipio) => {
     setLoading(true)
     setError('')
@@ -246,7 +216,6 @@ export default function DrugSearch() {
     setShowSuggest(false)
     inputRef.current?.blur()
     setSearchMode(Boolean(q))
-    if (!q) setStuck(false)
     await load(q, muni)
   }
 
@@ -259,7 +228,6 @@ export default function DrugSearch() {
     setShowSuggest(false)
     setActiveIdx(-1)
     setSearchMode(false)
-    setStuck(false)
     await load('', municipio)
   }
 

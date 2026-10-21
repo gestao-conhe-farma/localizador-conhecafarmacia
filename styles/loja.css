@@ -779,11 +779,17 @@ html.dark .cf-rx {
 /* Sem ícone à esquerda: o texto começa na margem do campo e a acção de
    pesquisa vive DENTRO da caixa, como ícone à direita. O padding da direita
    reserva espaço para esse botão e para o «limpar». */
-/* Caixa compacta: 11px de padding vertical em vez de 17 — a altura cai
-   de ~56px para ~46px sem perder a área de toque confortável. */
-.shop-search .cf-field,
-.sh-quick .cf-field {
+/* Caixa do hero: 11px de padding vertical — 48px de altura. */
+.shop-search .cf-field {
   padding: 11px 86px 11px 20px;
+  font-size: 15px;
+}
+
+/* Dentro da barra fixa o campo é MAIS BAIXO que a barra (42px dentro de
+   48px): o invólucro respira 3px em cima e em baixo, para o campo não
+   ficar colado ao header e ao conteúdo que passa por trás. */
+.sh-quick .cf-field {
+  padding: 8px 86px 8px 20px;
   font-size: 15px;
 }
 
@@ -905,7 +911,9 @@ html.dark .cf-rx {
   left: 0;
   right: 0;
   z-index: 45;
-  border-bottom: 1px solid var(--cf-line);
+  /* Hairline por DENTRO (box-shadow) — não soma altura: a barra fica com
+     os mesmos 48px da caixa de pesquisa da página de pesquisa. */
+  box-shadow: inset 0 -1px 0 var(--cf-line);
   background: color-mix(in srgb, var(--cf-paper) 92%, transparent);
   backdrop-filter: blur(14px) saturate(1.4);
 }
@@ -914,12 +922,24 @@ html.dark .cf-rx {
   display: flex;
   align-items: center;
   gap: 16px;
-  padding-top: 6px;
-  padding-bottom: 6px;
+  /* 3px + campo de 42px + 3px = barra de 48px (a altura da caixa da
+     página de pesquisa), com o campo visivelmente mais baixo. */
+  padding-top: 3px;
+  padding-bottom: 3px;
 }
 
 .sh-quick-field {
   max-width: 560px;
+}
+
+/* Prateleira da farmácia: sem botão de submeter (o filtro é ao vivo), o
+   campo reserva só o espaço do «limpar». */
+.sh-quick--shelf .cf-field {
+  padding-right: 46px;
+}
+
+.sh-quick--shelf .search-clear {
+  right: 10px;
 }
 
 .sh-quick-count {
@@ -1560,6 +1580,17 @@ html.dark .cf-rx {
 .pdp-actions .cf-btn--primary {
   flex: 1;
   min-width: 170px;
+}
+
+/* Partilha: largura fixa para a confirmação («Link copiado») não mexer
+   nos botões ao lado, e verde da marca como sinal de sucesso. */
+.pdp-share {
+  min-width: 8.75rem;
+}
+
+.pdp-share--done {
+  color: var(--cf-accent);
+  border-color: var(--cf-accent);
 }
 
 .pdp-page p.pdp-terms {

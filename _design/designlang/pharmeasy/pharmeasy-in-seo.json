@@ -1,0 +1,45 @@
+{
+  "openGraph": {
+    "title": "PharmEasy - Online Pharmacy & Medical Store with Healthcare Services in India | 50 Lakhs+ Customers",
+    "description": "PharmEasy, one of India's most trusted online pharmacy & medical stores, offers online medicine delivery, lab tests, online doctor consultation, home vaccination service and healthcare essentials across India. Get genuine products, great discounts, and fast doorstep delivery. Used by 50 lakhs+ customers in India in 1200+ cities like Bangalore, Delhi, Mumbai, Kolkata, Hyderabad, Gurgaon, Noida, Pune, etc.",
+    "url": "https://pharmeasy.in",
+    "site_name": "PharmEasy",
+    "image": "https://pharmeasy.in/pe_logo_2x.png",
+    "type": "website"
+  },
+  "twitter": {
+    "card": "summary_large_image",
+    "title": "PharmEasy - Online Pharmacy & Medical Store with Healthcare Services in India | 50 Lakhs+ Customers",
+    "description": "PharmEasy, one of India's most trusted online pharmacy & medical stores, offers online medicine delivery, lab tests, online doctor consultation, home vaccination service and healthcare essentials across India. Get genuine products, great discounts, and fast doorstep delivery. Used by 50 lakhs+ customers in India in 1200+ cities like Bangalore, Delhi, Mumbai, Kolkata, Hyderabad, Gurgaon, Noida, Pune, etc.",
+    "image": "https://pharmeasy.in/pe_logo_2x.png"
+  },
+  "description": "PharmEasy, one of India's most trusted online pharmacy & medical stores, offers online medicine delivery, lab tests, online doctor consultation, home vaccination service and healthcare essentials across India. Get genuine products, great discounts, and fast doorstep delivery. Used by 50 lakhs+ customers in India in 1200+ cities like Bangalore, Delhi, Mumbai, Kolkata, Hyderabad, Gurgaon, Noida, Pune, etc.",
+  "canonical": null,
+  "themeColor": "#ffffff",
+  "viewport": "width=device-width, initial-scale=1",
+  "favicons": [
+    {
+      "rel": "icon",
+      "href": "https://pharmeasy.in/favicon.ico",
+      "sizes": "",
+      "type": ""
+    }
+  ],
+  "manifest": null,
+  "structuredData": [
+    {
+      "type": "Thing",
+      "name": null,
+      "sample": "{\"@context\":\"https://schema.org\",\"@graph\":[{\"@id\":\"https://pharmeasy.in/#Organization\",\"@type\":\"Organization\",\"name\":\"PharmEasy\",\"email\":\"care@pharmeasy.in\",\"publishingPrinciples\":\"https://pharmeasy.in/legal/editorial-policy\",\"areaServed\":\"IN\",\"founders\":[{\"@type\":\"Person\",\"name\":\"Dhaval Shah\"},{\"@type\":\"Person\",\"name\":\"Dharmil Sheth\"},{\"@type\":\"Person\",\"name\":\"Hardik Dedhia\"},{\"@type\":\"Person\",\"n"
+    }
+  ],
+  "score": {
+    "hasOg": true,
+    "hasTwitter": true,
+    "hasDescription": true,
+    "hasCanonical": false,
+    "hasStructuredData": true,
+    "hasFavicon": true,
+    "hasThemeColor": true
+  }
+}

@@ -1,6 +1,13 @@
+import { Suspense } from 'react'
 import AppHeader from '@/components/layout/AppHeader'
 import AppFooter from '@/components/layout/AppFooter'
 import DrugSearch from '@/components/search/DrugSearch'
+
+// Render por pedido: o cartão da ficha lê `?produto=` (useSearchParams) e
+// queremos o hero e a lista no HTML inicial — um shell estático obrigaria
+// a pré-renderizar só o fallback da Suspense e a página aparecia vazia
+// até à hidratação. É uma página noindex, por isso o custo é irrelevante.
+export const dynamic = 'force-dynamic'
 
 // Página "por baixo dos panos": fora do índice do Google até ao lançamento.
 export const metadata = {
@@ -18,7 +25,11 @@ export default function PesquisaPage() {
     <>
       <AppHeader />
       <main className="cf-shop">
-        <DrugSearch />
+        {/* O cartão da ficha vive no URL (?produto=…): `useSearchParams`
+            corre dentro desta fronteira de Suspense. */}
+        <Suspense fallback={null}>
+          <DrugSearch />
+        </Suspense>
       </main>
       <AppFooter />
     </>

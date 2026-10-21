@@ -1,0 +1,136 @@
+{
+  "library": "unknown",
+  "confidence": 0,
+  "alternates": [],
+  "stats": {
+    "count": 19,
+    "strokeOnly": 0,
+    "fillOnly": 7,
+    "mixed": 1,
+    "avgStrokeWidth": 1.4,
+    "gridDistribution": {
+      "24": 19
+    },
+    "roundedCapsFraction": 0.42
+  },
+  "signals": [
+    "roundedCaps",
+    "grid24"
+  ],
+  "icons": [
+    {
+      "class": "header-lib-PincodeStrip-module_pincodeChevron__BzsJA",
+      "grid": 24,
+      "strokeWidth": 1.4,
+      "style": "mixed"
+    },
+    {
+      "class": "header-lib-UserDropdown-module_userIcon__20QOQ",
+      "grid": 24,
+      "strokeWidth": 1.4,
+      "style": "mixed"
+    },
+    {
+      "class": "header-lib-Header-module_offersIcon__-sCaA",
+      "grid": 24,
+      "strokeWidth": 1.4,
+      "style": "mixed"
+    },
+    {
+      "class": "header-lib-Header-module_cartIcon__q5dPk",
+      "grid": 24,
+      "strokeWidth": 1.4,
+      "style": "mixed"
+    },
+    {
+      "class": "",
+      "grid": 24,
+      "strokeWidth": 1.4,
+      "style": "mixed"
+    },
+    {
+      "class": "",
+      "grid": 24,
+      "strokeWidth": 1.4,
+      "style": "mixed"
+    },
+    {
+      "class": "",
+      "grid": 24,
+      "strokeWidth": 1.4,
+      "style": "mixed"
+    },
+    {
+      "class": "",
+      "grid": 24,
+      "strokeWidth": 1.4,
+      "style": "mixed"
+    },
+    {
+      "class": "style_prescriptionIcon__WciaM",
+      "grid": 24,
+      "strokeWidth": null,
+      "style": "fill"
+    },
+    {
+      "class": "style_chevronRight__oTzIu",
+      "grid": 24,
+      "strokeWidth": null,
+      "style": "fill"
+    },
+    {
+      "class": "",
+      "grid": 24,
+      "strokeWidth": null,
+      "style": "mixed"
+    },
+    {
+      "class": "style_uploadPin__jQww9",
+      "grid": 24,
+      "strokeWidth": null,
+      "style": "mixed"
+    },
+    {
+      "class": "style_ctaChevron___kTr3",
+      "grid": 24,
+      "strokeWidth": null,
+      "style": "fill"
+    },
+    {
+      "class": "style_quoteIcon__QQaIs",
+      "grid": 24,
+      "strokeWidth": null,
+      "style": "fill"
+    },
+    {
+      "class": "style_quoteIcon__QQaIs",
+      "grid": 24,
+      "strokeWidth": null,
+      "style": "fill"
+    },
+    {
+      "class": "style_quoteIcon__QQaIs",
+      "grid": 24,
+      "strokeWidth": null,
+      "style": "fill"
+    },
+    {
+      "class": "style_quoteIcon__QQaIs",
+      "grid": 24,
+      "strokeWidth": null,
+      "style": "fill"
+    },
+    {
+      "class": "",
+      "grid": 24,
+      "strokeWidth": null,
+      "style": "mixed"
+    },
+    {
+      "class": "",
+      "grid": 24,
+      "strokeWidth": null,
+      "style": "mixed"
+    }
+  ]
+}

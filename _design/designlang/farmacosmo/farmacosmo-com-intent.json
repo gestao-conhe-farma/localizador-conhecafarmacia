@@ -1,0 +1,665 @@
+{
+  "pageIntent": {
+    "type": "landing",
+    "confidence": 0.31,
+    "path": "/",
+    "title": "Farmacosmo | Online Pharmacy, Beauty and Health",
+    "description": "Shop Health & Beauty exclusive products at Farmacosmo! Discover great prices in healthcare, beauty, skincare and make up. Discover our best deals today.",
+    "signals": [
+      {
+        "kind": "dom",
+        "type": "blog-post",
+        "weight": 0.35,
+        "detail": "byline|min-read"
+      },
+      {
+        "kind": "url",
+        "type": "landing",
+        "weight": 0.45,
+        "detail": "root-path"
+      }
+    ],
+    "alternates": [
+      {
+        "type": "blog-post",
+        "score": 0.35
+      }
+    ],
+    "needsSmart": true
+  },
+  "sectionRoles": {
+    "sections": [
+      {
+        "index": 0,
+        "tag": "main",
+        "role": "pricing-table",
+        "subrole": null,
+        "confidence": 0.9,
+        "heading": "\n              \n                                  100mg/100ml - decongestant nasal spray 15 ml\n                              \n            ",
+        "bounds": {
+          "x": 0,
+          "y": 0,
+          "w": 1280,
+          "h": 7283.46875
+        },
+        "buttonCount": 47,
+        "cardCount": 357,
+        "slots": {
+          "heading": "\n              \n                                  100mg/100ml - decongestant nasal spray 15 ml\n                              \n            ",
+          "subheadings": [
+            "\n              \n                                  Yovis caps - probiotic supplement 20 capsules\n                              \n            ",
+            "\n              \n                                  Moisturising cream for dry to very dry skin 454 g\n                              \n            ",
+            "\n              \n                                  Hyalu b5 - moisturizing face cream in a 50 ml jar\n                              \n            ",
+            "\n              \n                                  Aminexil clinical r.e.g.e.n. booster - hair renewal serum 90 ml\n                              \n            "
+          ],
+          "ctaCount": 47
+        },
+        "needsSmart": false
+      },
+      {
+        "index": 1,
+        "tag": "header",
+        "role": "nav",
+        "subrole": null,
+        "confidence": 0.4,
+        "heading": "\n              \n                                  100mg/100ml - decongestant nasal spray 15 ml\n                              \n            ",
+        "bounds": {
+          "x": 0,
+          "y": 0,
+          "w": 1280,
+          "h": 168.5
+        },
+        "buttonCount": 17,
+        "cardCount": 222,
+        "slots": {
+          "heading": "\n              \n                                  100mg/100ml - decongestant nasal spray 15 ml\n                              \n            ",
+          "subheadings": [
+            "\n              \n                                  Yovis caps - probiotic supplement 20 capsules\n                              \n            ",
+            "\n              \n                                  Moisturising cream for dry to very dry skin 454 g\n                              \n            ",
+            "\n              \n                                  Hyalu b5 - moisturizing face cream in a 50 ml jar\n                              \n            ",
+            "\n              \n                                  Aminexil clinical r.e.g.e.n. booster - hair renewal serum 90 ml\n                              \n            "
+          ],
+          "ctaCount": 17,
+          "lede": "10% off Top Dermocosmetics Brands! Discover the coupon...\nI'm looking for...\nCustomer Service:\n02 8362 3081\nMon-Fri 09.30 / 12.30 - 15:00 / 17:00\nCustomer\nCare\n0\nIT\nEN\nCategories\nVitamins & Minerals \nStomach & Bowel \nHealth & Pharmacy \nAnti Aging \nSun & Tanning \nFragrance \nI'm looking for..."
+        },
+        "needsSmart": true
+      },
+      {
+        "index": 2,
+        "tag": "aside",
+        "role": "sidebar",
+        "subrole": null,
+        "confidence": 0.4,
+        "heading": "\n              \n                                  100mg/100ml - decongestant nasal spray 15 ml\n                              \n            ",
+        "bounds": {
+          "x": 0,
+          "y": 0,
+          "w": 0,
+          "h": 0
+        },
+        "buttonCount": 15,
+        "cardCount": 214,
+        "slots": {
+          "heading": "\n              \n                                  100mg/100ml - decongestant nasal spray 15 ml\n                              \n            ",
+          "subheadings": [
+            "\n              \n                                  Yovis caps - probiotic supplement 20 capsules\n                              \n            ",
+            "\n              \n                                  Moisturising cream for dry to very dry skin 454 g\n                              \n            ",
+            "\n              \n                                  Hyalu b5 - moisturizing face cream in a 50 ml jar\n                              \n            ",
+            "\n              \n                                  Aminexil clinical r.e.g.e.n. booster - hair renewal serum 90 ml\n                              \n            "
+          ],
+          "ctaCount": 15
+        },
+        "needsSmart": true
+      },
+      {
+        "index": 3,
+        "tag": "nav",
+        "role": "nav",
+        "subrole": null,
+        "confidence": 0.9,
+        "heading": "\n              \n                                  100mg/100ml - decongestant nasal spray 15 ml\n                              \n            ",
+        "bounds": {
+          "x": 0,
+          "y": 0,
+          "w": 0,
+          "h": 0
+        },
+        "buttonCount": 15,
+        "cardCount": 214,
+        "slots": {
+          "heading": "\n              \n                                  100mg/100ml - decongestant nasal spray 15 ml\n                              \n            ",
+          "subheadings": [
+            "\n              \n                                  Yovis caps - probiotic supplement 20 capsules\n                              \n            ",
+            "\n              \n                                  Moisturising cream for dry to very dry skin 454 g\n                              \n            ",
+            "\n              \n                                  Hyalu b5 - moisturizing face cream in a 50 ml jar\n                              \n            ",
+            "\n              \n                                  Aminexil clinical r.e.g.e.n. booster - hair renewal serum 90 ml\n                              \n            "
+          ],
+          "ctaCount": 15
+        },
+        "needsSmart": false
+      },
+      {
+        "index": 4,
+        "tag": "nav",
+        "role": "nav",
+        "subrole": null,
+        "confidence": 0.9,
+        "heading": null,
+        "bounds": {
+          "x": 160,
+          "y": 126.25,
+          "w": 1100,
+          "h": 24.5
+        },
+        "buttonCount": 0,
+        "cardCount": 6,
+        "slots": {
+          "lede": "Vitamins & Minerals \nStomach & Bowel \nHealth & Pharmacy \nAnti Aging \nSun & Tanning \nFragrance"
+        },
+        "needsSmart": false
+      },
+      {
+        "index": 5,
+        "tag": "section",
+        "role": "pricing-table",
+        "subrole": null,
+        "confidence": 0.9,
+        "heading": "Farmacosmo: Your Online Parapharmacy",
+        "bounds": {
+          "x": 0,
+          "y": 168.5,
+          "w": 1280,
+          "h": 5982.46875
+        },
+        "buttonCount": 29,
+        "cardCount": 108,
+        "slots": {
+          "heading": "Farmacosmo: Your Online Parapharmacy",
+          "subheadings": [
+            "Featured categories",
+            "Health & Pharmacy",
+            "Vitamins & Supplements",
+            "Bath & Body"
+          ],
+          "ctaCount": 29
+        },
+        "needsSmart": false
+      },
+      {
+        "index": 6,
+        "tag": "aside",
+        "role": "sidebar",
+        "subrole": null,
+        "confidence": 0.4,
+        "heading": null,
+        "bounds": {
+          "x": 0,
+          "y": 168.5,
+          "w": 1280,
+          "h": 0
+        },
+        "buttonCount": 0,
+        "cardCount": 0,
+        "slots": {},
+        "needsSmart": true
+      },
+      {
+        "index": 7,
+        "tag": "section",
+        "role": "pricing-table",
+        "subrole": null,
+        "confidence": 0.9,
+        "heading": "Farmacosmo: Your Online Parapharmacy",
+        "bounds": {
+          "x": 0,
+          "y": 178.5,
+          "w": 1280,
+          "h": 5972.46875
+        },
+        "buttonCount": 29,
+        "cardCount": 108,
+        "slots": {
+          "heading": "Farmacosmo: Your Online Parapharmacy",
+          "subheadings": [
+            "Featured categories",
+            "Health & Pharmacy",
+            "Vitamins & Supplements",
+            "Bath & Body"
+          ],
+          "ctaCount": 29
+        },
+        "needsSmart": false
+      },
+      {
+        "index": 8,
+        "tag": "section",
+        "role": "pricing-table",
+        "subrole": null,
+        "confidence": 0.9,
+        "heading": "Farmacosmo: Your Online Parapharmacy",
+        "bounds": {
+          "x": 0,
+          "y": 178.5,
+          "w": 1280,
+          "h": 5972.46875
+        },
+        "buttonCount": 29,
+        "cardCount": 108,
+        "slots": {
+          "heading": "Farmacosmo: Your Online Parapharmacy",
+          "subheadings": [
+            "Featured categories",
+            "Health & Pharmacy",
+            "Vitamins & Supplements",
+            "Bath & Body"
+          ],
+          "ctaCount": 29
+        },
+        "needsSmart": false
+      },
+      {
+        "index": 9,
+        "tag": "section",
+        "role": "gallery",
+        "subrole": null,
+        "confidence": 0.7,
+        "heading": null,
+        "bounds": {
+          "x": 20,
+          "y": 178.5,
+          "w": 1240,
+          "h": 527.703125
+        },
+        "buttonCount": 0,
+        "cardCount": 0,
+        "slots": {},
+        "needsSmart": false
+      },
+      {
+        "index": 10,
+        "tag": "section",
+        "role": "content",
+        "subrole": null,
+        "confidence": 0.3,
+        "heading": "Farmacosmo: Your Online Parapharmacy",
+        "bounds": {
+          "x": 20,
+          "y": 706.203125,
+          "w": 1240,
+          "h": 123.5
+        },
+        "buttonCount": 0,
+        "cardCount": 0,
+        "slots": {
+          "heading": "Farmacosmo: Your Online Parapharmacy"
+        },
+        "needsSmart": true
+      },
+      {
+        "index": 11,
+        "tag": "section",
+        "role": "content",
+        "subrole": null,
+        "confidence": 0.3,
+        "heading": "Featured categories",
+        "bounds": {
+          "x": 0,
+          "y": 842.703125,
+          "w": 1280,
+          "h": 366.5
+        },
+        "buttonCount": 0,
+        "cardCount": 0,
+        "slots": {
+          "heading": "Featured categories",
+          "subheadings": [
+            "Health & Pharmacy",
+            "Vitamins & Supplements",
+            "Bath & Body",
+            "Skincare"
+          ],
+          "lede": "Featured categories\nHealth & Pharmacy\nVitamins & Supplements\nBath & Body\nSkincare\nFragrance\nMake Up"
+        },
+        "needsSmart": true
+      },
+      {
+        "index": 12,
+        "tag": "section",
+        "role": "pricing-table",
+        "subrole": null,
+        "confidence": 0.9,
+        "heading": "Must-haves for your well-being",
+        "bounds": {
+          "x": 0,
+          "y": 1229.203125,
+          "w": 1280,
+          "h": 942.5
+        },
+        "buttonCount": 10,
+        "cardCount": 24,
+        "slots": {
+          "heading": "Must-haves for your well-being",
+          "subheadings": [
+            "Sideral forte - iron supplement 20 capsules",
+            "Daflon 500 mg - treatment of venous insufficiency 120 coated tablets",
+            "Magnesio supremo - magnesium supplement 300 g powder",
+            "Supplement neobianacid 70 tablets"
+          ],
+          "ctaCount": 10
+        },
+        "needsSmart": false
+      },
+      {
+        "index": 13,
+        "tag": "section",
+        "role": "pricing-table",
+        "subrole": null,
+        "confidence": 0.9,
+        "heading": "Must-haves for your well-being",
+        "bounds": {
+          "x": 78,
+          "y": 1229.203125,
+          "w": 1124,
+          "h": 922.5
+        },
+        "buttonCount": 10,
+        "cardCount": 24,
+        "slots": {
+          "heading": "Must-haves for your well-being",
+          "subheadings": [
+            "Sideral forte - iron supplement 20 capsules",
+            "Daflon 500 mg - treatment of venous insufficiency 120 coated tablets",
+            "Magnesio supremo - magnesium supplement 300 g powder",
+            "Supplement neobianacid 70 tablets"
+          ],
+          "ctaCount": 10
+        },
+        "needsSmart": false
+      },
+      {
+        "index": 14,
+        "tag": "section",
+        "role": "content",
+        "subrole": null,
+        "confidence": 0.3,
+        "heading": "Categories to discover",
+        "bounds": {
+          "x": 0,
+          "y": 2184.703125,
+          "w": 1280,
+          "h": 336.5
+        },
+        "buttonCount": 0,
+        "cardCount": 0,
+        "slots": {
+          "heading": "Categories to discover",
+          "subheadings": [
+            "Haircare",
+            "Dental care",
+            "Pets",
+            "Toys"
+          ],
+          "lede": "Categories to discover\nHaircare\nDental care\nPets\nToys\nBaby & Child\nHousehold"
+        },
+        "needsSmart": true
+      },
+      {
+        "index": 15,
+        "tag": "section",
+        "role": "pricing-table",
+        "subrole": null,
+        "confidence": 0.9,
+        "heading": "The products most chosen by customers",
+        "bounds": {
+          "x": 0,
+          "y": 2541.203125,
+          "w": 1280,
+          "h": 505.5
+        },
+        "buttonCount": 9,
+        "cardCount": 24,
+        "slots": {
+          "heading": "The products most chosen by customers",
+          "subheadings": [
+            "Geffer - granules for nausea and slow digestion 24 sachets of 5 g orange flavour",
+            "Momentact 400mg - pain relief medicament 30 tablets",
+            "Voltaren emulgel 2% gel - for muscle and joint pain 100 gr",
+            "100mg/100ml - decongestant nasal spray 15 ml"
+          ],
+          "ctaCount": 9
+        },
+        "needsSmart": false
+      },
+      {
+        "index": 16,
+        "tag": "section",
+        "role": "pricing-table",
+        "subrole": null,
+        "confidence": 0.9,
+        "heading": "The products most chosen by customers",
+        "bounds": {
+          "x": 78,
+          "y": 2541.203125,
+          "w": 1124,
+          "h": 485.5
+        },
+        "buttonCount": 9,
+        "cardCount": 24,
+        "slots": {
+          "heading": "The products most chosen by customers",
+          "subheadings": [
+            "Geffer - granules for nausea and slow digestion 24 sachets of 5 g orange flavour",
+            "Momentact 400mg - pain relief medicament 30 tablets",
+            "Voltaren emulgel 2% gel - for muscle and joint pain 100 gr",
+            "100mg/100ml - decongestant nasal spray 15 ml"
+          ],
+          "ctaCount": 9
+        },
+        "needsSmart": false
+      },
+      {
+        "index": 17,
+        "tag": "section",
+        "role": "pricing-table",
+        "subrole": null,
+        "confidence": 0.9,
+        "heading": "Bestseller for your daily routine",
+        "bounds": {
+          "x": 0,
+          "y": 3066.703125,
+          "w": 1280,
+          "h": 942.5
+        },
+        "buttonCount": 10,
+        "cardCount": 23,
+        "slots": {
+          "heading": "Bestseller for your daily routine",
+          "subheadings": [
+            "Elmex Sensitive - toothpaste for sensitive teeth 2x 75 ml",
+            "Shiseido Uv protective compact foundation spf30 - medium beige",
+            "Anthelios uvmune 400 spf50+ invisible fluid fragrance-free 50 ml",
+            "Farma-derma Ginexid - gynecological cleansing foam 150 ml"
+          ],
+          "ctaCount": 10
+        },
+        "needsSmart": false
+      },
+      {
+        "index": 18,
+        "tag": "section",
+        "role": "pricing-table",
+        "subrole": null,
+        "confidence": 0.9,
+        "heading": "Bestseller for your daily routine",
+        "bounds": {
+          "x": 78,
+          "y": 3066.703125,
+          "w": 1124,
+          "h": 922.5
+        },
+        "buttonCount": 10,
+        "cardCount": 23,
+        "slots": {
+          "heading": "Bestseller for your daily routine",
+          "subheadings": [
+            "Elmex Sensitive - toothpaste for sensitive teeth 2x 75 ml",
+            "Shiseido Uv protective compact foundation spf30 - medium beige",
+            "Anthelios uvmune 400 spf50+ invisible fluid fragrance-free 50 ml",
+            "Farma-derma Ginexid - gynecological cleansing foam 150 ml"
+          ],
+          "ctaCount": 10
+        },
+        "needsSmart": false
+      },
+      {
+        "index": 19,
+        "tag": "section",
+        "role": "faq",
+        "subrole": null,
+        "confidence": 0.85,
+        "heading": "Frequently asked questions",
+        "bounds": {
+          "x": 20,
+          "y": 4009.203125,
+          "w": 1240,
+          "h": 444.265625
+        },
+        "buttonCount": 0,
+        "cardCount": 17,
+        "slots": {
+          "heading": "Frequently asked questions",
+          "subheadings": [
+            "Who is Farmacosmo: your authorized online para-pharmacy",
+            "Can I buy without registering?",
+            "Can I cancel an order?",
+            "How can I contact Farmacosmo Customer Support?"
+          ],
+          "lede": "Frequently asked questions\nWho is Farmacosmo\nSupport and help with your order\nShipping, delivery times and options\nPayment methods\nPersonal Area\nReturns, withdrawal & refunds\nWho is Farmacosmo: your authorized online para-pharmacy"
+        },
+        "needsSmart": false
+      },
+      {
+        "index": 20,
+        "tag": "section",
+        "role": "testimonials",
+        "subrole": null,
+        "confidence": 0.4,
+        "heading": "99% satisfied customers",
+        "bounds": {
+          "x": 20,
+          "y": 4453.46875,
+          "w": 1240,
+          "h": 231.5
+        },
+        "buttonCount": 0,
+        "cardCount": 0,
+        "slots": {
+          "heading": "99% satisfied customers"
+        },
+        "needsSmart": true
+      },
+      {
+        "index": 21,
+        "tag": "section",
+        "role": "steps",
+        "subrole": null,
+        "confidence": 0.75,
+        "heading": "Farmacosmo is an online pharmacy that guarantees you professionalism and convenience in the world of medicines, food supplements, SOP and OTC products.",
+        "bounds": {
+          "x": 20,
+          "y": 4724.96875,
+          "w": 1240,
+          "h": 1426
+        },
+        "buttonCount": 0,
+        "cardCount": 20,
+        "slots": {
+          "heading": "Farmacosmo is an online pharmacy that guarantees you professionalism and convenience in the world of medicines, food supplements, SOP and OTC products.",
+          "subheadings": [
+            "What is an authorized online pharmacy?",
+            "Our pharmacists are by your side, free of charge.",
+            "Why choose Farmacosmo?",
+            "The perfect blend between health and beauty"
+          ]
+        },
+        "needsSmart": false
+      },
+      {
+        "index": 22,
+        "tag": "footer",
+        "role": "footer",
+        "subrole": null,
+        "confidence": 0.95,
+        "heading": null,
+        "bounds": {
+          "x": 0,
+          "y": 6150.96875,
+          "w": 1280,
+          "h": 0
+        },
+        "buttonCount": 0,
+        "cardCount": 0,
+        "slots": {},
+        "needsSmart": false
+      },
+      {
+        "index": 23,
+        "tag": "footer",
+        "role": "footer",
+        "subrole": null,
+        "confidence": 0.95,
+        "heading": null,
+        "bounds": {
+          "x": 0,
+          "y": 6150.96875,
+          "w": 1280,
+          "h": 1132.5
+        },
+        "buttonCount": 1,
+        "cardCount": 27,
+        "slots": {
+          "ctaCount": 1,
+          "lede": "Free shipping"
+        },
+        "needsSmart": false
+      }
+    ],
+    "counts": {
+      "pricing-table": 10,
+      "nav": 3,
+      "sidebar": 2,
+      "gallery": 1,
+      "content": 3,
+      "faq": 1,
+      "testimonials": 1,
+      "steps": 1,
+      "footer": 2
+    },
+    "readingOrder": [
+      "pricing-table",
+      "nav",
+      "sidebar",
+      "nav",
+      "nav",
+      "pricing-table",
+      "sidebar",
+      "pricing-table",
+      "pricing-table",
+      "gallery",
+      "content",
+      "content",
+      "pricing-table",
+      "pricing-table",
+      "content",
+      "pricing-table",
+      "pricing-table",
+      "pricing-table",
+      "pricing-table",
+      "faq",
+      "testimonials",
+      "steps",
+      "footer",
+      "footer"
+    ]
+  }
+}

@@ -1,0 +1,42 @@
+:root {
+  /* Colors — Primary */
+  --color-primary: #0000ee;
+
+  /* Colors — Neutrals */
+  --color-neutral-50: #313131;
+  --color-neutral-100: #000000;
+  --color-neutral-200: #d9d9d9;
+
+  /* Colors — Text */
+  --color-text: #313131;
+  --color-text-1: #000000;
+  --color-text-2: #0000ee;
+
+  /* Typography — Families */
+  --font-sans: 'system-ui', sans-serif;
+  --font-heading: 'Arial', sans-serif;
+  --font-body: 'monospace', sans-serif;
+
+  /* Typography — Scale */
+  --font-size-40: 40px;
+  --font-size-24: 24px;
+  --font-size-16: 16px;
+  --font-size-13.3333: 13.3333px;
+  --font-size-12: 12px;
+
+  /* Spacing */
+  --spacing-8: 8px;
+  --spacing-128: 128px;
+  --spacing-160: 160px;
+
+  /* Border Radius */
+  --radius-full: 50px;
+
+  /* Original Site Variables */
+  /* — semantic — */
+  success: [object Object];
+  warning: [object Object];
+  error: [object Object];
+  info: [object Object];
+
+}

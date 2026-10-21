@@ -34,6 +34,8 @@ yarn-error.log*
 # ficheiros de trabalho locais
 build-output.log
 devout.log
+_temp/
+screenshots/
 
 # credenciais locais (nunca commitar — contém tokens)
 credenciais.txt
@@ -44,6 +46,7 @@ credenciais.txt
 # artefactos de trabalho da pasta _design (ecrãs, perfis de Chromium,
 # scripts de diagnóstico) — nunca versionar
 _design/**/_shots/
+_design/**/shots/
 _design/**/_diag*.mjs
 _design/**/_verify*.mjs
 _diag*.mjs

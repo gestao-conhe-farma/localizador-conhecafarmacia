@@ -1,0 +1,558 @@
+<!doctype html>
+<html lang="pt">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Modelo C · Montra — /farmacia e /farmacia/[slug]</title>
+<style>
+  @font-face{
+    font-family:'Fraunces';font-style:normal;font-weight:100 900;font-display:swap;
+    src:url('assets/fraunces-normal.woff2') format('woff2-variations');
+  }
+  @font-face{
+    font-family:'Fraunces';font-style:italic;font-weight:100 900;font-display:swap;
+    src:url('assets/fraunces-italic.woff2') format('woff2-variations');
+  }
+  @font-face{
+    font-family:'Inter';font-style:normal;font-weight:100 900;font-display:swap;
+    src:url('assets/inter-normal.woff2') format('woff2-variations');
+  }
+
+  :root{
+    --paper:#fffdf9;
+    --paper-2:#f7f5f1;
+    --card:#ffffff;
+    --ink:#002a32;
+    --green:#00493a;
+    --accent:#0a844f;
+    --line:#e3e0d8;
+    --divider:#dfe4e0;
+    --muted:rgba(0,42,50,.6);
+    --muted-2:rgba(0,42,50,.42);
+    --cream:#fffdf9;
+    --serif:'Fraunces',Georgia,serif;
+    --sans:'Inter',ui-sans-serif,system-ui,sans-serif;
+  }
+
+  *{box-sizing:border-box}
+  html{scroll-behavior:smooth}
+  body{margin:0;background:var(--paper);color:var(--ink);font-family:var(--sans);font-size:15px;line-height:1.6;-webkit-font-smoothing:antialiased}
+  a{color:inherit;text-decoration:none}
+  h1,h2,h3,p{margin:0}
+
+  .wrap{max-width:1180px;margin:0 auto;padding:0 44px}
+  .kicker{font-size:11px;font-weight:700;letter-spacing:.22em;text-transform:uppercase;color:var(--accent)}
+  .muted{color:var(--muted)}
+  .num{font-variant-numeric:tabular-nums}
+
+  /* chrome de revisão — fora do site, visível só no topo do documento */
+  .review{background:var(--ink);color:#fffdf9;font-size:12px}
+  .review .wrap{display:flex;gap:22px;align-items:center;height:44px}
+  .review b{font-weight:600;letter-spacing:.14em;text-transform:uppercase;font-size:10.5px;color:#9fd8bd}
+  .review a{opacity:.72}
+  .review a:hover{opacity:1;text-decoration:underline}
+
+  /* header — igual ao site */
+  .hdr{border-bottom:1px solid var(--line);background:rgba(255,253,249,.94)}
+  .hdr-in{max-width:1180px;margin:0 auto;padding:0 44px;height:70px;display:flex;align-items:center;justify-content:space-between;gap:28px}
+  .logo{display:flex;align-items:center;gap:12px}
+  .logo img{height:28px;width:auto}
+  .logo span{font-size:10.5px;letter-spacing:.2em;text-transform:uppercase;color:var(--muted);padding-left:12px;border-left:1px solid var(--line)}
+  .nav{display:flex;gap:6px;background:var(--paper-2);border:1px solid var(--line);border-radius:999px;padding:4px}
+  .nav a{font-size:13px;padding:7px 16px;border-radius:999px;color:var(--muted)}
+  .nav a.on{background:var(--card);color:var(--ink)}
+  .hdr-r{font-size:12.5px;color:var(--muted-2)}
+
+  .btn{display:inline-flex;align-items:center;gap:8px;border-radius:999px;padding:11px 20px;font-size:13.5px;font-weight:600;border:1px solid transparent;white-space:nowrap}
+  .btn.primary{background:var(--green);color:#fff}
+  .btn.primary:hover{filter:brightness(1.12)}
+  .btn.ghost{border-color:var(--line);color:var(--ink)}
+  .btn.ghost:hover{border-color:rgba(0,42,50,.32)}
+  .btn.cream{background:var(--cream);color:var(--green)}
+  .btn.cream:hover{filter:brightness(.96)}
+  .btn.on-green{border-color:rgba(255,253,249,.35);color:var(--cream)}
+  .btn.on-green:hover{border-color:rgba(255,253,249,.7)}
+
+  /* ---------- abertura editorial ---------- */
+  .open{padding:74px 0 0;display:grid;grid-template-columns:1fr 320px;gap:64px;align-items:end}
+  .open h1{font-family:var(--serif);font-size:64px;font-weight:600;letter-spacing:-.026em;line-height:1.02;margin-top:16px}
+  .open h1 em{font-style:italic;color:var(--accent)}
+  .open-sub{margin-top:22px;max-width:46ch;color:var(--muted);font-size:16px;line-height:1.65}
+  .open-aside{border-top:1px solid var(--ink);padding-top:16px;font-size:13px;color:var(--muted)}
+  .open-aside strong{display:block;font-family:var(--serif);font-size:30px;font-weight:600;color:var(--ink);margin-bottom:4px}
+  .open-aside .row + .row{margin-top:18px}
+
+  .rail{display:flex;align-items:center;justify-content:space-between;gap:20px;margin-top:44px;border-top:1px solid var(--line);padding:16px 0;flex-wrap:wrap}
+  .chips{display:flex;gap:7px;flex-wrap:wrap}
+  .chip{font-size:12.5px;padding:8px 15px;border-radius:999px;border:1px solid var(--line);color:var(--muted);background:transparent}
+  .chip.on{background:var(--ink);border-color:var(--ink);color:var(--cream)}
+  .chip:hover{border-color:rgba(0,42,50,.32);color:var(--ink)}
+  .rail-r{font-size:12.5px;color:var(--muted-2)}
+
+  /* ---------- grelha montra ---------- */
+  .grid{display:grid;grid-template-columns:repeat(3,1fr);gap:22px;margin:26px 0 0;align-items:start}
+  .feat{grid-column:span 2;background:var(--green);color:var(--cream);padding:40px 42px;display:flex;flex-direction:column;justify-content:space-between;min-height:318px}
+  .feat-top{display:flex;justify-content:space-between;gap:20px;align-items:flex-start}
+  .feat .tag{font-size:10px;letter-spacing:.2em;text-transform:uppercase;font-weight:700;color:rgba(255,253,249,.72)}
+  .feat h2{font-family:var(--serif);font-size:52px;font-weight:600;line-height:1;letter-spacing:-.02em;margin:18px 0 0}
+  .feat .where{font-size:13px;color:rgba(255,253,249,.72);margin-top:10px}
+  .feat .count{font-family:var(--serif);font-size:56px;font-weight:600;line-height:.95;font-style:italic}
+  .feat .count small{display:block;font-family:var(--sans);font-style:normal;font-size:10.5px;letter-spacing:.16em;text-transform:uppercase;color:rgba(255,253,249,.7);margin-top:8px;font-weight:600}
+  .feat-foot{display:flex;justify-content:space-between;align-items:flex-end;gap:24px;flex-wrap:wrap;margin-top:30px}
+  .feat-badges{display:flex;gap:18px;font-size:11.5px;color:rgba(255,253,249,.78);flex-wrap:wrap}
+  .feat-badges span{display:flex;align-items:center;gap:7px}
+  .dot{width:6px;height:6px;border-radius:50%;background:var(--accent);flex:none}
+  .dot.off{background:rgba(0,42,50,.32)}
+  .dot.on-green{background:#9fd8bd}
+
+  .card{border:1px solid var(--line);background:var(--card);padding:30px 30px 26px;display:flex;flex-direction:column;gap:14px;transition:border-color .18s ease;margin:0}
+  .card:hover{border-color:rgba(0,42,50,.3)}
+  .card-top{display:flex;justify-content:space-between;align-items:flex-start;gap:14px}
+  .card h3{font-family:var(--serif);font-size:27px;font-weight:600;letter-spacing:-.014em;line-height:1.12}
+  .card .where{font-size:12.5px;color:var(--muted);margin-top:6px}
+  .card .badge{font-size:9.5px;letter-spacing:.14em;text-transform:uppercase;font-weight:700;color:var(--accent);white-space:nowrap;padding-top:5px}
+  .card .stock{font-family:var(--serif);font-style:italic;font-size:25px;line-height:1;color:var(--green);margin-top:auto}
+  .card .stock span{font-family:var(--sans);font-style:normal;font-size:13px;color:var(--muted)}
+  .card .stock.zero{color:var(--muted-2);font-size:18px}
+  .card-foot{display:flex;align-items:center;justify-content:space-between;gap:12px;border-top:1px solid var(--line);padding-top:14px;font-size:12.5px;color:var(--muted)}
+  .card-foot a{font-weight:600;color:var(--ink);border-bottom:1px solid var(--line);padding-bottom:1px}
+  .card-foot a:hover{color:var(--accent);border-bottom-color:var(--accent)}
+
+  .aside-card{background:var(--paper-2);border:1px solid var(--line);padding:30px 30px 28px;display:flex;flex-direction:column;gap:12px}
+  .aside-card h4{margin:0;font-size:10.5px;letter-spacing:.18em;text-transform:uppercase;color:var(--muted)}
+  .aside-card p{font-size:12.5px;color:var(--muted);line-height:1.6}
+  .aside-card b{font-family:var(--serif);font-size:17px;font-weight:600;color:var(--ink);display:block;margin-bottom:2px}
+
+  .zero-note{border-left:2px solid var(--line);padding-left:16px;font-size:12px;color:var(--muted-2);font-style:italic}
+
+  footer{border-top:1px solid var(--line);margin-top:70px}
+  footer .wrap{display:flex;justify-content:space-between;gap:24px;padding-top:26px;padding-bottom:34px;font-size:12px;color:var(--muted-2);flex-wrap:wrap}
+
+  /* ---------- página da farmácia ---------- */
+  .store{background:var(--green);color:var(--cream);padding:44px 0 46px}
+  .crumb{font-size:12px;color:rgba(255,253,249,.6);margin-bottom:26px}
+  .crumb a:hover{color:var(--cream)}
+  .store-grid{display:grid;grid-template-columns:1fr auto;gap:48px;align-items:end}
+  .store h1{font-family:var(--serif);font-size:58px;font-weight:600;line-height:1;letter-spacing:-.024em;margin-top:14px}
+  .store .addr{font-size:13.5px;color:rgba(255,253,249,.72);margin-top:14px}
+  .store .badges{display:flex;gap:20px;flex-wrap:wrap;margin-top:16px;font-size:12px;color:rgba(255,253,249,.8)}
+  .store .badges span{display:flex;align-items:center;gap:7px}
+  .store .acts{display:flex;gap:10px;flex-wrap:wrap;justify-content:flex-end}
+  .store .kicker{color:#9fd8bd}
+
+  .body{padding:44px 0 0;display:grid;grid-template-columns:1fr 322px;gap:66px}
+  .shelf-h{display:flex;align-items:baseline;justify-content:space-between;gap:20px;border-top:2px solid var(--green);padding-top:14px}
+  .shelf-h h2{font-family:var(--serif);font-size:30px;font-weight:600;letter-spacing:-.012em}
+  .shelf-h span{font-size:12px;color:var(--muted)}
+
+  .group{margin-top:30px}
+  .group-h{display:flex;align-items:baseline;justify-content:space-between;border-bottom:1px solid var(--line);padding-bottom:9px;margin-bottom:4px}
+  .group-h b{font-size:10.5px;letter-spacing:.18em;text-transform:uppercase;font-weight:700}
+  .group-h span{font-size:11.5px;color:var(--muted-2)}
+  .shelf{display:grid;grid-template-columns:1fr 1fr;gap:0 44px}
+  .item{padding:15px 0;border-bottom:1px solid var(--line);display:flex;justify-content:space-between;gap:16px;align-items:flex-start}
+  .item .nm{font-family:var(--serif);font-size:18.5px;font-weight:600;line-height:1.25;letter-spacing:-.006em}
+  .item .mt{font-size:11.5px;color:var(--muted);margin-top:3px;display:flex;gap:7px;align-items:center;flex-wrap:wrap}
+  .rx{font-size:9px;letter-spacing:.1em;text-transform:uppercase;font-weight:700;color:var(--green);border:1px solid rgba(0,73,58,.28);border-radius:3px;padding:1px 5px}
+  .item .rt{text-align:right;flex:none}
+  .item .price{font-size:14px;font-weight:600;white-space:nowrap;font-variant-numeric:tabular-nums}
+  .item .act{display:block;font-size:10px;letter-spacing:.12em;text-transform:uppercase;font-weight:700;color:var(--accent);margin-top:5px;cursor:pointer}
+  .item .act:hover{color:var(--green)}
+  .item .act.off{color:var(--muted-2);font-weight:600;letter-spacing:.1em}
+
+  .side{position:sticky;top:24px;align-self:start;display:flex;flex-direction:column;gap:18px}
+  .how{border:1px solid var(--line);background:var(--card);padding:24px}
+  .how h3{font-size:10px;letter-spacing:.18em;text-transform:uppercase;color:var(--muted);font-weight:700}
+  .how dl{margin:8px 0 0}
+  .how dt{font-size:10px;letter-spacing:.14em;text-transform:uppercase;color:var(--muted-2);font-weight:600;margin-top:14px}
+  .how dd{margin:2px 0 0;font-size:13.5px;line-height:1.5}
+  .how .map{margin-top:18px;height:112px;border:1px solid var(--line);background:var(--paper-2);display:grid;place-items:center;font-size:10.5px;letter-spacing:.14em;text-transform:uppercase;color:var(--muted-2)}
+  .fresh{border:1px solid var(--line);padding:20px 24px;font-size:12px;color:var(--muted);line-height:1.6}
+  .fresh b{display:flex;align-items:center;gap:8px;font-size:11px;letter-spacing:.14em;text-transform:uppercase;color:var(--ink);margin-bottom:8px}
+
+  .quote{margin:56px 0 0;padding:34px 0 0;border-top:1px solid var(--line);max-width:760px}
+  .quote p{font-family:var(--serif);font-style:italic;font-size:31px;line-height:1.3;letter-spacing:-.01em;color:var(--ink)}
+  .quote p span{color:var(--accent)}
+  .quote small{display:block;margin-top:14px;font-size:11.5px;letter-spacing:.1em;text-transform:uppercase;color:var(--muted-2);font-weight:600}
+</style>
+</head>
+<body>
+
+<div class="review"><div class="wrap">
+  <b>Modelo C · Montra</b>
+  <a href="#lista">01 · /farmacia</a>
+  <a href="#farmacia">02 · /farmacia/[slug]</a>
+  <a href="modelo-a-indice.html">ver A · Índice</a>
+  <a href="modelo-b-mapa.html">ver B · Mapa e balcão</a>
+  <a href="modelo-d-balcao.html">ver D · Balcão</a>
+  <a href="modelo-e-busca.html">ver E · Busca</a>
+  <a href="modelo-f-ficha.html">ver F · Ficha</a>
+</div></div>
+
+<!-- ============================================================ -->
+<!-- 01 · LISTA                                                   -->
+<!-- ============================================================ -->
+<section id="lista">
+  <header class="hdr"><div class="hdr-in">
+    <a class="logo" href="#"><img src="assets/logo.png" alt="Conheça Farmácia"><span>Localizador</span></a>
+    <nav class="nav">
+      <a href="#">Pesquisar</a>
+      <a class="on" href="#lista">Farmácias</a>
+      <a href="#">Sobre</a>
+    </nav>
+    <span class="hdr-r">conhecafarmacia.com ↗</span>
+  </div></header>
+
+  <div class="wrap">
+    <div class="open">
+      <div>
+        <p class="kicker">A rede · Luanda</p>
+        <h1>A farmácia certa<br>já está <em>confirmada</em>.</h1>
+        <p class="open-sub">Sete farmácias parceiras dizem, produto a produto, o que têm na prateleira agora. Escolha pela zona, veja o stock e reserve antes de sair de casa.</p>
+      </div>
+      <div class="open-aside">
+        <div class="row">
+          <strong class="num">6 / 7</strong>
+          com stock confirmado neste momento
+        </div>
+        <div class="row">
+          <strong class="num">136</strong>
+          produtos visíveis no Localizador
+        </div>
+        <div class="row" style="font-size:11.5px;color:var(--muted-2)">Última leitura às 14:32 · Talatona, Luanda</div>
+      </div>
+    </div>
+
+    <div class="rail">
+      <div class="chips">
+        <a class="chip on" href="#lista">Todas</a>
+        <a class="chip" href="#lista">Talatona</a>
+        <a class="chip" href="#lista">Luanda</a>
+        <a class="chip" href="#lista">Viana</a>
+        <a class="chip" href="#lista">Belas</a>
+        <a class="chip" href="#lista">Cacuaco</a>
+      </div>
+      <span class="rail-r">Ordenadas pelo stock confirmado</span>
+    </div>
+
+    <div class="grid">
+      <!-- Destaque: a farmácia com mais stock é a montra da página, não um
+           cartão igual aos outros. Verde cheio = a marca a apresentar-se. -->
+      <a class="feat" href="#farmacia">
+        <div class="feat-top">
+          <div>
+            <span class="tag">Mais stock agora · Talatona</span>
+            <h2>São Rafael</h2>
+            <p class="where">Rua do Centro Comercial, Belas Business Park</p>
+          </div>
+          <div class="count num">42<small>produtos confirmados</small></div>
+        </div>
+        <div class="feat-foot">
+          <div class="feat-badges">
+            <span><i class="dot on-green"></i> Aberta até 20:00</span>
+            <span><i class="dot on-green"></i> Verificada pela equipa</span>
+            <span><i class="dot on-green"></i> Confirmação há 12 min</span>
+          </div>
+          <span class="btn cream">Ver o stock →</span>
+        </div>
+      </a>
+
+      <article class="card">
+        <div class="card-top">
+          <div>
+            <h3>Kianda</h3>
+            <p class="where">Rua Rainha Ginga 45, Ingombota · Luanda</p>
+          </div>
+          <span class="badge">Verificada</span>
+        </div>
+        <p class="stock num">31 <span>produtos agora</span></p>
+        <div class="card-foot"><span><i class="dot"></i> Aberta até 19:00</span><a href="#farmacia">Ver stock →</a></div>
+      </article>
+
+      <article class="card">
+        <div class="card-top">
+          <div>
+            <h3>Aliança</h3>
+            <p class="where">Largo do Kinaxixi, Maianga · Luanda</p>
+          </div>
+        </div>
+        <p class="stock num">24 <span>produtos agora</span></p>
+        <div class="card-foot"><span><i class="dot off"></i> Abre às 08:00</span><a href="#farmacia">Ver stock →</a></div>
+      </article>
+
+      <article class="card">
+        <div class="card-top">
+          <div>
+            <h3>N'Gola</h3>
+            <p class="where">Estrada de Catete, km 12 · Viana</p>
+          </div>
+          <span class="badge">Verificada</span>
+        </div>
+        <p class="stock num">18 <span>produtos agora</span></p>
+        <div class="card-foot"><span><i class="dot"></i> Aberta até 21:00</span><a href="#farmacia">Ver stock →</a></div>
+      </article>
+
+      <article class="card">
+        <div class="card-top">
+          <div>
+            <h3>Bem-Estar</h3>
+            <p class="where">Via S10, Benfica · Belas</p>
+          </div>
+          <span class="badge">Verificada</span>
+        </div>
+        <p class="stock num">12 <span>produtos agora</span></p>
+        <div class="card-foot"><span><i class="dot"></i> Aberta até 18:30</span><a href="#farmacia">Ver stock →</a></div>
+      </article>
+
+      <article class="card">
+        <div class="card-top">
+          <div>
+            <h3>Horizonte</h3>
+            <p class="where">Estrada de Cacuaco, Zango 2 · Cacuaco</p>
+          </div>
+        </div>
+        <p class="stock num">9 <span>produtos agora</span></p>
+        <div class="card-foot"><span><i class="dot"></i> Aberta 24 h</span><a href="#farmacia">Ver stock →</a></div>
+      </article>
+
+      <!-- Zero é informação, não erro: a farmácia continua na lista, com a
+           razão dita em voz baixa. -->
+      <article class="card">
+        <div class="card-top">
+          <div>
+            <h3>Sagrada Esperança</h3>
+            <p class="where">Rua Amílcar Cabral · Talatona</p>
+          </div>
+        </div>
+        <p class="stock zero">Sem stock confirmado agora</p>
+        <div class="card-foot"><span><i class="dot"></i> Aberta até 19:00</span><a href="#farmacia">Ver ficha →</a></div>
+      </article>
+
+      <div class="aside-card">
+        <h4>Como ler esta página</h4>
+        <p><b>O número é o stock confirmado hoje.</b> Conta produtos distintos — não embalagens.</p>
+        <p>Medicamentos ficam 72 h sem nova confirmação. A parafarmácia, 30 dias. Passado o prazo, saem do Localizador até a farmácia voltar a confirmar.</p>
+        <p class="zero-note">Uma farmácia sem confirmação continua aqui — só não aparece como disponível.</p>
+      </div>
+    </div>
+  </div>
+
+  <footer><div class="wrap">
+    <span>Conheça Farmácia · Localizador de Medicamentos</span>
+    <span>Luanda · 2026 · Dados confirmados pelas farmácias</span>
+  </div></footer>
+</section>
+
+<!-- ============================================================ -->
+<!-- 02 · PÁGINA DA FARMÁCIA                                      -->
+<!-- ============================================================ -->
+<section id="farmacia">
+  <header class="hdr"><div class="hdr-in">
+    <a class="logo" href="#"><img src="assets/logo.png" alt="Conheça Farmácia"><span>Localizador</span></a>
+    <nav class="nav">
+      <a href="#">Pesquisar</a>
+      <a class="on" href="#lista">Farmácias</a>
+      <a href="#">Sobre</a>
+    </nav>
+    <span class="hdr-r">conhecafarmacia.com ↗</span>
+  </div></header>
+
+  <!-- Montra: a farmácia apresenta-se em verde cheio, como a fachada. -->
+  <div class="store">
+    <div class="wrap">
+      <p class="crumb"><a href="#lista">Farmácias</a> &nbsp;/&nbsp; Talatona</p>
+      <div class="store-grid">
+        <div>
+          <p class="kicker">Farmácia parceira · Talatona</p>
+          <h1>São Rafael</h1>
+          <p class="addr">Rua do Centro Comercial, Belas Business Park · Luanda</p>
+          <div class="badges">
+            <span><i class="dot on-green"></i> Aberta até 20:00</span>
+            <span><i class="dot on-green"></i> Stock confirmado há 12 min</span>
+            <span><i class="dot on-green"></i> Verificada pela equipa</span>
+          </div>
+        </div>
+        <div class="acts">
+          <a class="btn cream num" href="#">Ligar · 923 114 500</a>
+          <a class="btn on-green" href="#">WhatsApp</a>
+          <a class="btn on-green" href="#">Direcções</a>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <div class="wrap">
+    <div class="body">
+      <div>
+        <div class="shelf-h">
+          <h2>A prateleira de hoje</h2>
+          <span class="num">42 produtos confirmados · 11 aqui</span>
+        </div>
+
+        <div class="group">
+          <div class="group-h"><b>Críticos</b><span>prioridade máxima</span></div>
+          <div class="shelf">
+            <div class="item">
+              <div>
+                <div class="nm">Insulina NPH 100 UI/ml</div>
+                <div class="mt">10 ml · frasco <span class="rx">Receita</span></div>
+              </div>
+              <div class="rt"><div class="price num">8 500 Kz</div><span class="act">Reservar</span></div>
+            </div>
+            <div class="item">
+              <div>
+                <div class="nm">Carbamazepina 200 mg</div>
+                <div class="mt">cx 30 comprimidos <span class="rx">Receita</span></div>
+              </div>
+              <div class="rt"><div class="price num">3 200 Kz</div><span class="act">Reservar</span></div>
+            </div>
+            <div class="item">
+              <div>
+                <div class="nm">Salbutamol 100 µg</div>
+                <div class="mt">inalador · 200 doses</div>
+              </div>
+              <div class="rt"><div class="price num">4 750 Kz</div><span class="act">Reservar</span></div>
+            </div>
+          </div>
+        </div>
+
+        <div class="group">
+          <div class="group-h"><b>Comprimidos</b><span>8 produtos</span></div>
+          <div class="shelf">
+            <div class="item">
+              <div>
+                <div class="nm">Paracetamol 500 mg</div>
+                <div class="mt">cx 20 · confirmado há 12 min</div>
+              </div>
+              <div class="rt"><div class="price num">950 Kz</div><span class="act">Reservar</span></div>
+            </div>
+            <div class="item">
+              <div>
+                <div class="nm">Amoxicilina 500 mg</div>
+                <div class="mt">cx 21 cápsulas <span class="rx">Receita</span></div>
+              </div>
+              <div class="rt"><div class="price num">2 400 Kz</div><span class="act">Reservar</span></div>
+            </div>
+            <div class="item">
+              <div>
+                <div class="nm">Metformina 850 mg</div>
+                <div class="mt">cx 30 · confirmado há 41 min</div>
+              </div>
+              <div class="rt"><div class="price num">1 850 Kz</div><span class="act">Reservar</span></div>
+            </div>
+            <div class="item">
+              <div>
+                <div class="nm">Omeprazol 20 mg</div>
+                <div class="mt">cx 28 · confirmado há 2 h</div>
+              </div>
+              <div class="rt"><div class="price num">1 200 Kz</div><span class="act">Reservar</span></div>
+            </div>
+            <div class="item">
+              <div>
+                <div class="nm">Ácido fólico 5 mg</div>
+                <div class="mt">cx 30 · confirmado há 2 h</div>
+              </div>
+              <div class="rt"><div class="price num">700 Kz</div><span class="act">Reservar</span></div>
+            </div>
+          </div>
+        </div>
+
+        <div class="group">
+          <div class="group-h"><b>Parafarmácia</b><span>3 produtos · frescura de 30 dias</span></div>
+          <div class="shelf">
+            <div class="item">
+              <div>
+                <div class="nm">Fraldas tamanho M</div>
+                <div class="mt">30 unidades · confirmado há 3 h</div>
+              </div>
+              <div class="rt"><div class="price num">6 400 Kz</div><span class="act off">Só no balcão</span></div>
+            </div>
+            <div class="item">
+              <div>
+                <div class="nm">Creme barreira bebé</div>
+                <div class="mt">100 ml · confirmado ontem</div>
+              </div>
+              <div class="rt"><div class="price num">3 100 Kz</div><span class="act">Reservar</span></div>
+            </div>
+            <div class="item">
+              <div>
+                <div class="nm">Soro fisiológico</div>
+                <div class="mt">500 ml · confirmado ontem</div>
+              </div>
+              <div class="rt"><div class="price num">900 Kz</div><span class="act">Reservar</span></div>
+            </div>
+          </div>
+        </div>
+
+        <div class="quote">
+          <p>“Um medicamento sem confirmação há <span>72 horas</span> deixa de aparecer. A parafarmácia aguenta 30 dias.”</p>
+          <small>A regra que mantém o Localizador honesto</small>
+        </div>
+      </div>
+
+      <aside class="side">
+        <div class="how">
+          <h3>Como chegar</h3>
+          <dl>
+            <dt>Morada</dt>
+            <dd>Rua do Centro Comercial,<br>Belas Business Park, Talatona</dd>
+            <dt>Horário</dt>
+            <dd>Seg–Sáb · 08:00–20:00<br>Domingo · 09:00–13:00</dd>
+            <dt>Telefone</dt>
+            <dd class="num">+244 923 114 500</dd>
+          </dl>
+          <a class="btn ghost" href="#" style="margin-top:18px;width:100%;justify-content:center">Abrir no mapa</a>
+        </div>
+
+        <div class="fresh">
+          <b><i class="dot"></i> Confirmação há 12 min</b>
+          O stock é escrito pela farmácia no portal, produto a produto. Uma reserva concluída baixa o saldo no mesmo instante.
+        </div>
+      </aside>
+    </div>
+  </div>
+
+  <footer><div class="wrap">
+    <span>Conheça Farmácia · Localizador de Medicamentos</span>
+    <span>É farmácia e quer aparecer aqui? Fale com a equipa</span>
+  </div></footer>
+</section>
+
+<script>
+/* Filtro de protótipo: o destaque verde também obedece à zona escolhida. */
+(function () {
+  var root = document.querySelector('#lista');
+  if (!root) return;
+  var chips = Array.prototype.slice.call(root.querySelectorAll('.chips .chip'));
+  var feat = root.querySelector('.feat');
+  var cards = Array.prototype.slice.call(root.querySelectorAll('.card'));
+
+  function zoneOfCard(card) {
+    var parts = card.querySelector('.where').textContent.split('·');
+    return parts[parts.length - 1].trim();
+  }
+  function zoneOfFeat() {
+    var parts = feat.querySelector('.tag').textContent.split('·');
+    return parts[parts.length - 1].trim();
+  }
+  function apply(zone) {
+    feat.style.display = zone === 'Todas' || zoneOfFeat() === zone ? '' : 'none';
+    cards.forEach(function (card) {
+      var show = zone === 'Todas' || zoneOfCard(card) === zone;
+      card.style.display = show ? '' : 'none';
+    });
+  }
+
+  chips.forEach(function (chip) {
+    chip.addEventListener('click', function (event) {
+      event.preventDefault();
+      chips.forEach(function (other) {
+        other.classList.toggle('on', other === chip);
+      });
+      apply(chip.textContent.trim());
+    });
+  });
+})();
+</script>
+</body>
+</html>

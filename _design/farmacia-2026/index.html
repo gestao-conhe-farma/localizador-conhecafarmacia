@@ -1,0 +1,250 @@
+<!doctype html>
+<html lang="pt">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Farmácias públicas — seis modelos</title>
+<style>
+  @font-face{font-family:'Fraunces';font-weight:100 900;font-display:swap;src:url('assets/fraunces-normal.woff2') format('woff2-variations')}
+  @font-face{font-family:'Fraunces';font-style:italic;font-weight:100 900;font-display:swap;src:url('assets/fraunces-italic.woff2') format('woff2-variations')}
+  @font-face{font-family:'Inter';font-weight:100 900;font-display:swap;src:url('assets/inter-normal.woff2') format('woff2-variations')}
+  :root{--paper:#fffdf9;--paper-2:#f7f5f1;--card:#fff;--ink:#002a32;--green:#00493a;--accent:#0a844f;--line:#e3e0d8;--muted:rgba(0,42,50,.58);--muted-2:rgba(0,42,50,.4);--serif:'Fraunces',Georgia,serif;--sans:'Inter',ui-sans-serif,system-ui,sans-serif}
+  *{box-sizing:border-box}
+  body{margin:0;background:var(--paper);color:var(--ink);font-family:var(--sans);font-size:15px;line-height:1.6;-webkit-font-smoothing:antialiased}
+  a{color:inherit;text-decoration:none}
+  h1,h2,h3,p{margin:0}
+  .wrap{max-width:1240px;margin:0 auto;padding:0 40px}
+  .kicker{font-size:11px;font-weight:700;letter-spacing:.22em;text-transform:uppercase;color:var(--accent)}
+  header.top{border-bottom:1px solid var(--line);padding:22px 0}
+  header.top .wrap{display:flex;align-items:center;justify-content:space-between;gap:24px}
+  .brand{display:flex;align-items:center;gap:12px;font-size:12px;letter-spacing:.16em;text-transform:uppercase;color:var(--muted)}
+  .brand img{height:26px}
+  .top-links{display:flex;gap:18px;font-size:12.5px;color:var(--muted)}
+  .top-links a:hover{color:var(--ink)}
+  .intro{padding:58px 0 30px;display:grid;grid-template-columns:1.3fr .7fr;gap:56px;align-items:end}
+  .intro h1{font-family:var(--serif);font-size:52px;font-weight:600;letter-spacing:-.022em;line-height:1.03;margin-top:12px}
+  .intro h1 em{font-style:italic;color:var(--accent)}
+  .intro p{margin-top:16px;color:var(--muted);max-width:56ch}
+  .facts{border-top:1px solid var(--ink);padding-top:14px;font-size:13px;color:var(--muted)}
+  .facts b{display:block;font-family:var(--serif);font-size:22px;color:var(--ink);font-weight:600;margin-bottom:2px}
+  .facts div+div{margin-top:14px}
+
+  .model{border-top:1px solid var(--line);padding:40px 0 54px}
+  .model-head{display:block;margin-bottom:24px}
+  .model-head .letter{font-family:var(--serif);font-size:13px;color:var(--muted-2);letter-spacing:.12em}
+  .model-head h2{font-family:var(--serif);font-size:34px;font-weight:600;letter-spacing:-.018em;line-height:1.1;margin:2px 0 8px}
+  .model-head p{color:var(--muted);max-width:84ch}
+  .model-head .shots{margin-top:26px}
+  .model-meta{display:flex;flex-wrap:wrap;gap:8px;margin-top:14px}
+  .tag{font-size:11px;letter-spacing:.06em;border:1px solid var(--line);border-radius:999px;padding:4px 11px;color:var(--muted)}
+  .model-meta a{margin-left:6px;font-size:11.5px;font-weight:700;letter-spacing:.1em;text-transform:uppercase;color:var(--accent);align-self:center}
+  .model-meta a:hover{text-decoration:underline}
+
+  .shots{display:grid;grid-template-columns:1fr 1fr;gap:26px}
+  .shots.three{grid-template-columns:repeat(3,1fr)}
+  figure{margin:0}
+  figure img{width:100%;display:block;border:1px solid var(--line);background:var(--card)}
+  figcaption{margin-top:8px;font-size:11.5px;letter-spacing:.06em;color:var(--muted-2);display:flex;justify-content:space-between;gap:12px}
+
+  .decide{margin-top:18px;padding:22px 24px;background:var(--paper-2);border-left:2px solid var(--green);font-size:13.5px;color:var(--muted);max-width:88ch}
+  .decide b{color:var(--ink)}
+
+  footer{border-top:1px solid var(--line);padding:26px 0 40px;font-size:12px;color:var(--muted-2)}
+  footer .wrap{display:flex;justify-content:space-between;gap:24px;flex-wrap:wrap}
+
+  @media (max-width:960px){
+    .intro,.model-head{grid-template-columns:1fr;gap:26px}
+    .shots,.shots.three{grid-template-columns:1fr}
+  }
+</style>
+</head>
+<body>
+
+<header class="top"><div class="wrap">
+  <span class="brand"><img src="assets/logo.png" alt="Conheça Farmácia"> Localizador · design review</span>
+  <div class="top-links">
+    <a href="#a">A · Índice</a>
+    <a href="#b">B · Mapa e balcão</a>
+    <a href="#c">C · Montra</a>
+    <a href="#d">D · Balcão</a>
+    <a href="#e">E · Busca</a>
+    <a href="#f">F · Ficha</a>
+    <a href="LEIA-ME.md">notas</a>
+  </div>
+</div></header>
+
+<div class="wrap">
+  <div class="intro">
+    <div>
+      <p class="kicker">21 de Outubro de 2026</p>
+      <h1>Duas páginas, seis<br>formas de <em>decidir</em>.</h1>
+      <p>A lista de farmácias e a página de cada farmácia fazem hoje o mesmo trabalho com a mesma roupa. Estes seis modelos mantêm a identidade — papel quente, verde profundo, Fraunces, hairline — e mudam o que o cliente vê primeiro. Os últimos três trazem os comportamentos de loja que faltavam: filtros, preço na lista e ficha de produto em pop-up.</p>
+    </div>
+    <div class="facts">
+      <div><b>7</b> farmácias de demonstração, os mesmos dados nos seis modelos.</div>
+      <div><b>3</b> ecrãs nos modelos de loja: lista, farmácia (São Rafael, Talatona) e ficha de produto.</div>
+      <div><b>0</b> fotografias inventadas — só tipografia, regras e um esboço de mapa assumido.</div>
+    </div>
+  </div>
+
+  <div class="decide" style="max-width:none;margin-top:6px">
+    <b>Segunda ronda (D, E, F):</b> extração de design feita em <a href="https://pharmeasy.in" style="border-bottom:1px solid var(--line)">pharmeasy.in</a> e <a href="https://www.farmacosmo.com" style="border-bottom:1px solid var(--line)">farmacosmo.com</a> para ler os comportamentos padrão de lojas de saúde — cartão com preço e disponibilidade, ficha de produto com indicações e conservação, quantidade e janela de levantamento. A paleta do projecto não mudou. O <b>pharmamarket.eu</b> recusou a extração (Cloudflare, 403), portanto não foi usado como referência visual.
+  </div>
+
+  <div class="decide" style="max-width:none;margin-top:10px">
+    <b>Cartão de prateleira:</b> os cartões do D (e as âncoras do E e do F) seguem a anatomia de loja — imagem grande, nome, embalagem, preço com unidade e acção de largura total. Ficaram de fora o carrinho, o cupão, o preço riscado, a percentagem de desconto e a estimativa de entrega: o Localizador reserva para levantar, não vende nem entrega.
+  </div>
+</div>
+
+<!-- A -->
+<section class="model" id="a">
+  <div class="wrap">
+    <div class="model-head">
+      <div>
+        <p class="letter">Modelo A</p>
+        <h2>Índice editorial</h2>
+        <p>A lista vira um índice: números de ordem, nome em Fraunces, zona, estado e o stock como numeral grande. Sem cartões. Na farmácia, o stock é um catálogo com preço à direita e uma ficha de contacto fixa. É o mais próximo da promessa «o que expira, sai do ar»: tudo o que se vê é informação, não embalagem.</p>
+        <div class="model-meta">
+          <span class="tag">leitura rápida de rede</span>
+          <span class="tag">denso sem ruído</span>
+          <span class="tag">sem mapa</span>
+          <a href="modelo-a-indice.html">abrir modelo →</a>
+        </div>
+      </div>
+      <div class="shots">
+        <figure><img src="shots/a-lista.png" alt="Modelo A, lista de farmácias"><figcaption><span>01 · /farmacia</span><span>lista</span></figcaption></figure>
+        <figure><img src="shots/a-farmacia.png" alt="Modelo A, página da farmácia"><figcaption><span>02 · /farmacia/[slug]</span><span>ficha</span></figcaption></figure>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- B -->
+<section class="model" id="b">
+  <div class="wrap">
+    <div class="model-head">
+      <div>
+        <p class="letter">Modelo B</p>
+        <h2>Mapa e balcão</h2>
+        <p>Resultados à esquerda, mapa à direita. Cada linha traz o stock e o estado das portas, e a farmácia escolhida acende no mapa — que aqui é um esboço declarado, sem geografia inventada. Na página da farmácia, uma banda de frescura diz de quando é o stock e a ficha lateral concentra telefone, horário e direcções.</p>
+        <div class="model-meta">
+          <span class="tag">proximidade</span>
+          <span class="tag">split view</span>
+          <span class="tag">mapa = integração futura</span>
+          <a href="modelo-b-mapa.html">abrir modelo →</a>
+        </div>
+      </div>
+      <div class="shots">
+        <figure><img src="shots/b-lista.png" alt="Modelo B, lista com mapa"><figcaption><span>01 · /farmacia</span><span>lista + mapa</span></figcaption></figure>
+        <figure><img src="shots/b-farmacia.png" alt="Modelo B, página da farmácia"><figcaption><span>02 · /farmacia/[slug]</span><span>stock + ficha</span></figcaption></figure>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- C -->
+<section class="model" id="c">
+  <div class="wrap">
+    <div class="model-head">
+      <div>
+        <p class="letter">Modelo C</p>
+        <h2>Montra</h2>
+        <p>A rede apresenta-se como uma montra: a farmácia com mais stock ocupa um painel verde cheio e as outras ficam em cartões arejados. Na página da farmácia, uma «fachada» verde com o nome em creme abre caminho à prateleira de hoje, com o preço à frente e o produto em duas colunas. É o modelo com mais peso visual e o que mais aproxima a página de uma loja.</p>
+        <div class="model-meta">
+          <span class="tag">destaque comercial</span>
+          <span class="tag">preço à frente</span>
+          <span class="tag">mais cor de marca</span>
+          <a href="modelo-c-montra.html">abrir modelo →</a>
+        </div>
+      </div>
+      <div class="shots">
+        <figure><img src="shots/c-lista.png" alt="Modelo C, lista tipo montra"><figcaption><span>01 · /farmacia</span><span>montra</span></figcaption></figure>
+        <figure><img src="shots/c-farmacia.png" alt="Modelo C, página da farmácia"><figcaption><span>02 · /farmacia/[slug]</span><span>prateleira</span></figcaption></figure>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- D -->
+<section class="model" id="d">
+  <div class="wrap">
+    <div class="model-head">
+      <div>
+        <p class="letter">Modelo D</p>
+        <h2>Balcão</h2>
+        <p>A lista ganha filtros de loja — zona, abertas agora, stock confirmado, críticos com receita — e cada farmácia mostra três produtos com preço e frescura: decide-se sem abrir a ficha. A página da farmácia vira prateleira a sério: barra de categorias fixa e cartões verticais com imagem, nome, embalagem, preço por unidade e uma acção de largura total. Cada cartão abre a ficha completa do produto.</p>
+        <div class="model-meta">
+          <span class="tag">filtros de loja</span>
+          <span class="tag">preço na lista</span>
+          <span class="tag">ficha em pop-up</span>
+          <a href="modelo-d-balcao.html">abrir modelo →</a>
+        </div>
+      </div>
+      <div class="shots three">
+        <figure><img src="shots/d-lista.png" alt="Modelo D, lista com filtros"><figcaption><span>01 · /farmacia</span><span>lista + filtros</span></figcaption></figure>
+        <figure><img src="shots/d-farmacia.png" alt="Modelo D, prateleira da farmácia"><figcaption><span>02 · /farmacia/[slug]</span><span>prateleira</span></figcaption></figure>
+        <figure><img src="shots/d-ficha.png" alt="Modelo D, ficha de produto em pop-up"><figcaption><span>03 · ficha</span><span>duas colunas</span></figcaption></figure>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- E -->
+<section class="model" id="e">
+  <div class="wrap">
+    <div class="model-head">
+      <div>
+        <p class="letter">Modelo E</p>
+        <h2>Busca</h2>
+        <p>Inverte a pergunta: em vez de «que farmácia», começa por «que produto». A pesquisa devolve uma apresentação num cartão-âncora e compara as farmácias que a confirmam — preço, frescura e portas abertas na mesma linha. Na página da farmácia, a ficha de contacto fica fixa à esquerda e a prateleira é uma lista densa, sem cartões: o cartão fica onde ajuda a identificar o produto, não onde atrapalha a comparação.</p>
+        <div class="model-meta">
+          <span class="tag">produto primeiro</span>
+          <span class="tag">comparação de preço</span>
+          <span class="tag">ficha em coluna única</span>
+          <a href="modelo-e-busca.html">abrir modelo →</a>
+        </div>
+      </div>
+      <div class="shots three">
+        <figure><img src="shots/e-lista.png" alt="Modelo E, resultados por produto"><figcaption><span>01 · /farmacia</span><span>busca por produto</span></figcaption></figure>
+        <figure><img src="shots/e-farmacia.png" alt="Modelo E, prateleira em lista"><figcaption><span>02 · /farmacia/[slug]</span><span>ficha + lista</span></figcaption></figure>
+        <figure><img src="shots/e-ficha.png" alt="Modelo E, ficha em coluna única"><figcaption><span>03 · ficha</span><span>coluna única</span></figcaption></figure>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- F -->
+<section class="model" id="f">
+  <div class="wrap">
+    <div class="model-head">
+      <div>
+        <p class="letter">Modelo F</p>
+        <h2>Ficha — três comportamentos</h2>
+        <p>Um laboratório só para o pop-up: a mesma prateleira escurecida, três formas de decidir. <b>Duas colunas</b> responde a tudo; <b>compacta</b> resolve em metade da altura e esconde a bula atrás de um toque; <b>reserva em dois passos</b> transforma a ficha no próprio fluxo — quantidade, janela de levantamento, telemóvel, código. As três fecham com Esc, com o ✕ e com clique fora.</p>
+        <div class="model-meta">
+          <span class="tag">mesma prateleira</span>
+          <span class="tag">3 variantes</span>
+          <span class="tag">fluxo de reserva</span>
+          <a href="modelo-f-ficha.html">abrir modelo →</a>
+        </div>
+      </div>
+      <div class="shots three">
+        <figure><img src="shots/f-v1.png" alt="Ficha em duas colunas"><figcaption><span>F1</span><span>duas colunas</span></figcaption></figure>
+        <figure><img src="shots/f-v2.png" alt="Ficha compacta"><figcaption><span>F2</span><span>compacta</span></figcaption></figure>
+        <figure><img src="shots/f-v3.png" alt="Reserva em dois passos"><figcaption><span>F3</span><span>reserva em 2 passos</span></figcaption></figure>
+      </div>
+    </div>
+  </div>
+</section>
+
+<div class="wrap">
+  <p class="decide"><b>O que decidir:</b> (1) Quem comanda a lista — a farmácia (A/B/C/D) ou o produto (E)? (2) A ficha é um catálogo clínico (D), uma ficha rápida (E/F2) ou já o formulário de reserva (F3)? Escolhido o modelo, os outros servem de banco de peças: os filtros do D, a comparação de preço do E e a validação de telemóvel do F3 combinam entre si.</p>
+</div>
+
+<footer><div class="wrap">
+  <span>Conheça Farmácia · Localizador — modelos de /farmacia e /farmacia/[slug]</span>
+  <span>Capturas a 1440 × 1000 · dados de demonstração</span>
+</div></footer>
+
+</body>
+</html>

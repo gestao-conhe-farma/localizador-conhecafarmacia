@@ -1,0 +1,115 @@
+{
+  "tone": "formal",
+  "pronoun": "third-person",
+  "headingStyle": "unknown",
+  "headingLengthClass": "tight",
+  "ctaVerbs": [
+    {
+      "value": "off",
+      "count": 4
+    },
+    {
+      "value": "hello",
+      "count": 1
+    },
+    {
+      "value": "search",
+      "count": 1
+    },
+    {
+      "value": "medicine",
+      "count": 1
+    },
+    {
+      "value": "lab",
+      "count": 1
+    },
+    {
+      "value": "doctor",
+      "count": 1
+    },
+    {
+      "value": "branded",
+      "count": 1
+    },
+    {
+      "value": "healthcare",
+      "count": 1
+    },
+    {
+      "value": "health",
+      "count": 1
+    },
+    {
+      "value": "plus",
+      "count": 1
+    }
+  ],
+  "buttonPatterns": [
+    {
+      "value": "hello, log in",
+      "count": 1
+    },
+    {
+      "value": "search",
+      "count": 1
+    },
+    {
+      "value": "medicine\n\nsave 27%",
+      "count": 1
+    },
+    {
+      "value": "lab tests\n\nupto 70% off",
+      "count": 1
+    },
+    {
+      "value": "doctor consult\n\nfrom ₹199",
+      "count": 1
+    },
+    {
+      "value": "branded substitute\n\nupto 50% off",
+      "count": 1
+    },
+    {
+      "value": "healthcare\n\nupto 60% off",
+      "count": 1
+    },
+    {
+      "value": "health blogs",
+      "count": 1
+    },
+    {
+      "value": "plus\n\nsave 5% extra",
+      "count": 1
+    },
+    {
+      "value": "offers",
+      "count": 1
+    },
+    {
+      "value": "value store\n\nupto 50% off",
+      "count": 1
+    },
+    {
+      "value": "52% off\n\ncomprehensive full body checkup test with vitamin d and b12\n\n₹4599\n₹2199",
+      "count": 1
+    },
+    {
+      "value": "54% off\n\ncomprehensive plus full body checkup with vitamin d b12 & electrolytes\n\n₹4899\n₹2249",
+      "count": 1
+    },
+    {
+      "value": "43% off\n\naarogyam full body checkup with vitamins\n\n₹4599\n₹2599",
+      "count": 1
+    },
+    {
+      "value": "53% off\n\ncomprehensive bronze full body checkup with cardiac and fever markers\n\npackage with electrolytes, iron profile, cardiac markers & more\n\n₹7199\n₹3399",
+      "count": 1
+    }
+  ],
+  "sampleHeadings": [],
+  "stats": {
+    "buttons": 21,
+    "headings": 0
+  }
+}

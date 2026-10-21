@@ -1,0 +1,30 @@
+Clone the design language of this landing page and build a fresh equivalent.
+Visual feel: flat. Tone: friendly · Headings: Sentence case · CTA verbs: [object Object], [object Object], [object Object], [object Object], [object Object]
+Primary palette: #000000, #373a3c, #0d3464, #efb215, #ffffff.
+Typography: [object Object], [object Object], [object Object], [object Object].
+Corner radius vocabulary: 3, 8, 12, 20, 50.
+Shadow vocabulary: rgba(0, 0, 0, 0.12) 0px 4px 16px 0px.
+Use: Use Bootstrap 5 utility classes. Customize via CSS variables.
+Page structure:
+- pricing-table — heading: "
+              
+                                  100mg/100ml - decongestant nas"
+- sidebar — heading: "
+              
+                                  100mg/100ml - decongestant nas"
+- pricing-table — heading: "Farmacosmo: Your Online Parapharmacy"
+- sidebar
+- pricing-table — heading: "Farmacosmo: Your Online Parapharmacy"
+- pricing-table — heading: "Farmacosmo: Your Online Parapharmacy"
+- gallery
+- pricing-table — heading: "Must-haves for your well-being"
+- pricing-table — heading: "Must-haves for your well-being"
+- pricing-table — heading: "The products most chosen by customers"
+- pricing-table — heading: "The products most chosen by customers"
+- pricing-table — heading: "Bestseller for your daily routine"
+- pricing-table — heading: "Bestseller for your daily routine"
+- faq — heading: "Frequently asked questions"
+- testimonials — heading: "99% satisfied customers"
+- steps — heading: "Farmacosmo is an online pharmacy that guarantees you professionalism and conveni"
+- footer
+- footer

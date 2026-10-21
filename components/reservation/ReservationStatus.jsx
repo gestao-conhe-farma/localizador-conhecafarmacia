@@ -48,6 +48,7 @@ function fmtDate(iso) {
 
 import { originCode } from '@/lib/origin-flags'
 import { fmtKz, estimateTotal, quantityDesc, quantityLine } from '@/lib/reservation-format'
+import { parseReservationNotes } from '@/lib/pickup'
 import { packStructureText } from '@/lib/sale-options'
 
 const UUID_RE = /^[0-9a-f-]{36}$/i
@@ -131,7 +132,7 @@ export default function ReservationStatus({ reservationId }) {
     return (
       <div className="res-track-card">
         <p className="res-track-estado res-track-estado--erro">{shownError}</p>
-        <a href="/pesquisa" className="btn btn-primary">
+        <a href="/pesquisa" className="cf-btn cf-btn--primary">
           Ir ao Localizador
         </a>
       </div>
@@ -140,11 +141,16 @@ export default function ReservationStatus({ reservationId }) {
 
   if (!r) {
     return (
-      <div className="empty-state" role="status">
-        <div className="spinner" />
+      <div className="sh-empty" role="status">
+        <div className="sh-spinner" />
+        <p className="sh-empty-sub">A carregar a reserva…</p>
       </div>
     )
   }
+
+  // Levantamento pedido pelo cliente (dia + hora) e a nota livre ficam
+  // juntos em `notes` — aqui separam-se para cada um ter a sua linha.
+  const { pickup, note: freeNote } = parseReservationNotes(r.notes)
 
   const stepIndex = STEPS.findIndex((s) => s.id === r.status)
   const recusada = r.status === 'recusada'
@@ -239,6 +245,15 @@ export default function ReservationStatus({ reservationId }) {
         </div>
       </div>
 
+      {/* O dia e a hora que o cliente marcou — logo abaixo do cabeçalho,
+          porque é o que ele quer confirmar ao abrir o link. */}
+      {pickup && (
+        <p className="res-track-pickup">
+          <span>Levantamento pretendido</span>
+          <b>{pickup}</b>
+        </p>
+      )}
+
       {recusada || expirada ? (
         <div className="res-track-estado res-track-estado--ruim">
           <b>{expirada ? 'Reserva expirada' : 'Reserva não atendida'}</b>
@@ -253,7 +268,7 @@ export default function ReservationStatus({ reservationId }) {
           </p>
           <a
             href={`/pesquisa?q=${encodeURIComponent(r.drugs?.name || '')}`}
-            className="btn btn-primary"
+            className="cf-btn cf-btn--primary"
           >
             Procurar noutras farmácias
           </a>
@@ -288,7 +303,7 @@ export default function ReservationStatus({ reservationId }) {
           <span className="res-track-price-note"> a confirmar no balcão</span>
         </p>
       )}
-      {r.notes && <p className="res-track-note">A sua nota: “{r.notes}”</p>}
+      {freeNote && <p className="res-track-note">A sua nota: “{freeNote}”</p>}
 
       {waMessage && r.status !== 'concluida' && (
         <div className="res-track-contact">
@@ -297,7 +312,7 @@ export default function ReservationStatus({ reservationId }) {
               href={waLinkHref}
               target="_blank"
               rel="noopener noreferrer"
-              className="btn btn-secondary res-track-wa"
+              className="cf-btn cf-btn--ghost res-track-wa"
             >
               Falar com a {r.pharmacies?.name} no WhatsApp
             </a>
@@ -307,7 +322,7 @@ export default function ReservationStatus({ reservationId }) {
           {waNumber && (
             <a
               href={`tel:${String(waNumber).replace(/[^\d+]/g, '')}`}
-              className="btn btn-secondary res-track-call"
+              className="cf-btn cf-btn--ghost res-track-call"
             >
               Ligar
             </a>
@@ -317,7 +332,7 @@ export default function ReservationStatus({ reservationId }) {
               navigator.clipboard (HTTP puro, por ex.). */}
           <button
             type="button"
-            className="btn btn-secondary res-track-copy"
+            className="cf-btn cf-btn--ghost res-track-copy"
             onClick={async () => {
               try {
                 await navigator.clipboard.writeText(waMessage)

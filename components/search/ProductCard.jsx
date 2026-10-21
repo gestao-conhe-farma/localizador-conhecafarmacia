@@ -1,5 +1,14 @@
 import Link from 'next/link'
-import { activeOptions, cardMeta, drugImageUrl, freshness, kindLabel, priceOf, productHref, quantityText } from '@/lib/product-utils'
+import {
+  activeOptions,
+  cardMeta,
+  drugImageUrl,
+  freshness,
+  kindLabel,
+  priceOf,
+  productHref,
+  quantityText,
+} from '@/lib/product-utils'
 import { formatOptionLabel, unitLabel } from '@/lib/sale-options'
 
 /**
@@ -10,7 +19,7 @@ import { formatOptionLabel, unitLabel } from '@/lib/sale-options'
  * lugar da foto é ocupado pela embalagem tipográfica com os dados reais
  * (marca, nome, forma, quantidade) — nunca por uma imagem inventada.
  */
-export default function ProductCard({ item, flat = false, ctaLabel, priceLabel }) {
+export default function ProductCard({ item, flat = false, ctaLabel, priceLabel, onOpen = null }) {
   if (!item) return null
   const photo = drugImageUrl(item.image_path)
   const opts = activeOptions(item)
@@ -20,11 +29,25 @@ export default function ProductCard({ item, flat = false, ctaLabel, priceLabel }
   const showKind = kind !== 'medicamento'
   const label = ctaLabel || (item.reservable === false ? 'Ver ficha' : 'Ver ficha e reservar')
 
+  // Com `onOpen`, o cartão abre a ficha em modal sobre a lista em vez de
+  // navegar. Ctrl/Cmd/Shift/clique do meio continuam a abrir a rota numa
+  // nova aba — o href não é decorativo.
+  const openProps = onOpen
+    ? {
+        onClick: (e) => {
+          if (e.metaKey || e.ctrlKey || e.shiftKey || e.altKey || e.button !== 0) return
+          e.preventDefault()
+          onOpen(item.stock_item_id)
+        },
+      }
+    : null
+
   return (
     <Link
       href={productHref(item.stock_item_id)}
       className={`pcard${flat ? ' pcard--flat' : ''}`}
       aria-label={`${item.drug_name} — ${label}`}
+      {...openProps}
     >
       <div className="pcard-media">
         <div className="pcard-flags">
@@ -83,9 +106,7 @@ export default function ProductCard({ item, flat = false, ctaLabel, priceLabel }
         )}
       </div>
 
-      <span className="pcard-cta">
-        {label} <span aria-hidden="true">→</span>
-      </span>
+      <span className="pcard-cta">{label}</span>
     </Link>
   )
 }

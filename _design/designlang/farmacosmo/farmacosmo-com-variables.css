@@ -1,0 +1,152 @@
+:root {
+  /* Colors — Primary */
+  --color-primary: #fece00;
+  --color-secondary: #0d3464;
+  --color-accent: #0e4650;
+
+  /* Colors — Neutrals */
+  --color-neutral-50: #000000;
+  --color-neutral-100: #373a3c;
+  --color-neutral-200: #ffffff;
+  --color-neutral-300: #7a7a7a;
+  --color-neutral-400: #92989f;
+  --color-neutral-500: #f4f4f4;
+  --color-neutral-600: #c3c3c3;
+  --color-neutral-700: #eaf9ff;
+  --color-neutral-800: #d3d3d3;
+  --color-neutral-900: #e8e9ea;
+
+  /* Colors — Backgrounds */
+  --color-bg: #ffffff;
+  --color-bg-1: #0d3464;
+  --color-bg-2: #fff7f7;
+  --color-bg-3: #d8e9ff;
+  --color-bg-4: #e4dafd;
+  --color-bg-5: #eaf9ff;
+  --color-bg-6: #283646;
+  --color-bg-7: #f2f2f2;
+  --color-bg-8: #123663;
+
+  /* Colors — Text */
+  --color-text: #000000;
+  --color-text-1: #ffffff;
+  --color-text-2: #0d3464;
+  --color-text-3: #55595c;
+  --color-text-4: #222222;
+
+  /* Typography — Families */
+  --font-sans: 'proxima-nova-regular', sans-serif;
+  --font-body: 'Font Awesome 6 Free', sans-serif;
+  --font-font-2: 'montserrat-semibold', sans-serif;
+  --font-font-3: 'proxima-nova-medium', sans-serif;
+  --font-font-4: 'sans-serif', sans-serif;
+  --font-body: 'montserrat-medium', sans-serif;
+  --font-font-6: 'montserrat-bold', sans-serif;
+  --font-font-7: 'proxima-nova-bold', sans-serif;
+  --font-body: 'proxima-nova-extrabold', sans-serif;
+  --font-heading: 'proxima-nova-semibold', sans-serif;
+
+  /* Typography — Scale */
+  --font-size-29: 29px;
+  --font-size-22: 22px;
+  --font-size-20: 20px;
+  --font-size-19: 19px;
+  --font-size-18.72: 18.72px;
+  --font-size-18: 18px;
+  --font-size-16: 16px;
+  --font-size-15.21: 15.21px;
+  --font-size-15: 15px;
+  --font-size-14: 14px;
+  --font-size-13.8: 13.8px;
+  --font-size-13: 13px;
+
+  /* Spacing */
+  --spacing-0: 0px;
+  --spacing-20: 20px;
+  --spacing-24: 24px;
+  --spacing-30: 30px;
+  --spacing-32: 32px;
+  --spacing-35: 35px;
+  --spacing-37: 37px;
+  --spacing-40: 40px;
+  --spacing-43: 43px;
+  --spacing-58: 58px;
+  --spacing-95: 95px;
+  --spacing-135: 135px;
+  --spacing-155: 155px;
+  --spacing-361: 361px;
+
+  /* Border Radius */
+  --radius-sm: 3px;
+  --radius-md: 8px;
+  --radius-lg: 12px;
+  --radius-xl: 20px;
+  --radius-full: 50px;
+
+  /* Box Shadows */
+  --shadow-lg: rgba(0, 0, 0, 0.12) 0px 4px 16px 0px;
+
+  /* Original Site Variables */
+  /* — colors — */
+  --swiper-theme-color: #007aff;
+  --df-accent-on-tertiary: #fafafa;
+  --df-accent-secondary: #737678;
+  --df-accent-primary-hover: #065dea;
+  --df-accent-tertiary: #323334;
+  --df-accent-on-primary: #f5f9ff;
+  --df-accent-tertiary-active: #191a1a;
+  --df-accent-secondary-hover: #66696b;
+  --df-accent-secondary-active: #5a5c5e;
+  --df-accent-on-secondary: #fafafa;
+  --df-accent-primary-active: #0553d1;
+  --df-accent-primary: #1069f9;
+  --df-accent-tertiary-hover: #252627;
+  /* — spacing — */
+  --swiper-navigation-size: 44px;
+  --mm-listitem-size: 50px;
+  --mm-navbar-size: 50px;
+  --mm-toggle-size: 34px;
+  --mm-size: 80%;
+  --mm-min-size: 240px;
+  --mm-max-size: 440px;
+  --mm-iconbar-size: 50px;
+  --mm-iconpanel-size: 50px;
+  --mm-sectionindexer-size: 20px;
+  --mm-sidebar-collapsed-size: 50px;
+  --mm-sidebar-expanded-size: var(--mm-max-size);
+  /* — typography — */
+  --fa-font-regular: normal 400 1em/1 "Font Awesome 6 Free";
+  --fa-font-brands: normal 400 1em/1 "Font Awesome 6 Brands";
+  --fa-font-solid: normal 900 1em/1 "Font Awesome 6 Free";
+  /* — other — */
+  --searchbar-height: 79px;
+  --navbar-height: 60px;
+  --larghezzaMenu: 1240px;
+  --mm-lineheight: 22px;
+  --mm-blocker-visibility-delay: 0.4s;
+  --mm-blocker-opacity-delay: 0s;
+  --main-header-fixed-height: 92px;
+  --header-height: 92px;
+  --larghezzaPrimoLivello: 300px;
+  --larghezzMenu: 1240px;
+  --larghezzaSottomenu: 600px;
+  --fa-style-family-classic: "Font Awesome 6 Free";
+  --df-neutral-disabled: #eff0f0;
+  --df-neutral-low-contrast: #cbcccd;
+  --df-neutral-outline: #cbcccd;
+  --df-neutral-high-contrast: #323334;
+  --df-neutral-surface: #fff;
+  --df-neutral-background: #fff;
+  --df-neutral-surface-variant: #e5e6e6;
+  --df-layer-animation-duration: 0.5s;
+  --df-neutral-medium-contrast: #737678;
+  --fa-style-family-brands: "Font Awesome 6 Brands";
+  /* — dependencies — */
+  --mm-sidebar-expanded-size: --mm-max-size;
+  /* — semantic — */
+  success: [object Object];
+  warning: [object Object];
+  error: [object Object];
+  info: [object Object];
+
+}

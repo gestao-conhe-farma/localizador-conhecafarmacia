@@ -1,0 +1,49 @@
+{
+  "pageIntent": {
+    "type": "landing",
+    "confidence": 0.45,
+    "path": "/",
+    "title": "Um momento…",
+    "description": "",
+    "signals": [
+      {
+        "kind": "url",
+        "type": "landing",
+        "weight": 0.45,
+        "detail": "root-path"
+      }
+    ],
+    "alternates": [],
+    "needsSmart": true
+  },
+  "sectionRoles": {
+    "sections": [
+      {
+        "index": 0,
+        "tag": "div",
+        "role": "footer",
+        "subrole": null,
+        "confidence": 0.4,
+        "heading": null,
+        "bounds": {
+          "x": 160,
+          "y": 730,
+          "w": 960,
+          "h": 70
+        },
+        "buttonCount": 0,
+        "cardCount": 0,
+        "slots": {
+          "lede": "Ray ID: a4de3f47ac360ade\nDesempenho e segurança da Cloudflare\nPrivacidade"
+        },
+        "needsSmart": true
+      }
+    ],
+    "counts": {
+      "footer": 1
+    },
+    "readingOrder": [
+      "footer"
+    ]
+  }
+}

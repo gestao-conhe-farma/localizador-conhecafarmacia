@@ -1,0 +1,346 @@
+{
+  "$metadata": {
+    "generator": "designlang",
+    "version": "7.0.0",
+    "spec": "https://design-tokens.github.io/community-group/format/",
+    "source": "https://www.farmacosmo.com",
+    "generatedAt": "2026-10-21T06:39:07.772Z"
+  },
+  "primitive": {
+    "color": {
+      "brand": {
+        "primary": {
+          "$value": "#fece00",
+          "$type": "color"
+        },
+        "secondary": {
+          "$value": "#0d3464",
+          "$type": "color"
+        }
+      },
+      "neutral": {
+        "n100": {
+          "$value": "#000000",
+          "$type": "color"
+        },
+        "n200": {
+          "$value": "#373a3c",
+          "$type": "color"
+        },
+        "n300": {
+          "$value": "#ffffff",
+          "$type": "color"
+        },
+        "n400": {
+          "$value": "#7a7a7a",
+          "$type": "color"
+        },
+        "n500": {
+          "$value": "#92989f",
+          "$type": "color"
+        },
+        "n600": {
+          "$value": "#f4f4f4",
+          "$type": "color"
+        },
+        "n700": {
+          "$value": "#c3c3c3",
+          "$type": "color"
+        },
+        "n800": {
+          "$value": "#eaf9ff",
+          "$type": "color"
+        },
+        "n900": {
+          "$value": "#d3d3d3",
+          "$type": "color"
+        },
+        "n1000": {
+          "$value": "#e8e9ea",
+          "$type": "color"
+        },
+        "n1100": {
+          "$value": "#222222",
+          "$type": "color"
+        },
+        "n1200": {
+          "$value": "#55595c",
+          "$type": "color"
+        },
+        "n1300": {
+          "$value": "#707070",
+          "$type": "color"
+        },
+        "n1400": {
+          "$value": "#666666",
+          "$type": "color"
+        },
+        "n1500": {
+          "$value": "#888888",
+          "$type": "color"
+        },
+        "n1600": {
+          "$value": "#e0e0e0",
+          "$type": "color"
+        }
+      },
+      "background": {
+        "bg0": {
+          "$value": "#ffffff",
+          "$type": "color"
+        },
+        "bg1": {
+          "$value": "#0d3464",
+          "$type": "color"
+        },
+        "bg2": {
+          "$value": "#fff7f7",
+          "$type": "color"
+        },
+        "bg3": {
+          "$value": "#d8e9ff",
+          "$type": "color"
+        },
+        "bg4": {
+          "$value": "#e4dafd",
+          "$type": "color"
+        },
+        "bg5": {
+          "$value": "#eaf9ff",
+          "$type": "color"
+        },
+        "bg6": {
+          "$value": "#283646",
+          "$type": "color"
+        },
+        "bg7": {
+          "$value": "#f2f2f2",
+          "$type": "color"
+        },
+        "bg8": {
+          "$value": "#123663",
+          "$type": "color"
+        }
+      },
+      "text": {
+        "text0": {
+          "$value": "#000000",
+          "$type": "color"
+        },
+        "text1": {
+          "$value": "#ffffff",
+          "$type": "color"
+        },
+        "text2": {
+          "$value": "#0d3464",
+          "$type": "color"
+        },
+        "text3": {
+          "$value": "#55595c",
+          "$type": "color"
+        },
+        "text4": {
+          "$value": "#222222",
+          "$type": "color"
+        },
+        "text5": {
+          "$value": "#1a73e8",
+          "$type": "color"
+        },
+        "text6": {
+          "$value": "#666666",
+          "$type": "color"
+        },
+        "text7": {
+          "$value": "#7a7a7a",
+          "$type": "color"
+        },
+        "text8": {
+          "$value": "#373a3c",
+          "$type": "color"
+        },
+        "text9": {
+          "$value": "#55cdff",
+          "$type": "color"
+        }
+      }
+    },
+    "spacing": {
+      "s0": {
+        "$value": "0px",
+        "$type": "dimension"
+      },
+      "s1": {
+        "$value": "20px",
+        "$type": "dimension"
+      },
+      "s2": {
+        "$value": "24px",
+        "$type": "dimension"
+      },
+      "s3": {
+        "$value": "30px",
+        "$type": "dimension"
+      },
+      "s4": {
+        "$value": "32px",
+        "$type": "dimension"
+      },
+      "s5": {
+        "$value": "35px",
+        "$type": "dimension"
+      },
+      "s6": {
+        "$value": "37px",
+        "$type": "dimension"
+      },
+      "s7": {
+        "$value": "40px",
+        "$type": "dimension"
+      },
+      "s8": {
+        "$value": "43px",
+        "$type": "dimension"
+      },
+      "s9": {
+        "$value": "58px",
+        "$type": "dimension"
+      },
+      "s10": {
+        "$value": "95px",
+        "$type": "dimension"
+      },
+      "s11": {
+        "$value": "135px",
+        "$type": "dimension"
+      },
+      "s12": {
+        "$value": "155px",
+        "$type": "dimension"
+      },
+      "s13": {
+        "$value": "361px",
+        "$type": "dimension"
+      }
+    },
+    "radius": {
+      "r0": {
+        "$value": "3px",
+        "$type": "dimension"
+      },
+      "r1": {
+        "$value": "8px",
+        "$type": "dimension"
+      },
+      "r2": {
+        "$value": "12px",
+        "$type": "dimension"
+      },
+      "r3": {
+        "$value": "20px",
+        "$type": "dimension"
+      },
+      "r4": {
+        "$value": "50px",
+        "$type": "dimension"
+      }
+    },
+    "shadow": {
+      "sh0": {
+        "$value": "rgba(0, 0, 0, 0.12) 0px 4px 16px 0px",
+        "$type": "shadow"
+      }
+    },
+    "fontFamily": {
+      "f0": {
+        "$value": "proxima-nova-regular",
+        "$type": "fontFamily"
+      },
+      "f1": {
+        "$value": "Font Awesome 6 Free",
+        "$type": "fontFamily"
+      },
+      "f2": {
+        "$value": "montserrat-semibold",
+        "$type": "fontFamily"
+      },
+      "f3": {
+        "$value": "proxima-nova-medium",
+        "$type": "fontFamily"
+      },
+      "f4": {
+        "$value": "sans-serif",
+        "$type": "fontFamily"
+      },
+      "f5": {
+        "$value": "montserrat-medium",
+        "$type": "fontFamily"
+      },
+      "f6": {
+        "$value": "montserrat-bold",
+        "$type": "fontFamily"
+      },
+      "f7": {
+        "$value": "proxima-nova-bold",
+        "$type": "fontFamily"
+      },
+      "f8": {
+        "$value": "proxima-nova-extrabold",
+        "$type": "fontFamily"
+      },
+      "f9": {
+        "$value": "proxima-nova-semibold",
+        "$type": "fontFamily"
+      }
+    }
+  },
+  "semantic": {
+    "color": {
+      "action": {
+        "primary": {
+          "$value": "{primitive.color.brand.primary}",
+          "$type": "color"
+        },
+        "secondary": {
+          "$value": "{primitive.color.brand.secondary}",
+          "$type": "color"
+        }
+      },
+      "surface": {
+        "default": {
+          "$value": "{primitive.color.background.bg0}",
+          "$type": "color"
+        }
+      },
+      "text": {
+        "body": {
+          "$value": "{primitive.color.text.text0}",
+          "$type": "color"
+        }
+      }
+    },
+    "typography": {
+      "body": {
+        "$value": {
+          "fontFamily": "proxima-nova-regular",
+          "fontSize": "29px",
+          "fontWeight": "400",
+          "lineHeight": "43.5px"
+        },
+        "$type": "typography"
+      }
+    },
+    "radius": {
+      "control": {
+        "$value": "{primitive.radius.r0}",
+        "$type": "dimension"
+      }
+    },
+    "shadow": {
+      "elevated": {
+        "$value": "{primitive.shadow.sh0}",
+        "$type": "shadow"
+      }
+    }
+  }
+}

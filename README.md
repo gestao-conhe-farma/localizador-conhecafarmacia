@@ -46,6 +46,17 @@ SPF/DKIM). Sem isso o envio falha com `EMAIL_RECUSADO` e a UI diz o que corrigir
 O plano gratuito dá 100 e-mails/dia e 3.000/mês. O template e o mapeamento de erros
 vivem em `lib/email.js`; o envio é feito em `lib/actions/leads.js` (`convidarDono`).
 
+### Perfil de balcão (portal)
+
+`STAFF_COOKIE_SECRET` assina o cookie `portal-staff` (perfil de farmacêutico activo).
+É opcional: sem ela o segredo é derivado da `SUPABASE_SERVICE_ROLE_KEY` com
+separação de domínio, por isso o portal não fica sem login. Definir um valor
+próprio e aleatório isola a rotação de segredos dos cookies de balcão (24 h):
+
+```
+STAFF_COOKIE_SECRET=<openssl rand -hex 32>
+```
+
 Para os restantes e-mails do Supabase Auth (ex.: reposição de senha), configurar
 SMTP próprio em **Authentication → Emails → SMTP Settings**: `smtp.resend.com`,
 porta `465`, user `resend`, password = a mesma API key.

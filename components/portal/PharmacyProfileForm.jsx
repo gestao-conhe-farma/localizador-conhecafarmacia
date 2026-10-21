@@ -4,6 +4,7 @@ import Link from 'next/link'
 import { useState } from 'react'
 import { useRouter } from 'next/navigation'
 import { updatePharmacyProfile } from '@/lib/actions/pharmacy-portal'
+import LocationPicker from '@/components/portal/LocationPicker'
 import SettingsSection from '@/components/ui/SettingsSection'
 
 const ERRORES = {
@@ -28,14 +29,33 @@ const ERRORES = {
  * sessão iniciada. O email da farmácia entra aqui (migração 0019) —
  * antes só existia no drawer «Editar informações» da sessão.
  *
- * A localização é o link partilhado do Google Maps (migração 0009) — o
- * Localizador usa-o no botão «Google Maps» da página pública. Slug,
- * nome, município e selo «verificada» ficam sob gestão da equipa.
+ * A localização tem duas portas: o mapa (clique = alfinete = lat/lng) e
+ * os campos de coordenadas, para quem já as tem à mão. Ambas escrevem no
+ * mesmo par de campos controlados que vai no FormData. O link partilhado
+ * do Google Maps (migração 0009) continua a ser o botão da página
+ * pública. Slug, nome, município e selo «verificada» ficam sob gestão da
+ * equipa.
  */
+
+/** Coordenada escrita à mão: aceita vírgula decimal, vazio = null. */
+function parseCoord(value) {
+  const raw = String(value ?? '')
+    .trim()
+    .replace(',', '.')
+  if (!raw) return null
+  const n = Number(raw)
+  return Number.isFinite(n) ? n : null
+}
+
 export default function PharmacyProfileForm({ pharmacy, accountEmail = '' }) {
   const router = useRouter()
   const [saving, setSaving] = useState(false)
   const [toast, setToast] = useState(null) // { type: 'ok'|'err', text }
+  // Coordenadas controladas: o mapa e os campos escrevem no mesmo sítio.
+  const [coords, setCoords] = useState(() => ({
+    lat: pharmacy.lat ?? '',
+    lng: pharmacy.lng ?? '',
+  }))
 
   const submit = async (e) => {
     e.preventDefault()
@@ -49,8 +69,8 @@ export default function PharmacyProfileForm({ pharmacy, accountEmail = '' }) {
       whatsapp: fd.get('whatsapp') || '',
       openingHours: fd.get('openingHours') || '',
       mapsUrl: fd.get('mapsUrl') || '',
-      lat: fd.get('lat') || '',
-      lng: fd.get('lng') || '',
+      lat: coords.lat,
+      lng: coords.lng,
     })
     setSaving(false)
     if (res.ok) {
@@ -152,13 +172,20 @@ export default function PharmacyProfileForm({ pharmacy, accountEmail = '' }) {
                 Usado nos botões <b>falar com a farmácia</b>
               </span>
             </label>
+          </div>
+
+          {/* Par de coordenadas: meia largura cada, com a explicação
+              por baixo a toda a largura (no restante grid ficava
+              espremida numa coluna de 200px). */}
+          <div className="portal-coord-row">
             <label className="portal-label">
               Latitude
               <input
                 name="lat"
                 className="portal-input"
                 inputMode="decimal"
-                defaultValue={pharmacy.lat ?? ''}
+                value={coords.lat}
+                onChange={(e) => setCoords((c) => ({ ...c, lat: e.target.value }))}
                 placeholder="-8,838"
               />
             </label>
@@ -168,15 +195,30 @@ export default function PharmacyProfileForm({ pharmacy, accountEmail = '' }) {
                 name="lng"
                 className="portal-input"
                 inputMode="decimal"
-                defaultValue={pharmacy.lng ?? ''}
+                value={coords.lng}
+                onChange={(e) => setCoords((c) => ({ ...c, lng: e.target.value }))}
                 placeholder="13,234"
               />
-              <span className="portal-hint">
-                Abra a farmácia no Google Maps, clique com o botão direito sobre o alfinete e
-                copie as coordenadas. É o que coloca o alfinete no mapa e permite ordenar por
-                distância. Vazio = centro do município.
-              </span>
             </label>
+            <span className="portal-hint">
+              Clique no mapa abaixo — o alfinete preenche estes dois campos. Também pode colar as
+              coordenadas do Google Maps (botão direito sobre o alfinete → copiar). Vazio = centro
+              do município.
+            </span>
+          </div>
+
+          <div className="map-picker-field">
+            <span className="portal-label">Localização no mapa</span>
+            <LocationPicker
+              lat={parseCoord(coords.lat)}
+              lng={parseCoord(coords.lng)}
+              municipio={pharmacy.municipio}
+              onChange={(point) =>
+                setCoords(
+                  point ? { lat: String(point.lat), lng: String(point.lng) } : { lat: '', lng: '' },
+                )
+              }
+            />
           </div>
           <label className="portal-label" style={{ marginBottom: 0 }}>
             Link do Google Maps
@@ -188,8 +230,8 @@ export default function PharmacyProfileForm({ pharmacy, accountEmail = '' }) {
               placeholder="https://maps.app.goo.gl/…"
             />
             <span className="portal-hint">
-              No Google Maps: pesquise a farmácia → <b>Partilhar</b> → copie o link e cole aqui.
-              Sem link, usamos a morada para o cliente encontrar.
+              No Google Maps: pesquise a farmácia → <b>Partilhar</b> → copie o link e cole aqui. Sem
+              link, usamos a morada para o cliente encontrar.
             </span>
           </label>
         </div>

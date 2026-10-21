@@ -526,6 +526,13 @@ html.dark .form-note {
   /* Footer */
   .footer {
     @apply bg-brand-deep text-white py-16;
+    margin-top: 96px;
+  }
+
+  @media (max-width: 640px) {
+    .footer {
+      margin-top: 56px;
+    }
   }
 
   html.dark .footer {
@@ -1767,8 +1774,17 @@ html.dark .form-note {
      Compacto, estilo Modelo F. O footer da homepage
      usa .footer e não é afectado.
      ============================================ */
+  /* Respiro entre o conteúdo e o rodapé nas páginas do Localizador.
+     Sem isto o rodapé encostava ao último cartão/secção. */
   .app-footer {
     @apply border-t border-brand-line bg-brand-bg;
+    margin-top: 96px;
+  }
+
+  @media (max-width: 640px) {
+    .app-footer {
+      margin-top: 56px;
+    }
   }
 
   .app-footer-in {
@@ -3679,6 +3695,214 @@ html.dark .form-note {
 
   .portal-form-grid--three {
     grid-template-columns: repeat(auto-fit, minmax(160px, 1fr));
+  }
+
+  /* ============================================================
+     MAPA DE ESCOLHA DE LOCALIZAÇÃO (/portal/perfil)
+     Tiles raster do OpenStreetMap posicionadas à mão — a CSP do
+     proxy.js só autoriza tile.openstreetmap.org, por isso nada de
+     bibliotecas de mapas (que pedem outros domínios e uma chave).
+     ============================================================ */
+  /* Coordenadas: dois campos lado a lado, a explicação por baixo ao
+     comprimento todo. Numa célula só do form-grid (200px) o texto do
+     hint ficava numa coluna estreita de seis linhas. */
+  .portal-coord-row {
+    @apply grid gap-x-4 gap-y-1.5 mt-4;
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+  }
+
+  .portal-coord-row .portal-hint {
+    grid-column: 1 / -1;
+  }
+
+  .map-picker-field {
+    @apply flex flex-col gap-1.5 mt-4;
+  }
+
+  .map-picker {
+    @apply flex flex-col gap-2;
+  }
+
+  .map-picker__surface {
+    position: relative;
+    height: 340px;
+    overflow: hidden;
+    border: 1px solid var(--color-brand-line);
+    border-radius: 0.75rem;
+    background: var(--color-brand-bg);
+    cursor: grab;
+    touch-action: none;
+    outline: none;
+    user-select: none;
+  }
+
+  .map-picker__surface:focus-visible {
+    outline: 2px solid var(--color-brand-accent);
+    outline-offset: 2px;
+  }
+
+  .map-picker__surface.is-dragging {
+    cursor: grabbing;
+  }
+
+  .map-picker__tile {
+    position: absolute;
+    left: 0;
+    top: 0;
+    width: 256px;
+    height: 256px;
+    pointer-events: none;
+    user-select: none;
+    will-change: transform;
+  }
+
+  /* Círculo centrado no ponto — o mesmo alfinete da página pública, para
+     o gestor reconhecer o sítio exacto que o cliente vai ver. */
+  .map-picker__pin {
+    position: absolute;
+    left: 0;
+    top: 0;
+    width: 22px;
+    height: 22px;
+    margin-left: -11px;
+    margin-top: -11px;
+    border-radius: 50%;
+    background: var(--color-brand-accent);
+    border: 3px solid var(--color-brand-bg);
+    box-shadow:
+      0 0 0 1px rgb(0 25 29 / 0.18),
+      0 6px 16px rgb(0 25 29 / 0.3);
+    pointer-events: none;
+    display: grid;
+    place-items: center;
+  }
+
+  .map-picker__pin i {
+    width: 6px;
+    height: 6px;
+    border-radius: 50%;
+    background: var(--color-brand-bg);
+  }
+
+  .map-picker__zoom {
+    position: absolute;
+    top: 10px;
+    right: 10px;
+    display: flex;
+    flex-direction: column;
+    gap: 4px;
+  }
+
+  .map-picker__zoom button {
+    width: 34px;
+    height: 34px;
+    display: grid;
+    place-items: center;
+    border: 1px solid var(--color-brand-line);
+    border-radius: 0.5rem;
+    background: var(--color-brand-card);
+    color: var(--color-brand-deep);
+    font-size: 18px;
+    line-height: 1;
+    cursor: pointer;
+    box-shadow: 0 2px 8px rgb(0 25 29 / 0.12);
+  }
+
+  .map-picker__zoom button:hover:not(:disabled) {
+    border-color: var(--color-brand-accent);
+    color: var(--color-brand-accent);
+  }
+
+  .map-picker__zoom button:disabled {
+    opacity: 0.45;
+    cursor: default;
+  }
+
+  .map-picker__readout {
+    position: absolute;
+    left: 10px;
+    bottom: 10px;
+    padding: 4px 8px;
+    border: 1px solid var(--color-brand-line);
+    border-radius: 0.375rem;
+    background: color-mix(in srgb, var(--color-brand-card) 92%, transparent);
+    font-size: 11px;
+    font-variant-numeric: tabular-nums;
+    color: var(--color-brand-deep);
+  }
+
+  .map-picker__credit {
+    position: absolute;
+    right: 8px;
+    bottom: 8px;
+    padding: 2px 6px;
+    border-radius: 0.25rem;
+    background: color-mix(in srgb, var(--color-brand-card) 85%, transparent);
+    font-size: 10px;
+    color: var(--color-brand-deep);
+    opacity: 0.7;
+  }
+
+  .map-picker__credit:hover {
+    opacity: 1;
+    text-decoration: underline;
+  }
+
+  .map-picker__bar {
+    display: flex;
+    flex-wrap: wrap;
+    align-items: center;
+    justify-content: space-between;
+    gap: 8px 12px;
+  }
+
+  .map-picker__hint {
+    @apply text-xs;
+    color: var(--color-brand-deep-60, rgb(0 73 58 / 0.6));
+    line-height: 1.5;
+    max-width: 52ch;
+  }
+
+  .map-picker__hint kbd {
+    font-family: inherit;
+    border: 1px solid var(--color-brand-line);
+    border-radius: 0.25rem;
+    padding: 0 4px;
+    font-size: 10px;
+  }
+
+  .map-picker__actions {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 6px;
+  }
+
+  .map-picker__action {
+    @apply text-xs px-2.5 py-1.5 rounded-md border border-brand-line;
+    background: var(--color-brand-card);
+    color: var(--color-brand-deep);
+    cursor: pointer;
+  }
+
+  .map-picker__action:hover:not(:disabled) {
+    border-color: var(--color-brand-accent);
+    color: var(--color-brand-accent);
+  }
+
+  .map-picker__action:disabled {
+    opacity: 0.45;
+    cursor: default;
+  }
+
+  .map-picker__action--danger:hover:not(:disabled) {
+    border-color: #b91c1c;
+    color: #b91c1c;
+  }
+
+  @media (max-width: 640px) {
+    .map-picker__surface {
+      height: 260px;
+    }
   }
 
   .portal-label--check {

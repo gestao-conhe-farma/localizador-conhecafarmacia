@@ -1,0 +1,1332 @@
+{
+  "colors": {
+    "all": [
+      {
+        "hex": "#000000",
+        "rgb": {
+          "r": 0,
+          "g": 0,
+          "b": 0,
+          "a": 1
+        },
+        "hsl": {
+          "h": 0,
+          "s": 0,
+          "l": 0
+        },
+        "count": 2545,
+        "contexts": [
+          "text",
+          "border",
+          "background"
+        ]
+      },
+      {
+        "hex": "#373a3c",
+        "rgb": {
+          "r": 55,
+          "g": 58,
+          "b": 60,
+          "a": 1
+        },
+        "hsl": {
+          "h": 204,
+          "s": 4,
+          "l": 23
+        },
+        "count": 1653,
+        "contexts": [
+          "text",
+          "border"
+        ]
+      },
+      {
+        "hex": "#0d3464",
+        "rgb": {
+          "r": 13,
+          "g": 52,
+          "b": 100,
+          "a": 1
+        },
+        "hsl": {
+          "h": 213,
+          "s": 77,
+          "l": 22
+        },
+        "count": 461,
+        "contexts": [
+          "background",
+          "text",
+          "border"
+        ]
+      },
+      {
+        "hex": "#efb215",
+        "rgb": {
+          "r": 239,
+          "g": 178,
+          "b": 21,
+          "a": 1
+        },
+        "hsl": {
+          "h": 43,
+          "s": 87,
+          "l": 51
+        },
+        "count": 286,
+        "contexts": [
+          "text",
+          "border"
+        ]
+      },
+      {
+        "hex": "#ffffff",
+        "rgb": {
+          "r": 255,
+          "g": 255,
+          "b": 255,
+          "a": 1
+        },
+        "hsl": {
+          "h": 0,
+          "s": 0,
+          "l": 100
+        },
+        "count": 284,
+        "contexts": [
+          "background",
+          "text",
+          "border"
+        ]
+      },
+      {
+        "hex": "#7a7a7a",
+        "rgb": {
+          "r": 122,
+          "g": 122,
+          "b": 122,
+          "a": 1
+        },
+        "hsl": {
+          "h": 0,
+          "s": 0,
+          "l": 48
+        },
+        "count": 188,
+        "contexts": [
+          "text",
+          "border"
+        ]
+      },
+      {
+        "hex": "#92989f",
+        "rgb": {
+          "r": 146,
+          "g": 152,
+          "b": 159,
+          "a": 1
+        },
+        "hsl": {
+          "h": 212,
+          "s": 6,
+          "l": 60
+        },
+        "count": 100,
+        "contexts": [
+          "text",
+          "border"
+        ]
+      },
+      {
+        "hex": "#fece00",
+        "rgb": {
+          "r": 254,
+          "g": 206,
+          "b": 0,
+          "a": 1
+        },
+        "hsl": {
+          "h": 49,
+          "s": 100,
+          "l": 50
+        },
+        "count": 60,
+        "contexts": [
+          "background",
+          "text",
+          "border"
+        ]
+      },
+      {
+        "hex": "#f4f4f4",
+        "rgb": {
+          "r": 244,
+          "g": 244,
+          "b": 244,
+          "a": 1
+        },
+        "hsl": {
+          "h": 0,
+          "s": 0,
+          "l": 96
+        },
+        "count": 53,
+        "contexts": [
+          "background",
+          "border"
+        ]
+      },
+      {
+        "hex": "#007bff",
+        "rgb": {
+          "r": 0,
+          "g": 123,
+          "b": 255,
+          "a": 1
+        },
+        "hsl": {
+          "h": 211,
+          "s": 100,
+          "l": 50
+        },
+        "count": 46,
+        "contexts": [
+          "background",
+          "text",
+          "border"
+        ]
+      },
+      {
+        "hex": "#38812c",
+        "rgb": {
+          "r": 56,
+          "g": 129,
+          "b": 44,
+          "a": 1
+        },
+        "hsl": {
+          "h": 112,
+          "s": 49,
+          "l": 34
+        },
+        "count": 30,
+        "contexts": [
+          "text",
+          "border"
+        ]
+      },
+      {
+        "hex": "#c3c3c3",
+        "rgb": {
+          "r": 195,
+          "g": 195,
+          "b": 195,
+          "a": 1
+        },
+        "hsl": {
+          "h": 0,
+          "s": 0,
+          "l": 76
+        },
+        "count": 26,
+        "contexts": [
+          "border"
+        ]
+      },
+      {
+        "hex": "#eaf9ff",
+        "rgb": {
+          "r": 234,
+          "g": 249,
+          "b": 255,
+          "a": 1
+        },
+        "hsl": {
+          "h": 197,
+          "s": 100,
+          "l": 96
+        },
+        "count": 19,
+        "contexts": [
+          "background"
+        ]
+      },
+      {
+        "hex": "#d3d3d3",
+        "rgb": {
+          "r": 211,
+          "g": 211,
+          "b": 211,
+          "a": 1
+        },
+        "hsl": {
+          "h": 0,
+          "s": 0,
+          "l": 83
+        },
+        "count": 18,
+        "contexts": [
+          "border",
+          "text"
+        ]
+      },
+      {
+        "hex": "#c4dce8",
+        "rgb": {
+          "r": 196,
+          "g": 220,
+          "b": 232,
+          "a": 1
+        },
+        "hsl": {
+          "h": 200,
+          "s": 44,
+          "l": 84
+        },
+        "count": 15,
+        "contexts": [
+          "background"
+        ]
+      },
+      {
+        "hex": "#e8e9ea",
+        "rgb": {
+          "r": 232,
+          "g": 233,
+          "b": 234,
+          "a": 1
+        },
+        "hsl": {
+          "h": 210,
+          "s": 5,
+          "l": 91
+        },
+        "count": 15,
+        "contexts": [
+          "border"
+        ]
+      },
+      {
+        "hex": "#222222",
+        "rgb": {
+          "r": 34,
+          "g": 34,
+          "b": 34,
+          "a": 1
+        },
+        "hsl": {
+          "h": 0,
+          "s": 0,
+          "l": 13
+        },
+        "count": 12,
+        "contexts": [
+          "text",
+          "border"
+        ]
+      },
+      {
+        "hex": "#f7dede",
+        "rgb": {
+          "r": 247,
+          "g": 222,
+          "b": 222,
+          "a": 1
+        },
+        "hsl": {
+          "h": 0,
+          "s": 61,
+          "l": 92
+        },
+        "count": 12,
+        "contexts": [
+          "border"
+        ]
+      },
+      {
+        "hex": "#55595c",
+        "rgb": {
+          "r": 85,
+          "g": 89,
+          "b": 92,
+          "a": 1
+        },
+        "hsl": {
+          "h": 206,
+          "s": 4,
+          "l": 35
+        },
+        "count": 4,
+        "contexts": [
+          "text",
+          "background"
+        ]
+      },
+      {
+        "hex": "#707070",
+        "rgb": {
+          "r": 112,
+          "g": 112,
+          "b": 112,
+          "a": 1
+        },
+        "hsl": {
+          "h": 0,
+          "s": 0,
+          "l": 44
+        },
+        "count": 4,
+        "contexts": [
+          "background",
+          "text",
+          "border"
+        ]
+      },
+      {
+        "hex": "#283646",
+        "rgb": {
+          "r": 40,
+          "g": 54,
+          "b": 70,
+          "a": 1
+        },
+        "hsl": {
+          "h": 212,
+          "s": 27,
+          "l": 22
+        },
+        "count": 3,
+        "contexts": [
+          "background",
+          "text",
+          "border"
+        ]
+      },
+      {
+        "hex": "#1a73e8",
+        "rgb": {
+          "r": 26,
+          "g": 115,
+          "b": 232,
+          "a": 1
+        },
+        "hsl": {
+          "h": 214,
+          "s": 82,
+          "l": 51
+        },
+        "count": 2,
+        "contexts": [
+          "text",
+          "border"
+        ]
+      },
+      {
+        "hex": "#666666",
+        "rgb": {
+          "r": 102,
+          "g": 102,
+          "b": 102,
+          "a": 1
+        },
+        "hsl": {
+          "h": 0,
+          "s": 0,
+          "l": 40
+        },
+        "count": 2,
+        "contexts": [
+          "text",
+          "border"
+        ]
+      },
+      {
+        "hex": "#55cdff",
+        "rgb": {
+          "r": 85,
+          "g": 205,
+          "b": 255,
+          "a": 1
+        },
+        "hsl": {
+          "h": 198,
+          "s": 100,
+          "l": 67
+        },
+        "count": 2,
+        "contexts": [
+          "text",
+          "border"
+        ]
+      },
+      {
+        "hex": "#888888",
+        "rgb": {
+          "r": 136,
+          "g": 136,
+          "b": 136,
+          "a": 1
+        },
+        "hsl": {
+          "h": 0,
+          "s": 0,
+          "l": 53
+        },
+        "count": 2,
+        "contexts": [
+          "text",
+          "border"
+        ]
+      },
+      {
+        "hex": "#e0e0e0",
+        "rgb": {
+          "r": 224,
+          "g": 224,
+          "b": 224,
+          "a": 1
+        },
+        "hsl": {
+          "h": 0,
+          "s": 0,
+          "l": 88
+        },
+        "count": 1,
+        "contexts": [
+          "border"
+        ]
+      },
+      {
+        "hex": "#d8e9ff",
+        "rgb": {
+          "r": 216,
+          "g": 233,
+          "b": 255,
+          "a": 1
+        },
+        "hsl": {
+          "h": 214,
+          "s": 100,
+          "l": 92
+        },
+        "count": 1,
+        "contexts": [
+          "background"
+        ]
+      },
+      {
+        "hex": "#e4dafd",
+        "rgb": {
+          "r": 228,
+          "g": 218,
+          "b": 253,
+          "a": 1
+        },
+        "hsl": {
+          "h": 257,
+          "s": 90,
+          "l": 92
+        },
+        "count": 1,
+        "contexts": [
+          "background"
+        ]
+      },
+      {
+        "hex": "#0e4650",
+        "rgb": {
+          "r": 14,
+          "g": 70,
+          "b": 80,
+          "a": 1
+        },
+        "hsl": {
+          "h": 189,
+          "s": 70,
+          "l": 18
+        },
+        "count": 1,
+        "contexts": [
+          "background"
+        ]
+      }
+    ]
+  },
+  "regions": [
+    {
+      "role": "testimonials",
+      "tag": "main",
+      "bounds": {
+        "x": 0,
+        "y": 0,
+        "w": 1280,
+        "h": 7283.46875
+      },
+      "heading": "\n              \n                                  100mg/100ml - decongestant nasal spray 15 ml\n                              \n            ",
+      "buttonCount": 47,
+      "cardCount": 357,
+      "className": null
+    },
+    {
+      "role": "nav",
+      "tag": "header",
+      "bounds": {
+        "x": 0,
+        "y": 0,
+        "w": 1280,
+        "h": 168.5
+      },
+      "heading": "\n              \n                                  100mg/100ml - decongestant nasal spray 15 ml\n                              \n            ",
+      "buttonCount": 17,
+      "cardCount": 222,
+      "className": null
+    },
+    {
+      "role": "sidebar",
+      "tag": "aside",
+      "bounds": {
+        "x": 0,
+        "y": 0,
+        "w": 0,
+        "h": 0
+      },
+      "heading": "\n              \n                                  100mg/100ml - decongestant nasal spray 15 ml\n                              \n            ",
+      "buttonCount": 15,
+      "cardCount": 214,
+      "className": null
+    },
+    {
+      "role": "nav",
+      "tag": "nav",
+      "bounds": {
+        "x": 0,
+        "y": 0,
+        "w": 0,
+        "h": 0
+      },
+      "heading": "\n              \n                                  100mg/100ml - decongestant nasal spray 15 ml\n                              \n            ",
+      "buttonCount": 15,
+      "cardCount": 214,
+      "className": "menu-categories-bar"
+    },
+    {
+      "role": "nav",
+      "tag": "nav",
+      "bounds": {
+        "x": 160,
+        "y": 126.25,
+        "w": 1100,
+        "h": 24.5
+      },
+      "heading": null,
+      "buttonCount": 0,
+      "cardCount": 6,
+      "className": "static-menu-navigation"
+    },
+    {
+      "role": "testimonials",
+      "tag": "section",
+      "bounds": {
+        "x": 0,
+        "y": 168.5,
+        "w": 1280,
+        "h": 5982.46875
+      },
+      "heading": "Farmacosmo: Your Online Parapharmacy",
+      "buttonCount": 29,
+      "cardCount": 108,
+      "className": null
+    },
+    {
+      "role": "sidebar",
+      "tag": "aside",
+      "bounds": {
+        "x": 0,
+        "y": 168.5,
+        "w": 1280,
+        "h": 0
+      },
+      "heading": null,
+      "buttonCount": 0,
+      "cardCount": 0,
+      "className": null
+    },
+    {
+      "role": "testimonials",
+      "tag": "section",
+      "bounds": {
+        "x": 0,
+        "y": 178.5,
+        "w": 1280,
+        "h": 5972.46875
+      },
+      "heading": "Farmacosmo: Your Online Parapharmacy",
+      "buttonCount": 29,
+      "cardCount": 108,
+      "className": null
+    },
+    {
+      "role": "testimonials",
+      "tag": "section",
+      "bounds": {
+        "x": 0,
+        "y": 178.5,
+        "w": 1280,
+        "h": 5972.46875
+      },
+      "heading": "Farmacosmo: Your Online Parapharmacy",
+      "buttonCount": 29,
+      "cardCount": 108,
+      "className": "page-home"
+    },
+    {
+      "role": "content",
+      "tag": "section",
+      "bounds": {
+        "x": 20,
+        "y": 178.5,
+        "w": 1240,
+        "h": 527.703125
+      },
+      "heading": null,
+      "buttonCount": 0,
+      "cardCount": 0,
+      "className": "container"
+    },
+    {
+      "role": "content",
+      "tag": "section",
+      "bounds": {
+        "x": 20,
+        "y": 706.203125,
+        "w": 1240,
+        "h": 123.5
+      },
+      "heading": "Farmacosmo: Your Online Parapharmacy",
+      "buttonCount": 0,
+      "cardCount": 0,
+      "className": "container"
+    },
+    {
+      "role": "content",
+      "tag": "section",
+      "bounds": {
+        "x": 0,
+        "y": 842.703125,
+        "w": 1280,
+        "h": 366.5
+      },
+      "heading": "Featured categories",
+      "buttonCount": 0,
+      "cardCount": 0,
+      "className": "container-fluid"
+    },
+    {
+      "role": "content",
+      "tag": "section",
+      "bounds": {
+        "x": 0,
+        "y": 1229.203125,
+        "w": 1280,
+        "h": 942.5
+      },
+      "heading": "Must-haves for your well-being",
+      "buttonCount": 10,
+      "cardCount": 24,
+      "className": "container-fluid"
+    },
+    {
+      "role": "features",
+      "tag": "section",
+      "bounds": {
+        "x": 78,
+        "y": 1229.203125,
+        "w": 1124,
+        "h": 922.5
+      },
+      "heading": "Must-haves for your well-being",
+      "buttonCount": 10,
+      "cardCount": 24,
+      "className": "featured-products clearfix grid-container layout-griglia"
+    },
+    {
+      "role": "content",
+      "tag": "section",
+      "bounds": {
+        "x": 0,
+        "y": 2184.703125,
+        "w": 1280,
+        "h": 336.5
+      },
+      "heading": "Categories to discover",
+      "buttonCount": 0,
+      "cardCount": 0,
+      "className": "container-fluid"
+    },
+    {
+      "role": "testimonials",
+      "tag": "section",
+      "bounds": {
+        "x": 0,
+        "y": 2541.203125,
+        "w": 1280,
+        "h": 505.5
+      },
+      "heading": "The products most chosen by customers",
+      "buttonCount": 9,
+      "cardCount": 24,
+      "className": "container-fluid"
+    },
+    {
+      "role": "testimonials",
+      "tag": "section",
+      "bounds": {
+        "x": 78,
+        "y": 2541.203125,
+        "w": 1124,
+        "h": 485.5
+      },
+      "heading": "The products most chosen by customers",
+      "buttonCount": 9,
+      "cardCount": 24,
+      "className": "featured-products clearfix grid-container layout-carosello"
+    },
+    {
+      "role": "pricing",
+      "tag": "section",
+      "bounds": {
+        "x": 0,
+        "y": 3066.703125,
+        "w": 1280,
+        "h": 942.5
+      },
+      "heading": "Bestseller for your daily routine",
+      "buttonCount": 10,
+      "cardCount": 23,
+      "className": "container-fluid"
+    },
+    {
+      "role": "pricing",
+      "tag": "section",
+      "bounds": {
+        "x": 78,
+        "y": 3066.703125,
+        "w": 1124,
+        "h": 922.5
+      },
+      "heading": "Bestseller for your daily routine",
+      "buttonCount": 10,
+      "cardCount": 23,
+      "className": "featured-products clearfix grid-container layout-griglia"
+    },
+    {
+      "role": "testimonials",
+      "tag": "section",
+      "bounds": {
+        "x": 20,
+        "y": 4009.203125,
+        "w": 1240,
+        "h": 444.265625
+      },
+      "heading": "Frequently asked questions",
+      "buttonCount": 0,
+      "cardCount": 17,
+      "className": "container"
+    },
+    {
+      "role": "testimonials",
+      "tag": "section",
+      "bounds": {
+        "x": 20,
+        "y": 4453.46875,
+        "w": 1240,
+        "h": 231.5
+      },
+      "heading": "99% satisfied customers",
+      "buttonCount": 0,
+      "cardCount": 0,
+      "className": "container"
+    },
+    {
+      "role": "testimonials",
+      "tag": "section",
+      "bounds": {
+        "x": 20,
+        "y": 4724.96875,
+        "w": 1240,
+        "h": 1426
+      },
+      "heading": "Farmacosmo is an online pharmacy that guarantees you professionalism and convenience in the world of medicines, food supplements, SOP and OTC products.",
+      "buttonCount": 0,
+      "cardCount": 20,
+      "className": "container"
+    },
+    {
+      "role": "footer",
+      "tag": "footer",
+      "bounds": {
+        "x": 0,
+        "y": 6150.96875,
+        "w": 1280,
+        "h": 0
+      },
+      "heading": null,
+      "buttonCount": 0,
+      "cardCount": 0,
+      "className": "page-footer"
+    },
+    {
+      "role": "footer",
+      "tag": "footer",
+      "bounds": {
+        "x": 0,
+        "y": 6150.96875,
+        "w": 1280,
+        "h": 1132.5
+      },
+      "heading": null,
+      "buttonCount": 1,
+      "cardCount": 27,
+      "className": "js-footer"
+    }
+  ],
+  "componentClusters": [
+    {
+      "kind": "input",
+      "structuralHash": "input",
+      "instanceCount": 2,
+      "variants": [
+        {
+          "css": {
+            "background": "rgb(255, 255, 255)",
+            "color": "rgb(85, 89, 92)",
+            "padding": "8px 12px 8px 12px",
+            "borderRadius": "12px",
+            "border": "1px solid rgba(0, 0, 0, 0.25)",
+            "fontSize": "16px",
+            "fontWeight": "400"
+          },
+          "instanceCount": 2
+        }
+      ]
+    },
+    {
+      "kind": "button",
+      "structuralHash": "button>svg>span",
+      "instanceCount": 1,
+      "variants": [
+        {
+          "css": {
+            "background": "rgba(0, 0, 0, 0)",
+            "color": "rgb(0, 0, 0)",
+            "padding": "1px 6px 1px 0px",
+            "borderRadius": "0px",
+            "border": "0px none rgb(0, 0, 0)",
+            "fontSize": "16px",
+            "fontWeight": "400"
+          },
+          "instanceCount": 1
+        }
+      ]
+    },
+    {
+      "kind": "card",
+      "structuralHash": "article>div>div>div>ul>div",
+      "instanceCount": 24,
+      "variants": [
+        {
+          "css": {
+            "background": "rgba(0, 0, 0, 0)",
+            "color": "rgb(0, 0, 0)",
+            "padding": "0px 0px 0px 0px",
+            "borderRadius": "0px",
+            "border": "0px none rgb(0, 0, 0)",
+            "fontSize": "16px",
+            "fontWeight": "400"
+          },
+          "instanceCount": 24
+        }
+      ]
+    },
+    {
+      "kind": "button",
+      "structuralHash": "button>img",
+      "instanceCount": 25,
+      "variants": [
+        {
+          "css": {
+            "background": "rgb(255, 212, 0)",
+            "color": "rgb(0, 0, 0)",
+            "padding": "1px 6px 1px 6px",
+            "borderRadius": "5px",
+            "border": "0px none rgb(0, 0, 0)",
+            "fontSize": "16px",
+            "fontWeight": "400"
+          },
+          "instanceCount": 24
+        },
+        {
+          "css": {
+            "background": "rgb(14, 70, 80)",
+            "color": "rgb(255, 255, 255)",
+            "padding": "0px 0px 0px 0px",
+            "borderRadius": "0px",
+            "border": "0px none rgb(255, 255, 255)",
+            "fontSize": "16px",
+            "fontWeight": "400"
+          },
+          "instanceCount": 1
+        }
+      ]
+    },
+    {
+      "kind": "button",
+      "structuralHash": "div>button",
+      "instanceCount": 2,
+      "variants": [
+        {
+          "css": {
+            "background": "rgba(0, 0, 0, 0)",
+            "color": "rgb(0, 0, 0)",
+            "padding": "0px 0px 0px 0px",
+            "borderRadius": "0px",
+            "border": "0px none rgb(0, 0, 0)",
+            "fontSize": "16px",
+            "fontWeight": "400"
+          },
+          "instanceCount": 2
+        }
+      ]
+    },
+    {
+      "kind": "button",
+      "structuralHash": "button",
+      "instanceCount": 6,
+      "variants": [
+        {
+          "css": {
+            "background": "rgb(255, 212, 0)",
+            "color": "rgb(0, 0, 0)",
+            "padding": "10px 20px 10px 20px",
+            "borderRadius": "3px",
+            "border": "0px none rgb(0, 0, 0)",
+            "fontSize": "16px",
+            "fontWeight": "400"
+          },
+          "instanceCount": 2
+        },
+        {
+          "css": {
+            "background": "rgb(13, 52, 100)",
+            "color": "rgb(255, 255, 255)",
+            "padding": "1px 6px 1px 6px",
+            "borderRadius": "0px",
+            "border": "0px none rgb(255, 255, 255)",
+            "fontSize": "15px",
+            "fontWeight": "400"
+          },
+          "instanceCount": 1
+        },
+        {
+          "css": {
+            "background": "rgba(0, 0, 0, 0)",
+            "color": "rgb(255, 255, 255)",
+            "padding": "1px 6px 1px 6px",
+            "borderRadius": "0px",
+            "border": "1px solid rgb(255, 255, 255)",
+            "fontSize": "14px",
+            "fontWeight": "700"
+          },
+          "instanceCount": 1
+        },
+        {
+          "css": {
+            "background": "rgb(253, 251, 255)",
+            "color": "rgb(0, 0, 0)",
+            "padding": "10px 20px 10px 20px",
+            "borderRadius": "3px",
+            "border": "0px none rgb(0, 0, 0)",
+            "fontSize": "14px",
+            "fontWeight": "100"
+          },
+          "instanceCount": 1
+        },
+        {
+          "css": {
+            "background": "rgb(253, 251, 255)",
+            "color": "rgb(0, 0, 0)",
+            "padding": "0px 0px 0px 0px",
+            "borderRadius": "3px",
+            "border": "0px none rgb(0, 0, 0)",
+            "fontSize": "14px",
+            "fontWeight": "700"
+          },
+          "instanceCount": 1
+        }
+      ]
+    },
+    {
+      "kind": "button",
+      "structuralHash": "div>i",
+      "instanceCount": 1,
+      "variants": [
+        {
+          "css": {
+            "background": "rgb(255, 255, 255)",
+            "color": "rgb(13, 52, 100)",
+            "padding": "0px 0px 0px 0px",
+            "borderRadius": "5px",
+            "border": "2px solid rgb(13, 52, 100)",
+            "fontSize": "16px",
+            "fontWeight": "400"
+          },
+          "instanceCount": 1
+        }
+      ]
+    },
+    {
+      "kind": "button",
+      "structuralHash": "div>button>button",
+      "instanceCount": 1,
+      "variants": [
+        {
+          "css": {
+            "background": "rgba(0, 0, 0, 0)",
+            "color": "rgb(255, 255, 255)",
+            "padding": "0px 0px 0px 0px",
+            "borderRadius": "0px",
+            "border": "0px none rgb(255, 255, 255)",
+            "fontSize": "16px",
+            "fontWeight": "400"
+          },
+          "instanceCount": 1
+        }
+      ]
+    }
+  ],
+  "accessibility": {
+    "remediation": [
+      {
+        "fg": "#ffffff",
+        "bg": "#007bff",
+        "ratio": 3.98,
+        "rule": "AA-normal",
+        "suggestion": {
+          "replace": "fg",
+          "color": "#000000",
+          "newRatio": 5.28
+        }
+      }
+    ]
+  },
+  "cssHealth": {
+    "sheets": [
+      {
+        "url": "https://www.farmacosmo.com/modules/farmacookies/views/css/frontCookie2.min.css?v=2",
+        "totalBytes": 10595,
+        "usedBytes": 1186,
+        "unusedBytes": 9409,
+        "unusedPercent": 89
+      },
+      {
+        "url": "https://www.farmacosmo.com/modules/farmatpl/views/css/farmatpl.min.css?v=3",
+        "totalBytes": 10679,
+        "usedBytes": 0,
+        "unusedBytes": 10679,
+        "unusedPercent": 100
+      },
+      {
+        "url": "https://www.farmacosmo.com/",
+        "totalBytes": 24875,
+        "usedBytes": 726,
+        "unusedBytes": 24149,
+        "unusedPercent": 97
+      },
+      {
+        "url": "https://www.farmacosmo.com/modules/cosmogridproducts/views/css/gridFront.min.css?v=3",
+        "totalBytes": 1276,
+        "usedBytes": 430,
+        "unusedBytes": 846,
+        "unusedPercent": 66
+      },
+      {
+        "url": "https://www.farmacosmo.com/modules/farmaminitools/views/vendor/font-awesome/css/font-awesome.min.css?v=43",
+        "totalBytes": 94065,
+        "usedBytes": 1113,
+        "unusedBytes": 92952,
+        "unusedPercent": 99
+      },
+      {
+        "url": "https://www.farmacosmo.com/",
+        "totalBytes": 18877,
+        "usedBytes": 7657,
+        "unusedBytes": 11220,
+        "unusedPercent": 59
+      },
+      {
+        "url": "https://www.farmacosmo.com/",
+        "totalBytes": 6362,
+        "usedBytes": 0,
+        "unusedBytes": 6362,
+        "unusedPercent": 100
+      },
+      {
+        "url": "https://www.farmacosmo.com/modules/cosmosliders/views/css/slidersFront.min.css?v=2",
+        "totalBytes": 14637,
+        "usedBytes": 494,
+        "unusedBytes": 14143,
+        "unusedPercent": 97
+      },
+      {
+        "url": "https://www.farmacosmo.com/",
+        "totalBytes": 195,
+        "usedBytes": 133,
+        "unusedBytes": 62,
+        "unusedPercent": 32
+      },
+      {
+        "url": "https://www.farmacosmo.com/themes/cosmo/assets/cache/theme-5225bb458.css",
+        "totalBytes": 60620,
+        "usedBytes": 7280,
+        "unusedBytes": 53340,
+        "unusedPercent": 88
+      },
+      {
+        "url": "https://www.farmacosmo.com/modules/fc_couponbenvenuto/views/css/benvenutoFront.min.css?ver=1.4",
+        "totalBytes": 1594,
+        "usedBytes": 424,
+        "unusedBytes": 1170,
+        "unusedPercent": 73
+      },
+      {
+        "url": "https://www.farmacosmo.com/modules/farmamessaggi/views/css/farmamessaggiFront.min.css?ver=5.1",
+        "totalBytes": 5762,
+        "usedBytes": 252,
+        "unusedBytes": 5510,
+        "unusedPercent": 96
+      },
+      {
+        "url": "https://www.farmacosmo.com/modules/menucategories/views/css/menuCategoriesFront.min.css?v=2.2",
+        "totalBytes": 8272,
+        "usedBytes": 261,
+        "unusedBytes": 8011,
+        "unusedPercent": 97
+      },
+      {
+        "url": "https://www.farmacosmo.com/",
+        "totalBytes": 14868,
+        "usedBytes": 2558,
+        "unusedBytes": 12310,
+        "unusedPercent": 83
+      },
+      {
+        "url": "https://www.farmacosmo.com/modules/dofinderword/views/css/wordFront.min.css?v=2",
+        "totalBytes": 1854,
+        "usedBytes": 0,
+        "unusedBytes": 1854,
+        "unusedPercent": 100
+      },
+      {
+        "url": "https://www.farmacosmo.com/modules/farmaminitools/views/css/common.min.css?v=5",
+        "totalBytes": 57609,
+        "usedBytes": 5725,
+        "unusedBytes": 51884,
+        "unusedPercent": 90
+      },
+      {
+        "url": "https://www.farmacosmo.com/modules/farmaminitools/views/css/footer.min.css?v=3.2",
+        "totalBytes": 10735,
+        "usedBytes": 5055,
+        "unusedBytes": 5680,
+        "unusedPercent": 53
+      },
+      {
+        "url": "https://www.farmacosmo.com/modules/farmaminitools/views/vendor/swiper/swiper.min.css",
+        "totalBytes": 17861,
+        "usedBytes": 2107,
+        "unusedBytes": 15754,
+        "unusedPercent": 88
+      },
+      {
+        "url": "https://www.farmacosmo.com/modules/farmaminitools/views/vendor/font-awesome/css/font-awesome.min.css",
+        "totalBytes": 94065,
+        "usedBytes": 1113,
+        "unusedBytes": 92952,
+        "unusedPercent": 99
+      },
+      {
+        "url": "https://cdn.doofinder.com/livelayer/1.8.208/css/2/common.css?v=1.8.208",
+        "totalBytes": 111352,
+        "usedBytes": 1458,
+        "unusedBytes": 109894,
+        "unusedPercent": 99
+      },
+      {
+        "url": "https://cdn.doofinder.com/livelayer/1.8.208/css/2/ai_fullscreen.css?v=1.8.208",
+        "totalBytes": 32061,
+        "usedBytes": 0,
+        "unusedBytes": 32061,
+        "unusedPercent": 100
+      },
+      {
+        "url": "https://www.farmacosmo.com/modules/farmaminitools/views/css/index.min.css?v=4",
+        "totalBytes": 26301,
+        "usedBytes": 2051,
+        "unusedBytes": 24250,
+        "unusedPercent": 92
+      },
+      {
+        "url": "https://p.typekit.net/p.css?s=1&k=ovk7fqr&ht=tk&f=137.139.169.171.173.175.5474.25136.16353.37456.37457.37460.37462.37464.37466.37469.37470.37522&a=220945181&app=typekit&e=css",
+        "totalBytes": 5,
+        "usedBytes": 0,
+        "unusedBytes": 5,
+        "unusedPercent": 100
+      },
+      {
+        "url": "https://p.typekit.net/p.css?s=1&k=ovk7fqr&ht=tk&f=137.139.169.171.173.175.5474.25136.16353.37456.37457.37460.37462.37464.37466.37469.37470.37522&a=220945181&app=typekit&e=css",
+        "totalBytes": 5,
+        "usedBytes": 0,
+        "unusedBytes": 5,
+        "unusedPercent": 100
+      },
+      {
+        "url": "https://www.farmacosmo.com/modules/farmaminitools/views/css/fonts.min.css",
+        "totalBytes": 7710,
+        "usedBytes": 0,
+        "unusedBytes": 7710,
+        "unusedPercent": 100
+      }
+    ],
+    "totalBytes": 632235,
+    "usedBytes": 40023,
+    "unusedBytes": 592212,
+    "unusedPercent": 94,
+    "importantCount": 203,
+    "duplicates": 5957,
+    "vendorPrefixes": {
+      "webkit": 442,
+      "moz": 37,
+      "ms": 75,
+      "o": 30
+    },
+    "keyframes": [],
+    "specificity": {
+      "max": [
+        5,
+        12,
+        9
+      ],
+      "average": [
+        0.25,
+        1.95,
+        0.17
+      ],
+      "count": 9023
+    },
+    "issues": [
+      "203 !important rules",
+      "5957 duplicate declarations",
+      "94% unused CSS"
+    ]
+  }
+}

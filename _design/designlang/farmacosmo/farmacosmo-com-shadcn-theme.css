@@ -1,0 +1,19 @@
+/* shadcn/ui Theme — extracted from https://www.farmacosmo.com */
+/* Paste into your globals.css */
+
+@layer base {
+  :root {
+    --background: 0 0% 100%;
+    --foreground: 0 0% 0%;
+    --primary: 49 100% 50%;
+    --primary-foreground: 0 0% 0%;
+    --secondary: 213 77% 22%;
+    --secondary-foreground: 0 0% 100%;
+    --accent: 189 70% 18%;
+    --accent-foreground: 0 0% 100%;
+    --muted: 0 0% 88%;
+    --muted-foreground: 0 0% 0%;
+    --border: 212 6% 60%;
+    --radius: 8px;
+  }
+}

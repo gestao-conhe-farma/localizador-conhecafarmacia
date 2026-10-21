@@ -1,0 +1,104 @@
+{
+  "openGraph": {
+    "title": "Farmacosmo | Online Pharmacy, Beauty and Health",
+    "description": "Shop Health & Beauty exclusive products at Farmacosmo! Discover great prices in healthcare, beauty, skincare and make up. Discover our best deals today.",
+    "url": "https://www.farmacosmo.com/",
+    "site_name": "Farmacosmo",
+    "image": "https://www.farmacosmo.com/modules/farmaminitools/views/img/logo-og.png",
+    "type": "website"
+  },
+  "twitter": {},
+  "description": "Shop Health & Beauty exclusive products at Farmacosmo! Discover great prices in healthcare, beauty, skincare and make up. Discover our best deals today.",
+  "canonical": null,
+  "themeColor": "#ffffff",
+  "viewport": "width=device-width, initial-scale=1",
+  "favicons": [
+    {
+      "rel": "icon",
+      "href": "https://www.farmacosmo.com/favicon.ico",
+      "sizes": "",
+      "type": ""
+    },
+    {
+      "rel": "icon",
+      "href": "https://www.farmacosmo.com/img/favicon.ico?v=2_1753528243",
+      "sizes": "",
+      "type": "image/vnd.microsoft.icon"
+    },
+    {
+      "rel": "shortcut icon",
+      "href": "https://www.farmacosmo.com/img/favicon.ico?v=2_1753528243",
+      "sizes": "",
+      "type": "image/x-icon"
+    },
+    {
+      "rel": "apple-touch-icon",
+      "href": "https://www.farmacosmo.com/favicon/apple-icon-57x57.png",
+      "sizes": "57x57",
+      "type": ""
+    },
+    {
+      "rel": "apple-touch-icon",
+      "href": "https://www.farmacosmo.com/favicon/apple-icon-60x60.png",
+      "sizes": "60x60",
+      "type": ""
+    },
+    {
+      "rel": "apple-touch-icon",
+      "href": "https://www.farmacosmo.com/favicon/apple-icon-72x72.png",
+      "sizes": "72x72",
+      "type": ""
+    },
+    {
+      "rel": "apple-touch-icon",
+      "href": "https://www.farmacosmo.com/favicon/apple-icon-76x76.png",
+      "sizes": "76x76",
+      "type": ""
+    },
+    {
+      "rel": "apple-touch-icon",
+      "href": "https://www.farmacosmo.com/favicon/apple-icon-114x114.png",
+      "sizes": "114x114",
+      "type": ""
+    },
+    {
+      "rel": "apple-touch-icon",
+      "href": "https://www.farmacosmo.com/favicon/apple-icon-120x120.png",
+      "sizes": "120x120",
+      "type": ""
+    },
+    {
+      "rel": "apple-touch-icon",
+      "href": "https://www.farmacosmo.com/favicon/apple-icon-144x144.png",
+      "sizes": "144x144",
+      "type": ""
+    }
+  ],
+  "manifest": null,
+  "structuredData": [
+    {
+      "type": "Organization",
+      "name": "Farmacosmo",
+      "sample": "{\"@context\":\"https://schema.org\",\"@type\":\"Organization\",\"name\":\"Farmacosmo\",\"url\":\"https://www.farmacosmo.com/\",\"logo\":{\"@type\":\"ImageObject\",\"url\":\"https://www.farmacosmo.com/img/logo-1748616865.jpg\"}}"
+    },
+    {
+      "type": "WebPage",
+      "name": "Farmacosmo | Online Pharmacy, Beauty and Health",
+      "sample": "{\"@context\":\"https://schema.org\",\"@type\":\"WebPage\",\"isPartOf\":{\"@type\":\"WebSite\",\"url\":\"https://www.farmacosmo.com/\",\"name\":\"Farmacosmo\"},\"name\":\"Farmacosmo | Online Pharmacy, Beauty and Health\",\"url\":\"https://www.farmacosmo.com/\"}"
+    },
+    {
+      "type": "Organization",
+      "name": "Farmacosmo",
+      "sample": "{\"@context\":\"https://schema.org\",\"@type\":\"Organization\",\"name\":\"Farmacosmo\",\"url\":\"https://www.farmacosmo.com/\",\"logo\":\"https://www.farmacosmo.com/modules/farmaminitools/views/img/logo-farmacosmo.svg\",\"contactPoint\":{\"@type\":\"ContactPoint\",\"contactType\":\"Customer service\",\"telephone\":\"+39-02 8362 3081\",\"email\":\"info@farmacosmo.it\"},\"address\":{\"@type\":\"PostalAddress\",\"streetAddress\":\"Via Francesco "
+    }
+  ],
+  "score": {
+    "hasOg": true,
+    "hasTwitter": false,
+    "hasDescription": true,
+    "hasCanonical": false,
+    "hasStructuredData": true,
+    "hasFavicon": true,
+    "hasThemeColor": true
+  }
+}

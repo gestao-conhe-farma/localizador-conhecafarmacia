@@ -110,7 +110,7 @@ function StoreCard({ pharmacy, count, distance, approximate = false }) {
       </div>
 
       <span className={`pcard-cta${count === 0 ? ' pcard-cta--quiet' : ''}`}>
-        {count > 0 ? 'Ver prateleira' : 'Ver farmácia'} <span aria-hidden="true">→</span>
+        {count > 0 ? 'Ver prateleira' : 'Ver farmácia'}
       </span>
     </Link>
   )
@@ -134,7 +134,9 @@ export default function PharmacyList() {
         const supabase = createClient()
         const phRes = await supabase
           .from('pharmacies')
-          .select('slug, name, municipio, address, phone, whatsapp, opening_hours, verified, lat, lng')
+          .select(
+            'slug, name, municipio, address, phone, whatsapp, opening_hours, verified, lat, lng',
+          )
           .eq('active', true)
           .order('name')
         if (phRes.error) throw phRes.error
@@ -209,23 +211,13 @@ export default function PharmacyList() {
   return (
     <>
       <section className="shop-hero">
-        <div className="cf-wrap shop-hero-grid">
+        <div className="cf-wrap shop-hero-grid shop-hero-grid--solo">
           <div>
             <p className="cf-kicker">A rede</p>
             <h1>
               Farmácias que dizem <em>o que têm.</em>
             </h1>
-            <p>
-              Cada farmácia desta lista confirma o próprio stock: o que aparece está na prateleira,
-              e o que deixa de ser confirmado sai do ar. Escolha a mais perto e veja o que está
-              disponível hoje.
-            </p>
           </div>
-          <aside>
-            <b className="cf-num">{pharmacies ? pharmacies.length : '—'}</b>
-            farmácias parceiras em Luanda. {pharmacies ? withStock : '—'} com stock confirmado
-            agora — 72 h para medicamentos, 30 dias para parafarmácia.
-          </aside>
         </div>
       </section>
 
@@ -273,21 +265,23 @@ export default function PharmacyList() {
 
           {locStatus === 'PERMISSAO' && (
             <p className="location-note">
-              Sem permissão de localização — a lista continua ordenada por stock. Pode autorizar
-              nas definições do browser e tentar de novo.
+              Sem permissão de localização — a lista continua ordenada por stock. Pode autorizar nas
+              definições do browser e tentar de novo.
             </p>
           )}
-          {(locStatus === 'INDISPONIVEL' || locStatus === 'TEMPO' || locStatus === 'SEM_SUPORTE') && (
+          {(locStatus === 'INDISPONIVEL' ||
+            locStatus === 'TEMPO' ||
+            locStatus === 'SEM_SUPORTE') && (
             <p className="location-note">
-              Não foi possível obter a localização neste dispositivo. A rede continua disponível
-              por ordem de stock.
+              Não foi possível obter a localização neste dispositivo. A rede continua disponível por
+              ordem de stock.
             </p>
           )}
           {nearMe && location && (
             <p className="location-note">
-              Distâncias em linha recta a partir de si, calculadas no browser — a sua posição não
-              é enviada para nenhum servidor. O «≈» marca as farmácias que ainda não têm
-              coordenadas próprias (usamos o centro do município).
+              Distâncias em linha recta a partir de si, calculadas no browser — a sua posição não é
+              enviada para nenhum servidor. O «≈» marca as farmácias que ainda não têm coordenadas
+              próprias (usamos o centro do município).
             </p>
           )}
 

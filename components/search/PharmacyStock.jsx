@@ -7,6 +7,8 @@ import { usePharmacyStockRealtime } from '@/lib/use-pharmacy-stock-realtime'
 import { openStatus } from '@/lib/opening-hours'
 import { logError } from '@/lib/log'
 import ProductCard from '@/components/search/ProductCard'
+import ProductModal from '@/components/search/ProductModal'
+import { useProductSheet } from '@/components/search/useProductSheet'
 import MiniMap from '@/components/search/MiniMap'
 import { useUserLocation } from '@/lib/use-user-location'
 import { distanceKm, formatDistance, pharmacyPosition } from '@/lib/geo'
@@ -52,6 +54,9 @@ export default function PharmacyStock({ slug, initialItems = null }) {
   const [error, setError] = useState(false)
   const [query, setQuery] = useState('')
   const [tab, setTab] = useState('Tudo')
+  // Ficha em cartão sobre a prateleira: fechar devolve o cliente ao mesmo scroll.
+  // Ficha aberta no URL (?produto=) — link partilhável e «voltar» a fechar.
+  const { openId, open: openProduct, swap: swapProduct, close: closeProduct } = useProductSheet()
   // Posição do visitante: só é pedida quando ele carrega no botão.
   const { location, status: locStatus, request: requestLocation } = useUserLocation()
 
@@ -109,8 +114,7 @@ export default function PharmacyStock({ slug, initialItems = null }) {
   // Posição no mapa: coordenadas próprias ou, na falta delas, o centro do
   // município — sempre etiquetado como aproximado.
   const mapPos = pharmacy ? pharmacyPosition(pharmacy) : null
-  const distance =
-    location && mapPos ? distanceKm(location, mapPos) : null
+  const distance = location && mapPos ? distanceKm(location, mapPos) : null
   const distanceLabel = distance != null ? formatDistance(distance) : null
 
   const visible = useMemo(() => {
@@ -222,12 +226,22 @@ export default function PharmacyStock({ slug, initialItems = null }) {
                   </a>
                 )}
                 {waHref && (
-                  <a className="cf-btn cf-btn--on-green" href={waHref} target="_blank" rel="noopener noreferrer">
+                  <a
+                    className="cf-btn cf-btn--on-green"
+                    href={waHref}
+                    target="_blank"
+                    rel="noopener noreferrer"
+                  >
                     WhatsApp
                   </a>
                 )}
                 {maps && (
-                  <a className="cf-btn cf-btn--on-green" href={maps} target="_blank" rel="noopener noreferrer">
+                  <a
+                    className="cf-btn cf-btn--on-green"
+                    href={maps}
+                    target="_blank"
+                    rel="noopener noreferrer"
+                  >
                     Direcções
                   </a>
                 )}
@@ -375,10 +389,7 @@ export default function PharmacyStock({ slug, initialItems = null }) {
               <li>Confirme a quantidade e o horário de levantamento.</li>
               <li>Mostre a reserva no balcão e pague lá.</li>
             </ol>
-            <p style={{ marginTop: 8 }}>
-              Não há pagamento online. Sem nova confirmação, um medicamento sai do Localizador ao
-              fim de <b>72 h</b> e um produto de parafarmácia ao fim de <b>30 dias</b>.
-            </p>
+            <p style={{ marginTop: 8 }}>Não há pagamento online.</p>
           </div>
         </aside>
 
@@ -456,19 +467,17 @@ export default function PharmacyStock({ slug, initialItems = null }) {
             <div className="shelf" style={{ marginTop: 18 }}>
               <div className="pcard-grid">
                 {visible.map((it) => (
-                  <ProductCard key={it.stock_item_id} item={it} />
+                  <ProductCard key={it.stock_item_id} item={it} onOpen={openProduct} />
                 ))}
               </div>
             </div>
           )}
-
-          <p className="cf-note">
-            O stock é o que a farmácia escreveu no portal, e cada reserva concluída baixa o saldo no
-            mesmo instante. Quando a farmácia guarda alterações, esta prateleira actualiza-se sem
-            recarregar a página.
-          </p>
         </div>
       </div>
+
+      {openId && (
+        <ProductModal stockItemId={openId} onClose={closeProduct} onOpenItem={swapProduct} />
+      )}
     </>
   )
 }

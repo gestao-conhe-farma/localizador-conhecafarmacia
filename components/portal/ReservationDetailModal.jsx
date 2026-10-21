@@ -27,6 +27,7 @@ const BADGES = {
 }
 
 import { fmtKz, estimateTotal } from '@/lib/reservation-format'
+import { parseReservationNotes } from '@/lib/pickup'
 
 /** Data/hora completa — o modal é onde o "há 2 h" do card se abre em dia e hora. */
 function fmtDateTime(iso) {
@@ -101,6 +102,9 @@ export default function ReservationDetailModal({
   const opt = r.stock_sale_options
   const total = estimateTotal(r)
   const qty = r.confirmed_quantity ?? r.quantity
+  // O cliente escreve dia + hora no modal; ficam juntos em notes. Aqui
+  // separam-se para o atendente ver o levantamento sem ler a nota toda.
+  const { pickup, note: freeNote } = parseReservationNotes(r.notes)
 
   // Esc fecha — o mesmo comportamento do modal de stock.
   useEffect(() => {
@@ -214,10 +218,16 @@ export default function ReservationDetailModal({
               </dd>
             </div>
           )}
-          {r.notes && (
+          {pickup && (
+            <div className="res-detail-row">
+              <dt>Levantamento</dt>
+              <dd>{pickup}</dd>
+            </div>
+          )}
+          {freeNote && (
             <div className="res-detail-row">
               <dt>Nota do cliente</dt>
-              <dd>“{r.notes}”</dd>
+              <dd>“{freeNote}”</dd>
             </div>
           )}
           {reasonLabel(r.reason) && (

@@ -1,0 +1,689 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Design Language: Farmacosmo | Online Pharmacy, Beauty and Health</title>
+<style>
+  * { margin: 0; padding: 0; box-sizing: border-box; }
+  :root {
+    --bg: #0a0a0a; --bg-card: #141414; --border: #222; --text: #e5e5e5; --text-heading: #fff;
+    --text-muted: #666; --text-sub: #a0a0a0; --text-dim: #444; --text-faint: #555; --row-border: #1a1a1a;
+  }
+  [data-theme="light"] {
+    --bg: #f5f5f5; --bg-card: #fff; --border: #ddd; --text: #333; --text-heading: #111;
+    --text-muted: #888; --text-sub: #666; --text-dim: #999; --text-faint: #aaa; --row-border: #e5e5e5;
+  }
+  body { font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif; background: var(--bg); color: var(--text); line-height: 1.6; }
+  .container { max-width: 1200px; margin: 0 auto; padding: 40px 24px; }
+  .header-row { display: flex; align-items: center; justify-content: space-between; gap: 16px; flex-wrap: wrap; }
+  .theme-toggle { background: var(--bg-card); border: 1px solid var(--border); color: var(--text); padding: 6px 14px; border-radius: 8px; cursor: pointer; font-size: 13px; white-space: nowrap; }
+  h1 { font-size: 36px; font-weight: 700; margin-bottom: 8px; color: var(--text-heading); }
+  h2 { font-size: 24px; font-weight: 600; margin: 48px 0 20px; color: var(--text-heading); border-bottom: 1px solid var(--border); padding-bottom: 12px; }
+  h3 { font-size: 16px; font-weight: 600; margin: 24px 0 12px; color: var(--text-sub); text-transform: uppercase; letter-spacing: 0.05em; }
+  .meta { color: var(--text-muted); font-size: 14px; margin-bottom: 32px; }
+  .meta span { margin-right: 16px; }
+  .grid { display: grid; gap: 12px; }
+  .grid-2 { grid-template-columns: repeat(auto-fill, minmax(200px, 1fr)); }
+  .grid-3 { grid-template-columns: repeat(auto-fill, minmax(150px, 1fr)); }
+  .grid-4 { grid-template-columns: repeat(auto-fill, minmax(120px, 1fr)); }
+  @media (max-width: 600px) {
+    .grid-2, .grid-3, .grid-4 { grid-template-columns: 1fr 1fr; }
+    h1 { font-size: 24px; }
+    .container { padding: 20px 12px; }
+  }
+  @media (max-width: 380px) {
+    .grid-2, .grid-3, .grid-4 { grid-template-columns: 1fr; }
+  }
+
+  /* Color swatches */
+  .swatch { border-radius: 12px; overflow: hidden; background: var(--bg-card); border: 1px solid var(--border); cursor: pointer; position: relative; }
+  .swatch-color { height: 80px; position: relative; }
+  .swatch-info { padding: 10px 12px; font-size: 13px; }
+  .swatch-hex { font-weight: 600; font-family: monospace; color: var(--text-heading); }
+  .swatch-label { font-size: 11px; color: var(--text-muted); margin-top: 2px; }
+  .swatch-role { display: inline-block; font-size: 10px; background: var(--border); color: var(--text-sub); padding: 2px 8px; border-radius: 4px; margin-top: 4px; }
+  .copied-tip { position: absolute; top: 50%; left: 50%; transform: translate(-50%, -50%); background: rgba(0,0,0,0.8); color: #fff; padding: 4px 12px; border-radius: 6px; font-size: 12px; pointer-events: none; opacity: 0; transition: opacity 0.2s; }
+  .copied-tip.show { opacity: 1; }
+
+  /* Type scale */
+  .type-row { display: flex; align-items: baseline; gap: 16px; padding: 12px 0; border-bottom: 1px solid var(--row-border); }
+  .type-size { font-family: monospace; color: var(--text-muted); min-width: 60px; font-size: 13px; }
+  .type-meta { font-size: 12px; color: var(--text-dim); margin-left: auto; font-family: monospace; }
+
+  /* Spacing */
+  .spacing-row { display: flex; align-items: center; gap: 12px; padding: 6px 0; }
+  .spacing-bar { background: linear-gradient(90deg, #3b82f6, #8b5cf6); border-radius: 4px; height: 24px; min-width: 4px; transition: width 0.3s; }
+  .spacing-label { font-family: monospace; font-size: 13px; color: var(--text-sub); min-width: 60px; }
+
+  /* Shadows */
+  .shadow-card { background: var(--bg-card); border-radius: 12px; padding: 24px; text-align: center; min-height: 80px; display: flex; align-items: center; justify-content: center; border: 1px solid var(--border); }
+  .shadow-label { font-size: 12px; color: var(--text); font-family: monospace; }
+
+  /* Radii */
+  .radius-item { width: 60px; height: 60px; background: linear-gradient(135deg, #3b82f6, #8b5cf6); display: flex; align-items: center; justify-content: center; font-size: 11px; color: #fff; font-weight: 600; }
+
+  /* Accessibility */
+  .a11y-score { font-size: 64px; font-weight: 800; }
+  .a11y-score.good { color: #22c55e; }
+  .a11y-score.warn { color: #eab308; }
+  .a11y-score.bad { color: #ef4444; }
+  .a11y-pair { display: flex; align-items: center; gap: 12px; padding: 10px 16px; background: var(--bg-card); border-radius: 8px; margin-bottom: 6px; border: 1px solid var(--border); flex-wrap: wrap; }
+  .a11y-sample { width: 120px; padding: 6px 12px; border-radius: 6px; text-align: center; font-size: 14px; font-weight: 500; }
+  .a11y-ratio { font-family: monospace; font-size: 14px; min-width: 50px; }
+  .a11y-badge { font-size: 11px; font-weight: 700; padding: 2px 8px; border-radius: 4px; }
+  .a11y-badge.pass { background: #22c55e20; color: #22c55e; }
+  .a11y-badge.fail { background: #ef444420; color: #ef4444; }
+
+  /* Components */
+  .comp-screenshot { border-radius: 8px; border: 1px solid var(--border); max-width: 100%; }
+
+  /* Stat cards */
+  .stats { display: grid; grid-template-columns: repeat(auto-fill, minmax(160px, 1fr)); gap: 12px; margin: 24px 0; }
+  .stat { background: var(--bg-card); border: 1px solid var(--border); border-radius: 12px; padding: 16px; }
+  .stat-value { font-size: 28px; font-weight: 700; color: var(--text-heading); }
+  .stat-label { font-size: 12px; color: var(--text-muted); margin-top: 4px; }
+
+  .font-tag { display: inline-block; background: #1e1e2e; color: #a78bfa; padding: 4px 10px; border-radius: 6px; font-size: 13px; margin: 4px 4px 4px 0; }
+  [data-theme="light"] .font-tag { background: #ede9fe; color: #6d28d9; }
+</style>
+</head>
+<body>
+<div class="container">
+
+<div class="header-row">
+  <h1>Farmacosmo | Online Pharmacy, Beauty and Health</h1>
+  <button class="theme-toggle" onclick="toggleTheme()">Toggle Light/Dark</button>
+</div>
+<div class="meta">
+  <span>https://www.farmacosmo.com</span>
+  <span>2815 elements</span>
+  <span>21/10/2026</span>
+  
+</div>
+
+<div class="stats">
+  <div class="stat"><div class="stat-value">29</div><div class="stat-label">Colors</div></div>
+  <div class="stat"><div class="stat-value">10</div><div class="stat-label">Font Families</div></div>
+  <div class="stat"><div class="stat-value">14</div><div class="stat-label">Spacing Values</div></div>
+  <div class="stat"><div class="stat-value">1</div><div class="stat-label">Shadows</div></div>
+  <div class="stat"><div class="stat-value">5</div><div class="stat-label">Border Radii</div></div>
+  <div class="stat"><div class="stat-value">14</div><div class="stat-label">Components</div></div>
+  <div class="stat"><div class="stat-value bad" style="color: #ef4444">41%</div><div class="stat-label">A11y Score</div></div>
+</div>
+
+<!-- Colors -->
+<h2>Color Palette</h2>
+
+
+<h3>Brand Colors</h3>
+<div class="grid grid-3">
+  <div class="swatch">
+    <div class="swatch-color" style="background:#fece00"></div>
+    <div class="swatch-info">
+      <div class="swatch-hex">#fece00</div>
+      <div class="swatch-label">Primary</div>
+      <div class="swatch-label">60 uses</div>
+    </div>
+  </div>
+  <div class="swatch">
+    <div class="swatch-color" style="background:#0d3464"></div>
+    <div class="swatch-info">
+      <div class="swatch-hex">#0d3464</div>
+      <div class="swatch-label">Secondary</div>
+      <div class="swatch-label">461 uses</div>
+    </div>
+  </div>
+  <div class="swatch">
+    <div class="swatch-color" style="background:#0e4650"></div>
+    <div class="swatch-info">
+      <div class="swatch-hex">#0e4650</div>
+      <div class="swatch-label">Accent</div>
+      <div class="swatch-label">1 uses</div>
+    </div>
+  </div>
+</div>
+
+
+<h3>Neutrals</h3>
+<div class="grid grid-4">
+  <div class="swatch">
+    <div class="swatch-color" style="background:#000000"></div>
+    <div class="swatch-info">
+      <div class="swatch-hex">#000000</div>
+      
+      <div class="swatch-label">2545 uses</div>
+    </div>
+  </div>
+  <div class="swatch">
+    <div class="swatch-color" style="background:#373a3c"></div>
+    <div class="swatch-info">
+      <div class="swatch-hex">#373a3c</div>
+      
+      <div class="swatch-label">1653 uses</div>
+    </div>
+  </div>
+  <div class="swatch">
+    <div class="swatch-color" style="background:#ffffff"></div>
+    <div class="swatch-info">
+      <div class="swatch-hex">#ffffff</div>
+      
+      <div class="swatch-label">284 uses</div>
+    </div>
+  </div>
+  <div class="swatch">
+    <div class="swatch-color" style="background:#7a7a7a"></div>
+    <div class="swatch-info">
+      <div class="swatch-hex">#7a7a7a</div>
+      
+      <div class="swatch-label">188 uses</div>
+    </div>
+  </div>
+  <div class="swatch">
+    <div class="swatch-color" style="background:#92989f"></div>
+    <div class="swatch-info">
+      <div class="swatch-hex">#92989f</div>
+      
+      <div class="swatch-label">100 uses</div>
+    </div>
+  </div>
+  <div class="swatch">
+    <div class="swatch-color" style="background:#f4f4f4"></div>
+    <div class="swatch-info">
+      <div class="swatch-hex">#f4f4f4</div>
+      
+      <div class="swatch-label">53 uses</div>
+    </div>
+  </div>
+  <div class="swatch">
+    <div class="swatch-color" style="background:#c3c3c3"></div>
+    <div class="swatch-info">
+      <div class="swatch-hex">#c3c3c3</div>
+      
+      <div class="swatch-label">26 uses</div>
+    </div>
+  </div>
+  <div class="swatch">
+    <div class="swatch-color" style="background:#eaf9ff"></div>
+    <div class="swatch-info">
+      <div class="swatch-hex">#eaf9ff</div>
+      
+      <div class="swatch-label">19 uses</div>
+    </div>
+  </div>
+  <div class="swatch">
+    <div class="swatch-color" style="background:#d3d3d3"></div>
+    <div class="swatch-info">
+      <div class="swatch-hex">#d3d3d3</div>
+      
+      <div class="swatch-label">18 uses</div>
+    </div>
+  </div>
+  <div class="swatch">
+    <div class="swatch-color" style="background:#e8e9ea"></div>
+    <div class="swatch-info">
+      <div class="swatch-hex">#e8e9ea</div>
+      
+      <div class="swatch-label">15 uses</div>
+    </div>
+  </div>
+</div>
+
+
+<h3>Full Palette</h3>
+<div class="grid grid-4">
+  <div class="swatch">
+    <div class="swatch-color" style="background:#000000"></div>
+    <div class="swatch-info">
+      <div class="swatch-hex">#000000</div>
+      <div class="swatch-label">text, border, background</div>
+      <div class="swatch-label">2545 uses</div>
+    </div>
+  </div>
+  <div class="swatch">
+    <div class="swatch-color" style="background:#373a3c"></div>
+    <div class="swatch-info">
+      <div class="swatch-hex">#373a3c</div>
+      <div class="swatch-label">text, border</div>
+      <div class="swatch-label">1653 uses</div>
+    </div>
+  </div>
+  <div class="swatch">
+    <div class="swatch-color" style="background:#0d3464"></div>
+    <div class="swatch-info">
+      <div class="swatch-hex">#0d3464</div>
+      <div class="swatch-label">background, text, border</div>
+      <div class="swatch-label">461 uses</div>
+    </div>
+  </div>
+  <div class="swatch">
+    <div class="swatch-color" style="background:#efb215"></div>
+    <div class="swatch-info">
+      <div class="swatch-hex">#efb215</div>
+      <div class="swatch-label">text, border</div>
+      <div class="swatch-label">286 uses</div>
+    </div>
+  </div>
+  <div class="swatch">
+    <div class="swatch-color" style="background:#ffffff"></div>
+    <div class="swatch-info">
+      <div class="swatch-hex">#ffffff</div>
+      <div class="swatch-label">background, text, border</div>
+      <div class="swatch-label">284 uses</div>
+    </div>
+  </div>
+  <div class="swatch">
+    <div class="swatch-color" style="background:#7a7a7a"></div>
+    <div class="swatch-info">
+      <div class="swatch-hex">#7a7a7a</div>
+      <div class="swatch-label">text, border</div>
+      <div class="swatch-label">188 uses</div>
+    </div>
+  </div>
+  <div class="swatch">
+    <div class="swatch-color" style="background:#92989f"></div>
+    <div class="swatch-info">
+      <div class="swatch-hex">#92989f</div>
+      <div class="swatch-label">text, border</div>
+      <div class="swatch-label">100 uses</div>
+    </div>
+  </div>
+  <div class="swatch">
+    <div class="swatch-color" style="background:#fece00"></div>
+    <div class="swatch-info">
+      <div class="swatch-hex">#fece00</div>
+      <div class="swatch-label">background, text, border</div>
+      <div class="swatch-label">60 uses</div>
+    </div>
+  </div>
+  <div class="swatch">
+    <div class="swatch-color" style="background:#f4f4f4"></div>
+    <div class="swatch-info">
+      <div class="swatch-hex">#f4f4f4</div>
+      <div class="swatch-label">background, border</div>
+      <div class="swatch-label">53 uses</div>
+    </div>
+  </div>
+  <div class="swatch">
+    <div class="swatch-color" style="background:#007bff"></div>
+    <div class="swatch-info">
+      <div class="swatch-hex">#007bff</div>
+      <div class="swatch-label">background, text, border</div>
+      <div class="swatch-label">46 uses</div>
+    </div>
+  </div>
+  <div class="swatch">
+    <div class="swatch-color" style="background:#38812c"></div>
+    <div class="swatch-info">
+      <div class="swatch-hex">#38812c</div>
+      <div class="swatch-label">text, border</div>
+      <div class="swatch-label">30 uses</div>
+    </div>
+  </div>
+  <div class="swatch">
+    <div class="swatch-color" style="background:#c3c3c3"></div>
+    <div class="swatch-info">
+      <div class="swatch-hex">#c3c3c3</div>
+      <div class="swatch-label">border</div>
+      <div class="swatch-label">26 uses</div>
+    </div>
+  </div>
+  <div class="swatch">
+    <div class="swatch-color" style="background:#eaf9ff"></div>
+    <div class="swatch-info">
+      <div class="swatch-hex">#eaf9ff</div>
+      <div class="swatch-label">background</div>
+      <div class="swatch-label">19 uses</div>
+    </div>
+  </div>
+  <div class="swatch">
+    <div class="swatch-color" style="background:#d3d3d3"></div>
+    <div class="swatch-info">
+      <div class="swatch-hex">#d3d3d3</div>
+      <div class="swatch-label">border, text</div>
+      <div class="swatch-label">18 uses</div>
+    </div>
+  </div>
+  <div class="swatch">
+    <div class="swatch-color" style="background:#c4dce8"></div>
+    <div class="swatch-info">
+      <div class="swatch-hex">#c4dce8</div>
+      <div class="swatch-label">background</div>
+      <div class="swatch-label">15 uses</div>
+    </div>
+  </div>
+  <div class="swatch">
+    <div class="swatch-color" style="background:#e8e9ea"></div>
+    <div class="swatch-info">
+      <div class="swatch-hex">#e8e9ea</div>
+      <div class="swatch-label">border</div>
+      <div class="swatch-label">15 uses</div>
+    </div>
+  </div>
+  <div class="swatch">
+    <div class="swatch-color" style="background:#222222"></div>
+    <div class="swatch-info">
+      <div class="swatch-hex">#222222</div>
+      <div class="swatch-label">text, border</div>
+      <div class="swatch-label">12 uses</div>
+    </div>
+  </div>
+  <div class="swatch">
+    <div class="swatch-color" style="background:#f7dede"></div>
+    <div class="swatch-info">
+      <div class="swatch-hex">#f7dede</div>
+      <div class="swatch-label">border</div>
+      <div class="swatch-label">12 uses</div>
+    </div>
+  </div>
+  <div class="swatch">
+    <div class="swatch-color" style="background:#55595c"></div>
+    <div class="swatch-info">
+      <div class="swatch-hex">#55595c</div>
+      <div class="swatch-label">text, background</div>
+      <div class="swatch-label">4 uses</div>
+    </div>
+  </div>
+  <div class="swatch">
+    <div class="swatch-color" style="background:#707070"></div>
+    <div class="swatch-info">
+      <div class="swatch-hex">#707070</div>
+      <div class="swatch-label">background, text, border</div>
+      <div class="swatch-label">4 uses</div>
+    </div>
+  </div>
+</div>
+
+
+<h3>Gradients</h3>
+<div class="grid grid-2">
+  <div class="swatch"><div class="swatch-color" style="background-image:linear-gradient(rgba(0, 0, 0, 0) 80%, rgb(255, 212, 0) 80%);height:100px"></div></div>
+</div>
+
+<!-- Typography -->
+<h2>Typography</h2>
+
+
+<h3>Font Families</h3>
+<div>
+  <span class="font-tag">proxima-nova-regular <span style="color:#666">(all, 2219x)</span></span><span class="font-tag">Font Awesome 6 Free <span style="color:#666">(body, 145x)</span></span><span class="font-tag">montserrat-semibold <span style="color:#666">(all, 131x)</span></span><span class="font-tag">proxima-nova-medium <span style="color:#666">(all, 106x)</span></span><span class="font-tag">sans-serif <span style="color:#666">(all, 84x)</span></span><span class="font-tag">montserrat-medium <span style="color:#666">(body, 59x)</span></span><span class="font-tag">montserrat-bold <span style="color:#666">(all, 30x)</span></span><span class="font-tag">proxima-nova-bold <span style="color:#666">(all, 24x)</span></span><span class="font-tag">proxima-nova-extrabold <span style="color:#666">(body, 15x)</span></span><span class="font-tag">proxima-nova-semibold <span style="color:#666">(headings, 2x)</span></span>
+</div>
+
+
+<h3>Type Scale</h3>
+<div>
+  
+  <div class="type-row">
+    <span class="type-size">29px</span>
+    <span style="font-size:29px;font-weight:400;color:var(--text-heading)">The quick brown fox</span>
+    <span class="type-meta">400 / 43.5px</span>
+  </div>
+  <div class="type-row">
+    <span class="type-size">22px</span>
+    <span style="font-size:22px;font-weight:400;color:var(--text-heading)">The quick brown fox</span>
+    <span class="type-meta">400 / 22px</span>
+  </div>
+  <div class="type-row">
+    <span class="type-size">20px</span>
+    <span style="font-size:20px;font-weight:400;color:var(--text-heading)">The quick brown fox</span>
+    <span class="type-meta">400 / 30px</span>
+  </div>
+  <div class="type-row">
+    <span class="type-size">19px</span>
+    <span style="font-size:19px;font-weight:400;color:var(--text-heading)">The quick brown fox</span>
+    <span class="type-meta">400 / 28.5px</span>
+  </div>
+  <div class="type-row">
+    <span class="type-size">18.72px</span>
+    <span style="font-size:18.72px;font-weight:400;color:var(--text-heading)">The quick brown fox</span>
+    <span class="type-meta">400 / 28.08px</span>
+  </div>
+  <div class="type-row">
+    <span class="type-size">18px</span>
+    <span style="font-size:18px;font-weight:400;color:var(--text-heading)">The quick brown fox</span>
+    <span class="type-meta">400 / 27px</span>
+  </div>
+  <div class="type-row">
+    <span class="type-size">16px</span>
+    <span style="font-size:16px;font-weight:400;color:var(--text-heading)">The quick brown fox</span>
+    <span class="type-meta">400 / 18.4px</span>
+  </div>
+  <div class="type-row">
+    <span class="type-size">15.21px</span>
+    <span style="font-size:15.21px;font-weight:400;color:var(--text-heading)">The quick brown fox</span>
+    <span class="type-meta">400 / 22.815px</span>
+  </div>
+  <div class="type-row">
+    <span class="type-size">15px</span>
+    <span style="font-size:15px;font-weight:600;color:var(--text-heading)">The quick brown fox</span>
+    <span class="type-meta">600 / 22.5px</span>
+  </div>
+  <div class="type-row">
+    <span class="type-size">14px</span>
+    <span style="font-size:14px;font-weight:400;color:var(--text-heading)">The quick brown fox</span>
+    <span class="type-meta">400 / 21px</span>
+  </div>
+  <div class="type-row">
+    <span class="type-size">13.8px</span>
+    <span style="font-size:13.8px;font-weight:400;color:var(--text-heading)">The quick brown fox</span>
+    <span class="type-meta">400 / 20.7px</span>
+  </div>
+  <div class="type-row">
+    <span class="type-size">13px</span>
+    <span style="font-size:13px;font-weight:400;color:var(--text-heading)">The quick brown fox</span>
+    <span class="type-meta">400 / 19.5px</span>
+  </div>
+</div>
+
+<!-- Spacing -->
+
+<h2>Spacing Scale</h2>
+<div>
+  
+  <div class="spacing-row">
+    <span class="spacing-label">0px</span>
+    <div class="spacing-bar" style="width:0px"></div>
+  </div>
+  <div class="spacing-row">
+    <span class="spacing-label">20px</span>
+    <div class="spacing-bar" style="width:40px"></div>
+  </div>
+  <div class="spacing-row">
+    <span class="spacing-label">24px</span>
+    <div class="spacing-bar" style="width:48px"></div>
+  </div>
+  <div class="spacing-row">
+    <span class="spacing-label">30px</span>
+    <div class="spacing-bar" style="width:60px"></div>
+  </div>
+  <div class="spacing-row">
+    <span class="spacing-label">32px</span>
+    <div class="spacing-bar" style="width:64px"></div>
+  </div>
+  <div class="spacing-row">
+    <span class="spacing-label">35px</span>
+    <div class="spacing-bar" style="width:70px"></div>
+  </div>
+  <div class="spacing-row">
+    <span class="spacing-label">37px</span>
+    <div class="spacing-bar" style="width:74px"></div>
+  </div>
+  <div class="spacing-row">
+    <span class="spacing-label">40px</span>
+    <div class="spacing-bar" style="width:80px"></div>
+  </div>
+  <div class="spacing-row">
+    <span class="spacing-label">43px</span>
+    <div class="spacing-bar" style="width:86px"></div>
+  </div>
+  <div class="spacing-row">
+    <span class="spacing-label">58px</span>
+    <div class="spacing-bar" style="width:116px"></div>
+  </div>
+  <div class="spacing-row">
+    <span class="spacing-label">95px</span>
+    <div class="spacing-bar" style="width:190px"></div>
+  </div>
+  <div class="spacing-row">
+    <span class="spacing-label">135px</span>
+    <div class="spacing-bar" style="width:270px"></div>
+  </div>
+  <div class="spacing-row">
+    <span class="spacing-label">155px</span>
+    <div class="spacing-bar" style="width:310px"></div>
+  </div>
+  <div class="spacing-row">
+    <span class="spacing-label">361px</span>
+    <div class="spacing-bar" style="width:500px"></div>
+  </div>
+</div>
+
+<!-- Shadows -->
+
+<h2>Box Shadows</h2>
+<div class="grid grid-3">
+  
+  <div class="shadow-card" style="box-shadow:rgba(0, 0, 0, 0.12) 0px 4px 16px 0px">
+    <span class="shadow-label">lg</span>
+  </div>
+</div>
+
+<!-- Border Radii -->
+
+<h2>Border Radii</h2>
+<div style="display:flex;gap:16px;flex-wrap:wrap;align-items:end">
+  
+  <div style="text-align:center">
+    <div class="radius-item" style="border-radius:3px">3px</div>
+    <div style="font-size:11px;color:#666;margin-top:6px">sm</div>
+  </div>
+  <div style="text-align:center">
+    <div class="radius-item" style="border-radius:8px">8px</div>
+    <div style="font-size:11px;color:#666;margin-top:6px">md</div>
+  </div>
+  <div style="text-align:center">
+    <div class="radius-item" style="border-radius:12px">12px</div>
+    <div style="font-size:11px;color:#666;margin-top:6px">lg</div>
+  </div>
+  <div style="text-align:center">
+    <div class="radius-item" style="border-radius:20px">20px</div>
+    <div style="font-size:11px;color:#666;margin-top:6px">xl</div>
+  </div>
+  <div style="text-align:center">
+    <div class="radius-item" style="border-radius:50px">50px</div>
+    <div style="font-size:11px;color:#666;margin-top:6px">full</div>
+  </div>
+</div>
+
+<!-- Accessibility -->
+
+<h2>Accessibility</h2>
+<div style="display:flex;align-items:center;gap:24px;margin-bottom:24px">
+  <div class="a11y-score bad">41%</div>
+  <div>
+    <div style="color:#fff;font-weight:600">WCAG Contrast Score</div>
+    <div style="color:#666;font-size:14px">24 passing / 34 failing color pairs</div>
+  </div>
+</div>
+
+<h3>Color Pair Analysis</h3>
+
+<div class="a11y-pair">
+  <div class="a11y-sample" style="background:#007bff;color:#ffffff">Sample</div>
+  <div style="font-family:monospace;font-size:12px;color:#888">#ffffff on #007bff</div>
+  <div class="a11y-ratio">3.98:1</div>
+  <span class="a11y-badge fail">FAIL</span>
+  <div style="font-size:11px;color:#555;margin-left:auto">34x</div>
+</div>
+<div class="a11y-pair">
+  <div class="a11y-sample" style="background:#f0f0f0;color:#000000">Sample</div>
+  <div style="font-family:monospace;font-size:12px;color:#888">#000000 on #f0f0f0</div>
+  <div class="a11y-ratio">18.43:1</div>
+  <span class="a11y-badge pass">AAA</span>
+  <div style="font-size:11px;color:#555;margin-left:auto">15x</div>
+</div>
+<div class="a11y-pair">
+  <div class="a11y-sample" style="background:#ffd400;color:#000000">Sample</div>
+  <div style="font-family:monospace;font-size:12px;color:#888">#000000 on #ffd400</div>
+  <div class="a11y-ratio">14.67:1</div>
+  <span class="a11y-badge pass">AAA</span>
+  <div style="font-size:11px;color:#555;margin-left:auto">3x</div>
+</div>
+<div class="a11y-pair">
+  <div class="a11y-sample" style="background:#fdfbff;color:#000000">Sample</div>
+  <div style="font-family:monospace;font-size:12px;color:#888">#000000 on #fdfbff</div>
+  <div class="a11y-ratio">20.42:1</div>
+  <span class="a11y-badge pass">AAA</span>
+  <div style="font-size:11px;color:#555;margin-left:auto">2x</div>
+</div>
+<div class="a11y-pair">
+  <div class="a11y-sample" style="background:#fece00;color:#0d3464">Sample</div>
+  <div style="font-family:monospace;font-size:12px;color:#888">#0d3464 on #fece00</div>
+  <div class="a11y-ratio">8.3:1</div>
+  <span class="a11y-badge pass">AAA</span>
+  <div style="font-size:11px;color:#555;margin-left:auto">1x</div>
+</div>
+<div class="a11y-pair">
+  <div class="a11y-sample" style="background:#ffffff;color:#808080">Sample</div>
+  <div style="font-family:monospace;font-size:12px;color:#888">#808080 on #ffffff</div>
+  <div class="a11y-ratio">3.95:1</div>
+  <span class="a11y-badge pass">AA</span>
+  <div style="font-size:11px;color:#555;margin-left:auto">1x</div>
+</div>
+<div class="a11y-pair">
+  <div class="a11y-sample" style="background:#ffffff;color:#283646">Sample</div>
+  <div style="font-family:monospace;font-size:12px;color:#888">#283646 on #ffffff</div>
+  <div class="a11y-ratio">12.31:1</div>
+  <span class="a11y-badge pass">AAA</span>
+  <div style="font-size:11px;color:#555;margin-left:auto">1x</div>
+</div>
+<div class="a11y-pair">
+  <div class="a11y-sample" style="background:#0d3464;color:#ffffff">Sample</div>
+  <div style="font-family:monospace;font-size:12px;color:#888">#ffffff on #0d3464</div>
+  <div class="a11y-ratio">12.41:1</div>
+  <span class="a11y-badge pass">AAA</span>
+  <div style="font-size:11px;color:#555;margin-left:auto">1x</div>
+</div>
+
+
+<!-- Component Screenshots -->
+
+<h2>Component Screenshots</h2>
+<div class="grid grid-2">
+  
+  <div>
+    <h3>undefined</h3>
+    <img class="comp-screenshot" src="undefined" alt="undefined" />
+  </div>
+  <div>
+    <h3>undefined</h3>
+    <img class="comp-screenshot" src="screenshots/full-page.png" alt="undefined" />
+  </div>
+  <div>
+    <h3>undefined</h3>
+    <img class="comp-screenshot" src="undefined" alt="undefined" />
+  </div>
+</div>
+
+</div>
+<script>
+function toggleTheme() {
+  const html = document.documentElement;
+  const current = html.getAttribute('data-theme');
+  html.setAttribute('data-theme', current === 'light' ? 'dark' : 'light');
+}
+document.querySelectorAll('.swatch').forEach(el => {
+  el.addEventListener('click', () => {
+    const hex = el.querySelector('.swatch-hex');
+    if (!hex) return;
+    navigator.clipboard.writeText(hex.textContent).then(() => {
+      let tip = el.querySelector('.copied-tip');
+      if (!tip) { tip = document.createElement('div'); tip.className = 'copied-tip'; tip.textContent = 'Copied!'; el.appendChild(tip); }
+      tip.classList.add('show');
+      setTimeout(() => tip.classList.remove('show'), 1200);
+    });
+  });
+});
+</script>
+</body>
+</html>

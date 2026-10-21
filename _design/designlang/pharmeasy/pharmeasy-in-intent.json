@@ -1,0 +1,82 @@
+{
+  "pageIntent": {
+    "type": "landing",
+    "confidence": 0.31,
+    "path": "/",
+    "title": "PharmEasy – Online Pharmacy & Medical Store with Healthcare Services in India | 50 Lakhs+ Customers",
+    "description": "PharmEasy, one of India's most trusted online pharmacy & medical stores, offers online medicine delivery, lab tests, online doctor consultation, home vaccination service and healthcare essentials acro",
+    "signals": [
+      {
+        "kind": "dom",
+        "type": "auth",
+        "weight": 0.35,
+        "detail": "auth-form-shape"
+      },
+      {
+        "kind": "url",
+        "type": "landing",
+        "weight": 0.45,
+        "detail": "root-path"
+      }
+    ],
+    "alternates": [
+      {
+        "type": "auth",
+        "score": 0.35
+      }
+    ],
+    "needsSmart": true
+  },
+  "sectionRoles": {
+    "sections": [
+      {
+        "index": 0,
+        "tag": "header",
+        "role": "nav",
+        "subrole": null,
+        "confidence": 0.4,
+        "heading": null,
+        "bounds": {
+          "x": 0,
+          "y": 0,
+          "w": 1280,
+          "h": 64
+        },
+        "buttonCount": 1,
+        "cardCount": 376,
+        "slots": {
+          "ctaCount": 1,
+          "lede": "Delivery to\nSelect Location\nHello, Log in\nOffers\nCart\nMedicine\nHealthcare\nDoctor Consult\nLab Tests\nPLUS\nHealth Insights\nOffers\nAskEasy"
+        },
+        "needsSmart": true
+      },
+      {
+        "index": 1,
+        "tag": "nav",
+        "role": "nav",
+        "subrole": null,
+        "confidence": 0.9,
+        "heading": null,
+        "bounds": {
+          "x": 0,
+          "y": 58,
+          "w": 1280,
+          "h": 40
+        },
+        "buttonCount": 0,
+        "cardCount": 376,
+        "slots": {
+          "lede": "Medicine\nHealthcare\nDoctor Consult\nLab Tests\nPLUS\nHealth Insights\nOffers\nAskEasy"
+        },
+        "needsSmart": false
+      }
+    ],
+    "counts": {
+      "nav": 2
+    },
+    "readingOrder": [
+      "nav",
+      "nav"
+    ]
+  }
+}

@@ -1,0 +1,282 @@
+{
+  "$metadata": {
+    "generator": "designlang",
+    "version": "7.0.0",
+    "spec": "https://design-tokens.github.io/community-group/format/",
+    "source": "https://pharmeasy.in",
+    "generatedAt": "2026-10-21T06:39:08.575Z"
+  },
+  "primitive": {
+    "color": {
+      "brand": {
+        "primary": {
+          "$value": "#fff8e3",
+          "$type": "color"
+        },
+        "secondary": {
+          "$value": "#10847e",
+          "$type": "color"
+        }
+      },
+      "neutral": {
+        "n100": {
+          "$value": "#30363c",
+          "$type": "color"
+        },
+        "n200": {
+          "$value": "#000000",
+          "$type": "color"
+        },
+        "n300": {
+          "$value": "#8897a2",
+          "$type": "color"
+        },
+        "n400": {
+          "$value": "#ffffff",
+          "$type": "color"
+        },
+        "n500": {
+          "$value": "#4f585e",
+          "$type": "color"
+        },
+        "n600": {
+          "$value": "#f1f1f2",
+          "$type": "color"
+        },
+        "n700": {
+          "$value": "#6e787e",
+          "$type": "color"
+        },
+        "n800": {
+          "$value": "#808080",
+          "$type": "color"
+        }
+      },
+      "background": {
+        "bg0": {
+          "$value": "#ffffff",
+          "$type": "color"
+        },
+        "bg1": {
+          "$value": "#ebf2ff",
+          "$type": "color"
+        },
+        "bg2": {
+          "$value": "#8678de",
+          "$type": "color"
+        },
+        "bg3": {
+          "$value": "#f1fafe",
+          "$type": "color"
+        },
+        "bg4": {
+          "$value": "#fff8e3",
+          "$type": "color"
+        },
+        "bg5": {
+          "$value": "#f5f8fc",
+          "$type": "color"
+        },
+        "bg6": {
+          "$value": "#def7f8",
+          "$type": "color"
+        },
+        "bg7": {
+          "$value": "#f2fff8",
+          "$type": "color"
+        },
+        "bg8": {
+          "$value": "#eef4ff",
+          "$type": "color"
+        }
+      },
+      "text": {
+        "text0": {
+          "$value": "#000000",
+          "$type": "color"
+        },
+        "text1": {
+          "$value": "#30363c",
+          "$type": "color"
+        },
+        "text2": {
+          "$value": "#4f585e",
+          "$type": "color"
+        },
+        "text3": {
+          "$value": "#10847e",
+          "$type": "color"
+        },
+        "text4": {
+          "$value": "#8897a2",
+          "$type": "color"
+        },
+        "text5": {
+          "$value": "#ffffff",
+          "$type": "color"
+        },
+        "text6": {
+          "$value": "#f47779",
+          "$type": "color"
+        },
+        "text7": {
+          "$value": "#3661b0",
+          "$type": "color"
+        },
+        "text8": {
+          "$value": "#6e787e",
+          "$type": "color"
+        },
+        "text9": {
+          "$value": "#cfc9f2",
+          "$type": "color"
+        }
+      }
+    },
+    "spacing": {
+      "s0": {
+        "$value": "4px",
+        "$type": "dimension"
+      },
+      "s1": {
+        "$value": "32px",
+        "$type": "dimension"
+      },
+      "s2": {
+        "$value": "40px",
+        "$type": "dimension"
+      },
+      "s3": {
+        "$value": "48px",
+        "$type": "dimension"
+      },
+      "s4": {
+        "$value": "56px",
+        "$type": "dimension"
+      },
+      "s5": {
+        "$value": "80px",
+        "$type": "dimension"
+      },
+      "s6": {
+        "$value": "157px",
+        "$type": "dimension"
+      },
+      "s7": {
+        "$value": "491px",
+        "$type": "dimension"
+      }
+    },
+    "radius": {
+      "r0": {
+        "$value": "2px",
+        "$type": "dimension"
+      },
+      "r1": {
+        "$value": "8px",
+        "$type": "dimension"
+      },
+      "r2": {
+        "$value": "12px",
+        "$type": "dimension"
+      },
+      "r3": {
+        "$value": "16px",
+        "$type": "dimension"
+      },
+      "r4": {
+        "$value": "24px",
+        "$type": "dimension"
+      },
+      "r5": {
+        "$value": "50px",
+        "$type": "dimension"
+      },
+      "r6": {
+        "$value": "100px",
+        "$type": "dimension"
+      }
+    },
+    "shadow": {
+      "sh0": {
+        "$value": "rgba(0, 0, 0, 0.12) 0px -1px 0px 0px inset",
+        "$type": "shadow"
+      },
+      "sh1": {
+        "$value": "rgba(0, 0, 0, 0.06) 0px 4px 8px 0px",
+        "$type": "shadow"
+      },
+      "sh2": {
+        "$value": "rgba(0, 0, 0, 0.2) 0px 2px 10px 0px",
+        "$type": "shadow"
+      },
+      "sh3": {
+        "$value": "rgba(33, 33, 33, 0.06) 0px 6px 10px 0px, rgba(33, 33, 33, 0.04) 0px 1px 18px 0px, rgba(33, 33, 33, 0.08) 0px 3px 5px 0px",
+        "$type": "shadow"
+      },
+      "sh4": {
+        "$value": "rgba(33, 33, 33, 0.06) 0px 8px 10px 0px, rgba(33, 33, 33, 0.04) 0px 3px 14px 0px, rgba(33, 33, 33, 0.08) 0px 5px 5px 0px",
+        "$type": "shadow"
+      }
+    },
+    "fontFamily": {
+      "f0": {
+        "$value": "Inter",
+        "$type": "fontFamily"
+      },
+      "f1": {
+        "$value": "Times New Roman",
+        "$type": "fontFamily"
+      }
+    }
+  },
+  "semantic": {
+    "color": {
+      "action": {
+        "primary": {
+          "$value": "{primitive.color.brand.primary}",
+          "$type": "color"
+        },
+        "secondary": {
+          "$value": "{primitive.color.brand.secondary}",
+          "$type": "color"
+        }
+      },
+      "surface": {
+        "default": {
+          "$value": "{primitive.color.background.bg0}",
+          "$type": "color"
+        }
+      },
+      "text": {
+        "body": {
+          "$value": "{primitive.color.text.text0}",
+          "$type": "color"
+        }
+      }
+    },
+    "typography": {
+      "body": {
+        "$value": {
+          "fontFamily": "Inter",
+          "fontSize": "40px",
+          "fontWeight": "600",
+          "lineHeight": "40px"
+        },
+        "$type": "typography"
+      }
+    },
+    "radius": {
+      "control": {
+        "$value": "{primitive.radius.r0}",
+        "$type": "dimension"
+      }
+    },
+    "shadow": {
+      "elevated": {
+        "$value": "{primitive.shadow.sh0}",
+        "$type": "shadow"
+      }
+    }
+  }
+}

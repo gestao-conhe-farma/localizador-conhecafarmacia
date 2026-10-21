@@ -1,0 +1,19 @@
+/* shadcn/ui Theme — extracted from https://pharmeasy.in */
+/* Paste into your globals.css */
+
+@layer base {
+  :root {
+    --background: 0 0% 100%;
+    --foreground: 0 0% 0%;
+    --primary: 45 100% 95%;
+    --primary-foreground: 0 0% 0%;
+    --secondary: 177 78% 29%;
+    --secondary-foreground: 0 0% 100%;
+    --accent: 128 63% 36%;
+    --accent-foreground: 0 0% 100%;
+    --muted: 0 0% 50%;
+    --muted-foreground: 210 11% 21%;
+    --border: 204 9% 34%;
+    --radius: 8px;
+  }
+}

@@ -1,0 +1,769 @@
+<!doctype html>
+<html lang="pt">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Modelo D · Balcão — /farmacia e /farmacia/[slug]</title>
+<link rel="stylesheet" href="loja.css">
+<style>
+  /* ---------- lista: decisão com filtros de loja ---------- */
+  .open{padding:52px 0 0;display:grid;grid-template-columns:1fr 430px;gap:56px;align-items:end}
+  .open h1{font-family:var(--serif);font-size:50px;font-weight:600;letter-spacing:-.026em;line-height:1.02;margin-top:14px}
+  .open h1 em{font-style:italic;color:var(--accent)}
+  .open-sub{margin-top:18px;max-width:48ch;color:var(--muted);font-size:15px;line-height:1.65}
+  .searchbox{padding-bottom:4px}
+  .searchbox label{display:block;font-size:10px;letter-spacing:.18em;text-transform:uppercase;color:var(--muted);font-weight:700;margin-bottom:9px}
+  .searchbox .field-wrap{box-shadow:0 1px 0 rgba(0,42,50,.06)}
+  .searchbox .hint{font-size:11.5px;color:var(--muted-2);margin-top:9px;display:flex;justify-content:space-between;gap:14px}
+  .searchbox .hint button{color:var(--muted);border-bottom:1px solid var(--line)}
+
+  .toolbar{display:flex;justify-content:space-between;align-items:center;gap:20px;border-top:1px solid var(--line);margin-top:40px;padding:15px 0;flex-wrap:wrap}
+  .zones{display:flex;gap:6px;flex-wrap:wrap;align-items:center}
+  .zones .lbl{font-size:10px;letter-spacing:.16em;text-transform:uppercase;color:var(--muted-2);margin-right:6px;font-weight:700}
+  .toolbar .right{display:flex;align-items:center;gap:12px;font-size:12px;color:var(--muted-2)}
+
+  .layout{display:grid;grid-template-columns:232px 1fr;gap:42px;padding-bottom:30px;align-items:start}
+  .filters{position:sticky;top:18px;background:var(--card);border:1px solid var(--line);padding:22px 22px 20px}
+  .filters h3{font-size:10px;letter-spacing:.18em;text-transform:uppercase;color:var(--muted);font-weight:700;margin-bottom:12px}
+  .fgroup{padding:16px 0;border-top:1px solid var(--line)}
+  .filters .fgroup:first-of-type{border-top:0;padding-top:0}
+  .check{display:flex;align-items:center;gap:10px;font-size:12.5px;color:var(--muted);padding:5px 0;cursor:pointer;line-height:1.4}
+  .check input{appearance:none;width:15px;height:15px;border:1px solid rgba(0,42,50,.32);border-radius:2px;flex:none;display:grid;place-items:center;background:var(--paper)}
+  .check input:checked{background:var(--green);border-color:var(--green)}
+  .check input:checked::after{content:"✓";color:#fff;font-size:10px;line-height:1}
+  .check input:focus-visible{outline:2px solid var(--accent);outline-offset:2px}
+  .check .n{margin-left:auto;font-size:11px;color:var(--muted-2);font-variant-numeric:tabular-nums}
+  .filters .foot{border-top:1px solid var(--line);padding-top:14px;margin-top:4px;display:flex;justify-content:space-between;align-items:center;gap:10px}
+  .filters .foot span{font-size:11px;color:var(--muted-2)}
+  .filters .reset{font-size:11.5px;font-weight:600;border-bottom:1px solid var(--line)}
+
+  .results-head{display:flex;justify-content:space-between;align-items:baseline;gap:20px;margin-bottom:14px}
+  .results-head h2{font-family:var(--serif);font-size:23px;font-weight:600;letter-spacing:-.01em}
+  .results-head .count{font-size:12px;color:var(--muted-2)}
+  .results-head .count b{color:var(--ink);font-weight:600}
+
+  .store-list{display:grid;grid-template-columns:1fr 1fr;gap:18px}
+  .store-card{background:var(--card);border:1px solid var(--line);padding:22px 22px 18px;display:flex;flex-direction:column;gap:12px;transition:border-color .16s}
+  .store-card:hover{border-color:rgba(0,42,50,.3)}
+  .store-card .top{display:flex;justify-content:space-between;gap:14px;align-items:flex-start}
+  .store-card h3{font-family:var(--serif);font-size:24px;font-weight:600;letter-spacing:-.014em;line-height:1.1}
+  .store-card .where{font-size:12px;color:var(--muted);margin-top:5px}
+  .store-card .stat{display:flex;gap:14px;align-items:baseline;font-size:11.5px;color:var(--muted-2);flex-wrap:wrap}
+  .store-card .stat b{font-family:var(--serif);font-size:22px;font-weight:600;color:var(--ink);font-variant-numeric:tabular-nums;margin-right:3px}
+  .minis{border-top:1px solid var(--line);margin-top:2px}
+  .mini{display:flex;justify-content:space-between;align-items:center;gap:10px;padding:7px 0;border-bottom:1px solid var(--line);font-size:12px;width:100%;text-align:left}
+  .mini .nm{color:var(--ink);white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+  .mini .nm .s{color:var(--muted-2);font-size:10.5px}
+  .mini .rt{display:flex;align-items:center;gap:9px;flex:none;color:var(--muted)}
+  .mini:hover .nm{color:var(--accent)}
+  .mini .plus{width:18px;height:18px;border:1px solid var(--line);border-radius:50%;display:grid;place-items:center;font-size:11px;color:var(--muted)}
+  .mini:hover .plus{border-color:var(--accent);color:var(--accent)}
+  .store-card .foot{display:flex;justify-content:space-between;align-items:center;gap:12px;margin-top:auto;padding-top:12px;font-size:12px;color:var(--muted)}
+  .store-card .foot .acts{display:flex;gap:12px}
+  .store-card .foot a{font-weight:600;color:var(--ink);border-bottom:1px solid var(--line);padding-bottom:1px;font-size:12px}
+  .store-card .foot a:hover{color:var(--accent);border-color:var(--accent)}
+  .empty{border:1px dashed var(--line);padding:40px 30px;text-align:center;color:var(--muted);font-size:13.5px;display:none}
+  .empty b{display:block;font-family:var(--serif);font-size:23px;color:var(--ink);font-weight:600;margin-bottom:6px}
+
+  /* ---------- página da farmácia: prateleira ---------- */
+  .storeband{background:var(--green);color:var(--paper);padding:34px 0 36px}
+  .crumb{font-size:12px;color:rgba(255,253,249,.62);margin-bottom:20px}
+  .crumb a:hover{color:var(--paper)}
+  .band-grid{display:grid;grid-template-columns:1fr auto;gap:44px;align-items:end}
+  .storeband h1{font-family:var(--serif);font-size:46px;font-weight:600;line-height:1;letter-spacing:-.022em;margin-top:10px}
+  .storeband .addr{font-size:13px;color:rgba(255,253,249,.74);margin-top:12px}
+  .storeband .badges{display:flex;gap:18px;flex-wrap:wrap;margin-top:13px;font-size:11.5px;color:rgba(255,253,249,.8)}
+  .storeband .badges span{display:flex;align-items:center;gap:6px}
+  .storeband .kicker{color:#9fd8bd}
+  .storeband .acts{display:flex;gap:9px;flex-wrap:wrap;justify-content:flex-end}
+
+  .trust{display:flex;gap:0;border-bottom:1px solid var(--line)}
+  .trust div{padding:14px 26px 14px 0;margin-right:26px;border-right:1px solid var(--line);font-size:11px;color:var(--muted-2);line-height:1.45}
+  .trust div:last-child{border-right:0}
+  .trust b{display:block;font-size:13px;color:var(--ink);font-weight:600;margin-bottom:1px}
+
+  .catbar{position:sticky;top:0;z-index:15;background:rgba(255,253,249,.96);border-bottom:1px solid var(--line);backdrop-filter:blur(6px)}
+  .catbar-in{display:flex;justify-content:space-between;align-items:center;gap:18px;padding:11px 0;flex-wrap:wrap}
+  .tabs{display:flex;gap:3px;flex-wrap:wrap}
+  .tab{padding:8px 13px;border-radius:999px;font-size:12.5px;color:var(--muted);white-space:nowrap}
+  .tab .n{font-size:10.5px;color:var(--muted-2);margin-left:5px;font-variant-numeric:tabular-nums}
+  .tab:hover{color:var(--ink)}
+  .tab.on{background:var(--ink);color:var(--paper)}
+  .tab.on .n{color:rgba(255,253,249,.62)}
+  .catbar .field-wrap{width:250px}
+  .catbar .field{padding:9px 14px 9px 36px;font-size:12.5px}
+  .catbar .field-wrap .ico{left:14px;font-size:12px}
+
+  .shelf{padding:26px 0 0}
+  .shelf-head{display:flex;justify-content:space-between;align-items:baseline;gap:20px;margin-bottom:16px}
+  .shelf-head h2{font-family:var(--serif);font-size:28px;font-weight:600;letter-spacing:-.014em}
+  .shelf-head span{font-size:12px;color:var(--muted-2)}
+
+  .prodgrid{display:grid;grid-template-columns:repeat(3,1fr);gap:18px;align-items:stretch}
+  .prod{width:100%}
+  /* parafarmácia não usa o verde dos medicamentos na barra da embalagem */
+  .prod[data-cat="Parafarmácia"] .pack::before{background:var(--muted-2)}
+
+  .shelf-note{margin-top:26px;border:1px solid var(--line);background:var(--paper-2);padding:18px 22px;display:flex;gap:18px;justify-content:space-between;align-items:center;flex-wrap:wrap}
+  .shelf-note p{font-size:12px;color:var(--muted);max-width:76ch;line-height:1.6}
+  .shelf-note b{color:var(--ink)}
+
+  @media (max-width:1040px){
+    .open{grid-template-columns:1fr;gap:26px}
+    .layout{grid-template-columns:1fr}
+    .filters{position:static;display:grid;grid-template-columns:repeat(3,1fr);gap:0 24px}
+    .filters .fgroup{border-top:0;padding-top:0}
+    .filters .foot{grid-column:1/-1;border-top:1px solid var(--line)}
+    .prodgrid{grid-template-columns:1fr 1fr}
+  }
+  @media (max-width:760px){
+    .store-list{grid-template-columns:1fr}
+    .prodgrid{grid-template-columns:1fr}
+    .open h1{font-size:38px}
+    .band-grid{grid-template-columns:1fr}
+    .storeband .acts{justify-content:flex-start}
+    .trust{flex-wrap:wrap}
+    .catbar .field-wrap{width:100%}
+  }
+</style>
+</head>
+<body>
+
+<div class="review"><div class="wrap">
+  <b>Modelo D · Balcão</b>
+  <a href="modelo-a-indice.html">A · Índice</a>
+  <a href="modelo-b-mapa.html">B · Mapa</a>
+  <a href="modelo-c-montra.html">C · Montra</a>
+  <a href="modelo-d-balcao.html" class="on">D · Balcão</a>
+  <a href="modelo-e-busca.html">E · Busca</a>
+  <a href="modelo-f-ficha.html">F · Ficha</a>
+  <a href="LEIA-ME.md">notas</a>
+</div></div>
+
+<!-- ============================================================ -->
+<!-- 01 · LISTA                                                   -->
+<!-- ============================================================ -->
+<section id="lista">
+  <header class="hdr"><div class="hdr-in">
+    <a class="logo" href="#"><img src="assets/logo.png" alt="Conheça Farmácia"><span>Localizador</span></a>
+    <nav class="nav">
+      <a href="#">Pesquisar</a>
+      <a class="on" href="#lista">Farmácias</a>
+      <a href="#">Sobre</a>
+    </nav>
+    <span class="hdr-r">conhecafarmacia.com ↗</span>
+  </div></header>
+
+  <div class="wrap">
+    <div class="open">
+      <div>
+        <p class="kicker">A rede · Luanda</p>
+        <h1>Qual farmácia<br>tem <em>o que procura?</em></h1>
+        <p class="open-sub">Filtre pelo que precisa — zona, portas abertas e produto em stock — e veja a prateleira antes de sair de casa. Sete farmácias, stock escrito por quem o tem à frente.</p>
+      </div>
+      <div class="searchbox">
+        <label for="q">Procurar produto ou farmácia</label>
+        <div class="field-wrap">
+          <span class="ico" aria-hidden="true">⌕</span>
+          <input class="field" id="q" type="search" placeholder="paracetamol, soro, São Rafael…" autocomplete="off">
+        </div>
+        <p class="hint"><span>Ex.: paracetamol · insulina · fraldas</span><button type="button" id="clear-q">limpar</button></p>
+      </div>
+    </div>
+
+    <div class="toolbar">
+      <div class="zones" id="zones">
+        <span class="lbl">Zona</span>
+        <button class="chip on" type="button" data-zone="Todas">Todas</button>
+        <button class="chip" type="button" data-zone="Talatona">Talatona</button>
+        <button class="chip" type="button" data-zone="Luanda">Luanda</button>
+        <button class="chip" type="button" data-zone="Viana">Viana</button>
+        <button class="chip" type="button" data-zone="Belas">Belas</button>
+        <button class="chip" type="button" data-zone="Cacuaco">Cacuaco</button>
+      </div>
+      <div class="right">
+        <label for="sort" class="sr-only">Ordenar</label>
+        <select class="select" id="sort">
+          <option value="stock">Mais stock primeiro</option>
+          <option value="fresh">Confirmação mais recente</option>
+          <option value="name">Nome (A–Z)</option>
+        </select>
+      </div>
+    </div>
+
+    <div class="layout">
+      <aside class="filters" aria-label="Filtros">
+        <h3>Refinar</h3>
+        <div class="fgroup">
+          <label class="check"><input type="checkbox" id="f-open"> Só abertas agora</label>
+          <label class="check"><input type="checkbox" id="f-stock"> Só com stock confirmado</label>
+        </div>
+        <div class="fgroup">
+          <label class="check"><input type="checkbox" id="f-rx"> Têm críticos com receita</label>
+          <label class="check"><input type="checkbox" id="f-para"> Têm parafarmácia</label>
+        </div>
+        <div class="fgroup">
+          <h3 style="margin-bottom:8px">Como ler</h3>
+          <p style="font-size:11.5px;color:var(--muted);line-height:1.55">O número é o stock confirmado hoje. Medicamentos saem do ar ao fim de 72 h sem confirmação; a parafarmácia aguenta 30 dias.</p>
+        </div>
+        <div class="foot">
+          <span id="f-count">7 farmácias</span>
+          <button class="reset" type="button" id="reset">limpar filtros</button>
+        </div>
+      </aside>
+
+      <div>
+        <div class="results-head">
+          <h2 id="result-title">Todas as farmácias</h2>
+          <span class="count" id="result-count"><b>7</b> resultados</span>
+        </div>
+
+        <div class="store-list" id="store-list">
+          <article class="store-card" data-zone="Talatona" data-open="1" data-stock="42" data-rx="1" data-para="1" data-fresh="12"
+                   data-search="são rafael talatona paracetamol amoxicilina soro insulina carbamazepina">
+            <div class="top">
+              <div>
+                <h3>São Rafael</h3>
+                <p class="where">Rua do Centro Comercial · Belas Business Park</p>
+              </div>
+              <span class="badge">Verificada</span>
+            </div>
+            <div class="stat"><span><b>42</b>produtos</span><span class="fresh"><i class="dot"></i>confirmado há 12 min</span></div>
+            <div class="minis">
+              <button class="mini" type="button" data-open-pdp="paracetamol" data-pharmacy="Farmácia São Rafael" data-hours="Aberta até 20:00">
+                <span class="nm">Paracetamol 500 mg <span class="s">· 20 comp.</span></span>
+                <span class="rt"><span class="price num">950 Kz</span><span class="plus">＋</span></span>
+              </button>
+              <button class="mini" type="button" data-open-pdp="amoxicilina" data-pharmacy="Farmácia São Rafael" data-hours="Aberta até 20:00">
+                <span class="nm">Amoxicilina 500 mg <span class="s">· 21 cáps.</span></span>
+                <span class="rt"><span class="price num">2 400 Kz</span><span class="plus">＋</span></span>
+              </button>
+              <button class="mini" type="button" data-open-pdp="soro" data-pharmacy="Farmácia São Rafael" data-hours="Aberta até 20:00">
+                <span class="nm">Soro fisiológico <span class="s">· 500 ml</span></span>
+                <span class="rt"><span class="price num">900 Kz</span><span class="plus">＋</span></span>
+              </button>
+            </div>
+            <div class="foot">
+              <span class="fresh"><i class="dot"></i>Aberta até 20:00</span>
+              <span class="acts"><a href="#">Ligar</a><a href="#farmacia">Ver stock →</a></span>
+            </div>
+          </article>
+
+          <article class="store-card" data-zone="Luanda" data-open="1" data-stock="31" data-rx="1" data-para="1" data-fresh="18"
+                   data-search="kianda luanda ingombota metformina paracetamol fraldas creme">
+            <div class="top">
+              <div><h3>Kianda</h3><p class="where">Rua Rainha Ginga 45 · Ingombota</p></div>
+              <span class="badge">Verificada</span>
+            </div>
+            <div class="stat"><span><b>31</b>produtos</span><span class="fresh"><i class="dot"></i>confirmado há 18 min</span></div>
+            <div class="minis">
+              <button class="mini" type="button" data-open-pdp="metformina" data-pharmacy="Farmácia Kianda" data-hours="Aberta até 19:00">
+                <span class="nm">Metformina 850 mg <span class="s">· 30 comp.</span></span>
+                <span class="rt"><span class="price num">1 850 Kz</span><span class="plus">＋</span></span>
+              </button>
+              <button class="mini" type="button" data-open-pdp="paracetamol" data-pharmacy="Farmácia Kianda" data-hours="Aberta até 19:00">
+                <span class="nm">Paracetamol 500 mg <span class="s">· 20 comp.</span></span>
+                <span class="rt"><span class="price num">950 Kz</span><span class="plus">＋</span></span>
+              </button>
+              <button class="mini" type="button" data-open-pdp="fraldas" data-pharmacy="Farmácia Kianda" data-hours="Aberta até 19:00">
+                <span class="nm">Fraldas tamanho M <span class="s">· 30 un.</span></span>
+                <span class="rt"><span class="price num">6 400 Kz</span><span class="plus">＋</span></span>
+              </button>
+            </div>
+            <div class="foot">
+              <span class="fresh"><i class="dot"></i>Aberta até 19:00</span>
+              <span class="acts"><a href="#">Ligar</a><a href="#farmacia">Ver stock →</a></span>
+            </div>
+          </article>
+
+          <article class="store-card" data-zone="Luanda" data-open="0" data-stock="24" data-rx="0" data-para="1" data-fresh="65"
+                   data-search="aliança luanda maianga kinaxixi omeprazol paracetamol soro">
+            <div class="top">
+              <div><h3>Aliança</h3><p class="where">Largo do Kinaxixi · Maianga</p></div>
+            </div>
+            <div class="stat"><span><b>24</b>produtos</span><span class="fresh"><i class="dot off"></i>confirmado há 1 h</span></div>
+            <div class="minis">
+              <button class="mini" type="button" data-open-pdp="omeprazol" data-pharmacy="Farmácia Aliança" data-hours="Abre às 08:00">
+                <span class="nm">Omeprazol 20 mg <span class="s">· 28 cáps.</span></span>
+                <span class="rt"><span class="price num">1 200 Kz</span><span class="plus">＋</span></span>
+              </button>
+              <button class="mini" type="button" data-open-pdp="paracetamol" data-pharmacy="Farmácia Aliança" data-hours="Abre às 08:00">
+                <span class="nm">Paracetamol 500 mg <span class="s">· 20 comp.</span></span>
+                <span class="rt"><span class="price num">950 Kz</span><span class="plus">＋</span></span>
+              </button>
+            </div>
+            <div class="foot">
+              <span class="fresh"><i class="dot off"></i>Abre às 08:00</span>
+              <span class="acts"><a href="#">Ligar</a><a href="#farmacia">Ver stock →</a></span>
+            </div>
+          </article>
+
+          <article class="store-card" data-zone="Viana" data-open="1" data-stock="18" data-rx="1" data-para="1" data-fresh="25"
+                   data-search="n'gola ngola viana catete amoxicilina soro paracetamol">
+            <div class="top">
+              <div><h3>N'Gola</h3><p class="where">Estrada de Catete, km 12 · Viana</p></div>
+              <span class="badge">Verificada</span>
+            </div>
+            <div class="stat"><span><b>18</b>produtos</span><span class="fresh"><i class="dot"></i>confirmado há 25 min</span></div>
+            <div class="minis">
+              <button class="mini" type="button" data-open-pdp="amoxicilina" data-pharmacy="Farmácia N'Gola" data-hours="Aberta até 21:00">
+                <span class="nm">Amoxicilina 500 mg <span class="s">· 21 cáps.</span></span>
+                <span class="rt"><span class="price num">2 400 Kz</span><span class="plus">＋</span></span>
+              </button>
+              <button class="mini" type="button" data-open-pdp="soro" data-pharmacy="Farmácia N'Gola" data-hours="Aberta até 21:00">
+                <span class="nm">Soro fisiológico <span class="s">· 500 ml</span></span>
+                <span class="rt"><span class="price num">900 Kz</span><span class="plus">＋</span></span>
+              </button>
+            </div>
+            <div class="foot">
+              <span class="fresh"><i class="dot"></i>Aberta até 21:00</span>
+              <span class="acts"><a href="#">Ligar</a><a href="#farmacia">Ver stock →</a></span>
+            </div>
+          </article>
+
+          <article class="store-card" data-zone="Belas" data-open="1" data-stock="12" data-rx="0" data-para="1" data-fresh="120"
+                   data-search="bem-estar benfica belas creme fraldas soro">
+            <div class="top">
+              <div><h3>Bem-Estar</h3><p class="where">Via S10, Benfica · Belas</p></div>
+              <span class="badge">Verificada</span>
+            </div>
+            <div class="stat"><span><b>12</b>produtos</span><span class="fresh"><i class="dot"></i>confirmado há 2 h</span></div>
+            <div class="minis">
+              <button class="mini" type="button" data-open-pdp="creme" data-pharmacy="Farmácia Bem-Estar" data-hours="Aberta até 18:30">
+                <span class="nm">Creme barreira bebé <span class="s">· 100 ml</span></span>
+                <span class="rt"><span class="price num">3 100 Kz</span><span class="plus">＋</span></span>
+              </button>
+              <button class="mini" type="button" data-open-pdp="fraldas" data-pharmacy="Farmácia Bem-Estar" data-hours="Aberta até 18:30">
+                <span class="nm">Fraldas tamanho M <span class="s">· 30 un.</span></span>
+                <span class="rt"><span class="price num">6 400 Kz</span><span class="plus">＋</span></span>
+              </button>
+            </div>
+            <div class="foot">
+              <span class="fresh"><i class="dot"></i>Aberta até 18:30</span>
+              <span class="acts"><a href="#">Ligar</a><a href="#farmacia">Ver stock →</a></span>
+            </div>
+          </article>
+
+          <article class="store-card" data-zone="Cacuaco" data-open="1" data-stock="9" data-rx="0" data-para="1" data-fresh="35"
+                   data-search="horizonte cacuaco zango paracetamol soro omeprazol">
+            <div class="top">
+              <div><h3>Horizonte</h3><p class="where">Estrada de Cacuaco, Zango 2</p></div>
+            </div>
+            <div class="stat"><span><b>9</b>produtos</span><span class="fresh"><i class="dot"></i>confirmado há 35 min</span></div>
+            <div class="minis">
+              <button class="mini" type="button" data-open-pdp="paracetamol" data-pharmacy="Farmácia Horizonte" data-hours="Aberta 24 h">
+                <span class="nm">Paracetamol 500 mg <span class="s">· 20 comp.</span></span>
+                <span class="rt"><span class="price num">950 Kz</span><span class="plus">＋</span></span>
+              </button>
+              <button class="mini" type="button" data-open-pdp="soro" data-pharmacy="Farmácia Horizonte" data-hours="Aberta 24 h">
+                <span class="nm">Soro fisiológico <span class="s">· 500 ml</span></span>
+                <span class="rt"><span class="price num">900 Kz</span><span class="plus">＋</span></span>
+              </button>
+            </div>
+            <div class="foot">
+              <span class="fresh"><i class="dot"></i>Aberta 24 h</span>
+              <span class="acts"><a href="#">Ligar</a><a href="#farmacia">Ver stock →</a></span>
+            </div>
+          </article>
+
+          <article class="store-card" data-zone="Talatona" data-open="1" data-stock="0" data-rx="0" data-para="0" data-fresh="999"
+                   data-search="sagrada esperança talatona amílcar cabral">
+            <div class="top">
+              <div><h3>Sagrada Esperança</h3><p class="where">Rua Amílcar Cabral · Talatona</p></div>
+            </div>
+            <div class="stat"><span><b>0</b>produtos</span><span class="fresh"><i class="dot off"></i>sem confirmação hoje</span></div>
+            <div class="minis">
+              <p style="font-size:11.5px;color:var(--muted-2);padding:10px 0 12px;line-height:1.55">A farmácia não escreveu stock nas últimas 72 h. Continua na lista — não aparece como disponível.</p>
+            </div>
+            <div class="foot">
+              <span class="fresh"><i class="dot"></i>Aberta até 19:00</span>
+              <span class="acts"><a href="#">Ligar</a><a href="#farmacia">Ver ficha →</a></span>
+            </div>
+          </article>
+
+          <div class="empty" id="empty">
+            <b>Nada com esses filtros.</b>
+            Experimente outra zona ou limpe a pesquisa. Uma farmácia sem stock confirmado continua na lista — só não conta como disponível.
+            <div style="margin-top:16px"><button class="btn ghost sm" type="button" id="empty-reset">Limpar tudo</button></div>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <footer><div class="wrap">
+    <span>Conheça Farmácia · Localizador de Medicamentos</span>
+    <span>Luanda · 2026 · Dados confirmados pelas farmácias</span>
+  </div></footer>
+</section>
+
+<!-- ============================================================ -->
+<!-- 02 · PÁGINA DA FARMÁCIA                                      -->
+<!-- ============================================================ -->
+<section id="farmacia">
+  <header class="hdr"><div class="hdr-in">
+    <a class="logo" href="#"><img src="assets/logo.png" alt="Conheça Farmácia"><span>Localizador</span></a>
+    <nav class="nav">
+      <a href="#">Pesquisar</a>
+      <a class="on" href="#lista">Farmácias</a>
+      <a href="#">Sobre</a>
+    </nav>
+    <span class="hdr-r">conhecafarmacia.com ↗</span>
+  </div></header>
+
+  <div class="storeband">
+    <div class="wrap">
+      <p class="crumb"><a href="#lista">Farmácias</a> &nbsp;/&nbsp; Talatona &nbsp;/&nbsp; São Rafael</p>
+      <div class="band-grid">
+        <div>
+          <p class="kicker">Farmácia parceira · Talatona</p>
+          <h1>São Rafael</h1>
+          <p class="addr">Rua do Centro Comercial, Belas Business Park · Luanda</p>
+          <div class="badges">
+            <span><i class="dot on-green"></i> Aberta até 20:00</span>
+            <span><i class="dot on-green"></i> 42 produtos confirmados</span>
+            <span><i class="dot on-green"></i> Verificada pela equipa</span>
+          </div>
+        </div>
+        <div class="acts">
+          <a class="btn cream num" href="tel:+244923114500">Ligar · 923 114 500</a>
+          <a class="btn on-green" href="#">WhatsApp</a>
+          <a class="btn on-green" href="#">Direcções</a>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <div class="wrap">
+    <div class="trust">
+      <div><b>12 min</b>desde a última confirmação</div>
+      <div><b>11</b>produtos nesta prateleira</div>
+      <div><b>2 h</b>de reserva guardada</div>
+      <div><b>0 Kz</b>para reservar</div>
+    </div>
+  </div>
+
+  <div class="catbar"><div class="wrap catbar-in">
+    <div class="tabs" id="cats">
+      <button class="tab on" type="button" data-cat="Tudo">Tudo <span class="n">11</span></button>
+      <button class="tab" type="button" data-cat="Críticos">Críticos <span class="n">3</span></button>
+      <button class="tab" type="button" data-cat="Comprimidos">Comprimidos <span class="n">5</span></button>
+      <button class="tab" type="button" data-cat="Parafarmácia">Parafarmácia <span class="n">3</span></button>
+    </div>
+    <div class="field-wrap">
+      <span class="ico" aria-hidden="true">⌕</span>
+      <label class="sr-only" for="q-store">Procurar nesta farmácia</label>
+      <input class="field" id="q-store" type="search" placeholder="Procurar nesta farmácia" autocomplete="off">
+    </div>
+  </div></div>
+
+  <div class="wrap shelf">
+    <div class="shelf-head">
+      <h2>A prateleira de hoje</h2>
+      <span id="store-count">11 produtos · preços de balcão</span>
+    </div>
+
+    <div class="prodgrid" id="products">
+      <button class="prod pcard" type="button" data-cat="Críticos" data-search="insulina nph 100 ui" data-open-pdp="insulina" data-pharmacy="Farmácia São Rafael" data-hours="Aberta até 20:00">
+        <div class="pcard-media">
+          <div class="pcard-flags"><span class="tagchip">Crítico</span><span class="tagchip rx">Receita</span></div>
+          <div class="pack"><span class="pack-brand">Novo Nordisk</span><span class="pack-name">Insulina NPH</span><span class="pack-dose">100 UI/ml</span><span class="pack-foot"><span>10 ml</span><span>4 frascos</span></span></div>
+        </div>
+        <div class="pcard-body">
+          <span class="pcard-name">Insulina NPH 100 UI/ml</span>
+          <span class="pcard-meta">Frasco 10 ml · suspensão injectável · 4 frascos</span>
+          <div class="pcard-pricerow">
+            <div><span class="price num">8 500 Kz</span><div class="pcard-unit">850 Kz por ml</div></div>
+            <span class="pcard-fresh"><i class="dot"></i>12 min</span>
+          </div>
+        </div>
+        <span class="pcard-cta">Ver ficha e reservar <span>→</span></span>
+      </button>
+
+      <button class="prod pcard" type="button" data-cat="Críticos" data-search="carbamazepina 200 mg" data-open-pdp="carbamazepina" data-pharmacy="Farmácia São Rafael" data-hours="Aberta até 20:00">
+        <div class="pcard-media">
+          <div class="pcard-flags"><span class="tagchip">Crítico</span><span class="tagchip rx">Receita</span></div>
+          <div class="pack"><span class="pack-brand">Generis</span><span class="pack-name">Carbamazepina</span><span class="pack-dose">200 mg</span><span class="pack-foot"><span>30 comp.</span><span>5 caixas</span></span></div>
+        </div>
+        <div class="pcard-body">
+          <span class="pcard-name">Carbamazepina 200 mg</span>
+          <span class="pcard-meta">Caixa 30 comprimidos · 5 caixas</span>
+          <div class="pcard-pricerow">
+            <div><span class="price num">3 200 Kz</span><div class="pcard-unit">106,67 Kz por comprimido</div></div>
+            <span class="pcard-fresh"><i class="dot"></i>12 min</span>
+          </div>
+        </div>
+        <span class="pcard-cta">Ver ficha e reservar <span>→</span></span>
+      </button>
+
+      <button class="prod pcard" type="button" data-cat="Críticos" data-search="salbutamol 100 inalador" data-open-pdp="salbutamol" data-pharmacy="Farmácia São Rafael" data-hours="Aberta até 20:00">
+        <div class="pcard-media">
+          <div class="pcard-flags"><span class="tagchip">Crítico</span><span class="tagchip">Venda livre</span></div>
+          <div class="pack"><span class="pack-brand">Ventilan</span><span class="pack-name">Salbutamol</span><span class="pack-dose">100 µg</span><span class="pack-foot"><span>200 doses</span><span>7 un.</span></span></div>
+        </div>
+        <div class="pcard-body">
+          <span class="pcard-name">Salbutamol 100 µg</span>
+          <span class="pcard-meta">Inalador · 200 doses · 7 un.</span>
+          <div class="pcard-pricerow">
+            <div><span class="price num">4 750 Kz</span><div class="pcard-unit">23,75 Kz por dose</div></div>
+            <span class="pcard-fresh"><i class="dot"></i>2 h</span>
+          </div>
+        </div>
+        <span class="pcard-cta">Ver ficha e reservar <span>→</span></span>
+      </button>
+
+      <button class="prod pcard" type="button" data-cat="Comprimidos" data-search="paracetamol 500 mg" data-open-pdp="paracetamol" data-pharmacy="Farmácia São Rafael" data-hours="Aberta até 20:00">
+        <div class="pcard-media">
+          <div class="pcard-flags"><span class="tagchip">Comprimidos</span><span class="tagchip">Venda livre</span></div>
+          <div class="pack"><span class="pack-brand">Generis</span><span class="pack-name">Paracetamol</span><span class="pack-dose">500 mg</span><span class="pack-foot"><span>20 comp.</span><span>18 caixas</span></span></div>
+        </div>
+        <div class="pcard-body">
+          <span class="pcard-name">Paracetamol 500 mg</span>
+          <span class="pcard-meta">Caixa 20 comprimidos · 18 caixas</span>
+          <div class="pcard-pricerow">
+            <div><span class="price num">950 Kz</span><div class="pcard-unit">47,50 Kz por comprimido</div></div>
+            <span class="pcard-fresh"><i class="dot"></i>12 min</span>
+          </div>
+        </div>
+        <span class="pcard-cta">Ver ficha e reservar <span>→</span></span>
+      </button>
+
+      <button class="prod pcard" type="button" data-cat="Comprimidos" data-search="amoxicilina 500 mg" data-open-pdp="amoxicilina" data-pharmacy="Farmácia São Rafael" data-hours="Aberta até 20:00">
+        <div class="pcard-media">
+          <div class="pcard-flags"><span class="tagchip">Comprimidos</span><span class="tagchip rx">Receita</span></div>
+          <div class="pack"><span class="pack-brand">Labesfal</span><span class="pack-name">Amoxicilina</span><span class="pack-dose">500 mg</span><span class="pack-foot"><span>21 cáps.</span><span>6 caixas</span></span></div>
+        </div>
+        <div class="pcard-body">
+          <span class="pcard-name">Amoxicilina 500 mg</span>
+          <span class="pcard-meta">Caixa 21 cápsulas · 6 caixas</span>
+          <div class="pcard-pricerow">
+            <div><span class="price num">2 400 Kz</span><div class="pcard-unit">114,29 Kz por cápsula</div></div>
+            <span class="pcard-fresh"><i class="dot"></i>41 min</span>
+          </div>
+        </div>
+        <span class="pcard-cta">Ver ficha e reservar <span>→</span></span>
+      </button>
+
+      <button class="prod pcard" type="button" data-cat="Comprimidos" data-search="metformina 850 mg" data-open-pdp="metformina" data-pharmacy="Farmácia São Rafael" data-hours="Aberta até 20:00">
+        <div class="pcard-media">
+          <div class="pcard-flags"><span class="tagchip">Comprimidos</span><span class="tagchip rx">Receita</span></div>
+          <div class="pack"><span class="pack-brand">Generis</span><span class="pack-name">Metformina</span><span class="pack-dose">850 mg</span><span class="pack-foot"><span>30 comp.</span><span>22 caixas</span></span></div>
+        </div>
+        <div class="pcard-body">
+          <span class="pcard-name">Metformina 850 mg</span>
+          <span class="pcard-meta">Caixa 30 comprimidos · 22 caixas</span>
+          <div class="pcard-pricerow">
+            <div><span class="price num">1 850 Kz</span><div class="pcard-unit">61,67 Kz por comprimido</div></div>
+            <span class="pcard-fresh"><i class="dot"></i>41 min</span>
+          </div>
+        </div>
+        <span class="pcard-cta">Ver ficha e reservar <span>→</span></span>
+      </button>
+
+      <button class="prod pcard" type="button" data-cat="Comprimidos" data-search="omeprazol 20 mg" data-open-pdp="omeprazol" data-pharmacy="Farmácia São Rafael" data-hours="Aberta até 20:00">
+        <div class="pcard-media">
+          <div class="pcard-flags"><span class="tagchip">Comprimidos</span><span class="tagchip">Venda livre</span></div>
+          <div class="pack"><span class="pack-brand">Generis</span><span class="pack-name">Omeprazol</span><span class="pack-dose">20 mg</span><span class="pack-foot"><span>28 cáps.</span><span>14 caixas</span></span></div>
+        </div>
+        <div class="pcard-body">
+          <span class="pcard-name">Omeprazol 20 mg</span>
+          <span class="pcard-meta">Caixa 28 cápsulas gastrorresistentes · 14 caixas</span>
+          <div class="pcard-pricerow">
+            <div><span class="price num">1 200 Kz</span><div class="pcard-unit">42,86 Kz por cápsula</div></div>
+            <span class="pcard-fresh"><i class="dot"></i>2 h</span>
+          </div>
+        </div>
+        <span class="pcard-cta">Ver ficha e reservar <span>→</span></span>
+      </button>
+
+      <button class="prod pcard" type="button" data-cat="Comprimidos" data-search="ácido fólico 5 mg" data-open-pdp="acido" data-pharmacy="Farmácia São Rafael" data-hours="Aberta até 20:00">
+        <div class="pcard-media">
+          <div class="pcard-flags"><span class="tagchip">Comprimidos</span><span class="tagchip">Venda livre</span></div>
+          <div class="pack"><span class="pack-brand">Generis</span><span class="pack-name">Ácido fólico</span><span class="pack-dose">5 mg</span><span class="pack-foot"><span>30 comp.</span><span>26 caixas</span></span></div>
+        </div>
+        <div class="pcard-body">
+          <span class="pcard-name">Ácido fólico 5 mg</span>
+          <span class="pcard-meta">Caixa 30 comprimidos · 26 caixas</span>
+          <div class="pcard-pricerow">
+            <div><span class="price num">700 Kz</span><div class="pcard-unit">23,33 Kz por comprimido</div></div>
+            <span class="pcard-fresh"><i class="dot"></i>2 h</span>
+          </div>
+        </div>
+        <span class="pcard-cta">Ver ficha e reservar <span>→</span></span>
+      </button>
+
+      <button class="prod pcard" type="button" data-cat="Parafarmácia" data-search="fraldas tamanho m" data-open-pdp="fraldas" data-pharmacy="Farmácia São Rafael" data-hours="Aberta até 20:00">
+        <div class="pcard-media">
+          <div class="pcard-flags"><span class="tagchip">Parafarmácia</span><span class="tagchip">Balcão</span></div>
+          <div class="pack"><span class="pack-brand">Bem-Estar</span><span class="pack-name">Fraldas M</span><span class="pack-dose">6–11 kg</span><span class="pack-foot"><span>30 un.</span><span>9 pacotes</span></span></div>
+        </div>
+        <div class="pcard-body">
+          <span class="pcard-name">Fraldas tamanho M</span>
+          <span class="pcard-meta">Pacote 30 unidades · 9 pacotes</span>
+          <div class="pcard-pricerow">
+            <div><span class="price num">6 400 Kz</span><div class="pcard-unit">213,33 Kz por fralda</div></div>
+            <span class="pcard-fresh"><i class="dot"></i>3 h</span>
+          </div>
+        </div>
+        <span class="pcard-cta quiet">Só no balcão — ver ficha</span>
+      </button>
+
+      <button class="prod pcard" type="button" data-cat="Parafarmácia" data-search="creme barreira bebé" data-open-pdp="creme" data-pharmacy="Farmácia São Rafael" data-hours="Aberta até 20:00">
+        <div class="pcard-media">
+          <div class="pcard-flags"><span class="tagchip">Parafarmácia</span><span class="tagchip">Venda livre</span></div>
+          <div class="pack"><span class="pack-brand">Mustela</span><span class="pack-name">Creme barreira</span><span class="pack-dose">bebé</span><span class="pack-foot"><span>100 ml</span><span>7 un.</span></span></div>
+        </div>
+        <div class="pcard-body">
+          <span class="pcard-name">Creme barreira bebé</span>
+          <span class="pcard-meta">Bisnaga 100 ml · 7 un.</span>
+          <div class="pcard-pricerow">
+            <div><span class="price num">3 100 Kz</span><div class="pcard-unit">31 Kz por ml</div></div>
+            <span class="pcard-fresh"><i class="dot"></i>ontem</span>
+          </div>
+        </div>
+        <span class="pcard-cta">Ver ficha e reservar <span>→</span></span>
+      </button>
+
+      <button class="prod pcard" type="button" data-cat="Parafarmácia" data-search="soro fisiológico 500 ml" data-open-pdp="soro" data-pharmacy="Farmácia São Rafael" data-hours="Aberta até 20:00">
+        <div class="pcard-media">
+          <div class="pcard-flags"><span class="tagchip">Parafarmácia</span><span class="tagchip">Venda livre</span></div>
+          <div class="pack"><span class="pack-brand">B. Braun</span><span class="pack-name">Soro fisiológico</span><span class="pack-dose">0,9%</span><span class="pack-foot"><span>500 ml</span><span>31 un.</span></span></div>
+        </div>
+        <div class="pcard-body">
+          <span class="pcard-name">Soro fisiológico 0,9%</span>
+          <span class="pcard-meta">Frasco 500 ml · 31 un.</span>
+          <div class="pcard-pricerow">
+            <div><span class="price num">900 Kz</span><div class="pcard-unit">1,80 Kz por ml</div></div>
+            <span class="pcard-fresh"><i class="dot"></i>ontem</span>
+          </div>
+        </div>
+        <span class="pcard-cta">Ver ficha e reservar <span>→</span></span>
+      </button>
+    </div>
+
+    <div class="shelf-note">
+      <p><b>Preço de balcão, não de carrinho.</b> O Localizador não vende: mostra o que a farmácia confirmou e guarda a reserva durante 2 horas. O pagamento e a dispensa acontecem na farmácia, com o código da reserva.</p>
+      <a class="btn ghost sm" href="#lista">Ver outras farmácias</a>
+    </div>
+  </div>
+
+  <footer><div class="wrap">
+    <span>Conheça Farmácia · Localizador de Medicamentos</span>
+    <span>É farmácia e quer aparecer aqui? Fale com a equipa</span>
+  </div></footer>
+</section>
+
+<!-- modal + toast -->
+<div class="pdp" id="pdp" hidden>
+  <div class="pdp-scrim" data-close></div>
+  <div class="pdp-dialog" role="dialog" aria-modal="true" aria-label="Ficha do produto"></div>
+</div>
+<div class="toast" id="toast" role="status" aria-live="polite"><i class="dot"></i><span></span></div>
+
+<script src="pdp.js"></script>
+<script>
+(function () {
+  var list = document.getElementById('store-list');
+  var cards = Array.prototype.slice.call(list.querySelectorAll('.store-card'));
+  var zones = Array.prototype.slice.call(document.querySelectorAll('#zones .chip'));
+  var q = document.getElementById('q');
+  var open = document.getElementById('f-open');
+  var stock = document.getElementById('f-stock');
+  var rx = document.getElementById('f-rx');
+  var para = document.getElementById('f-para');
+  var sort = document.getElementById('sort');
+  var count = document.getElementById('result-count');
+  var fcount = document.getElementById('f-count');
+  var title = document.getElementById('result-title');
+  var empty = document.getElementById('empty');
+  var zone = 'Todas';
+
+  function matches(card) {
+    if (zone !== 'Todas' && card.getAttribute('data-zone') !== zone) return false;
+    if (open.checked && card.getAttribute('data-open') !== '1') return false;
+    if (stock.checked && Number(card.getAttribute('data-stock')) === 0) return false;
+    if (rx.checked && card.getAttribute('data-rx') !== '1') return false;
+    if (para.checked && card.getAttribute('data-para') !== '1') return false;
+    var term = q.value.trim().toLowerCase();
+    if (term && card.getAttribute('data-search').indexOf(term) === -1) return false;
+    return true;
+  }
+
+  function apply() {
+    var shown = 0;
+    cards.forEach(function (card) {
+      var ok = matches(card);
+      card.hidden = !ok;
+      if (ok) shown++;
+    });
+    count.innerHTML = '<b>' + shown + '</b> ' + (shown === 1 ? 'resultado' : 'resultados');
+    fcount.textContent = shown + (shown === 1 ? ' farmácia' : ' farmácias');
+    title.textContent = zone === 'Todas' ? 'Todas as farmácias' : 'Farmácias · ' + zone;
+    empty.style.display = shown ? 'none' : 'block';
+
+    var visible = cards.filter(function (c) { return !c.hidden; });
+    visible.sort(function (a, b) {
+      var mode = sort.value;
+      if (mode === 'name') return a.querySelector('h3').textContent.localeCompare(b.querySelector('h3').textContent);
+      if (mode === 'fresh') return Number(a.getAttribute('data-fresh')) - Number(b.getAttribute('data-fresh'));
+      return Number(b.getAttribute('data-stock')) - Number(a.getAttribute('data-stock'));
+    });
+    visible.forEach(function (c) { list.insertBefore(c, empty); });
+  }
+
+  zones.forEach(function (chip) {
+    chip.addEventListener('click', function () {
+      zone = chip.getAttribute('data-zone');
+      zones.forEach(function (c) { c.classList.toggle('on', c === chip); });
+      apply();
+    });
+  });
+  [open, stock, rx, para].forEach(function (i) { i.addEventListener('change', apply); });
+  q.addEventListener('input', apply);
+  q.addEventListener('search', apply);
+  sort.addEventListener('change', apply);
+  document.getElementById('clear-q').addEventListener('click', function () { q.value = ''; apply(); q.focus(); });
+
+  function reset() {
+    q.value = '';
+    open.checked = stock.checked = rx.checked = para.checked = false;
+    zone = 'Todas';
+    zones.forEach(function (c) { c.classList.toggle('on', c.getAttribute('data-zone') === 'Todas'); });
+    apply();
+  }
+  document.getElementById('reset').addEventListener('click', reset);
+  document.getElementById('empty-reset').addEventListener('click', reset);
+
+  apply();
+
+  /* prateleira da farmácia */
+  var prods = Array.prototype.slice.call(document.querySelectorAll('#products .prod'));
+  var tabs = Array.prototype.slice.call(document.querySelectorAll('#cats .tab'));
+  var qs = document.getElementById('q-store');
+  var scount = document.getElementById('store-count');
+  var cat = 'Tudo';
+
+  function shelf() {
+    var term = qs.value.trim().toLowerCase();
+    var shown = 0;
+    prods.forEach(function (p) {
+      var ok = (cat === 'Tudo' || p.getAttribute('data-cat') === cat) &&
+               (!term || p.getAttribute('data-search').indexOf(term) !== -1);
+      p.hidden = !ok;
+      if (ok) shown++;
+    });
+    scount.textContent = shown + (shown === 1 ? ' produto' : ' produtos') + ' · preços de balcão';
+  }
+  tabs.forEach(function (t) {
+    t.addEventListener('click', function () {
+      cat = t.getAttribute('data-cat');
+      tabs.forEach(function (x) { x.classList.toggle('on', x === t); });
+      shelf();
+    });
+  });
+  qs.addEventListener('input', shelf);
+  shelf();
+})();
+</script>
+</body>
+</html>

@@ -7,7 +7,7 @@ import ThemeToggle from '@/components/ui/ThemeToggle'
 
 const MAIN_SITE = 'https://conhecafarmacia.com'
 const WHATSAPP_URL = `https://wa.me/244925696002?text=${encodeURIComponent(
-  'Olá! Tenho interesse no Localizador de Medicamentos.'
+  'Olá! Tenho interesse no Localizador de Medicamentos.',
 )}`
 
 export default function Header() {
@@ -86,13 +86,25 @@ export default function Header() {
         {/* Menu mobile simples */}
         {navOpen && (
           <div className="md:hidden border-t border-brand-divider/40 bg-brand-bg px-6 pb-4 pt-2">
-            <a href="#o-problema" onClick={closeNav} className="block py-2.5 text-brand-deep font-medium">
+            <a
+              href="#o-problema"
+              onClick={closeNav}
+              className="block py-2.5 text-brand-deep font-medium"
+            >
               O problema
             </a>
-            <a href="#como-funciona" onClick={closeNav} className="block py-2.5 text-brand-deep font-medium">
+            <a
+              href="#como-funciona"
+              onClick={closeNav}
+              className="block py-2.5 text-brand-deep font-medium"
+            >
               Como funciona
             </a>
-            <a href="#farmacias" onClick={closeNav} className="block py-2.5 text-brand-deep font-medium">
+            <a
+              href="#farmacias"
+              onClick={closeNav}
+              className="block py-2.5 text-brand-deep font-medium"
+            >
               Farmácias
             </a>
             <a href="#faq" onClick={closeNav} className="block py-2.5 text-brand-deep font-medium">
@@ -104,7 +116,7 @@ export default function Header() {
               rel="noopener noreferrer"
               className="block py-2.5 text-brand-accent font-semibold"
             >
-              Falar no WhatsApp →
+              Falar no WhatsApp
             </a>
           </div>
         )}

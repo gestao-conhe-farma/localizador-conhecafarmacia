@@ -1,12 +1,13 @@
 'use client'
 
-import { useEffect, useMemo, useRef, useState } from 'react'
+import { useEffect, useMemo, useRef, useState, useSyncExternalStore } from 'react'
 import Link from 'next/link'
 import { createReservation } from '@/lib/actions/reservations'
 import { openStatus } from '@/lib/opening-hours'
 import { monthYear } from '@/lib/expiry'
 import { formatOptionLabel, packStructureText, perBasePrice, unitLabel } from '@/lib/sale-options'
 import { fmtKzPublic as fmtKz } from '@/lib/reservation-format'
+import { pickupText, reservationNotes } from '@/lib/pickup'
 import {
   activeOptions,
   defaultOption,
@@ -32,54 +33,105 @@ const ERRORES = {
   PAYLOAD_INVALIDO: 'Não foi possível criar a reserva. Tente novamente.',
 }
 
-/**
- * Janelas de levantamento — as próximas horas cheias, hoje e amanhã. A
- * farmácia confirma a hora ao responder; nada aqui promete um horário
- * que a farmácia não aceitou.
- */
-function pickupSlots(now = new Date()) {
-  const slots = []
-  const push = (dayOffset, start, end) => {
-    const d = new Date(now)
-    d.setDate(d.getDate() + dayOffset)
-    d.setHours(start, 0, 0, 0)
-    if (d.getTime() < now.getTime() + 45 * 60 * 1000) return
-    const day = dayOffset === 0 ? 'Hoje' : dayOffset === 1 ? 'Amanhã' : ''
-    slots.push({
-      value: `${day} · ${String(start).padStart(2, '0')}:00–${String(end).padStart(2, '0')}:00`,
-      day,
-      range: `${String(start).padStart(2, '0')}:00 – ${String(end).padStart(2, '0')}:00`,
-      hint:
-        dayOffset === 0
-          ? 'Hoje, antes de fechar'
-          : dayOffset === 1
-            ? 'Abre às 08:00'
-            : 'Depois do trabalho',
-    })
-  }
-  for (const [s, e] of [
-    [10, 12],
-    [14, 16],
-    [18, 20],
-  ]) {
-    push(0, s, e)
-  }
-  for (const [s, e] of [
-    [8, 10],
-    [12, 14],
-    [18, 20],
-  ]) {
-    push(1, s, e)
-  }
-  return slots.slice(0, 4)
+/* ---------------- levantamento: dia + hora ---------------- */
+
+const DAY_MS = 24 * 60 * 60 * 1000
+const pad2 = (n) => String(n).padStart(2, '0')
+const isoDay = (d) => `${d.getFullYear()}-${pad2(d.getMonth() + 1)}-${pad2(d.getDate())}`
+
+/** Janelas sugeridas de cada dia — o cliente pode sempre escrever outra hora. */
+const WINDOWS = [
+  ['10:00', '12:00'],
+  ['14:00', '16:00'],
+  ['18:00', '20:00'],
+]
+
+/** «Hoje» / «Amanhã» / «27 out» — o dia tal como o cliente o lê. */
+function dayLabel(iso, now = new Date()) {
+  if (!iso) return ''
+  const today = new Date(now)
+  today.setHours(0, 0, 0, 0)
+  const target = new Date(`${iso}T00:00:00`)
+  const diff = Math.round((target - today) / DAY_MS)
+  if (diff === 0) return 'Hoje'
+  if (diff === 1) return 'Amanhã'
+  return target.toLocaleDateString('pt-PT', { day: '2-digit', month: 'short' }).replace('.', '')
 }
 
-export default function ProductSheet({ item, alternatives = [] }) {
+/**
+ * Janelas do dia escolhido. As de hoje que já fecharam (ou fecham em menos
+ * de 15 min) continuam à vista, mas desactivadas — o cliente vê que o dia
+ * tem opções e que aquela já passou, em vez de a lista parecer só amanhã.
+ */
+function windowsFor(iso, now = new Date()) {
+  const today = isoDay(now)
+  return WINDOWS.map(([from, to]) => {
+    const end = new Date(`${iso}T${to}:00`)
+    return { from, to, past: iso === today && end.getTime() <= now.getTime() + 15 * 60 * 1000 }
+  })
+}
+
+/** Rótulo do levantamento + se a hora já passou (15 min de tolerância). */
+function describePickup(date, time, end, now = new Date()) {
+  if (!date || !time) return { label: '', past: false }
+  const at = new Date(`${date}T${time}:00`)
+  return {
+    label: pickupText(dayLabel(date, now), time, end),
+    past: at.getTime() < now.getTime() + 15 * 60 * 1000,
+  }
+}
+
+const EMPTY_PICKUP = { date: '', time: '', end: '', label: '', past: false }
+const EMPTY_BOUNDS = { min: '', max: '' }
+
+/**
+ * Primeiro levantamento possível: hoje, se ainda houver janela aberta;
+ * senão amanhã na primeira janela. Corre só no cliente.
+ */
+function initialPickup(now = new Date()) {
+  const today = isoDay(now)
+  const firstToday = windowsFor(today, now).find((w) => !w.past)
+  const date = firstToday ? today : isoDay(new Date(now.getTime() + DAY_MS))
+  const time = firstToday ? firstToday.from : WINDOWS[0][0]
+  const end = firstToday ? firstToday.to : ''
+  return {
+    pickup: { date, time, end, ...describePickup(date, time, end, now) },
+    bounds: { min: today, max: isoDay(new Date(now.getTime() + 14 * DAY_MS)) },
+  }
+}
+
+const NO_SUBSCRIBE = () => () => {}
+
+/**
+ * «Já montou?» sem setState num efeito: o servidor vê `false` e o cliente
+ * passa a `true` na primeira renderização após a hidratação. É o gatilho
+ * para derivar datas do relógio do browser só do lado do cliente.
+ */
+function useMounted() {
+  return useSyncExternalStore(
+    NO_SUBSCRIBE,
+    () => true,
+    () => false,
+  )
+}
+
+export default function ProductSheet({
+  item,
+  alternatives = [],
+  modal = false,
+  onOpenItem = null,
+}) {
   const [mode, setMode] = useState('ficha') // ficha → quando → contacto → feito
   const [quantity, setQuantity] = useState(1)
   const [optionId, setOptionId] = useState(() => defaultOption(item)?.id || null)
-  const [slot, setSlot] = useState('')
-  const [slots, setSlots] = useState([])
+  // Levantamento completo: dia + hora (a hora pode vir de uma sugestão ou
+  // ser escrita pelo cliente) e, nas sugestões, a hora de fim da janela.
+  // O rótulo («Hoje · 14:00–16:00») e o «já passou» calculam-se nos
+  // eventos/efeito: o relógio não corre durante o render.
+  // null = ainda automático (primeira janela possível); depois guarda a
+  // escolha do cliente. Os valores automáticos são DERIVADOS do relógio
+  // no render (mounted), nunca escritos num efeito de montagem.
+  const [picked, setPicked] = useState(null)
   const [name, setName] = useState('')
   const [phone, setPhone] = useState('')
   const [note, setNote] = useState('')
@@ -103,13 +155,33 @@ export default function ProductSheet({ item, alternatives = [] }) {
   const estimate =
     option?.price != null ? Math.round(quantity * Number(option.price) * 100) / 100 : null
 
-  // As janelas dependem da hora do browser: só depois de montar, para o
-  // HTML do servidor não divergir do cliente.
-  useEffect(() => {
-    const list = pickupSlots()
-    setSlots(list)
-    setSlot((current) => current || list[0]?.value || '')
-  }, [])
+  // As datas dependem do relógio do browser: só depois de montar, para o
+  // HTML do servidor não divergir do cliente. O dia começa em hoje (ou
+  // amanhã, se as janelas de hoje já fecharam).
+  const mounted = useMounted()
+  const auto = useMemo(() => (mounted ? initialPickup() : null), [mounted])
+  const pickup = picked || auto?.pickup || EMPTY_PICKUP
+  const bounds = auto?.bounds || EMPTY_BOUNDS
+  // As janelas seguem sempre o dia escolhido — derivadas, sem estado próprio.
+  const slots = pickup.date ? windowsFor(pickup.date) : []
+
+  const chooseDate = (iso) => {
+    if (!iso) return
+    // A janela escolhida era de outro dia: fica só a hora escrita.
+    const next = { date: iso, time: pickup.time, end: '' }
+    setPicked({ ...next, ...describePickup(next.date, next.time, next.end) })
+  }
+
+  const chooseWindow = (w) => {
+    if (w.past) return
+    const next = { date: pickup.date, time: w.from, end: w.to }
+    setPicked({ ...next, ...describePickup(next.date, next.time, next.end) })
+  }
+
+  const changeTime = (time) => {
+    const next = { date: pickup.date, time, end: '' }
+    setPicked({ ...next, ...describePickup(next.date, next.time, next.end) })
+  }
 
   // Ao mudar de passo, o painel volta ao topo e o título recebe o foco —
   // quem navega por teclado não fica perdido no fim do formulário.
@@ -146,10 +218,7 @@ export default function ProductSheet({ item, alternatives = [] }) {
     }
     setBusy(true)
     setError('')
-    const notes = [`Levantamento: ${slot || 'a combinar'}`, note.trim()]
-      .filter(Boolean)
-      .join(' · ')
-      .slice(0, 300)
+    const notes = reservationNotes(pickup.label || 'a combinar', note)
     const res = await createReservation({
       stockItemId: item.stock_item_id,
       name,
@@ -167,12 +236,10 @@ export default function ProductSheet({ item, alternatives = [] }) {
     }
   }
 
-  const trackHref = created
-    ? `/reserva/${created.reservationId}?t=${created.accessToken}`
-    : '#'
+  const trackHref = created ? `/reserva/${created.reservationId}?t=${created.accessToken}` : '#'
 
   return (
-    <div className="pdp-page">
+    <div className={`pdp-page${modal ? ' pdp-page--modal' : ''}`}>
       <div className="pdp-media">
         {photo ? (
           <img
@@ -211,7 +278,8 @@ export default function ProductSheet({ item, alternatives = [] }) {
           <span>
             <b>Confirmado pela farmácia</b>
             <br />
-            Stock escrito no portal {freshness(item.confirmed_at) ? `há ${freshness(item.confirmed_at)}` : 'agora'}.
+            Stock escrito no portal{' '}
+            {freshness(item.confirmed_at) ? `há ${freshness(item.confirmed_at)}` : 'agora'}.
           </span>
         </div>
       </div>
@@ -249,7 +317,8 @@ export default function ProductSheet({ item, alternatives = [] }) {
               {item.drug_name}
             </h2>
             <p className="pdp-form">
-              {[item.drug_form, item.drug_dosage].filter(Boolean).join(' · ') || kindLabel(item.drug_kind)}
+              {[item.drug_form, item.drug_dosage].filter(Boolean).join(' · ') ||
+                kindLabel(item.drug_kind)}
               <span className="sep">·</span>
               {quantityText(item) || 'Stock confirmado'}
               {item.drug_molecule && (
@@ -315,6 +384,11 @@ export default function ProductSheet({ item, alternatives = [] }) {
                 </>
               )}
             </div>
+            {/* O aviso de receita é um bloco próprio, com o mesmo respiro que
+                o botão tem até às informações de lâminas e caixa (.sh-filters /
+                chips) acima — não é letra miúda encostada à acção. */}
+            {item.drug_requires_rx && <p className="pdp-rx">Sujeito a receita médica.</p>}
+
             <p className="pdp-terms">
               Reserva gratuita · pagamento no balcão
               {waHref && (
@@ -339,7 +413,8 @@ export default function ProductSheet({ item, alternatives = [] }) {
               <div>
                 <dt>Embalagem</dt>
                 <dd>
-                  {packText || formatOptionLabel(option || {}, unitLabel(defaultOption(item)?.unit))}
+                  {packText ||
+                    formatOptionLabel(option || {}, unitLabel(defaultOption(item)?.unit))}
                 </dd>
               </div>
               <div>
@@ -391,17 +466,19 @@ export default function ProductSheet({ item, alternatives = [] }) {
                     Direcções
                   </a>
                 )}
-                <Link className="cf-btn cf-btn--ghost cf-btn--sm" href={`/farmacia/${item.pharmacy_slug}`}>
+                <Link
+                  className="cf-btn cf-btn--ghost cf-btn--sm"
+                  href={`/farmacia/${item.pharmacy_slug}`}
+                >
                   Ver prateleira completa
                 </Link>
               </div>
             </div>
 
             <div className="pdp-sec">
-              <h3>O que o Localizador mostra</h3>
+              <h3>Observação</h3>
               <p>
-                Só dados que a farmácia confirmou: preço, quantidade e frescura do stock. O
-                Localizador não dá indicações clínicas nem substitui o farmacêutico — na dúvida,
+                O Localizador não dá indicações clínicas nem substitui o farmacêutico — na dúvida,
                 fale com a farmácia antes de reservar.
               </p>
             </div>
@@ -423,9 +500,22 @@ export default function ProductSheet({ item, alternatives = [] }) {
                         <b className="cf-num">{altPrice.label}</b>
                         <div>há {freshness(alt.confirmed_at) || '1 min'}</div>
                       </div>
-                      <Link className="cf-btn cf-btn--ghost cf-btn--sm" href={productHref(alt.stock_item_id)}>
-                        Ver
-                      </Link>
+                      {onOpenItem ? (
+                        <button
+                          type="button"
+                          className="cf-btn cf-btn--ghost cf-btn--sm"
+                          onClick={() => onOpenItem(alt.stock_item_id)}
+                        >
+                          Ver
+                        </button>
+                      ) : (
+                        <Link
+                          className="cf-btn cf-btn--ghost cf-btn--sm"
+                          href={productHref(alt.stock_item_id)}
+                        >
+                          Ver
+                        </Link>
+                      )}
                     </div>
                   )
                 })}
@@ -450,7 +540,10 @@ export default function ProductSheet({ item, alternatives = [] }) {
               <div>
                 <div className="nm">{item.drug_name}</div>
                 <div className="sub">
-                  {[formatOptionLabel(option || {}, unitLabel(defaultOption(item)?.unit)), item.pharmacy_name]
+                  {[
+                    formatOptionLabel(option || {}, unitLabel(defaultOption(item)?.unit)),
+                    item.pharmacy_name,
+                  ]
                     .filter(Boolean)
                     .join(' · ')}
                 </div>
@@ -489,26 +582,70 @@ export default function ProductSheet({ item, alternatives = [] }) {
                 </span>
 
                 <span className="res-label">Quando passa?</span>
+
+                {/* Dia e hora completos: o cliente marca o dia que quiser
+                    (até 14 dias) e a hora exacta a que passa. */}
+                <div className="res-when">
+                  <label className="res-when-field">
+                    <span>Dia</span>
+                    <input
+                      className="cf-field cf-field--square"
+                      type="date"
+                      min={bounds.min}
+                      max={bounds.max}
+                      value={pickup.date}
+                      onChange={(e) => chooseDate(e.target.value)}
+                      aria-label="Dia do levantamento"
+                    />
+                  </label>
+                  <label className="res-when-field">
+                    <span>Hora</span>
+                    <input
+                      className="cf-field cf-field--square cf-num"
+                      type="time"
+                      value={pickup.time}
+                      onChange={(e) => changeTime(e.target.value)}
+                      aria-label="Hora do levantamento"
+                    />
+                  </label>
+                </div>
+
+                {/* Janelas do DIA escolhido — hoje incluído. As que já
+                    fecharam ficam à vista mas desactivadas. */}
                 <div className="res-slots">
-                  {slots.map((s) => (
-                    <button
-                      key={s.value}
-                      type="button"
-                      className={`res-slot${slot === s.value ? ' res-slot--on' : ''}`}
-                      aria-pressed={slot === s.value}
-                      onClick={() => setSlot(s.value)}
-                    >
-                      <span className="res-tag">{s.day}</span>
-                      <b className="cf-num">{s.range}</b>
-                      {s.hint}
-                    </button>
-                  ))}
+                  {slots.map((w) => {
+                    const on = pickup.time === w.from && pickup.end === w.to
+                    return (
+                      <button
+                        key={w.from}
+                        type="button"
+                        className={`res-slot${on ? ' res-slot--on' : ''}`}
+                        aria-pressed={on}
+                        disabled={w.past}
+                        onClick={() => chooseWindow(w)}
+                      >
+                        <span className="res-tag">{w.past ? 'Já passou' : 'Sugestão'}</span>
+                        <b className="cf-num">
+                          {w.from}–{w.to}
+                        </b>
+                        {w.past ? 'Escolha outra hora' : 'A farmácia confirma ao responder'}
+                      </button>
+                    )
+                  })}
                   {slots.length === 0 && (
                     <p className="sh-empty-sub" style={{ gridColumn: '1 / -1' }}>
-                      A preparar as janelas de hoje…
+                      A preparar as janelas do dia…
                     </p>
                   )}
                 </div>
+
+                <p className={`res-when-note${pickup.past ? ' res-when-note--bad' : ''}`}>
+                  {pickup.past
+                    ? 'Essa hora já passou — escolha outra.'
+                    : pickup.label
+                      ? `Marcado: ${pickup.label}`
+                      : 'Escolha o dia e a hora a que passa pela farmácia.'}
+                </p>
 
                 <div className="res-summary">
                   <span>Estimativa a pagar no balcão</span>
@@ -519,10 +656,15 @@ export default function ProductSheet({ item, alternatives = [] }) {
                     type="button"
                     className="cf-btn cf-btn--primary"
                     onClick={() => setMode('contacto')}
+                    disabled={!pickup.label || pickup.past}
                   >
                     Continuar
                   </button>
-                  <button type="button" className="cf-btn cf-btn--quiet" onClick={() => setMode('ficha')}>
+                  <button
+                    type="button"
+                    className="cf-btn cf-btn--ghost"
+                    onClick={() => setMode('ficha')}
+                  >
                     Voltar à ficha
                   </button>
                 </div>
@@ -586,7 +728,7 @@ export default function ProductSheet({ item, alternatives = [] }) {
                   </div>
                   <div>
                     <span>Levantamento</span>
-                    <b>{slot || 'A combinar com a farmácia'}</b>
+                    <b>{pickup.label || 'A combinar com a farmácia'}</b>
                   </div>
                   <div>
                     <span>Total no balcão</span>
@@ -658,7 +800,7 @@ export default function ProductSheet({ item, alternatives = [] }) {
               </div>
               <div>
                 <span>Levantamento</span>
-                <b>{slot || 'A combinar com a farmácia'}</b>
+                <b>{pickup.label || 'A combinar com a farmácia'}</b>
               </div>
               <div>
                 <span>Total no balcão</span>

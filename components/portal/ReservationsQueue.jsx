@@ -100,6 +100,7 @@ function concludedMessage(stock) {
 }
 
 import { fmtKz, estimateTotal, quantityDesc } from '@/lib/reservation-format'
+import { parseReservationNotes } from '@/lib/pickup'
 
 /** Motivo legível na ficha (reason é "chave" ou "chave:texto"). */
 function reasonLabel(reason) {
@@ -731,6 +732,8 @@ export default function ReservationsQueue() {
        desdobrar (toque) — nenhum estado alarga a coluna. */
     const estadoFull = r.status === 'pronta' ? 'Pronta · aguarda levantamento' : null
     const kebabOpen = kebabId === r.id
+    // Dia/hora que o cliente marcou + nota livre (vivem juntos em notes).
+    const { pickup, note: freeNote } = parseReservationNotes(r.notes)
 
     return (
       <div
@@ -752,8 +755,15 @@ export default function ReservationsQueue() {
         <div className="portal-cell">
           <b>{d.name || 'Medicamento'}</b>
           <span className="sub">
-            {[r.requester_name, r.requester_phone, quantityDesc(r)].filter(Boolean).join(' · ')}
-            {r.notes ? ` · “${r.notes}”` : ''}
+            {[
+              r.requester_name,
+              r.requester_phone,
+              quantityDesc(r),
+              pickup ? `levanta ${pickup}` : null,
+            ]
+              .filter(Boolean)
+              .join(' · ')}
+            {freeNote ? ` · “${freeNote}”` : ''}
           </span>
         </div>
 

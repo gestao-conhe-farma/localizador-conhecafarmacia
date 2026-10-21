@@ -1,0 +1,757 @@
+{
+  "colors": {
+    "all": [
+      {
+        "hex": "#30363c",
+        "rgb": {
+          "r": 48,
+          "g": 54,
+          "b": 60,
+          "a": 1
+        },
+        "hsl": {
+          "h": 210,
+          "s": 11,
+          "l": 21
+        },
+        "count": 6045,
+        "contexts": [
+          "text",
+          "border"
+        ]
+      },
+      {
+        "hex": "#000000",
+        "rgb": {
+          "r": 0,
+          "g": 0,
+          "b": 0,
+          "a": 1
+        },
+        "hsl": {
+          "h": 0,
+          "s": 0,
+          "l": 0
+        },
+        "count": 610,
+        "contexts": [
+          "text",
+          "border"
+        ]
+      },
+      {
+        "hex": "#8897a2",
+        "rgb": {
+          "r": 136,
+          "g": 151,
+          "b": 162,
+          "a": 1
+        },
+        "hsl": {
+          "h": 205,
+          "s": 12,
+          "l": 58
+        },
+        "count": 207,
+        "contexts": [
+          "background",
+          "text",
+          "border"
+        ]
+      },
+      {
+        "hex": "#ffffff",
+        "rgb": {
+          "r": 255,
+          "g": 255,
+          "b": 255,
+          "a": 1
+        },
+        "hsl": {
+          "h": 0,
+          "s": 0,
+          "l": 100
+        },
+        "count": 148,
+        "contexts": [
+          "background",
+          "border",
+          "text"
+        ]
+      },
+      {
+        "hex": "#f47779",
+        "rgb": {
+          "r": 244,
+          "g": 119,
+          "b": 121,
+          "a": 1
+        },
+        "hsl": {
+          "h": 359,
+          "s": 85,
+          "l": 71
+        },
+        "count": 107,
+        "contexts": [
+          "background",
+          "text",
+          "border"
+        ]
+      },
+      {
+        "hex": "#dce4f1",
+        "rgb": {
+          "r": 220,
+          "g": 228,
+          "b": 241,
+          "a": 1
+        },
+        "hsl": {
+          "h": 217,
+          "s": 43,
+          "l": 90
+        },
+        "count": 74,
+        "contexts": [
+          "background",
+          "border",
+          "text"
+        ]
+      },
+      {
+        "hex": "#4f585e",
+        "rgb": {
+          "r": 79,
+          "g": 88,
+          "b": 94,
+          "a": 1
+        },
+        "hsl": {
+          "h": 204,
+          "s": 9,
+          "l": 34
+        },
+        "count": 34,
+        "contexts": [
+          "text",
+          "border"
+        ]
+      },
+      {
+        "hex": "#f1f1f2",
+        "rgb": {
+          "r": 241,
+          "g": 241,
+          "b": 242,
+          "a": 1
+        },
+        "hsl": {
+          "h": 240,
+          "s": 4,
+          "l": 95
+        },
+        "count": 26,
+        "contexts": [
+          "background"
+        ]
+      },
+      {
+        "hex": "#10847e",
+        "rgb": {
+          "r": 16,
+          "g": 132,
+          "b": 126,
+          "a": 1
+        },
+        "hsl": {
+          "h": 177,
+          "s": 78,
+          "l": 29
+        },
+        "count": 14,
+        "contexts": [
+          "text",
+          "border",
+          "background"
+        ]
+      },
+      {
+        "hex": "#3661b0",
+        "rgb": {
+          "r": 54,
+          "g": 97,
+          "b": 176,
+          "a": 1
+        },
+        "hsl": {
+          "h": 219,
+          "s": 53,
+          "l": 45
+        },
+        "count": 10,
+        "contexts": [
+          "text",
+          "border"
+        ]
+      },
+      {
+        "hex": "#6e787e",
+        "rgb": {
+          "r": 110,
+          "g": 120,
+          "b": 126,
+          "a": 1
+        },
+        "hsl": {
+          "h": 203,
+          "s": 7,
+          "l": 46
+        },
+        "count": 10,
+        "contexts": [
+          "text",
+          "border"
+        ]
+      },
+      {
+        "hex": "#b5cdf7",
+        "rgb": {
+          "r": 181,
+          "g": 205,
+          "b": 247,
+          "a": 1
+        },
+        "hsl": {
+          "h": 218,
+          "s": 80,
+          "l": 84
+        },
+        "count": 5,
+        "contexts": [
+          "border",
+          "background"
+        ]
+      },
+      {
+        "hex": "#cef8ff",
+        "rgb": {
+          "r": 206,
+          "g": 248,
+          "b": 255,
+          "a": 1
+        },
+        "hsl": {
+          "h": 189,
+          "s": 100,
+          "l": 90
+        },
+        "count": 4,
+        "contexts": [
+          "border"
+        ]
+      },
+      {
+        "hex": "#cfc9f2",
+        "rgb": {
+          "r": 207,
+          "g": 201,
+          "b": 242,
+          "a": 1
+        },
+        "hsl": {
+          "h": 249,
+          "s": 61,
+          "l": 87
+        },
+        "count": 2,
+        "contexts": [
+          "text",
+          "border"
+        ]
+      },
+      {
+        "hex": "#808080",
+        "rgb": {
+          "r": 128,
+          "g": 128,
+          "b": 128,
+          "a": 1
+        },
+        "hsl": {
+          "h": 0,
+          "s": 0,
+          "l": 50
+        },
+        "count": 2,
+        "contexts": [
+          "text",
+          "border"
+        ]
+      },
+      {
+        "hex": "#fff8e3",
+        "rgb": {
+          "r": 255,
+          "g": 248,
+          "b": 227,
+          "a": 1
+        },
+        "hsl": {
+          "h": 45,
+          "s": 100,
+          "l": 95
+        },
+        "count": 2,
+        "contexts": [
+          "background"
+        ]
+      },
+      {
+        "hex": "#229532",
+        "rgb": {
+          "r": 34,
+          "g": 149,
+          "b": 50,
+          "a": 1
+        },
+        "hsl": {
+          "h": 128,
+          "s": 63,
+          "l": 36
+        },
+        "count": 2,
+        "contexts": [
+          "background"
+        ]
+      },
+      {
+        "hex": "#bfeddd",
+        "rgb": {
+          "r": 191,
+          "g": 237,
+          "b": 221,
+          "a": 1
+        },
+        "hsl": {
+          "h": 159,
+          "s": 56,
+          "l": 84
+        },
+        "count": 1,
+        "contexts": [
+          "border"
+        ]
+      },
+      {
+        "hex": "#8678de",
+        "rgb": {
+          "r": 134,
+          "g": 120,
+          "b": 222,
+          "a": 1
+        },
+        "hsl": {
+          "h": 248,
+          "s": 61,
+          "l": 67
+        },
+        "count": 1,
+        "contexts": [
+          "background"
+        ]
+      },
+      {
+        "hex": "#f5b326",
+        "rgb": {
+          "r": 245,
+          "g": 179,
+          "b": 38,
+          "a": 1
+        },
+        "hsl": {
+          "h": 41,
+          "s": 91,
+          "l": 55
+        },
+        "count": 1,
+        "contexts": [
+          "background"
+        ]
+      },
+      {
+        "hex": "#ff9341",
+        "rgb": {
+          "r": 255,
+          "g": 147,
+          "b": 65,
+          "a": 1
+        },
+        "hsl": {
+          "h": 26,
+          "s": 100,
+          "l": 63
+        },
+        "count": 1,
+        "contexts": [
+          "background"
+        ]
+      },
+      {
+        "hex": "#def7f8",
+        "rgb": {
+          "r": 222,
+          "g": 247,
+          "b": 248,
+          "a": 1
+        },
+        "hsl": {
+          "h": 182,
+          "s": 65,
+          "l": 92
+        },
+        "count": 1,
+        "contexts": [
+          "background"
+        ]
+      },
+      {
+        "hex": "#3b7aef",
+        "rgb": {
+          "r": 59,
+          "g": 122,
+          "b": 239,
+          "a": 1
+        },
+        "hsl": {
+          "h": 219,
+          "s": 85,
+          "l": 58
+        },
+        "count": 1,
+        "contexts": [
+          "background"
+        ]
+      }
+    ]
+  },
+  "regions": [
+    {
+      "role": "nav",
+      "tag": "header",
+      "bounds": {
+        "x": 0,
+        "y": 0,
+        "w": 1280,
+        "h": 64
+      },
+      "heading": null,
+      "buttonCount": 1,
+      "cardCount": 376,
+      "className": "header-lib-Header-module_header__uLlco"
+    },
+    {
+      "role": "nav",
+      "tag": "nav",
+      "bounds": {
+        "x": 0,
+        "y": 58,
+        "w": 1280,
+        "h": 40
+      },
+      "heading": null,
+      "buttonCount": 0,
+      "cardCount": 376,
+      "className": "header-lib-Navigation-module_navigation__uPjS1"
+    }
+  ],
+  "componentClusters": [
+    {
+      "kind": "button",
+      "structuralHash": "button>svg>span>span",
+      "instanceCount": 1,
+      "variants": [
+        {
+          "css": {
+            "background": "rgba(0, 0, 0, 0)",
+            "color": "rgb(48, 54, 60)",
+            "padding": "0px 0px 0px 0px",
+            "borderRadius": "0px",
+            "border": "0px none rgb(48, 54, 60)",
+            "fontSize": "16px",
+            "fontWeight": "400"
+          },
+          "instanceCount": 1
+        }
+      ]
+    },
+    {
+      "kind": "button",
+      "structuralHash": "button>svg",
+      "instanceCount": 1,
+      "variants": [
+        {
+          "css": {
+            "background": "rgba(0, 0, 0, 0)",
+            "color": "rgb(136, 151, 162)",
+            "padding": "0px 12px 0px 0px",
+            "borderRadius": "0px",
+            "border": "0px none rgb(136, 151, 162)",
+            "fontSize": "16px",
+            "fontWeight": "400"
+          },
+          "instanceCount": 1
+        }
+      ]
+    },
+    {
+      "kind": "button",
+      "structuralHash": "button",
+      "instanceCount": 1,
+      "variants": [
+        {
+          "css": {
+            "background": "rgb(16, 132, 126)",
+            "color": "rgb(255, 255, 255)",
+            "padding": "0px 0px 0px 0px",
+            "borderRadius": "100px",
+            "border": "0px none rgb(255, 255, 255)",
+            "fontSize": "14px",
+            "fontWeight": "600"
+          },
+          "instanceCount": 1
+        }
+      ]
+    },
+    {
+      "kind": "link",
+      "structuralHash": "a>div>p>p",
+      "instanceCount": 7,
+      "variants": [
+        {
+          "css": {
+            "background": "rgba(0, 0, 0, 0)",
+            "color": "rgb(48, 54, 60)",
+            "padding": "0px 0px 0px 0px",
+            "borderRadius": "8px",
+            "border": "0px none rgb(48, 54, 60)",
+            "fontSize": "16px",
+            "fontWeight": "400"
+          },
+          "instanceCount": 7
+        }
+      ]
+    },
+    {
+      "kind": "link",
+      "structuralHash": "a>div>p",
+      "instanceCount": 8,
+      "variants": [
+        {
+          "css": {
+            "background": "rgba(0, 0, 0, 0)",
+            "color": "rgb(48, 54, 60)",
+            "padding": "0px 0px 0px 0px",
+            "borderRadius": "8px",
+            "border": "0px none rgb(48, 54, 60)",
+            "fontSize": "16px",
+            "fontWeight": "400"
+          },
+          "instanceCount": 8
+        }
+      ]
+    },
+    {
+      "kind": "link",
+      "structuralHash": "a>img",
+      "instanceCount": 10,
+      "variants": [
+        {
+          "css": {
+            "background": "rgba(0, 0, 0, 0)",
+            "color": "rgb(48, 54, 60)",
+            "padding": "0px 0px 0px 0px",
+            "borderRadius": "0px",
+            "border": "0px none rgb(48, 54, 60)",
+            "fontSize": "16px",
+            "fontWeight": "400"
+          },
+          "instanceCount": 10
+        }
+      ]
+    },
+    {
+      "kind": "card",
+      "structuralHash": "div>div>div",
+      "instanceCount": 1,
+      "variants": [
+        {
+          "css": {
+            "background": "rgba(0, 0, 0, 0)",
+            "color": "rgb(48, 54, 60)",
+            "padding": "0px 0px 0px 0px",
+            "borderRadius": "8px",
+            "border": "1px solid rgb(230, 235, 244)",
+            "fontSize": "16px",
+            "fontWeight": "400"
+          },
+          "instanceCount": 1
+        }
+      ]
+    },
+    {
+      "kind": "link",
+      "structuralHash": "a>span>p>p>div",
+      "instanceCount": 4,
+      "variants": [
+        {
+          "css": {
+            "background": "rgb(241, 250, 254)",
+            "color": "rgb(48, 54, 60)",
+            "padding": "16px 0px 0px 16px",
+            "borderRadius": "8px",
+            "border": "0px none rgb(48, 54, 60)",
+            "fontSize": "16px",
+            "fontWeight": "400"
+          },
+          "instanceCount": 4
+        }
+      ]
+    },
+    {
+      "kind": "card",
+      "structuralHash": "div>p>p>div",
+      "instanceCount": 4,
+      "variants": [
+        {
+          "css": {
+            "background": "rgba(0, 0, 0, 0)",
+            "color": "rgb(48, 54, 60)",
+            "padding": "0px 0px 0px 0px",
+            "borderRadius": "0px",
+            "border": "0px none rgb(48, 54, 60)",
+            "fontSize": "16px",
+            "fontWeight": "400"
+          },
+          "instanceCount": 4
+        }
+      ]
+    }
+  ],
+  "accessibility": {
+    "remediation": [
+      {
+        "fg": "#ffffff",
+        "bg": "#f47779",
+        "ratio": 2.71,
+        "rule": "AA-normal",
+        "suggestion": {
+          "replace": "fg",
+          "color": "#000000",
+          "newRatio": 7.76
+        }
+      },
+      {
+        "fg": "#ffffff",
+        "bg": "#f5b326",
+        "ratio": 1.85,
+        "rule": "AA-normal",
+        "suggestion": {
+          "replace": "fg",
+          "color": "#000000",
+          "newRatio": 11.36
+        }
+      }
+    ]
+  },
+  "cssHealth": {
+    "sheets": [
+      {
+        "url": "https://pharmeasy.in/",
+        "totalBytes": 64360,
+        "usedBytes": 28819,
+        "unusedBytes": 35541,
+        "unusedPercent": 55
+      },
+      {
+        "url": "https://pharmeasy.in/",
+        "totalBytes": 2436,
+        "usedBytes": 1759,
+        "unusedBytes": 677,
+        "unusedPercent": 28
+      },
+      {
+        "url": "https://pharmeasy.in/",
+        "totalBytes": 1134,
+        "usedBytes": 888,
+        "unusedBytes": 246,
+        "unusedPercent": 22
+      },
+      {
+        "url": "https://pharmeasy.in/",
+        "totalBytes": 583,
+        "usedBytes": 367,
+        "unusedBytes": 216,
+        "unusedPercent": 37
+      },
+      {
+        "url": "https://pharmeasy.in/",
+        "totalBytes": 59136,
+        "usedBytes": 17245,
+        "unusedBytes": 41891,
+        "unusedPercent": 71
+      },
+      {
+        "url": "https://pharmeasy.in/",
+        "totalBytes": 12986,
+        "usedBytes": 0,
+        "unusedBytes": 12986,
+        "unusedPercent": 100
+      },
+      {
+        "url": "https://pharmeasy.in/",
+        "totalBytes": 59080,
+        "usedBytes": 17725,
+        "unusedBytes": 41355,
+        "unusedPercent": 70
+      },
+      {
+        "url": "https://pharmeasy.in/",
+        "totalBytes": 12986,
+        "usedBytes": 2469,
+        "unusedBytes": 10517,
+        "unusedPercent": 81
+      }
+    ],
+    "totalBytes": 212701,
+    "usedBytes": 69272,
+    "unusedBytes": 143429,
+    "unusedPercent": 67,
+    "importantCount": 0,
+    "duplicates": 3936,
+    "vendorPrefixes": {
+      "webkit": 68,
+      "moz": 7,
+      "ms": 3,
+      "o": 16
+    },
+    "keyframes": [],
+    "specificity": {
+      "max": [
+        0,
+        5,
+        4
+      ],
+      "average": [
+        0,
+        1.24,
+        0.12
+      ],
+      "count": 1266
+    },
+    "issues": [
+      "3936 duplicate declarations",
+      "67% unused CSS"
+    ]
+  }
+}

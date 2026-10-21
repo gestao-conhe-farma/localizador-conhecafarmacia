@@ -3,6 +3,7 @@
 import { useEffect, useMemo, useState } from 'react'
 import { getMyReservations, setReservationStatus } from '@/lib/actions/pharmacy-portal'
 import { quantityDesc } from '@/lib/reservation-format'
+import { parseReservationNotes } from '@/lib/pickup'
 
 const REASONS = [
   { id: 'sem_stock', label: 'Sem stock' },
@@ -104,7 +105,11 @@ export default function PendingReservationsCard() {
       {rows === null && (
         <div className="portal-rows-empty" role="status">
           <span className="sr-only">A carregar reservas…</span>
-          <span className="portal-skeleton" aria-hidden="true" style={{ height: '0.875rem', width: '55%' }} />
+          <span
+            className="portal-skeleton"
+            aria-hidden="true"
+            style={{ height: '0.875rem', width: '55%' }}
+          />
           <span
             className="portal-skeleton"
             aria-hidden="true"
@@ -125,11 +130,13 @@ export default function PendingReservationsCard() {
         const d = r.drugs || {}
         const idade = agora - new Date(r.created_at).getTime()
         const stCls = idade > 48 * 3600 * 1000 ? 'bad' : 'warn'
+        const { pickup, note: freeNote } = parseReservationNotes(r.notes)
         const meta = [
           r.requester_name,
           r.requester_phone,
           quantityDesc(r),
-          r.notes ? `«${r.notes}»` : null,
+          pickup ? `levanta ${pickup}` : null,
+          freeNote ? `«${freeNote}»` : null,
         ]
           .filter(Boolean)
           .join(' · ')

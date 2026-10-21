@@ -1,0 +1,12 @@
+Clone the design language of this landing page and build a fresh equivalent.
+Visual feel: flat. Tone: formal · Headings: unknown · CTA verbs: [object Object], [object Object], [object Object], [object Object], [object Object], [object Object]
+Primary palette: #30363c, #000000, #8897a2, #ffffff, #f47779.
+Typography: [object Object], [object Object].
+Corner radius vocabulary: 2, 8, 12, 16, 24, 50.
+Shadow vocabulary: rgba(0, 0, 0, 0.12) 0px -1px 0px 0px inset | rgba(0, 0, 0, 0.06) 0px 4px 8px 0px | rgba(0, 0, 0, 0.2) 0px 2px 10px 0px.
+Page structure:
+- hero
+- features
+- social proof
+- cta
+- footer

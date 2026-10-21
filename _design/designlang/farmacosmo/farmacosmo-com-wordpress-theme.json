@@ -1,0 +1,228 @@
+{
+  "$schema": "https://schemas.wp.org/trunk/theme.json",
+  "version": 3,
+  "settings": {
+    "color": {
+      "palette": [
+        {
+          "slug": "primary",
+          "color": "#fece00",
+          "name": "Primary"
+        },
+        {
+          "slug": "secondary",
+          "color": "#0d3464",
+          "name": "Secondary"
+        },
+        {
+          "slug": "accent",
+          "color": "#0e4650",
+          "name": "Accent"
+        },
+        {
+          "slug": "neutral-1",
+          "color": "#000000",
+          "name": "Neutral 1"
+        },
+        {
+          "slug": "neutral-2",
+          "color": "#373a3c",
+          "name": "Neutral 2"
+        },
+        {
+          "slug": "neutral-3",
+          "color": "#ffffff",
+          "name": "Neutral 3"
+        },
+        {
+          "slug": "neutral-4",
+          "color": "#7a7a7a",
+          "name": "Neutral 4"
+        },
+        {
+          "slug": "neutral-5",
+          "color": "#92989f",
+          "name": "Neutral 5"
+        },
+        {
+          "slug": "bg-ffffff",
+          "color": "#ffffff",
+          "name": "Background #ffffff"
+        },
+        {
+          "slug": "bg-0d3464",
+          "color": "#0d3464",
+          "name": "Background #0d3464"
+        },
+        {
+          "slug": "bg-fff7f7",
+          "color": "#fff7f7",
+          "name": "Background #fff7f7"
+        }
+      ],
+      "gradients": [
+        {
+          "slug": "gradient-1",
+          "gradient": "linear-gradient(rgba(0, 0, 0, 0) 80%, rgb(255, 212, 0) 80%)",
+          "name": "Gradient 1"
+        }
+      ]
+    },
+    "typography": {
+      "fontFamilies": [
+        {
+          "fontFamily": "proxima-nova-regular",
+          "slug": "proxima-nova-regular",
+          "name": "proxima-nova-regular"
+        },
+        {
+          "fontFamily": "Font Awesome 6 Free",
+          "slug": "font-awesome-6-free",
+          "name": "Font Awesome 6 Free"
+        },
+        {
+          "fontFamily": "montserrat-semibold",
+          "slug": "montserrat-semibold",
+          "name": "montserrat-semibold"
+        },
+        {
+          "fontFamily": "proxima-nova-medium",
+          "slug": "proxima-nova-medium",
+          "name": "proxima-nova-medium"
+        },
+        {
+          "fontFamily": "sans-serif",
+          "slug": "sans-serif",
+          "name": "sans-serif"
+        },
+        {
+          "fontFamily": "montserrat-medium",
+          "slug": "montserrat-medium",
+          "name": "montserrat-medium"
+        },
+        {
+          "fontFamily": "montserrat-bold",
+          "slug": "montserrat-bold",
+          "name": "montserrat-bold"
+        },
+        {
+          "fontFamily": "proxima-nova-bold",
+          "slug": "proxima-nova-bold",
+          "name": "proxima-nova-bold"
+        },
+        {
+          "fontFamily": "proxima-nova-extrabold",
+          "slug": "proxima-nova-extrabold",
+          "name": "proxima-nova-extrabold"
+        },
+        {
+          "fontFamily": "proxima-nova-semibold",
+          "slug": "proxima-nova-semibold",
+          "name": "proxima-nova-semibold"
+        }
+      ],
+      "fontSizes": [
+        {
+          "size": "29px",
+          "slug": "size-29",
+          "name": "29px"
+        },
+        {
+          "size": "22px",
+          "slug": "size-22",
+          "name": "22px"
+        },
+        {
+          "size": "20px",
+          "slug": "size-20",
+          "name": "20px"
+        },
+        {
+          "size": "19px",
+          "slug": "size-19",
+          "name": "19px"
+        },
+        {
+          "size": "18.72px",
+          "slug": "size-18.72",
+          "name": "18.72px"
+        },
+        {
+          "size": "18px",
+          "slug": "size-18",
+          "name": "18px"
+        },
+        {
+          "size": "16px",
+          "slug": "size-16",
+          "name": "16px"
+        },
+        {
+          "size": "15.21px",
+          "slug": "size-15.21",
+          "name": "15.21px"
+        }
+      ]
+    },
+    "spacing": {
+      "spacingSizes": [
+        {
+          "size": "0px",
+          "slug": "spacing-0",
+          "name": "0px"
+        },
+        {
+          "size": "20px",
+          "slug": "spacing-20",
+          "name": "20px"
+        },
+        {
+          "size": "24px",
+          "slug": "spacing-24",
+          "name": "24px"
+        },
+        {
+          "size": "30px",
+          "slug": "spacing-30",
+          "name": "30px"
+        },
+        {
+          "size": "32px",
+          "slug": "spacing-32",
+          "name": "32px"
+        },
+        {
+          "size": "35px",
+          "slug": "spacing-35",
+          "name": "35px"
+        },
+        {
+          "size": "37px",
+          "slug": "spacing-37",
+          "name": "37px"
+        },
+        {
+          "size": "40px",
+          "slug": "spacing-40",
+          "name": "40px"
+        }
+      ]
+    },
+    "layout": {
+      "contentSize": "100%",
+      "wideSize": "1400px"
+    }
+  },
+  "styles": {
+    "color": {
+      "background": "#ffffff",
+      "text": "#000000"
+    },
+    "typography": {
+      "fontSize": "12px",
+      "lineHeight": "18px",
+      "fontFamily": "proxima-nova-regular"
+    },
+    "spacing": {}
+  }
+}

@@ -1,0 +1,511 @@
+<!doctype html>
+<html lang="pt">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Modelo F · Ficha — três comportamentos do pop-up de produto</title>
+<link rel="stylesheet" href="loja.css">
+<style>
+  /* ---------- chrome de revisão: fica ACIMA do scrim ---------- */
+  .f-chrome{position:relative;z-index:300;background:var(--ink);color:var(--paper)}
+  .f-chrome .row{display:flex;align-items:center;gap:20px;min-height:52px;flex-wrap:wrap;padding-top:6px;padding-bottom:6px}
+  .f-chrome b{font-weight:600;letter-spacing:.14em;text-transform:uppercase;font-size:10.5px;color:#9fd8bd;flex:none}
+  .f-chrome .vtabs{display:flex;gap:3px;flex-wrap:wrap}
+  .f-chrome .vtabs button{font-size:12px;padding:7px 13px;border-radius:999px;color:rgba(255,253,249,.66);border:1px solid transparent}
+  .f-chrome .vtabs button:hover{color:var(--paper)}
+  .f-chrome .vtabs button.on{background:rgba(255,253,249,.12);border-color:rgba(255,253,249,.22);color:var(--paper)}
+  .f-chrome .vtabs button .n{font-size:9.5px;opacity:.6;margin-right:5px}
+  .f-chrome .spacer{margin-left:auto;display:flex;gap:16px;font-size:11.5px;color:rgba(255,253,249,.55)}
+  .f-chrome .spacer a:hover{color:var(--paper);text-decoration:underline}
+  .f-note{position:relative;z-index:300;background:var(--paper-2);border-bottom:1px solid var(--line);padding:11px 0}
+  .f-note .wrap{display:flex;gap:16px;align-items:baseline;flex-wrap:wrap}
+  .f-note .tag{font-size:9.5px;letter-spacing:.16em;text-transform:uppercase;font-weight:700;color:var(--accent);flex:none}
+  .f-note p{font-size:12px;color:var(--muted);line-height:1.55;max-width:96ch}
+  .f-note b{color:var(--ink);font-weight:600}
+  .f-note .reopen{font-size:11.5px;font-weight:600;color:var(--ink);border-bottom:1px solid var(--line);margin-left:auto}
+  .f-note .reopen[hidden]{display:none}
+
+  /* ---------- fundo: prateleira real, escurecida ---------- */
+  .storeband{background:var(--green);color:var(--paper);padding:34px 0 36px}
+  .crumb{font-size:12px;color:rgba(255,253,249,.62);margin-bottom:20px}
+  .band-grid{display:grid;grid-template-columns:1fr auto;gap:44px;align-items:end}
+  .storeband h1{font-family:var(--serif);font-size:46px;font-weight:600;line-height:1;letter-spacing:-.022em;margin-top:10px}
+  .storeband .addr{font-size:13px;color:rgba(255,253,249,.74);margin-top:12px}
+  .storeband .badges{display:flex;gap:18px;flex-wrap:wrap;margin-top:13px;font-size:11.5px;color:rgba(255,253,249,.8)}
+  .storeband .badges span{display:flex;align-items:center;gap:6px}
+  .storeband .kicker{color:#9fd8bd}
+  .storeband .acts{display:flex;gap:9px;flex-wrap:wrap;justify-content:flex-end}
+
+  .shelf{padding:30px 0 50px}
+  .shelf-head{display:flex;justify-content:space-between;align-items:baseline;border-top:2px solid var(--green);padding-top:14px;margin-bottom:14px}
+  .shelf-head h2{font-family:var(--serif);font-size:28px;font-weight:600}
+  .shelf-head span{font-size:12px;color:var(--muted-2)}
+  .shelf .pcard-grid{gap:16px}
+
+  /* ---------- variantes ---------- */
+  .f-dialog{padding:34px 38px 30px}
+  .f-one{grid-template-columns:1fr;width:min(620px,100%)}
+  .f-one .pdp-main{padding:34px 38px 30px}
+  .f-one .f-close{position:absolute;top:14px;right:14px;width:32px;height:32px;border:1px solid var(--line);border-radius:50%;display:grid;place-items:center;font-size:14px;color:var(--muted);background:var(--paper)}
+  .f-one .f-close:hover{border-color:rgba(0,42,50,.35);color:var(--ink)}
+
+  /* V1 */
+  .v1 .pdp-media .pack{min-height:300px}
+  .v1 .pdp-title{font-size:36px}
+  .v1 .quick{display:grid;grid-template-columns:1fr 1fr;border-top:1px solid var(--line);border-bottom:1px solid var(--line);margin-top:20px}
+  .v1 .quick div{padding:11px 0}
+  .v1 .quick div:nth-child(odd){border-right:1px solid var(--line);padding-right:18px}
+  .v1 .quick div:nth-child(even){padding-left:18px}
+  .v1 .quick dt{font-size:9.5px;letter-spacing:.14em;text-transform:uppercase;color:var(--muted-2);font-weight:600}
+  .v1 .quick dd{margin:2px 0 0;font-size:12.5px}
+  .v1 .why{font-size:11.5px;color:var(--muted-2);line-height:1.55;margin-top:10px}
+
+  /* V2 */
+  .v2 .f-head{display:flex;gap:10px;align-items:center;flex-wrap:wrap;margin-bottom:10px}
+  .v2 h2{font-family:var(--serif);font-size:33px;font-weight:600;line-height:1.05;letter-spacing:-.022em;padding-right:30px}
+  .v2 .meta{font-size:12px;color:var(--muted);margin-top:8px}
+  .v2 .pricebar{display:flex;justify-content:space-between;align-items:flex-end;gap:20px;border-top:1px solid var(--line);border-bottom:1px solid var(--line);margin-top:18px;padding:14px 0}
+  .v2 .avail{font-size:11.5px;color:var(--muted);text-align:right;line-height:1.5}
+  .v2 .avail b{display:block;color:var(--ink);font-size:12px}
+  .v2 .facts3{display:flex;gap:22px;flex-wrap:wrap;font-size:11.5px;color:var(--muted);margin-top:14px}
+  .v2 .facts3 b{color:var(--ink);font-weight:600}
+  .v2 .more{display:none;margin-top:16px;border-top:1px solid var(--line);padding-top:12px;font-size:12px;color:rgba(0,42,50,.75);line-height:1.65}
+  .v2 .more.open{display:block}
+  .v2 .more h4{font-size:9.5px;letter-spacing:.15em;text-transform:uppercase;color:var(--muted);margin:12px 0 4px}
+  .v2 .more h4:first-child{margin-top:0}
+  .v2 .toggle{font-size:11.5px;font-weight:600;color:var(--accent);border-bottom:1px solid rgba(10,132,79,.3);padding-bottom:1px;margin-top:14px;display:inline-block}
+  .v2 .actions{display:flex;gap:8px;margin-top:18px}
+  .v2 .actions .btn.primary{flex:1}
+
+  /* V3 */
+  .v3 .steps{display:flex;align-items:center;gap:10px;font-size:10px;letter-spacing:.14em;text-transform:uppercase;font-weight:700;color:var(--muted-2);margin-bottom:18px;padding-right:30px}
+  .v3 .steps span.on{color:var(--accent)}
+  .v3 .steps i{flex:1;height:1px;background:var(--line);display:block}
+  .v3 h2{font-family:var(--serif);font-size:31px;font-weight:600;letter-spacing:-.02em;line-height:1.06;padding-right:30px}
+  .v3 .which{display:flex;justify-content:space-between;gap:16px;align-items:center;border:1px solid var(--line);background:var(--card);padding:12px 14px;margin-top:16px}
+  .v3 .which .nm{font-family:var(--serif);font-size:17px;font-weight:600}
+  .v3 .which .sub{font-size:11px;color:var(--muted-2);margin-top:2px}
+  .v3 .which .price{text-align:right}
+  .v3 .field-label{display:block;font-size:9.5px;letter-spacing:.15em;text-transform:uppercase;color:var(--muted);font-weight:700;margin:20px 0 8px}
+  .v3 .stepper{display:inline-flex;align-items:center;border:1px solid var(--line);background:var(--card)}
+  .v3 .stepper button{width:38px;height:38px;display:grid;place-items:center;font-size:16px;color:var(--muted)}
+  .v3 .stepper button:hover{color:var(--ink);background:var(--paper-2)}
+  .v3 .stepper output{width:46px;text-align:center;font-size:13.5px;font-variant-numeric:tabular-nums;border-left:1px solid var(--line);border-right:1px solid var(--line);line-height:38px}
+  .v3 .inline-note{font-size:11px;color:var(--muted-2);margin-left:12px}
+  .v3 .slots{display:grid;grid-template-columns:1fr 1fr 1fr;gap:8px}
+  .v3 .slot{border:1px solid var(--line);background:var(--card);padding:10px 12px;text-align:left;font-size:11.5px;line-height:1.35}
+  .v3 .slot b{display:block;font-size:12px;font-weight:600;margin-bottom:2px}
+  .v3 .slot:hover{border-color:rgba(0,42,50,.32)}
+  .v3 .slot.on{border-color:var(--green);box-shadow:inset 0 0 0 1px var(--green)}
+  .v3 .slot .tagline{font-size:9.5px;color:var(--accent);letter-spacing:.08em;text-transform:uppercase;font-weight:700}
+  .v3 input.field{border-radius:2px;padding:10px 12px;font-size:13px}
+  .v3 .err{font-size:11px;color:var(--green);font-weight:600;margin-top:6px;display:none}
+  .v3 .err.show{display:block}
+  .v3 .summary{display:flex;justify-content:space-between;align-items:baseline;border-top:1px solid var(--line);margin-top:18px;padding-top:12px;font-size:12px;color:var(--muted)}
+  .v3 .summary b{font-family:var(--serif);font-size:22px;color:var(--ink);font-weight:600}
+  .v3 .actions{display:flex;gap:8px;margin-top:14px}
+  .v3 .actions .btn.primary{flex:1}
+  .v3 .legal{font-size:10.5px;color:var(--muted-2);line-height:1.55;margin-top:10px}
+  .v3 .done{display:none;text-align:left}
+  .v3.done .step1{display:none}
+  .v3.done .done{display:block}
+  .v3 .code{border:1px dashed rgba(0,73,58,.4);background:var(--paper-2);padding:18px;margin:18px 0;text-align:center}
+  .v3 .code span{font-size:9.5px;letter-spacing:.18em;text-transform:uppercase;color:var(--muted);font-weight:700}
+  .v3 .code b{display:block;font-family:var(--serif);font-size:38px;font-weight:600;letter-spacing:.06em;margin-top:6px}
+  .v3 .done p{font-size:12.5px;color:var(--muted);line-height:1.65}
+  .v3 .done .rows{border-top:1px solid var(--line);margin-top:14px}
+  .v3 .done .rows div{display:flex;justify-content:space-between;gap:16px;border-bottom:1px solid var(--line);padding:9px 0;font-size:12px}
+  .v3 .done .rows b{font-weight:600}
+
+  @media (max-width:860px){
+    .f-note .reopen{margin-left:0}
+    .v3 .slots{grid-template-columns:1fr}
+    .f-one .pdp-main{padding:26px 22px}
+    .f-dialog{padding:26px 22px}
+  }
+</style>
+</head>
+<body>
+
+<div class="f-chrome"><div class="wrap row">
+  <b>Modelo F · Ficha</b>
+  <div class="vtabs" role="tablist" aria-label="Variantes da ficha">
+    <button class="on" type="button" data-v="v1" role="tab" aria-selected="true"><span class="n">01</span>Duas colunas</button>
+    <button type="button" data-v="v2" role="tab" aria-selected="false"><span class="n">02</span>Compacta</button>
+    <button type="button" data-v="v3" role="tab" aria-selected="false"><span class="n">03</span>Reserva em 2 passos</button>
+  </div>
+  <div class="spacer">
+    <a href="modelo-a-indice.html">A</a><a href="modelo-b-mapa.html">B</a><a href="modelo-c-montra.html">C</a>
+    <a href="modelo-d-balcao.html">D</a><a href="modelo-e-busca.html">E</a>
+    <a href="LEIA-ME.md">notas</a>
+  </div>
+</div></div>
+
+<div class="f-note"><div class="wrap">
+  <span class="tag" id="note-tag">Variante 01 · Duas colunas</span>
+  <p id="note-text"><b>Ficha completa.</b> Embalagem tipográfica à esquerda, decisão à direita: preço, stock, reserva e alternativas. É a variante que responde a tudo sem obrigar a abrir outra página — mas pede um ecrã largo.</p>
+  <button class="reopen" type="button" id="reopen" hidden>Reabrir a ficha</button>
+</div></div>
+
+<!-- fundo: prateleira real, escurecida pela ficha -->
+<div class="storeband">
+  <div class="wrap">
+    <p class="crumb">Farmácias &nbsp;/&nbsp; Talatona &nbsp;/&nbsp; São Rafael</p>
+    <div class="band-grid">
+      <div>
+        <p class="kicker">Farmácia parceira · Talatona</p>
+        <h1>São Rafael</h1>
+        <p class="addr">Rua do Centro Comercial, Belas Business Park · Luanda</p>
+        <div class="badges">
+          <span><i class="dot on-green"></i> Aberta até 20:00</span>
+          <span><i class="dot on-green"></i> 42 produtos confirmados</span>
+          <span><i class="dot on-green"></i> Verificada pela equipa</span>
+        </div>
+      </div>
+      <div class="acts">
+        <a class="btn cream num" href="#">Ligar · 923 114 500</a>
+        <a class="btn on-green" href="#">WhatsApp</a>
+        <a class="btn on-green" href="#">Direcções</a>
+      </div>
+    </div>
+  </div>
+</div>
+
+<div class="wrap shelf">
+  <div class="shelf-head"><h2>A prateleira de hoje</h2><span>3 de 42 produtos · o fundo serve só para mostrar o ofuscamento</span></div>
+  <div class="pcard-grid">
+    <article class="pcard pcard--flat">
+      <div class="pcard-media">
+        <div class="pcard-flags"><span class="tagchip">Comprimidos</span><span class="tagchip">Venda livre</span></div>
+        <div class="pack"><span class="pack-brand">Generis</span><span class="pack-name">Paracetamol</span><span class="pack-dose">500 mg</span><span class="pack-foot"><span>20 comp.</span><span>18 caixas</span></span></div>
+      </div>
+      <div class="pcard-body">
+        <span class="pcard-name">Paracetamol 500 mg</span>
+        <span class="pcard-meta">Caixa 20 comprimidos · 18 caixas</span>
+        <div class="pcard-pricerow">
+          <div><span class="price num">950 Kz</span><div class="pcard-unit">47,50 Kz por comprimido</div></div>
+          <span class="pcard-fresh"><i class="dot"></i>12 min</span>
+        </div>
+      </div>
+      <span class="pcard-cta">Ver ficha e reservar <span>→</span></span>
+    </article>
+    <article class="pcard pcard--flat">
+      <div class="pcard-media">
+        <div class="pcard-flags"><span class="tagchip">Comprimidos</span><span class="tagchip rx">Receita</span></div>
+        <div class="pack"><span class="pack-brand">Labesfal</span><span class="pack-name">Amoxicilina</span><span class="pack-dose">500 mg</span><span class="pack-foot"><span>21 cáps.</span><span>6 caixas</span></span></div>
+      </div>
+      <div class="pcard-body">
+        <span class="pcard-name">Amoxicilina 500 mg</span>
+        <span class="pcard-meta">Caixa 21 cápsulas · 6 caixas</span>
+        <div class="pcard-pricerow">
+          <div><span class="price num">2 400 Kz</span><div class="pcard-unit">114,29 Kz por cápsula</div></div>
+          <span class="pcard-fresh"><i class="dot"></i>41 min</span>
+        </div>
+      </div>
+      <span class="pcard-cta">Ver ficha e reservar <span>→</span></span>
+    </article>
+    <article class="pcard pcard--flat">
+      <div class="pcard-media">
+        <div class="pcard-flags"><span class="tagchip">Parafarmácia</span><span class="tagchip">Venda livre</span></div>
+        <div class="pack"><span class="pack-brand">B. Braun</span><span class="pack-name">Soro fisiológico</span><span class="pack-dose">0,9%</span><span class="pack-foot"><span>500 ml</span><span>31 un.</span></span></div>
+      </div>
+      <div class="pcard-body">
+        <span class="pcard-name">Soro fisiológico 0,9%</span>
+        <span class="pcard-meta">Frasco 500 ml · 31 un.</span>
+        <div class="pcard-pricerow">
+          <div><span class="price num">900 Kz</span><div class="pcard-unit">1,80 Kz por ml</div></div>
+          <span class="pcard-fresh"><i class="dot"></i>ontem</span>
+        </div>
+      </div>
+      <span class="pcard-cta">Ver ficha e reservar <span>→</span></span>
+    </article>
+  </div>
+  <p class="note" style="margin-top:20px;font-size:11.5px;color:var(--muted-2)">A prateleira em cartões — o mesmo cartão do modelo D. A ficha abre por cima e escurece-o. As três variantes usam os dados do Paracetamol 500 mg.</p>
+</div>
+
+<!-- ===================== FICHAS ===================== -->
+<div class="pdp" id="fdp">
+  <div class="pdp-scrim" data-fclose></div>
+
+  <!-- V1 · duas colunas -->
+  <div class="pdp-dialog v1" id="v1" role="dialog" aria-modal="true" aria-labelledby="v1-title">
+    <div class="pdp-media">
+      <div class="pack">
+        <span class="pack-brand">Generis</span>
+        <span class="pack-name">Paracetamol</span>
+        <span class="pack-dose">500 mg</span>
+        <span class="pack-foot"><span>20 comprimidos</span><span>PAR500</span></span>
+      </div>
+      <p class="pack-cap">Embalagem representada por tipografia — sem fotografia do produto.</p>
+      <div class="meta"><b>Origem</b>Fabricado em Portugal · lote 24K18</div>
+      <div class="stamp"><i class="dot"></i><span><b>Confirmado pela farmácia</b><br>Stock escrito no portal há 12 min.</span></div>
+    </div>
+    <div class="pdp-main" style="padding:34px 38px 30px">
+      <button class="pdp-x" type="button" data-fclose aria-label="Fechar ficha">✕</button>
+      <div class="pdp-crumb"><a href="#">Farmácias</a><span>/</span><b>São Rafael</b><span>/</span><span>Comprimidos</span></div>
+      <div class="pdp-kicker"><span class="badge">Comprimidos</span><span class="badge muted">Venda livre</span></div>
+      <h2 class="pdp-title" id="v1-title">Paracetamol 500 mg</h2>
+      <p class="pdp-form">Comprimidos<span class="sep">·</span>Caixa 20 comprimidos<span class="sep">·</span><span class="num">PAR500</span></p>
+
+      <div class="pdp-buy">
+        <div class="pdp-priceblock">
+          <div class="row"><span class="price xl num">950 Kz</span></div>
+          <span class="price-unit">47,50 Kz por comprimido · IVA incluído</span>
+        </div>
+        <div class="pdp-avail"><b>18 caixas agora</b>Actualizado há 12 min<br>Aberta até 20:00</div>
+      </div>
+
+      <div class="pdp-actions">
+        <button class="btn primary" type="button" data-freserve>Reservar para levantar</button>
+        <a class="btn ghost" href="#">Ligar</a>
+      </div>
+      <p class="pdp-terms">Reserva guardada 2 h · pagamento no balcão · <a href="#">como funciona</a></p>
+
+      <dl class="quick">
+        <div><dt>Forma</dt><dd>Comprimidos</dd></div>
+        <div><dt>Embalagem</dt><dd>20 comprimidos</dd></div>
+        <div><dt>Dispensa</dt><dd>Sem receita</dd></div>
+        <div><dt>Validade</dt><dd>09/2028</dd></div>
+      </dl>
+
+      <div class="pdp-sec"><h3>Para que serve</h3><p>Analgésico e antipirético para dor ligeira a moderada e febre. Não trata a causa — alivia o sintoma enquanto o corpo recupera.</p></div>
+
+      <div class="pdp-sec">
+        <div class="pdp-acc">
+          <details open><summary>Como tomar</summary><div class="body">1 a 2 comprimidos por toma, de 6 em 6 horas. Não exceder 8 comprimidos (4 g) em 24 horas.</div></details>
+          <details><summary>Conservação e aviso</summary><div class="body">Abaixo de 25 °C, ao abrigo da luz. Evitar em doença hepática grave e não combinar com outros produtos com paracetamol.</div></details>
+        </div>
+      </div>
+      <p class="why">O fundo continua visível mas inerte: o foco fica na ficha. Fecha com Esc, com o ✕ ou clicando fora.</p>
+    </div>
+  </div>
+
+  <!-- V2 · compacta -->
+  <div class="pdp-dialog f-one v2" id="v2" role="dialog" aria-modal="true" aria-labelledby="v2-title" hidden>
+    <div class="pdp-main">
+      <button class="f-close" type="button" data-fclose aria-label="Fechar ficha">✕</button>
+      <div class="f-head"><span class="badge">Comprimidos</span><span class="badge muted">Venda livre</span><span class="fresh"><i class="dot"></i>São Rafael · há 12 min</span></div>
+      <h2 id="v2-title">Paracetamol 500 mg</h2>
+      <p class="meta">Caixa 20 comprimidos · 47,50 Kz por comprimido</p>
+
+      <div class="pricebar">
+        <span class="price xl num">950 Kz</span>
+        <div class="avail"><b>18 caixas agora</b>Aberta até 20:00</div>
+      </div>
+
+      <div class="facts3">
+        <span><b>Sem receita</b></span>
+        <span><b>Reserva 2 h</b></span>
+        <span><b>Pagamento no balcão</b></span>
+      </div>
+
+      <div class="actions">
+        <button class="btn primary" type="button" data-freserve>Reservar</button>
+        <a class="btn ghost" href="#">Ligar</a>
+      </div>
+
+      <button class="toggle" type="button" id="more-toggle" aria-expanded="false" aria-controls="more">Ver composição, conservação e aviso</button>
+      <div class="more" id="more">
+        <h4>Indicações</h4>
+        <p>Dor ligeira a moderada e febre em adultos e crianças acima de 12 anos.</p>
+        <h4>Como tomar</h4>
+        <p>1 a 2 comprimidos de 6 em 6 horas. Máximo 8 comprimidos (4 g) por dia.</p>
+        <h4>Conservação</h4>
+        <p>Abaixo de 25 °C, ao abrigo da luz e da humidade. Validade 09/2028.</p>
+        <h4>Aviso</h4>
+        <p>Evitar em doença hepática grave. Não combinar com outros produtos que contenham paracetamol.</p>
+      </div>
+      <p class="legal" style="margin-top:16px">A ficha compacta assume que a decisão é rápida: preço, stock, reserva. A informação clínica fica a um toque, não à frente de quem só quer reservar.</p>
+    </div>
+  </div>
+
+  <!-- V3 · reserva em dois passos -->
+  <div class="pdp-dialog f-one v3" id="v3" role="dialog" aria-modal="true" aria-labelledby="v3-title" hidden>
+    <div class="pdp-main">
+      <button class="f-close" type="button" data-fclose aria-label="Fechar ficha">✕</button>
+
+      <div class="step1">
+        <div class="steps"><span class="on">1 · Levantamento</span><i></i><span>2 · Confirmação</span></div>
+        <h2 id="v3-title">Reservar Paracetamol 500 mg</h2>
+
+        <div class="which">
+          <div><div class="nm">Paracetamol 500 mg</div><div class="sub">20 comprimidos · São Rafael · há 12 min</div></div>
+          <div class="price"><div class="price num" id="unit-price">950 Kz</div><div class="price-unit">por caixa</div></div>
+        </div>
+
+        <span class="field-label">Quantidade</span>
+        <div class="stepper" role="group" aria-label="Quantidade">
+          <button type="button" id="minus" aria-label="Diminuir">−</button>
+          <output id="qty" aria-live="polite">1</output>
+          <button type="button" id="plus" aria-label="Aumentar">＋</button>
+        </div>
+        <span class="inline-note">Máximo 5 caixas por reserva.</span>
+
+        <span class="field-label">Quando passa?</span>
+        <div class="slots" id="slots">
+          <button class="slot on" type="button" data-slot="Hoje · 18:00–20:00" aria-pressed="true"><span class="tagline">Hoje</span><b>18:00 – 20:00</b>Fecha às 20:00</button>
+          <button class="slot" type="button" data-slot="Amanhã · 08:00–10:00" aria-pressed="false"><span class="tagline">Amanhã</span><b>08:00 – 10:00</b>Abre às 08:00</button>
+          <button class="slot" type="button" data-slot="Amanhã · 18:00–20:00" aria-pressed="false"><span class="tagline">Amanhã</span><b>18:00 – 20:00</b>Depois do trabalho</button>
+        </div>
+
+        <label class="field-label" for="phone">Telemóvel para o código</label>
+        <input class="field" id="phone" type="tel" inputmode="tel" placeholder="923 000 000" autocomplete="tel">
+        <p class="err" id="err">Indique um número angolano de 9 dígitos (ex.: 923 114 500).</p>
+
+        <div class="summary"><span>Total a pagar no balcão</span><b class="num" id="total">950 Kz</b></div>
+        <div class="actions">
+          <button class="btn primary" type="button" id="confirm">Confirmar reserva</button>
+          <button class="btn quiet" type="button" data-fclose>Cancelar</button>
+        </div>
+        <p class="legal">Não há pagamento online. Guardamos o produto 2 horas depois do início da janela escolhida; se não puder passar, ligue para a farmácia.</p>
+      </div>
+
+      <div class="done" aria-live="polite">
+        <div class="steps"><span>1 · Levantamento</span><i></i><span class="on">2 · Confirmação</span></div>
+        <h2>Reserva guardada</h2>
+        <div class="code"><span>Código de levantamento</span><b id="code">SR-0000</b></div>
+        <p>Mostre este código no balcão da <b>São Rafael</b>. A reserva fica válida até 2 horas depois do início da janela escolhida.</p>
+        <div class="rows">
+          <div><span>Produto</span><b>Paracetamol 500 mg</b></div>
+          <div><span>Quantidade</span><b id="done-qty">1 caixa</b></div>
+          <div><span>Levantamento</span><b id="done-slot">Hoje · 18:00–20:00</b></div>
+          <div><span>Total no balcão</span><b id="done-total">950 Kz</b></div>
+        </div>
+        <div class="actions">
+          <button class="btn primary" type="button" data-fclose>Concluir</button>
+          <button class="btn ghost" type="button" id="again">Fazer outra reserva</button>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<div class="toast" id="toast" role="status" aria-live="polite"><i class="dot"></i><span></span></div>
+
+<script>
+(function () {
+  var root = document.getElementById('fdp');
+  var dialogs = { v1: document.getElementById('v1'), v2: document.getElementById('v2'), v3: document.getElementById('v3') };
+  var tabs = Array.prototype.slice.call(document.querySelectorAll('.vtabs button'));
+  var noteTag = document.getElementById('note-tag');
+  var noteText = document.getElementById('note-text');
+  var reopen = document.getElementById('reopen');
+  var active = 'v1';
+  var lastFocus = null;
+
+  var NOTES = {
+    v1: '<b>Ficha completa.</b> Embalagem tipográfica à esquerda, decisão à direita: preço, stock, reserva e alternativas. É a variante que responde a tudo sem obrigar a abrir outra página — mas pede um ecrã largo.',
+    v2: '<b>Compacta.</b> Preço, stock e reserva primeiro; composição e aviso a um toque. Resolve a tarefa em metade da altura e não esconde a prateleira toda — ao custo de menos contexto clínico à vista.',
+    v3: '<b>Reserva em dois passos.</b> A ficha transforma-se no próprio fluxo: quantidade, janela de levantamento, telemóvel, código. É a variante mais próxima de uma loja online, sem carrinho nem pagamento.'
+  };
+
+  function show(v) {
+    active = v;
+    Object.keys(dialogs).forEach(function (k) { dialogs[k].hidden = k !== v; });
+    tabs.forEach(function (t) {
+      var on = t.getAttribute('data-v') === v;
+      t.classList.toggle('on', on);
+      t.setAttribute('aria-selected', on ? 'true' : 'false');
+    });
+    noteTag.textContent = 'Variante ' + (v === 'v1' ? '01' : v === 'v2' ? '02' : '03') + ' · ' +
+      (v === 'v1' ? 'Duas colunas' : v === 'v2' ? 'Compacta' : 'Reserva em 2 passos');
+    noteText.innerHTML = NOTES[v];
+    root.hidden = false;
+    document.body.classList.add('no-scroll');
+    reopen.hidden = true;
+    var focusable = dialogs[v].querySelector('button');
+    if (focusable) focusable.focus({ preventScroll: true });
+  }
+
+  function closeAll() {
+    root.hidden = true;
+    document.body.classList.remove('no-scroll');
+    reopen.hidden = false;
+    if (lastFocus) lastFocus.focus({ preventScroll: true });
+  }
+
+  tabs.forEach(function (t) {
+    t.addEventListener('click', function () { show(t.getAttribute('data-v')); });
+  });
+
+  document.querySelectorAll('[data-fclose]').forEach(function (b) {
+    b.addEventListener('click', closeAll);
+  });
+  reopen.addEventListener('click', function () { show(active); });
+
+  document.addEventListener('keydown', function (e) {
+    if (e.key === 'Escape' && !root.hidden) closeAll();
+  });
+
+  /* variante 02: detalhes */
+  var toggle = document.getElementById('more-toggle');
+  var more = document.getElementById('more');
+  toggle.addEventListener('click', function () {
+    var open = more.classList.toggle('open');
+    toggle.setAttribute('aria-expanded', open ? 'true' : 'false');
+    toggle.textContent = open ? 'Esconder detalhes' : 'Ver composição, conservação e aviso';
+  });
+
+  /* variante 03: quantidade, janela, validação e código */
+  var qty = 1;
+  var qtyEl = document.getElementById('qty');
+  var totalEl = document.getElementById('total');
+  var unit = 950;
+  var slot = 'Hoje · 18:00–20:00';
+  var money = function (v) { return String(v).replace(/\B(?=(\d{3})+(?!\d))/g, ' ') + ' Kz'; };
+
+  function refreshTotal() {
+    qtyEl.textContent = qty;
+    totalEl.textContent = money(unit * qty);
+  }
+  document.getElementById('minus').addEventListener('click', function () { if (qty > 1) { qty--; refreshTotal(); } });
+  document.getElementById('plus').addEventListener('click', function () { if (qty < 5) { qty++; refreshTotal(); } });
+
+  document.querySelectorAll('#slots .slot').forEach(function (b) {
+    b.addEventListener('click', function () {
+      slot = b.getAttribute('data-slot');
+      document.querySelectorAll('#slots .slot').forEach(function (x) {
+        var on = x === b;
+        x.classList.toggle('on', on);
+        x.setAttribute('aria-pressed', on ? 'true' : 'false');
+      });
+    });
+  });
+
+  var phone = document.getElementById('phone');
+  var err = document.getElementById('err');
+
+  document.getElementById('confirm').addEventListener('click', function () {
+    var digits = phone.value.replace(/\D/g, '');
+    if (digits.length !== 9) {
+      err.classList.add('show');
+      phone.focus();
+      return;
+    }
+    err.classList.remove('show');
+    var code = 'SR-' + Math.floor(1000 + Math.random() * 9000);
+    document.getElementById('code').textContent = code;
+    document.getElementById('done-qty').textContent = qty + (qty === 1 ? ' caixa' : ' caixas');
+    document.getElementById('done-slot').textContent = slot;
+    document.getElementById('done-total').textContent = money(unit * qty);
+    document.getElementById('v3').classList.add('done');
+    var toast = document.getElementById('toast');
+    toast.querySelector('span:last-child').textContent = 'Reserva ' + code + ' guardada. Mostre o código no balcão.';
+    toast.classList.add('show');
+    setTimeout(function () { toast.classList.remove('show'); }, 4200);
+  });
+
+  document.getElementById('again').addEventListener('click', function () {
+    document.getElementById('v3').classList.remove('done');
+    qty = 1;
+    phone.value = '';
+    refreshTotal();
+    phone.focus();
+  });
+
+  show('v1');
+  lastFocus = tabs[0];
+})();
+</script>
+</body>
+</html>

@@ -1,0 +1,14 @@
+/* shadcn/ui Theme — extracted from https://www.pharmamarket.eu */
+/* Paste into your globals.css */
+
+@layer base {
+  :root {
+    --foreground: 0 0% 19%;
+    --primary: 240 100% 47%;
+    --primary-foreground: 0 0% 100%;
+    --muted: 0 0% 85%;
+    --muted-foreground: 0 0% 19%;
+    --border: 0 0% 85%;
+    --radius: 50px;
+  }
+}

@@ -1,0 +1,70 @@
+{
+  "tone": "friendly",
+  "pronoun": "you-only",
+  "headingStyle": "Sentence case",
+  "headingLengthClass": "balanced",
+  "ctaVerbs": [
+    {
+      "value": "show",
+      "count": 4
+    },
+    {
+      "value": "x",
+      "count": 2
+    },
+    {
+      "value": "manage",
+      "count": 2
+    },
+    {
+      "value": "categories",
+      "count": 1
+    },
+    {
+      "value": "allow",
+      "count": 1
+    }
+  ],
+  "buttonPatterns": [
+    {
+      "value": "show more products",
+      "count": 4
+    },
+    {
+      "value": "x",
+      "count": 2
+    },
+    {
+      "value": "categories",
+      "count": 1
+    },
+    {
+      "value": "manage consent preferences allow all",
+      "count": 1
+    },
+    {
+      "value": "manage consent preferences",
+      "count": 1
+    },
+    {
+      "value": "allow all",
+      "count": 1
+    }
+  ],
+  "sampleHeadings": [
+    "\n              \n                                  100mg/100ml - decongestant nasal spray 15 ml\n                              \n            ",
+    "\n              \n                                  Yovis caps - probiotic supplement 20 capsules\n                              \n            ",
+    "\n              \n                                  Moisturising cream for dry to very dry skin 454 g\n                              \n            ",
+    "\n              \n                                  Hyalu b5 - moisturizing face cream in a 50 ml jar\n                              \n            ",
+    "\n              \n                                  Aminexil clinical r.e.g.e.n. booster - hair renewal serum 90 ml\n                              \n            ",
+    "\n              \n                                  100mg/100ml - decongestant nasal spray 15 ml\n                              \n            ",
+    "\n              \n                                  Yovis caps - probiotic supplement 20 capsules\n                              \n            ",
+    "\n              \n                                  Moisturising cream for dry to very dry skin 454 g\n                              \n            ",
+    "\n              \n                                  Hyalu b5 - moisturizing face cream in a 50 ml jar\n                              \n            ",
+    "\n              \n                                  Aminexil clinical r.e.g.e.n. booster - hair renewal serum 90 ml\n                              \n            "
+  ],
+  "stats": {
+    "buttons": 10,
+    "headings": 87
+  }
+}

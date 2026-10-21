@@ -41,9 +41,13 @@ const nextConfig = {
           { key: 'X-Content-Type-Options', value: 'nosniff' },
           { key: 'Referrer-Policy', value: 'strict-origin-when-cross-origin' },
           {
+            // geolocation=(self): o «Perto de mim» do Localizador precisa
+            // da Geolocation API na mesma origem. Com geolocation=() o
+            // browser recusava sempre o pedido. Câmara, microfone,
+            // pagamentos e USB continuam desligados.
             key: 'Permissions-Policy',
             value:
-              'camera=(), microphone=(), geolocation=(), payment=(), usb=()',
+              'camera=(), microphone=(), geolocation=(self), payment=(), usb=()',
           },
           {
             key: 'Strict-Transport-Security',

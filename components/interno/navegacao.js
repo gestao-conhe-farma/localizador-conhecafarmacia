@@ -7,6 +7,7 @@ import {
   ScrollText,
   Settings,
   UsersRound,
+  Images,
 } from 'lucide-react'
 
 /**
@@ -19,6 +20,7 @@ import {
  */
 export const ICONES = {
   painel: LayoutDashboard,
+  catalogo: Images,
   farmacias: Store,
   avisos: Megaphone,
   leads: ClipboardList,

@@ -1069,6 +1069,49 @@ html.dark .form-note {
     cursor: wait;
   }
 
+  /* Escolha da imagem (0040): imagem do catálogo da marca ou foto da
+     farmácia. Cartões clicáveis em vez de um select — a diferença entre
+     as duas imagens vê-se na miniatura, não num rótulo. */
+  .stock-image-field {
+    @apply flex flex-col gap-2;
+  }
+
+  .stock-image-choice {
+    @apply flex flex-col gap-2;
+  }
+
+  .stock-image-opt {
+    @apply flex items-start gap-3 rounded-lg border p-2.5 cursor-pointer;
+    border-color: var(--color-brand-line);
+    background: #fff;
+    transition: border-color 0.15s ease, background 0.15s ease;
+  }
+
+  .stock-image-opt.is-on {
+    border-color: var(--color-brand-accent);
+    background: color-mix(in srgb, var(--color-brand-accent) 6%, #fff);
+  }
+
+  .stock-image-opt input {
+    @apply mt-1;
+    accent-color: var(--color-brand-accent);
+  }
+
+  .stock-image-opt-txt {
+    @apply flex flex-col gap-0.5;
+    font-size: 0.8125rem;
+    line-height: 1.3;
+  }
+
+  .stock-image-opt-txt b {
+    @apply font-semibold;
+  }
+
+  .stock-image-opt-txt small {
+    color: #6b6b6b;
+    font-size: 0.75rem;
+  }
+
   /* Foto + tags no modal de reserva — lado a lado, a caixa que o cliente
      vai encontrar no balcão. */
   .res-visual {
@@ -11750,6 +11793,47 @@ html.dark .interno-pill--link:focus-visible {
    uma coluna da grelha de filtros. */
 .interno-filters > .interno-btn {
   flex: 0 0 auto;
+}
+
+/* Catálogo de imagens por marca (0040). */
+.interno-catalogue-check-row {
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+  min-height: 2.125rem;
+  font-size: 0.8125rem;
+}
+
+.interno-catalogue-imgcell {
+  display: flex;
+  flex-direction: column;
+  align-items: flex-start;
+  gap: 0.25rem;
+}
+
+.interno-catalogue-thumb {
+  width: 44px;
+  height: 44px;
+  border: 1px solid var(--color-brand-divider);
+  border-radius: 0.5rem;
+  background: #fff;
+  object-fit: contain;
+  display: block;
+}
+
+.interno-catalogue-file {
+  cursor: pointer;
+}
+
+.interno-catalogue-file input {
+  display: none;
+}
+
+.interno-catalogue-foot {
+  padding: 0.75rem 1.25rem;
+  border-top: 1px solid var(--color-brand-divider);
+  color: var(--ink-45v);
+  font-size: 0.75rem;
 }
 
 .interno-filter-label {

@@ -64,6 +64,16 @@ export default async function InternoLayout({ children }) {
     // Os leads são a porta de entrada das farmácias: quem os lê vê a
     // secção, e é pela mesma acção que a página autoriza. Quem só vê
     // farmácias não perde nada por não a ter.
+    // Catálogo de imagens por marca (0040): a lista de compras de quem
+    // fotografa caixas — farmácias que usam a marca primeiro, sem imagem
+    // no topo. A gestão é `catalogue.manage`; a secção abre a quem lê.
+    {
+      href: '/interno/catalogo',
+      label: 'Catálogo',
+      grupo: 'Operação',
+      acao: 'catalogue.view',
+      icone: 'catalogo',
+    },
     {
       href: '/interno/leads',
       label: 'Leads',

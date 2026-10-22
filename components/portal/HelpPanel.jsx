@@ -269,8 +269,13 @@ const TOPICS = [
             vender!
           </li>
           <li>
-            <b>Foto da embalagem</b> — fotografa a caixa real (até 2 MB). O preview aparece no
-            modal; o botão vermelho remove.
+            <b>Imagem do catálogo</b> — quando a equipa já tem uma foto para esta marca, aparece
+            um cartão com a miniatura. É a mesma para todas as farmácias e não precisas de
+            fotografar nada. A marca é a chave: sem marca escrita, não há imagem de catálogo.
+          </li>
+          <li>
+            <b>A minha foto</b> — fotografa a caixa real (até 2 MB). O preview aparece no modal;
+            o botão vermelho remove. Se houver imagem de catálogo, remover a foto volta a usá-la.
           </li>
           <li>
             <b>Formas de venda</b> — se vendes lâmina e caixa, registra as duas formas com o preço

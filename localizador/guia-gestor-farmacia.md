@@ -98,6 +98,30 @@ o que mantém a lista de stock limpa para o dia-a-dia da equipa.
 
 ---
 
+## 2.b. A imagem do produto: catálogo ou a minha foto
+
+O Localizador mostra uma imagem por produto. Há duas fontes:
+
+- **Imagem do catálogo** — uma foto da embalagem que a equipa Conheça
+  Farmácia carrega, identificada pelo **medicamento + a marca**. É a mesma
+  para todas as farmácias e poupa-te a fotografia.
+- **A minha foto** — a fotografia que a farmácia sobe no modal do Stock.
+
+Se existir imagem de catálogo para a marca, o modal mostra os dois cartões
+com miniatura. Escolhe um e **Guarda**. A escolha é por produto: podes usar
+o catálogo num item e a foto própria noutro.
+
+**Sem marca não há imagem de catálogo** — o medicamento sozinho não diz
+qual é a caixa. «Ben-u-ron», «BEN U RON» e «Benuron» contam como a mesma
+marca; «ibuprofeno» sozinho não chega. Se o item ainda não tem marca,
+escreve-a no campo **Marca** (como aparece na embalagem) e guarda.
+
+A imagem de catálogo pode mostrar uma apresentação diferente da que tens
+(ex.: caixa de 60 em vez de 20). Se a diferença for importante para o
+cliente, escolhe **A minha foto**.
+
+---
+
 ## 3. Formas de venda — lâmina ou caixa?
 
 **Esta é a configuração que mais influencia a venda.** Em Angola vende-se de

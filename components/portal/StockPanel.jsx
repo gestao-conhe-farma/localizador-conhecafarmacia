@@ -1,12 +1,13 @@
 'use client'
 
-import { useCallback, useEffect, useMemo, useState } from 'react'
+import { useCallback, useEffect, useMemo, useRef, useState } from 'react'
 import Link from 'next/link'
 import { useSearchParams } from 'next/navigation'
 import {
   getMyStockSnapshot,
   updateStockItem,
   uploadDrugImage,
+  previewCatalogueImage,
   retireStockItem,
   restoreStockItem,
 } from '@/lib/actions/pharmacy-portal'
@@ -185,6 +186,14 @@ function StockEditModal({ item, saving, onClose, onSave, onSaveOptions, onRetire
   const [origin, setOrigin] = useState(item.origin || '')
   const [brand, setBrand] = useState(item.brand || '')
   const [imagePath, setImagePath] = useState(item.image_path || '')
+  // Imagem de catálogo (0040): path publicado para (fármaco, marca). A
+  // preferência é a escolha da farmácia — catálogo ou foto própria.
+  const [cataloguePath, setCataloguePath] = useState(item.catalogue_image_path || '')
+  const [prefersCatalogue, setPrefersCatalogue] = useState(
+    item.prefers_catalogue_image !== false,
+  )
+  const [previewing, setPreviewing] = useState(false)
+  const previewTimer = useRef(null)
   const [uploading, setUploading] = useState(false)
   const [removing, setRemoving] = useState(false)
   // Reserva opcional por produto (0038) — só faz sentido mostrar o
@@ -212,6 +221,9 @@ function StockEditModal({ item, saving, onClose, onSave, onSaveOptions, onRetire
     setUploading(false)
     if (up.ok) {
       setImagePath(up.path)
+      // Subir a própria foto = querer usá-la (a escolha continua visível
+      // no cartão «A minha foto»).
+      setPrefersCatalogue(false)
       setFileMsg(
         compressed !== f
           ? `Foto carregada (${Math.round(compressed.size / 1024)} KB, comprimida) — guarda para publicar.`
@@ -227,6 +239,31 @@ function StockEditModal({ item, saving, onClose, onSave, onSaveOptions, onRetire
       )
     }
   }
+  /**
+   * Marca editada → procura a imagem de catálogo (400 ms de pausa).
+   * A normalização da marca acontece em SQL (`brand_key`); aqui só se
+   * envia o texto tal como a pessoa o escreveu.
+   */
+  const handleBrandChange = (value) => {
+    setBrand(value)
+    if (previewTimer.current) clearTimeout(previewTimer.current)
+    const marca = value.trim()
+    if (!marca) {
+      setCataloguePath('')
+      setPreviewing(false)
+      return
+    }
+    setPreviewing(true)
+    previewTimer.current = setTimeout(async () => {
+      const r = await previewCatalogueImage({ drugId: item.drug_id, brand: marca })
+      setCataloguePath(r?.ok ? r.path || '' : '')
+      setPreviewing(false)
+    }, 400)
+  }
+
+  // O modal é efémero; o timer não pode sobreviver a ele.
+  useEffect(() => () => clearTimeout(previewTimer.current), [])
+
   // Opções de venda (0012). Sem opções registadas: começa vazio — o
   // botão "sugerir formas de venda" preenche com defaults pela forma.
   const [opts, setOpts] = useState(
@@ -267,6 +304,8 @@ function StockEditModal({ item, saving, onClose, onSave, onSaveOptions, onRetire
             origin,
             brand,
             image_path: imagePath,
+            catalogue_image_path: cataloguePath,
+            prefersCatalogueImage: prefersCatalogue,
             reservable,
           })
         }}
@@ -419,72 +458,127 @@ function StockEditModal({ item, saving, onClose, onSave, onSaveOptions, onRetire
               placeholder="Ex.: Ben-u-ron"
               maxLength={80}
               value={brand}
-              onChange={(e) => setBrand(e.target.value)}
+              onChange={(e) => handleBrandChange(e.target.value)}
             />
           </label>
-          <label className="portal-label">
-            Foto da embalagem
-            {imageUrl && (
-              <span className="stock-img-preview">
-                <img
-                  src={imageUrl}
-                  alt={`Embalagem de ${item.name}`}
-                  className="stock-img-preview-img"
-                />
-                <button
-                  type="button"
-                  className="stock-img-preview-remove"
-                  disabled={removing || saving}
-                  title="Remover a foto deste medicamento"
-                  onClick={async () => {
-                    setRemoving(true)
-                    try {
-                      // Apaga do Storage e limpa o path. O item só perde a
-                      // foto no Localizador após «Guardar» — mas remover
-                      // aqui evita subir o modal para nada.
-                      await createClient()
-                        .storage.from('drug-images')
-                        .remove([imagePath])
-                        .catch(() => {})
-                      setImagePath('')
-                      setFileMsg('Foto removida — guarda para aplicar.')
-                    } finally {
-                      setRemoving(false)
-                    }
-                  }}
-                >
-                  {removing ? '…' : <CloseIcon />}
-                </button>
+          <div className="portal-label stock-image-field">
+            Imagem
+            {cataloguePath ? (
+              <div
+                className="stock-image-choice"
+                role="radiogroup"
+                aria-label="Imagem do produto"
+              >
+                <label className={`stock-image-opt${prefersCatalogue ? ' is-on' : ''}`}>
+                  <input
+                    type="radio"
+                    name={`imagem-${item.drug_id}`}
+                    checked={prefersCatalogue}
+                    onChange={() => setPrefersCatalogue(true)}
+                  />
+                  <span className="stock-img-preview">
+                    <img
+                      src={`${supabaseUrl}/storage/v1/object/public/drug-images/${cataloguePath}`}
+                      alt={`Imagem de catálogo de ${item.name}`}
+                      className="stock-img-preview-img"
+                    />
+                  </span>
+                  <span className="stock-image-opt-txt">
+                    <b>Imagem do catálogo</b>
+                    <small>Da marca — igual em todas as farmácias.</small>
+                  </span>
+                </label>
+                <label className={`stock-image-opt${prefersCatalogue ? '' : ' is-on'}`}>
+                  <input
+                    type="radio"
+                    name={`imagem-${item.drug_id}`}
+                    checked={!prefersCatalogue}
+                    onChange={() => setPrefersCatalogue(false)}
+                  />
+                  <span className="stock-image-opt-txt">
+                    <b>A minha foto</b>
+                    <small>Só a fotografia desta farmácia.</small>
+                  </span>
+                </label>
+              </div>
+            ) : (
+              <span className="portal-hint">
+                {previewing
+                  ? 'A procurar imagem para esta marca…'
+                  : brand.trim()
+                    ? 'Ainda não temos imagem para esta marca — usa a tua foto, se tiveres.'
+                    : 'Escreve a marca para usar a imagem do catálogo: o medicamento sozinho não chega.'}
               </span>
             )}
-            <input
-              type="file"
-              accept="image/jpeg,image/png,image/webp"
-              className="portal-input"
-              disabled={uploading}
-              onChange={(e) => {
-                const f = e.target.files?.[0]
-                e.target.value = '' // permite reescolher o mesmo ficheiro
-                handleImageFile(f)
-              }}
-            />
-            {/* Câmara directa no telemóvel — abre a app da câmara
-                  (câmara traseira) sem passar pela galeria. */}
-            <input
-              type="file"
-              accept="image/jpeg,image/png,image/webp"
-              capture="environment"
-              className="portal-input portal-input--camera"
-              disabled={uploading}
-              onChange={(e) => {
-                const f = e.target.files?.[0]
-                e.target.value = ''
-                handleImageFile(f)
-              }}
-            />
-            {uploading && <span className="portal-hint">A carregar…</span>}
-            {!uploading && fileMsg && <span className="portal-hint">{fileMsg}</span>}
-          </label>
+
+            {(!cataloguePath || !prefersCatalogue) && (
+              <>
+                {imageUrl && (
+                  <span className="stock-img-preview">
+                    <img
+                      src={imageUrl}
+                      alt={`Embalagem de ${item.name}`}
+                      className="stock-img-preview-img"
+                    />
+                    <button
+                      type="button"
+                      className="stock-img-preview-remove"
+                      disabled={removing || saving}
+                      title="Remover a foto deste medicamento"
+                      onClick={async () => {
+                        setRemoving(true)
+                        try {
+                          // Apaga do Storage e limpa o path. O item só perde a
+                          // foto no Localizador após «Guardar» — mas remover
+                          // aqui evita subir o modal para nada.
+                          await createClient()
+                            .storage.from('drug-images')
+                            .remove([imagePath])
+                            .catch(() => {})
+                          setImagePath('')
+                          // Sem foto própria, voltar ao catálogo é o que evita
+                          // um produto sem imagem — quando existe uma.
+                          if (cataloguePath) setPrefersCatalogue(true)
+                          setFileMsg('Foto removida — guarda para aplicar.')
+                        } finally {
+                          setRemoving(false)
+                        }
+                      }}
+                    >
+                      {removing ? '…' : <CloseIcon />}
+                    </button>
+                  </span>
+                )}
+                <input
+                  type="file"
+                  accept="image/jpeg,image/png,image/webp"
+                  className="portal-input"
+                  disabled={uploading}
+                  onChange={(e) => {
+                    const f = e.target.files?.[0]
+                    e.target.value = '' // permite reescolher o mesmo ficheiro
+                    handleImageFile(f)
+                  }}
+                />
+                {/* Câmara directa no telemóvel — abre a app da câmara
+                      (câmara traseira) sem passar pela galeria. */}
+                <input
+                  type="file"
+                  accept="image/jpeg,image/png,image/webp"
+                  capture="environment"
+                  className="portal-input portal-input--camera"
+                  disabled={uploading}
+                  onChange={(e) => {
+                    const f = e.target.files?.[0]
+                    e.target.value = ''
+                    handleImageFile(f)
+                  }}
+                />
+                {uploading && <span className="portal-hint">A carregar…</span>}
+                {!uploading && fileMsg && <span className="portal-hint">{fileMsg}</span>}
+              </>
+            )}
+          </div>
         </div>
 
         {/* Formas de venda (0012) — só faz sentido com
@@ -1007,6 +1101,11 @@ export default function StockPanel({ compact = false, isManager = false }) {
       ...(patch.origin !== undefined && { origin: patch.origin }),
       ...(patch.brand !== undefined && { brand: patch.brand }),
       ...(patch.image_path !== undefined && { imagePath: patch.image_path }),
+      // Preferência de imagem (0040) — só o modal a envia; os toggles da
+      // fila não mexem no que a farmácia escolheu.
+      ...(patch.prefersCatalogueImage !== undefined && {
+        prefersCatalogueImage: patch.prefersCatalogueImage,
+      }),
       // Estrutura da caixa (0016) — só quando o patch a trouxe (o modal
       // envia sempre; os toggles da fila/atenção nunca).
       ...(patch.packLaminas !== undefined && { packLaminas: patch.packLaminas }),
@@ -1024,6 +1123,14 @@ export default function StockPanel({ compact = false, isManager = false }) {
                 brand: patch.brand !== undefined ? patch.brand || null : row.brand,
                 image_path:
                   patch.image_path !== undefined ? patch.image_path || null : row.image_path,
+                catalogue_image_path:
+                  patch.catalogue_image_path !== undefined
+                    ? patch.catalogue_image_path || null
+                    : row.catalogue_image_path,
+                prefers_catalogue_image:
+                  patch.prefersCatalogueImage !== undefined
+                    ? patch.prefersCatalogueImage
+                    : row.prefers_catalogue_image,
                 ...(patch.packLaminas !== undefined && {
                   pack_laminas: patch.packLaminas === '' ? null : Number(patch.packLaminas),
                 }),

@@ -53,8 +53,12 @@ function Linha({ lead, podeMover, podeConverter }) {
           {lead.contacto}
           {lead.papel ? ` · ${lead.papel}` : ''}
         </span>
+        {lead.nif && <span className="interno-foot-sub">NIF {lead.nif}</span>}
       </td>
-      <td data-rotulo="Município">{lead.municipio || '—'}</td>
+      <td data-rotulo="Município">
+        {lead.municipio || '—'}
+        {lead.endereco && <span className="interno-foot-sub">{lead.endereco}</span>}
+      </td>
       <td data-rotulo="Estado">
         <span className={pillLead(lead.estado)}>{estadoLead(lead.estado)}</span>
         {ligado && !convertido && (
@@ -88,6 +92,12 @@ function Linha({ lead, podeMover, podeConverter }) {
       </td>
       <td data-rotulo="Acções" className="interno-table-acts">
         <div className="interno-row-acts interno-row-acts--lead">
+          <Link
+            href={`/interno/leads/${lead.id}`}
+            className="interno-btn interno-btn--ghost interno-btn--small"
+          >
+            Ver ficha
+          </Link>
           {/* Converter é a acção que CRIA (farmácia + conta + funil): tem
               ecrã próprio, como o primeiro plano — não é um diálogo. */}
           {podeConverter && !convertido && !ligado && (

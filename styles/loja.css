@@ -1,10 +1,11 @@
 /* ==========================================================================
    Localizador — linguagem de loja (Modelos B / D / E / F)
 
-   As quatro páginas públicas do Localizador partilham um só vocabulário
-   visual: papel, verde, tinta, hairline, serifa nos nomes e uma acção
-   verde de largura total em cada cartão. Nada de carrinho, cupões ou
-   percentagens — o produto é de balcão.
+   As páginas públicas do Localizador partilham um só vocabulário
+   visual: branco e cinza-frio (a paleta do portal), verde, tinta,
+   hairline, Inter em todas as hierarquias e uma acção verde de largura
+   total em cada cartão. Nada de carrinho, cupões ou percentagens — o
+   produto é de balcão.
 
    Tudo vive debaixo de `.cf-shop` para não tocar no portal nem no site
    principal: os tokens e as classes (.pcard, .chip, .price…) ficam
@@ -12,18 +13,31 @@
    especificidade.
    ========================================================================== */
 
+/* ---------- superfície pública ----------
+   O portal abandonou o bege e a serifa; as páginas públicas seguem-no.
+   A paleta (branco #ffffff nas superfícies, cinza #f9f9f9 nas faixas
+   de fundo e hairlines neutras #dfe4e0) vive nos tokens de marca — ver
+   `@theme` em globals.css — porque também o corpo, o cabeçalho e o rodapé
+   a usam. A tipografia também deixou de ter serifa: `--font-display`
+   resolve para a fonte de interface, como em `.portal-shell`.
+   ---------------------------------------------------------------------- */
+
 .cf-shop {
-  --cf-paper: #fffdf9;
-  --cf-paper-2: #f7f5f1;
+  /* Paleta do portal: branco (#ffffff) para as superfícies e o cinza do
+     site principal (#f9f9f9) para as faixas de fundo. O bege quente
+     (#fffdf9 / #f7f5f1) e a serifa saíram com o abandono da Fraunces —
+     a fonte de display resolve para a de interface, como em `.portal-shell`. */
+  --cf-paper: #ffffff;
+  --cf-paper-2: #f9f9f9;
   --cf-card: #ffffff;
   --cf-ink: #002a32;
   --cf-green: #00493a;
   --cf-accent: #0a844f;
-  --cf-line: #e3e0d8;
+  --cf-line: #dfe4e0;
   --cf-muted: rgba(0, 42, 50, 0.62);
   --cf-muted-2: rgba(0, 42, 50, 0.44);
   --cf-scrim: rgba(0, 25, 29, 0.58);
-  --cf-on-green: #fffdf9;
+  --cf-on-green: #ffffff;
 
   background: var(--cf-paper);
   color: var(--cf-ink);
@@ -162,19 +176,19 @@ html.dark .cf-shop {
 
 /* Botão de papel sobre a faixa verde da farmácia. Cores fixas: em tema
    escuro `--cf-paper` é quase preto e o texto verde da marca ficava a
-   2,2:1. Assim é creme com verde escuro nos dois temas (10,3:1). */
+   2,2:1. Assim é branco com verde escuro nos dois temas (10,3:1). */
 .cf-btn--cream {
-  background: #fffdf9;
+  background: #ffffff;
   color: #00493a;
 }
 
 .cf-btn--on-green {
-  border-color: rgba(255, 253, 249, 0.35);
+  border-color: rgba(255, 255, 255, 0.35);
   color: var(--cf-on-green);
 }
 
 .cf-btn--on-green:hover {
-  border-color: rgba(255, 253, 249, 0.7);
+  border-color: rgba(255, 255, 255, 0.7);
 }
 
 .cf-btn--sm {
@@ -455,12 +469,17 @@ html.dark .cf-rx {
   text-align: left;
   background: var(--cf-card);
   border: 1px solid var(--cf-line);
+  border-radius: 16px;
   overflow: hidden;
-  transition: border-color 0.16s ease;
+  box-shadow: 0 4px 20px rgba(0, 42, 50, 0.05);
+  transition:
+    border-color 0.16s ease,
+    box-shadow 0.16s ease;
 }
 
 .pcard:hover {
   border-color: var(--cf-muted);
+  box-shadow: 0 10px 30px rgba(0, 42, 50, 0.08);
 }
 
 .pcard-media {
@@ -636,14 +655,30 @@ html.dark .cf-rx {
 
 /* ---------- hero editorial (E / D) ---------- */
 .shop-hero {
-  padding: 54px 0 0;
+  /* Hero curto: o Localizador é uma ferramenta, não uma landing page.
+     Branco sobre a faixa cinza do conteúdo, como no site principal.
+     O respiro inferior é o mesmo em /pesquisa, /farmacia e /sobre. */
+  padding: 34px 0 36px;
   scroll-margin-top: 84px;
   transition: padding-top 0.38s cubic-bezier(0.22, 1, 0.36, 1);
 }
 
 /* Pesquisa activa: o texto sai de cena e sobra a caixa + filtros. */
 .shop-hero--searching {
-  padding-top: 22px;
+  padding-top: 18px;
+}
+
+/* Os dois heroes têm a mesma estrutura (kicker, título, subtítulo, caixa e
+   filtros). Reservar duas linhas no título e no subtítulo garante a mesma
+   altura mesmo quando um deles cabe numa só linha. */
+@media (min-width: 761px) {
+  .shop-hero--tools h1 {
+    min-height: 2.12em;
+  }
+
+  .shop-hero--tools .shop-hero-sub {
+    min-height: 3.3em;
+  }
 }
 
 /* A altura 0 do exit corta o texto a subir — sem overflow isto transbordava. */
@@ -688,8 +723,8 @@ html.dark .cf-rx {
 }
 
 .shop-hero h1 {
-  font-size: 50px;
-  margin-top: 14px;
+  font-size: 42px;
+  margin-top: 10px;
 }
 
 .shop-hero h1 em {
@@ -697,11 +732,11 @@ html.dark .cf-rx {
   color: var(--cf-accent);
 }
 
-.shop-hero p {
+.shop-hero .shop-hero-sub {
   margin-top: 16px;
   color: var(--cf-muted);
   max-width: 52ch;
-  font-size: 15px;
+  font-size: 14px;
   line-height: 1.65;
 }
 
@@ -785,12 +820,30 @@ html.dark .cf-rx {
   font-size: 15px;
 }
 
-/* Dentro da barra fixa o campo é MAIS BAIXO que a barra (42px dentro de
-   48px): o invólucro respira 3px em cima e em baixo, para o campo não
-   ficar colado ao header e ao conteúdo que passa por trás. */
+/* A busca da rede filtra ao vivo e não tem botão de submeter: o campo
+   dispensa o espaço reservado aos controlos da pesquisa de produtos. */
+.shop-search--live .cf-field {
+  padding: 11px 20px 11px 44px;
+}
+
+/* Dentro da barra fixa o campo é MAIS BAIXO que a barra (34px dentro de
+   40px): o invólucro respira 3px em cima e em baixo, para o campo não
+   ficar colado ao header e ao conteúdo que passa por trás. O botão de
+   pesquisa e o «limpar» encolhem com ele — 36px num pill de 34px
+   transbordava. */
 .sh-quick .cf-field {
-  padding: 8px 86px 8px 20px;
+  padding: 4px 78px 4px 20px;
   font-size: 15px;
+}
+
+.sh-quick .search-go {
+  right: 5px;
+  width: 26px;
+  height: 26px;
+}
+
+.sh-quick .search-clear {
+  right: 38px;
 }
 
 /* O campo já mostra o seu próprio botão de limpar. */
@@ -860,9 +913,7 @@ html.dark .cf-rx {
   justify-content: space-between;
   align-items: center;
   gap: 20px;
-  border-top: 1px solid var(--cf-line);
-  border-bottom: 1px solid var(--cf-line);
-  margin-top: 36px;
+  margin-top: 0;
   padding: 13px 0;
   flex-wrap: wrap;
 }
@@ -897,8 +948,249 @@ html.dark .cf-rx {
   margin-top: 26px;
 }
 
+/* Origem do medicamento: linha própria por baixo da barra de resultados,
+   para não empurrar os chips de estado e não se confundir com o município. */
+.sh-origin {
+  align-items: center;
+  margin-top: 12px;
+}
+
+.sh-origin-label {
+  font-size: 9.5px;
+  letter-spacing: 0.15em;
+  text-transform: uppercase;
+  color: var(--cf-muted-2);
+  font-weight: 700;
+  margin-right: 4px;
+}
+
 .sh-section {
-  padding: 34px 0 10px;
+  /* Faixa de conteúdo cinza: o hero branco termina e os cartões brancos
+     arredondados ganham relevo — o mesmo contraste do site principal. */
+  background: var(--cf-paper-2);
+  padding: 34px 0 28px;
+}
+
+/* Documento (/sobre) em cartão branco sobre a faixa cinza. */
+.doc-card {
+  background: var(--cf-card);
+  border: 1px solid var(--cf-line);
+  border-radius: 18px;
+  box-shadow: 0 4px 20px rgba(0, 42, 50, 0.05);
+  padding: 32px 34px 34px;
+}
+
+.doc-card .legal-grid {
+  padding-top: 0;
+}
+
+/* ---------- formulário de adesão (/farmacias/participar) ---------- */
+.apply-card {
+  max-width: 880px;
+  margin: 0 auto;
+  background: var(--cf-card);
+  border: 1px solid var(--cf-line);
+  border-radius: 18px;
+  box-shadow: 0 4px 20px rgba(0, 42, 50, 0.05);
+  padding: 32px 34px 34px;
+}
+
+.apply-section {
+  grid-column: 1 / -1;
+  margin-top: 22px;
+  padding-top: 20px;
+  border-top: 1px solid var(--cf-line);
+}
+
+.apply-section:first-child {
+  margin-top: 0;
+  padding-top: 0;
+  border-top: 0;
+}
+
+.apply-section h2 {
+  font-family: var(--font-display);
+  font-size: 20px;
+  font-weight: 600;
+  letter-spacing: -0.01em;
+  color: var(--cf-ink);
+}
+
+.apply-section p {
+  margin-top: 4px;
+  max-width: 62ch;
+  font-size: 13px;
+  line-height: 1.55;
+  color: var(--cf-muted);
+}
+
+.apply-check {
+  display: flex;
+  align-items: flex-start;
+  gap: 10px;
+  font-size: 13px;
+  line-height: 1.6;
+  color: var(--cf-muted);
+}
+
+.apply-check input {
+  flex: none;
+  width: 1rem;
+  height: 1rem;
+  margin-top: 3px;
+  accent-color: var(--cf-green);
+}
+
+.apply-check a {
+  color: var(--cf-accent);
+  text-decoration: underline;
+  text-underline-offset: 2px;
+}
+
+.apply-submit {
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+  margin-top: 6px;
+}
+
+.apply-submit .form-note {
+  text-align: center;
+}
+
+/* Honeypot fora do ecrã: existe para os bots, não para as pessoas. */
+.apply-hp {
+  position: absolute;
+  left: -9999px;
+  width: 1px;
+  height: 1px;
+  overflow: hidden;
+}
+
+.apply-success {
+  max-width: 720px;
+  text-align: center;
+}
+
+.apply-success-icon {
+  width: 3.25rem;
+  height: 3.25rem;
+  margin: 0 auto 16px;
+  border-radius: 50%;
+  display: grid;
+  place-items: center;
+  background: color-mix(in srgb, var(--cf-accent) 12%, transparent);
+  color: var(--cf-accent);
+}
+
+.apply-success h2 {
+  font-family: var(--font-display);
+  font-size: 24px;
+  font-weight: 600;
+  letter-spacing: -0.01em;
+  color: var(--cf-ink);
+}
+
+.apply-success-steps {
+  max-width: 54ch;
+  margin: 18px auto 0;
+  padding-left: 1.15rem;
+  text-align: left;
+  font-size: 14px;
+  line-height: 1.65;
+  color: var(--cf-muted);
+}
+
+.apply-success-steps li + li {
+  margin-top: 8px;
+}
+
+.apply-success .notice {
+  margin-top: 22px;
+  text-align: left;
+}
+
+/* Resumo do pedido: os mesmos três dados que o e-mail de confirmação
+   repete. Fica discreto — é confirmação, não o conteúdo principal. */
+.apply-recap {
+  max-width: 30rem;
+  margin: 26px auto 0;
+  padding: 18px 20px 16px;
+  border: 1px solid var(--cf-line);
+  border-radius: 14px;
+  text-align: left;
+}
+
+.apply-recap h3 {
+  margin: 0;
+  font-size: 10px;
+  font-weight: 600;
+  letter-spacing: 0.14em;
+  text-transform: uppercase;
+  color: var(--cf-muted);
+}
+
+.apply-recap dl {
+  margin: 10px 0 0;
+}
+
+.apply-recap dl > div {
+  display: grid;
+  grid-template-columns: 38% 1fr;
+  gap: 12px;
+  padding: 9px 0;
+  border-top: 1px solid var(--cf-line);
+}
+
+.apply-recap dt {
+  padding-top: 2px;
+  font-size: 10px;
+  letter-spacing: 0.12em;
+  text-transform: uppercase;
+  color: var(--cf-muted);
+}
+
+.apply-recap dd {
+  margin: 0;
+  font-size: 14px;
+  line-height: 1.5;
+  color: var(--cf-ink);
+  overflow-wrap: anywhere;
+}
+
+.apply-recap p {
+  margin: 12px 0 0;
+  font-size: 12px;
+  line-height: 1.6;
+  color: var(--cf-muted);
+}
+
+.apply-success-note {
+  margin-top: 20px;
+  font-size: 13px;
+  line-height: 1.6;
+  color: var(--cf-muted);
+}
+
+.apply-success-note a {
+  color: var(--cf-accent);
+  text-decoration: underline;
+  text-underline-offset: 2px;
+}
+
+.apply-success-acts {
+  display: flex;
+  flex-wrap: wrap;
+  justify-content: center;
+  gap: 10px;
+  margin-top: 24px;
+}
+
+@media (max-width: 760px) {
+  .apply-card {
+    padding: 22px 18px 24px;
+    border-radius: 14px;
+  }
 }
 
 /* ---------- barra de refinação fixa (resultados) ----------
@@ -922,8 +1214,8 @@ html.dark .cf-rx {
   display: flex;
   align-items: center;
   gap: 16px;
-  /* 3px + campo de 42px + 3px = barra de 48px (a altura da caixa da
-     página de pesquisa), com o campo visivelmente mais baixo. */
+  /* 3px + campo de 34px + 3px = barra de 40px, com o campo visivelmente
+     mais baixo do que o header. */
   padding-top: 3px;
   padding-bottom: 3px;
 }
@@ -956,6 +1248,34 @@ html.dark .cf-rx {
   .sh-quick-count {
     display: none;
   }
+
+  /* Telemóvel: campo ainda mais baixo (30px), com o botão e o «limpar»
+     proporcionais. A prateleira da farmácia não tem botão de pesquisa —
+     o «limpar» fica encostado à direita, como no desktop. */
+  .sh-quick .cf-field {
+    padding: 3px 62px 3px 16px;
+    font-size: 14px;
+  }
+
+  .sh-quick .search-go {
+    right: 4px;
+    width: 24px;
+    height: 24px;
+  }
+
+  .sh-quick .search-clear {
+    right: 32px;
+    width: 24px;
+    height: 24px;
+  }
+
+  .sh-quick--shelf .cf-field {
+    padding-right: 40px;
+  }
+
+  .sh-quick--shelf .search-clear {
+    right: 8px;
+  }
 }
 
 /* ---------- Modelo E: produto primeiro, farmácias em comparação ---------- */
@@ -968,16 +1288,41 @@ html.dark .cf-rx {
   padding: 26px 0 22px;
   display: grid;
   grid-template-columns: 294px 1fr;
-  gap: 44px;
+  gap: 0 44px;
   align-items: start;
 }
 
+/* O produto ocupa a primeira linha; o aviso de receita fica na segunda,
+   debaixo do cartão, sem arrastar a altura da caixa de resultados. */
+.e-product {
+  grid-column: 1;
+  grid-row: 1;
+}
+
 .e-summary {
+  grid-column: 1;
+  grid-row: 2;
   font-size: 12px;
   color: var(--cf-muted);
   line-height: 1.6;
   margin-top: 14px;
   max-width: 34ch;
+}
+
+/* Caixa branca das farmácias: acompanha a altura do cartão do produto
+   (mesmo com uma só linha), porque estica com a linha da grelha. */
+.e-results {
+  grid-column: 2;
+  grid-row: 1;
+  align-self: stretch;
+  height: 100%;
+  background: var(--cf-card);
+  border: 1px solid var(--cf-line);
+  border-radius: 16px;
+  box-shadow: 0 4px 20px rgba(0, 42, 50, 0.05);
+  padding: 14px 20px 4px;
+  display: flex;
+  flex-direction: column;
 }
 
 .e-rows {
@@ -986,7 +1331,13 @@ html.dark .cf-rx {
 
 .e-head {
   display: grid;
-  grid-template-columns: 1.25fr 0.7fr 0.8fr 0.62fr auto;
+  /* A última coluna é FIXA, não `auto`: no cabeçalho está vazia (0px) e nas
+     linhas leva o botão (~80px). Com `auto`, as colunas do cabeçalho ficavam
+     mais largas e «Confirmação» deixava de estar sobre os valores. As
+     restantes usam minmax(0, …) para o texto não voltar a torcer as larguras. */
+  grid-template-columns:
+    minmax(0, 1.25fr) minmax(0, 0.7fr) minmax(0, 0.8fr) minmax(0, 0.62fr)
+    96px;
   gap: 14px;
   padding: 0 0 8px;
   border-bottom: 1px solid var(--cf-line);
@@ -997,9 +1348,18 @@ html.dark .cf-rx {
   font-weight: 700;
 }
 
+/* A confirmação na linha começa depois do ponto de estado (6px) e do
+   espaço entre eles (6px); o cabeçalho leva o mesmo recuo para «Confirmação»
+   ficar alinhado com o texto que lhe corresponde. */
+.e-head > span:nth-child(3) {
+  padding-left: 12px;
+}
+
 .e-row {
   display: grid;
-  grid-template-columns: 1.25fr 0.7fr 0.8fr 0.62fr auto;
+  grid-template-columns:
+    minmax(0, 1.25fr) minmax(0, 0.7fr) minmax(0, 0.8fr) minmax(0, 0.62fr)
+    96px;
   gap: 14px;
   align-items: center;
   padding: 11px 0;
@@ -1195,7 +1555,7 @@ html.dark .cf-rx {
 
 .store-band .crumbs {
   font-size: 12px;
-  color: rgba(255, 253, 249, 0.62);
+  color: rgba(255, 255, 255, 0.62);
   margin-bottom: 20px;
 }
 
@@ -1211,7 +1571,7 @@ html.dark .cf-rx {
 
 .store-band .addr {
   font-size: 13px;
-  color: rgba(255, 253, 249, 0.74);
+  color: rgba(255, 255, 255, 0.74);
   margin-top: 12px;
 }
 
@@ -1221,7 +1581,7 @@ html.dark .cf-rx {
   flex-wrap: wrap;
   margin-top: 13px;
   font-size: 11.5px;
-  color: rgba(255, 253, 249, 0.82);
+  color: rgba(255, 255, 255, 0.82);
 }
 
 .store-band .badges span {
@@ -2155,6 +2515,24 @@ html.dark .res-when-note--bad {
   color: #ff9b8a;
 }
 
+/* Farmácia fechada agora e primeira sugestão noutro dia: a nota explica
+   o intervalo entre as duas coisas, no tom neutro de uma informação e
+   não no vermelho de um erro (o cliente não fez nada mal). */
+.res-closed {
+  margin-top: 10px;
+  padding: 9px 11px;
+  border-left: 2px solid var(--cf-line);
+  background: var(--cf-paper-2);
+  font-size: 11.5px;
+  line-height: 1.5;
+  color: var(--cf-muted);
+}
+
+.res-closed b {
+  color: var(--cf-ink);
+  font-weight: 600;
+}
+
 .res-legal {
   font-size: 10.5px;
   color: var(--cf-muted-2);
@@ -2224,7 +2602,10 @@ html.dark .res-when-note--bad {
   margin-bottom: 6px;
 }
 
-.sh-empty-sub {
+/* `p.` é necessário: o reset `.cf-shop p` (0,1,1) ganha a uma classe
+   simples (0,1,0) e anulava o `margin: 0 auto` — a mensagem ficava com a
+   caixa de 56ch encostada à esquerda, fora do centro do ecrã. */
+p.sh-empty-sub {
   font-size: 13px;
   color: var(--cf-muted);
   max-width: 56ch;
@@ -2251,7 +2632,9 @@ html.dark .res-when-note--bad {
 .sh-cta {
   margin-top: 34px;
   border: 1px solid var(--cf-line);
-  background: var(--cf-paper-2);
+  background: var(--cf-card);
+  border-radius: 16px;
+  box-shadow: 0 4px 20px rgba(0, 42, 50, 0.05);
   padding: 26px 28px;
   display: grid;
   grid-template-columns: 1fr auto;
@@ -2298,8 +2681,20 @@ html.dark .res-when-note--bad {
     gap: 16px;
   }
 
+  .e-product,
+  .e-summary,
+  .e-results {
+    grid-column: 1;
+    grid-row: auto;
+  }
+
   .e-summary {
     max-width: 60ch;
+    margin-top: 0;
+  }
+
+  .e-results {
+    height: auto;
   }
 
   .store-grid {
@@ -2361,11 +2756,17 @@ html.dark .res-when-note--bad {
   }
 
   .shop-hero {
-    padding-top: 34px;
+    padding-top: 26px;
+    padding-bottom: 30px;
   }
 
   .shop-hero h1 {
-    font-size: 36px;
+    font-size: 34px;
+  }
+
+  .doc-card {
+    padding: 22px 18px;
+    border-radius: 14px;
   }
 
   .shop-search {
@@ -2453,7 +2854,7 @@ html.dark .res-when-note--bad {
   }
 
   .shop-hero h1 {
-    font-size: 31px;
+    font-size: 29px;
   }
 
   .shelf-head .cf-field-wrap {
@@ -2464,8 +2865,8 @@ html.dark .res-when-note--bad {
 /* ---------- acompanhamento público (/reserva/[id]) ----------
    A página usa o mesmo esqueleto das outras páginas do Localizador
    (AppHeader + .cf-shop + AppFooter). Aqui a ficha de estado veste a
-   linguagem de papel: hairline em vez de sombras, serifa nos nomes e
-   verde da marca nas acções — nada de um cartão "à parte". */
+   linguagem do Localizador: hairline em vez de sombras, Inter nos nomes
+   e verde da marca nas acções — nada de um cartão "à parte". */
 .cf-shop .res-track-page {
   display: block;
   min-height: 0;
@@ -2606,5 +3007,352 @@ html.dark .res-when-note--bad {
 
   .cf-shop .res-when {
     grid-template-columns: 1fr;
+  }
+}
+
+/* ---------- documentos legais (/termos, /privacidade) ----------
+   Mesma gramática das outras páginas públicas: branco e cinza-frio,
+   hairline, Inter nos títulos e verde só nas acções. O documento é longo, por isso a
+   leitura manda — medida de 74ch, secções numeradas com régua e um
+   índice preso à esquerda no desktop (no telemóvel o índice fica em
+   cima, em duas colunas, sem sticky).
+
+   As duas páginas partilham a divisão por público: «Parte I» para quem
+   usa o Localizador, «Parte II» para farmácias. A régua de 2px marca a
+   mudança de parte — é o único sítio do documento onde a linha é grossa,
+   portanto a mudança vê-se antes de se ler o título. */
+.legal-page {
+  padding-top: 54px;
+}
+
+.legal-hero {
+  padding-bottom: 26px;
+  border-bottom: 1px solid var(--cf-line);
+}
+
+.legal-title {
+  font-size: 50px;
+  margin-top: 14px;
+}
+
+.legal-lede {
+  margin-top: 16px;
+  max-width: 62ch;
+  font-size: 15px;
+  line-height: 1.65;
+  color: var(--cf-muted);
+}
+
+.legal-meta {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 4px 8px;
+  margin-top: 18px;
+  font-size: 11.5px;
+  line-height: 1.5;
+  color: var(--cf-muted-2);
+}
+
+.legal-meta b {
+  font-weight: 600;
+  color: var(--cf-muted);
+}
+
+.legal-meta .sep {
+  color: var(--cf-line);
+}
+
+.legal-grid {
+  display: grid;
+  grid-template-columns: 230px minmax(0, 1fr);
+  gap: 56px;
+  align-items: start;
+  padding-top: 32px;
+}
+
+/* Índice com a mesma cabeça do «store-aside» da farmácia: régua verde
+   grossa em cima e nada de caixa. A altura máxima evita que um índice
+   longo fique preso por baixo do viewport. */
+.legal-toc {
+  position: sticky;
+  top: 84px;
+  align-self: start;
+  max-height: calc(100dvh - 110px);
+  overflow-y: auto;
+  border-top: 2px solid var(--cf-green);
+  padding-top: 14px;
+}
+
+.legal-toc-title {
+  font-size: 9.5px;
+  letter-spacing: 0.16em;
+  text-transform: uppercase;
+  font-weight: 700;
+  color: var(--cf-ink);
+}
+
+.legal-toc-group {
+  margin-top: 16px;
+  font-size: 9.5px;
+  letter-spacing: 0.14em;
+  text-transform: uppercase;
+  font-weight: 600;
+  color: var(--cf-muted-2);
+}
+
+.legal-toc ul {
+  list-style: none;
+  margin: 6px 0 0;
+  padding: 0;
+}
+
+/* O alvo é a linha toda: um link de 12,5px com 3px de respiro em cima e
+   em baixo ainda tem 22px de altura — suficiente para o dedo e discreto
+   o bastante para não competir com o documento. */
+.cf-shop .legal-toc a {
+  display: block;
+  padding: 3px 0;
+  font-size: 12.5px;
+  line-height: 1.45;
+  color: var(--cf-muted);
+  transition: color 0.15s ease;
+}
+
+.cf-shop .legal-toc a:hover,
+.cf-shop .legal-toc a:focus-visible {
+  color: var(--cf-ink);
+}
+
+.legal-body {
+  min-width: 0;
+  max-width: 74ch;
+}
+
+/* Um link no meio de um parágrafo jurídico tem de se ver como link — o
+   verde da marca com sublinhado. O `:not(.cf-btn)` protege os botões, que
+   já perdem a decoração noutra regra. */
+.cf-shop .legal-body a:not(.cf-btn) {
+  color: var(--cf-accent);
+  text-decoration: underline;
+  text-underline-offset: 2px;
+  text-decoration-thickness: 1px;
+}
+
+.cf-shop .legal-body a:not(.cf-btn):hover {
+  text-decoration-thickness: 2px;
+}
+
+.legal-part {
+  scroll-margin-top: 96px;
+}
+
+/* Ritmo de leitura partilhado por /sobre, /termos e /privacidade: leading
+   de 1.6, parágrafos a 12px e secções próximas. O documento respira, mas
+   as linhas não se afastam ao ponto de se perder o fio. */
+.legal-part + .legal-part,
+.legal-end {
+  margin-top: 34px;
+  padding-top: 24px;
+  border-top: 2px solid var(--cf-ink);
+}
+
+.legal-part-title {
+  font-size: 30px;
+  margin-top: 10px;
+  letter-spacing: -0.018em;
+}
+
+.legal-part-intro {
+  margin-top: 12px;
+  font-size: 13px;
+  line-height: 1.65;
+  color: var(--cf-muted-2);
+  max-width: 66ch;
+}
+
+/* Cada secção abre com uma régua fina (a do topo) e não fecha com nada:
+   o fim de uma secção é o princípio da seguinte. `scroll-margin` porque
+   o header é sticky. */
+.legal-sec {
+  padding: 18px 0;
+  border-top: 1px solid var(--cf-line);
+  scroll-margin-top: 96px;
+}
+
+.legal-part-intro + .legal-sec,
+.legal-part-title + .legal-sec {
+  margin-top: 18px;
+}
+
+.legal-sec h3 {
+  display: flex;
+  gap: 0.55rem;
+  font-family: var(--font-sans);
+  font-size: 15px;
+  font-weight: 650;
+  letter-spacing: -0.005em;
+  line-height: 1.4;
+  color: var(--cf-ink);
+}
+
+/* O número alinha numa coluna de largura fixa: os títulos de duas linhas
+   continuam a começar no mesmo sítio. */
+.legal-num {
+  flex: none;
+  min-width: 1.4rem;
+  font-variant-numeric: tabular-nums;
+  font-weight: 600;
+  color: var(--cf-muted-2);
+}
+
+.legal-p {
+  margin-top: 12px;
+  font-size: 14px;
+  line-height: 1.6;
+  color: var(--cf-muted);
+}
+
+.legal-p b,
+.legal-list b {
+  font-weight: 600;
+  color: var(--cf-ink);
+}
+
+.legal-list {
+  margin: 12px 0 0;
+  padding-left: 1.15rem;
+  font-size: 14px;
+  line-height: 1.6;
+  color: var(--cf-muted);
+}
+
+.legal-list li + li {
+  margin-top: 5px;
+}
+
+.legal-list li::marker {
+  color: var(--cf-muted-2);
+}
+
+/* Aviso de leitura obrigatória (o «não somos uma farmácia», o «a reserva
+   é um pedido»). Filete verde à esquerda como no cartão de levantamento
+   da reserva; o fundo é papel-2 para separar do corpo do texto. */
+.legal-box {
+  margin-top: 14px;
+  padding: 13px 15px;
+  border-left: 3px solid var(--cf-green);
+  background: var(--cf-paper-2);
+  font-size: 13px;
+  line-height: 1.65;
+  color: var(--cf-muted);
+}
+
+.legal-box b {
+  display: block;
+  margin-bottom: 3px;
+  font-weight: 600;
+  color: var(--cf-ink);
+}
+
+/* Campos por preencher ([NOME DA EMPRESA], [NIF], [SEDE]). Ficam com
+   sublinhado tracejado para não se publicarem por distracção — é o único
+   sítio do site onde o tracejado é um aviso e não decoração. */
+.legal-fill {
+  background: color-mix(in srgb, var(--cf-accent) 13%, transparent);
+  border-bottom: 1px dashed var(--cf-accent);
+  padding: 0 3px;
+  font-weight: 600;
+  color: var(--cf-ink);
+}
+
+/* Rodapé do documento: o caminho para falar connosco, com a mesma
+   largura de leitura do texto (não atravessa o índice). */
+.legal-help {
+  margin-top: 34px;
+  padding: 22px 24px;
+  border: 1px solid var(--cf-line);
+  background: var(--cf-paper-2);
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  justify-content: space-between;
+  gap: 16px 24px;
+}
+
+.legal-help-title {
+  font-family: var(--font-display);
+  font-size: 19px;
+  font-weight: 600;
+  color: var(--cf-ink);
+  letter-spacing: -0.01em;
+}
+
+.legal-help p {
+  margin-top: 4px;
+  font-size: 12.5px;
+  line-height: 1.6;
+  color: var(--cf-muted);
+  max-width: 46ch;
+}
+
+.legal-help-acts {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px;
+}
+
+@media (max-width: 1040px) {
+  .legal-grid {
+    grid-template-columns: minmax(0, 1fr);
+    gap: 26px;
+  }
+
+  .legal-toc {
+    position: static;
+    max-height: none;
+    overflow: visible;
+  }
+
+  /* Índice em duas colunas: em telemóvel uma lista de 16 links empurra o
+     documento para fora do primeiro ecrã. */
+  .legal-toc ul {
+    columns: 2;
+    column-gap: 24px;
+  }
+
+  .legal-toc li {
+    break-inside: avoid;
+  }
+}
+
+@media (max-width: 760px) {
+  .legal-page {
+    padding-top: 34px;
+  }
+
+  .legal-title {
+    font-size: 36px;
+  }
+
+  .legal-part-title {
+    font-size: 25px;
+  }
+}
+
+@media (max-width: 560px) {
+  .legal-title {
+    font-size: 31px;
+  }
+
+  .legal-toc ul {
+    columns: 1;
+  }
+
+  .legal-help {
+    padding: 18px 16px;
+  }
+
+  .legal-help-acts .cf-btn {
+    flex: 1 1 auto;
   }
 }

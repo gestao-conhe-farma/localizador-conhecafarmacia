@@ -3,15 +3,18 @@
 @custom-variant dark (&:is(.dark *));
 
 @theme {
-  /* Core Brand Colors — idênticos ao site principal (conhecafarmacia.com) */
+  /* Core Brand Colors — a paleta das superfícies do Localizador. Desde
+     23/10/2026 segue o site principal: branco (#ffffff) nas superfícies,
+     cinza #f9f9f9 nas faixas de fundo e hairlines neutras — o bege quente
+     saiu com a Fraunces. */
   --color-brand-primary: #00493a;
   --color-brand-accent: #0a844f;
   --color-brand-deep: #002a32;
-  --color-brand-bg: #fffdf9;
-  --color-brand-bg-alt: #f7f5f1;
+  --color-brand-bg: #ffffff;
+  --color-brand-bg-alt: #f9f9f9;
   --color-brand-card: #ffffff;
   --color-brand-divider: #dfe4e0;
-  --color-brand-line: #e3e0d8;
+  --color-brand-line: #dfe4e0;
   /* Faixa estrutural da área interna e do drawer — o verde escuro do
      painel de entrada. Em escuro fica mais fundo, como na plataforma de
      gestão: é chrome, não conteúdo, e não pode competir com o papel. */
@@ -19,7 +22,10 @@
 
   /* Typography — fontes variáveis self-hosted (fontsource, importadas no layout) */
   --font-sans: 'Inter Variable', 'Inter', ui-sans-serif, system-ui, sans-serif;
-  --font-display: 'Fraunces Variable', 'Fraunces', Georgia, serif;
+  /* Sem serifa: a display resolve para a interface — a mesma decisão que
+     o portal tomou em `.portal-shell`. Nada no Localizador sai em
+     Fraunces, por isso o layout já não carrega as fontes dela. */
+  --font-display: var(--font-sans);
 
   /* Elevação mínima — o Modelo F é flat: hairlines em vez de sombras */
   --shadow-soft: 0 2px 10px rgba(0, 42, 50, 0.04);
@@ -627,7 +633,7 @@ html.dark .form-note {
 
 /* ============================================
    LOCALIZADOR — MODELO F ("Editorial Prático")
-   Fundo quente #fffdf9, Fraunces protagonista,
+   Fundo branco e cinza-frio do portal, Inter em vez de Fraunces,
    flat: hairlines em vez de sombras, botões pill
    ============================================ */
 @layer components {
@@ -759,7 +765,7 @@ html.dark .form-note {
     color: #ffffff;
   }
 
-  /* Stats strip — números grandes em Fraunces separados por hairlines */
+  /* Stats strip — números grandes em Inter separados por hairlines */
   .stats-strip {
     @apply flex flex-wrap border-t border-b border-brand-line mt-12;
   }
@@ -1789,6 +1795,17 @@ html.dark .form-note {
 
   .about-p {
     @apply text-brand-deep/70 leading-relaxed mb-4;
+  }
+
+  /* Referências aos documentos legais: o sublinhado é o que os distingue do
+     texto corrido — só a cor não chegava para quem não distingue verde. */
+  .about-link {
+    @apply text-brand-accent font-semibold underline;
+    text-underline-offset: 2px;
+  }
+
+  .about-link:hover {
+    @apply text-brand-deep;
   }
 
   .about-points {
@@ -9751,7 +9768,7 @@ html.dark .form-note {
   --chart-3: #4aa981;
   --chart-4: #8cc9ae;
   --chart-5: #c2e2d2;
-  --chart-background: #fffdf9;
+  --chart-background: #ffffff;
   --chart-foreground: #002a32;
   --chart-foreground-muted: #5b6b66;
   --chart-line-primary: var(--chart-1);
@@ -9760,9 +9777,9 @@ html.dark .form-note {
   --chart-grid: #dfe4e0;
   --chart-brush-border: var(--chart-grid);
   --chart-tooltip-background: rgb(0 42 50 / 0.92);
-  --chart-tooltip-foreground: #fffdf9;
+  --chart-tooltip-foreground: #ffffff;
   --chart-tooltip-muted: #b9c8c3;
-  --chart-marker-background: #f7f5f1;
+  --chart-marker-background: #f9f9f9;
   --chart-marker-border: #dfe4e0;
   --chart-marker-foreground: #002a32;
   --chart-label: #5b6b66;
@@ -12195,6 +12212,12 @@ html.dark .interno-modal {
   line-height: 1.5;
   color: var(--color-brand-deep);
   overflow-wrap: anywhere;
+}
+
+/* Texto livre (a mensagem do pedido): as quebras de linha que a farmácia
+   escreveu contam, e sem isto o bloco vira um parágrafo corrido. */
+.interno-dl-text {
+  white-space: pre-wrap;
 }
 
 .interno-dl-note {

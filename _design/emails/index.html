@@ -1,0 +1,374 @@
+<!doctype html>
+<html lang="pt">
+<head>
+<meta charset="utf-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1" />
+<title>E-mails transaccionais · Conheça Farmácia</title>
+<style>
+  /* Inter é a fonte da marca (self-hosted no projecto): a galeria usa a mesma
+     que o Localizador para o julgamento não ser contaminado por outra letra. */
+  @font-face {
+    font-family: 'InterPreview';
+    src: url('../../node_modules/@fontsource-variable/inter/files/inter-latin-wght-normal.woff2') format('woff2');
+    font-weight: 100 900;
+    font-display: swap;
+  }
+  :root {
+    --green: #00493a;
+    --deep: #002a32;
+    --accent: #0a844f;
+    --paper: #ffffff;
+    --soft: #f9f9f9;
+    --line: #dfe4e0;
+    --muted: #5b6a65;
+    --frame-w: 680px;
+  }
+  * { box-sizing: border-box; }
+  html { -webkit-text-size-adjust: 100%; }
+  body {
+    margin: 0;
+    background: var(--paper);
+    color: var(--deep);
+    font-family: 'InterPreview', 'Inter Variable', ui-sans-serif, system-ui, sans-serif;
+    font-optical-sizing: auto;
+    line-height: 1.55;
+    text-wrap: pretty;
+  }
+  .wrap { width: min(1120px, 100% - 48px); margin-inline: auto; }
+  a { color: var(--green); }
+
+  /* ---------- Cabeçalho ---------- */
+  .top { border-bottom: 1px solid var(--line); padding: 40px 0 44px; }
+  .top img { width: 150px; height: auto; display: block; margin-bottom: 40px; }
+  .eyebrow {
+    margin: 0 0 14px; font-size: 11px; font-weight: 600; letter-spacing: 0.16em;
+    text-transform: uppercase; color: var(--accent);
+  }
+  h1 {
+    margin: 0; font-size: clamp(30px, 4.4vw, 48px); line-height: 1.06;
+    letter-spacing: -0.035em; font-weight: 600; max-width: 20ch;
+  }
+  .lede { margin: 20px 0 0; max-width: 62ch; font-size: 16px; color: var(--muted); }
+  .lede b { color: var(--deep); font-weight: 600; }
+  .facts {
+    display: flex; flex-wrap: wrap; gap: 10px 28px; margin: 28px 0 0; padding: 0;
+    font-size: 12px; color: var(--muted); font-variant-numeric: tabular-nums;
+  }
+
+  /* ---------- Barra de controlo ---------- */
+  .bar {
+    position: sticky; top: 0; z-index: 10; background: rgba(255,255,255,0.94);
+    backdrop-filter: blur(8px); border-bottom: 1px solid var(--line);
+  }
+  .bar-in {
+    display: flex; align-items: center; justify-content: space-between; gap: 20px;
+    padding: 12px 0; flex-wrap: wrap;
+  }
+  .jump { display: flex; gap: 22px; font-size: 13px; }
+  .jump a { text-decoration: none; color: var(--muted); font-variant-numeric: tabular-nums; }
+  .jump a:hover { color: var(--green); }
+  .jump a span { color: #9aa7a2; margin-right: 6px; }
+  .sizes { display: flex; align-items: center; gap: 8px; font-size: 12px; color: var(--muted); }
+  .sizes button {
+    font: inherit; font-size: 12px; padding: 5px 11px; cursor: pointer;
+    background: transparent; color: var(--muted);
+    border: 1px solid var(--line); border-radius: 2px;
+  }
+  .sizes button[aria-pressed='true'] { background: var(--green); border-color: var(--green); color: #fff; }
+
+  /* ---------- Modelos ---------- */
+  section.mail { padding: 56px 0 8px; border-bottom: 1px solid var(--line); }
+  section.mail:last-of-type { border-bottom: 0; }
+  .sec-head { display: grid; grid-template-columns: 56px 1fr; gap: 0 18px; align-items: baseline; }
+  .num {
+    font-size: 12px; font-weight: 600; letter-spacing: 0.08em; color: var(--accent);
+    font-variant-numeric: tabular-nums; padding-top: 6px;
+  }
+  h2 { margin: 0; font-size: clamp(22px, 2.6vw, 30px); letter-spacing: -0.025em; font-weight: 600; }
+  .when { margin: 6px 0 0; font-size: 14px; color: var(--muted); }
+
+  .meta {
+    grid-column: 2; display: grid; grid-template-columns: repeat(auto-fit, minmax(210px, 1fr));
+    gap: 2px 32px; margin: 22px 0 0; padding: 18px 0; border-top: 1px solid var(--line);
+  }
+  .meta div { padding: 6px 0; }
+  .meta dt {
+    font-size: 10px; letter-spacing: 0.14em; text-transform: uppercase; color: #8a948f;
+    font-weight: 600; margin-bottom: 3px;
+  }
+  .meta dd { margin: 0; font-size: 13.5px; color: var(--deep); }
+  .meta dd code {
+    font-family: ui-monospace, SFMono-Regular, Menlo, Consolas, monospace;
+    font-size: 12px; color: var(--green); background: var(--soft); padding: 1px 5px;
+  }
+
+  .frame-box { margin: 10px 0 0 74px; }
+  .frame-tools {
+    display: flex; align-items: center; justify-content: space-between; gap: 16px;
+    padding: 10px 0; font-size: 11.5px; color: var(--muted); font-variant-numeric: tabular-nums;
+  }
+  .frame-tools code { font-family: ui-monospace, SFMono-Regular, Menlo, Consolas, monospace; color: #7a8681; }
+  .stage {
+    background: var(--soft); border: 1px solid var(--line); padding: 0;
+    width: var(--frame-w); max-width: 100%; overflow: hidden;
+  }
+  .stage iframe { display: block; width: 100%; border: 0; background: #f7f5f1; }
+  .stage iframe[data-h='760'] { height: 760px; }
+  .stage iframe[data-h='880'] { height: 880px; }
+  .stage iframe[data-h='820'] { height: 820px; }
+
+  details.text { margin: 14px 0 40px 74px; }
+  details.text summary {
+    cursor: pointer; font-size: 12px; color: var(--muted); letter-spacing: 0.02em;
+    padding: 6px 0; list-style: none;
+  }
+  details.text summary::-webkit-details-marker { display: none; }
+  details.text summary::before { content: '+ '; color: var(--accent); font-weight: 600; }
+  details.text[open] summary::before { content: '− '; }
+  details.text pre {
+    margin: 10px 0 0; padding: 18px 20px; background: var(--soft);
+    border: 1px solid var(--line); overflow-x: auto;
+    font-family: ui-monospace, SFMono-Regular, Menlo, Consolas, monospace;
+    font-size: 12px; line-height: 1.65; color: #33413d; white-space: pre-wrap;
+  }
+
+  /* ---------- Notas ---------- */
+  .notes { padding: 64px 0 40px; }
+  .notes h2 { font-size: clamp(20px, 2.2vw, 26px); }
+  .notes .grid {
+    display: grid; grid-template-columns: repeat(auto-fit, minmax(260px, 1fr));
+    gap: 0 40px; margin-top: 26px;
+  }
+  .notes .item { padding: 18px 0; border-top: 1px solid var(--line); }
+  .notes .item h3 {
+    margin: 0 0 6px; font-size: 13px; font-weight: 600; letter-spacing: -0.005em;
+    display: flex; gap: 8px; align-items: baseline;
+  }
+  .notes .item h3 span { font-size: 10px; letter-spacing: 0.1em; color: var(--accent); }
+  .notes .item p { margin: 0; font-size: 13.5px; color: var(--muted); }
+  .notes .item p code { font-family: ui-monospace, SFMono-Regular, Menlo, Consolas, monospace; font-size: 12px; }
+
+  footer {
+    border-top: 1px solid var(--line); padding: 22px 0 56px;
+    font-size: 11.5px; color: #8a948f;
+  }
+  footer code { font-family: ui-monospace, SFMono-Regular, Menlo, Consolas, monospace; }
+
+  @media (max-width: 760px) {
+    .wrap { width: min(100% - 32px, 1120px); }
+    .sec-head { grid-template-columns: 1fr; }
+    .num { padding: 0 0 4px; }
+    .meta, .frame-box, details.text { margin-left: 0; }
+    .jump { display: none; }
+  }
+</style>
+</head>
+<body>
+
+<header class="top">
+  <div class="wrap">
+    <img src="../../public/logo/logo-principal-verde.png" alt="Conheça Farmácia" />
+    <p class="eyebrow">Revisão de identidade · e-mails transaccionais</p>
+    <h1>Três mensagens que a farmácia recebe.</h1>
+    <p class="lede">
+      As pré-visualizações abaixo são o <b>HTML real</b> que sai de <code>lib/email.js</code>, com dados de
+      exemplo — não uma maqueta desenhada à parte. O texto simples também está aqui, porque é ele que
+      aparece quando o cliente de e-mail bloqueia imagens e é ele que os filtros de spam leem.
+      A identidade já é a da marca: <b>logótipo</b>, <b>Inter</b> e <b>#00493a</b>.
+    </p>
+    <div class="facts">
+      <span>3 modelos</span>
+      <span>Gerado em 23 de Outubro de 2026</span>
+      <span>Atualizar: <b>node scripts/render-emails.mjs</b></span>
+    </div>
+  </div>
+</header>
+
+<div class="bar">
+  <div class="wrap bar-in">
+    <nav class="jump" aria-label="Modelos">
+      <a href="#pedido"><span>01</span>Pedido de adesão</a>
+      <a href="#convite"><span>02</span>Convite</a>
+      <a href="#senha"><span>03</span>Senha</a>
+    </nav>
+    <div class="sizes" role="group" aria-label="Largura da moldura">
+      <span>Moldura</span>
+      <button type="button" data-w="680" aria-pressed="true">680 px</button>
+      <button type="button" data-w="390" aria-pressed="false">390 px</button>
+    </div>
+  </div>
+</div>
+
+<main class="wrap">
+
+  <section class="mail" id="pedido">
+    <div class="sec-head">
+      <span class="num">01</span>
+      <div>
+        <h2>Pedido de adesão recebido</h2>
+        <p class="when">Enviado logo depois de a farmácia preencher <code>/farmacias/participar</code>. É a resposta imediata que promete as 72 horas.</p>
+      </div>
+      <dl class="meta">
+        <div><dt>Assunto</dt><dd>Pedido recebido — Farmácia Nossa Senhora da Saúde</dd></div>
+        <div><dt>Vai para</dt><dd>quem preencheu o formulário</dd></div>
+        <div><dt>Função no código</dt><dd><code>emailPedidoAdesao()</code></dd></div>
+      </dl>
+    </div>
+    <div class="frame-box">
+      <div class="frame-tools">
+        <code>01-pedido-adesao.html</code>
+        <a href="01-pedido-adesao.html" target="_blank" rel="noopener">abrir em nova janela</a>
+      </div>
+      <div class="stage"><iframe src="01-pedido-adesao.html" data-h="760" title="Pré-visualização do e-mail de pedido de adesão"></iframe></div>
+      <details class="text">
+        <summary>Ver a versão em texto simples</summary>
+        <pre>Pedido recebido.
+
+Olá, Maria Domingos.
+
+Recebemos o pedido de adesão da Farmácia Nossa Senhora da Saúde ao Localizador de Medicamentos.
+
+A equipa da Conheça Farmácia vai analisar os dados e entra em contacto no máximo em
+72 horas (horas corridas).
+
+Se precisar de falar connosco antes disso: geral@conhecafarmacia.com · +244 925 696 002.
+
+Não é necessário responder a este e-mail. O pedido ficou registado na nossa área interna.
+
+Conheça Farmácia</pre>
+      </details>
+    </div>
+  </section>
+
+  <section class="mail" id="convite">
+    <div class="sec-head">
+      <span class="num">02</span>
+      <div>
+        <h2>Convite para o portal</h2>
+        <p class="when">Sai quando a equipa converte o lead em farmácia. É o primeiro acesso — define a senha e abre o portal de gestão.</p>
+      </div>
+      <dl class="meta">
+        <div><dt>Assunto</dt><dd>Convite para o portal — Farmácia Nossa Senhora da Saúde</dd></div>
+        <div><dt>Vai para</dt><dd>o responsável indicado na conversão</dd></div>
+        <div><dt>Função no código</dt><dd><code>emailConvite()</code></dd></div>
+      </dl>
+    </div>
+    <div class="frame-box">
+      <div class="frame-tools">
+        <code>02-convite-farmacia.html</code>
+        <a href="02-convite-farmacia.html" target="_blank" rel="noopener">abrir em nova janela</a>
+      </div>
+      <div class="stage"><iframe src="02-convite-farmacia.html" data-h="880" title="Pré-visualização do e-mail de convite"></iframe></div>
+      <details class="text">
+        <summary>Ver a versão em texto simples</summary>
+        <pre>A Farmácia Nossa Senhora da Saúde está pronta para começar.
+
+Olá, Maria Domingos.
+
+A equipa da Conheça Farmácia criou o acesso da sua farmácia ao portal de gestão.
+Stock, reservas e avisos de validade ficam num sítio só — e o stock confirmado
+aparece no Localizador.
+
+Defina a sua senha para entrar:
+https://localizador.conhecafarmacia.com/portal/convite?token=exemplo-de-token
+
+Este link é pessoal e expira. Se já não precisar dele, ignore este e-mail.
+Para renovar o convite, fale com a equipa: geral@conhecafarmacia.com.
+
+Conheça Farmácia</pre>
+      </details>
+    </div>
+  </section>
+
+  <section class="mail" id="senha">
+    <div class="sec-head">
+      <span class="num">03</span>
+      <div>
+        <h2>Reposição de senha</h2>
+        <p class="when">Para quem já entra no portal e perdeu a senha. Um botão, um link cru e o aviso para ignorar se não foi a pessoa.</p>
+      </div>
+      <dl class="meta">
+        <div><dt>Assunto</dt><dd>Repor a senha — Farmácia Nossa Senhora da Saúde</dd></div>
+        <div><dt>Vai para</dt><dd>o e-mail da conta que pediu</dd></div>
+        <div><dt>Função no código</dt><dd><code>emailRecuperacao()</code></dd></div>
+      </dl>
+    </div>
+    <div class="frame-box">
+      <div class="frame-tools">
+        <code>03-recuperacao-senha.html</code>
+        <a href="03-recuperacao-senha.html" target="_blank" rel="noopener">abrir em nova janela</a>
+      </div>
+      <div class="stage"><iframe src="03-recuperacao-senha.html" data-h="820" title="Pré-visualização do e-mail de reposição de senha"></iframe></div>
+      <details class="text">
+        <summary>Ver a versão em texto simples</summary>
+        <pre>Repor a senha de Farmácia Nossa Senhora da Saúde
+
+Olá, Maria Domingos.
+
+A equipa da Conheça Farmácia enviou-lhe o caminho para escolher uma senha nova.
+A senha antiga deixa de valer assim que guardar a nova.
+
+Escolher nova senha:
+https://localizador.conhecafarmacia.com/portal/recuperar/confirmar?token=exemplo-de-token
+
+O link vale uma hora e só pode ser usado uma vez.
+Se não pediu a reposição, ignore este e-mail e avise a equipa: geral@conhecafarmacia.com.
+
+Conheça Farmácia</pre>
+      </details>
+    </div>
+  </section>
+
+  <section class="notes">
+    <h2>O que mudou nesta passagem</h2>
+    <div class="grid">
+      <div class="item">
+        <h3><span>01</span>A letra é a da marca</h3>
+        <p>Os três modelos passam a Inter Variable — o mesmo ficheiro que as páginas públicas servem em <code>public/fonts/</code>. Onde o cliente não carrega a fonte (Outlook desktop, Gmail em parte), cai na letra do sistema, nunca numa serifa.</p>
+      </div>
+      <div class="item">
+        <h3><span>02</span>O logótipo abre a mensagem</h3>
+        <p>A faixa de topo passa a levar o logótipo branco sobre o verde <b>#00493a</b>. A marca é reconhecida na lista de entrada antes de o e-mail abrir.</p>
+      </div>
+      <div class="item">
+        <h3><span>03</span>Pré-linha escrita à mão</h3>
+        <p>Cada modelo tem agora a frase que o Gmail mostra a seguir ao assunto — o prazo das 72 horas, a conta pronta, a hora de validade do link — em vez do arranque do HTML.</p>
+      </div>
+      <div class="item">
+        <h3><span>04</span>O pedido devolve os dados</h3>
+        <p>O e-mail de recepção repete <b>Farmácia, NIF e Município</b>, em lista, antes das 72 horas. Erro na submissão vê-se na hora, não ao telefone.</p>
+      </div>
+      <div class="item">
+        <h3><span>05</span>Os prazos dizem o mesmo</h3>
+        <p>Convite e reposição passam a dizer «vale uma hora e só pode ser usado uma vez» — o mesmo prazo que o pedido de adesão tem com as 72 horas.</p>
+      </div>
+      <div class="item">
+        <h3><span>06</span>Rodapé com saídas</h3>
+        <p>O rodapé passa a ligar ao site, à Política de Privacidade e ao contacto da equipa, com o telefone. Sem endereço postal inventado — só o que existe.</p>
+      </div>
+    </div>
+  </section>
+
+</main>
+
+<footer>
+  <div class="wrap">
+    Pré-visualizações geradas a partir de <code>lib/email.js</code> · <code>node scripts/render-emails.mjs</code> ·
+    ficheiros em <code>_design/emails/</code>
+  </div>
+</footer>
+
+<script>
+  // Moldura: 680 px (desktop de e-mail) ou 390 px (telemóvel). Só muda a
+  // largura — o HTML do e-mail é o mesmo, para se ver onde quebra.
+  const root = document.documentElement
+  const botoes = document.querySelectorAll('.sizes button')
+  botoes.forEach((b) => {
+    b.addEventListener('click', () => {
+      root.style.setProperty('--frame-w', b.dataset.w + 'px')
+      botoes.forEach((o) => o.setAttribute('aria-pressed', String(o === b)))
+    })
+  })
+</script>
+</body>
+</html>

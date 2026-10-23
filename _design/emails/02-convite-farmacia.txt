@@ -1,0 +1,18 @@
+A Farmácia Nossa Senhora da Saúde está pronta para começar.
+
+Olá, Maria Domingos.
+
+A equipa da Conheça Farmácia criou o acesso da sua farmácia ao portal de gestão.
+Stock, reservas e avisos de validade ficam num sítio só — e o stock confirmado
+aparece no Localizador.
+
+Defina a sua senha para entrar:
+https://localizador.conhecafarmacia.com/portal/convite?token=exemplo-de-token
+
+Este link vale uma hora e só pode ser usado uma vez.
+Se já não precisar dele, ignore este e-mail.
+Para renovar o convite, fale com a equipa: geral@conhecafarmacia.com.
+
+Conheça Farmácia
+https://localizador.conhecafarmacia.com
+Política de Privacidade: https://localizador.conhecafarmacia.com/privacidade

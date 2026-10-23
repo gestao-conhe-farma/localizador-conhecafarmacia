@@ -38,7 +38,7 @@ Vercel → Settings → Environment Variables, Production e Preview):
 
 ```
 RESEND_API_KEY=re_...                 # permissão «Sending access»
-RESEND_FROM=Conheça Farmácia <nao-responder@conhecafarmacia.com>
+RESEND_FROM=Conheça Farmácia <no-reply@conhecafarmacia.com>
 ```
 
 O domínio de `RESEND_FROM` tem de estar verificado em **Resend → Domains** (registos

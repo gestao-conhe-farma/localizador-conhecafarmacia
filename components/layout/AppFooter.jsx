@@ -25,7 +25,7 @@ export default function AppFooter() {
             <Link href="/pesquisa">Pesquisar</Link>
             <Link href="/farmacia">Farmácias</Link>
             <Link href="/sobre">Sobre</Link>
-            <Link href="/#farmacias">É farmácia?</Link>
+            <Link href="/farmacias/participar">É farmácia?</Link>
             <a
               href="https://wa.me/244925696002?text=Olá,%20Conheça%20Farmácia"
               target="_blank"
@@ -36,13 +36,18 @@ export default function AppFooter() {
           </nav>
         </div>
 
-        {/* Linha 2: legal — site principal e disclaimer em duas linhas */}
+        {/* Linha 2: legal — site principal, documentos e disclaimer */}
         <div className="app-footer-bottom">
           <p className="app-footer-legal">
             © {year} Conheça Farmácia ·{' '}
             <a href="https://conhecafarmacia.com" target="_blank" rel="noopener noreferrer">
               conhecafarmacia.com
             </a>
+          </p>
+          <p className="app-footer-legal">
+            <Link href="/termos">Termos de Utilização</Link>
+            {' · '}
+            <Link href="/privacidade">Política de Privacidade</Link>
           </p>
           <p className="app-footer-legal">
             Um serviço de educação em saúde. Não vendemos medicamentos.

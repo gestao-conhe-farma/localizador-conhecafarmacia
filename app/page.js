@@ -1,6 +1,5 @@
 import Header from '@/components/layout/Header'
 import Footer from '@/components/layout/Footer'
-import PharmacyLeadForm from '@/components/home/PharmacyLeadForm'
 
 const CONTACT_PHONE = '+244 925 696 002'
 const CONTACT_EMAIL = 'geral@conhecafarmacia.com'
@@ -25,7 +24,7 @@ export default function Home() {
                 confirmada pela própria farmácia.
               </p>
               <div className="hero-actions">
-                <a href="#farmacias" className="btn btn-primary btn-lg">
+                <a href="/farmacias/participar" className="btn btn-primary btn-lg">
                   Sou farmácia e quero participar
                 </a>
                 <a href="#como-funciona" className="btn btn-secondary btn-lg">
@@ -210,8 +209,21 @@ export default function Home() {
               </div>
             </div>
 
-            {/* Formulário de pré-adesão */}
-            <PharmacyLeadForm />
+            {/* O formulário completo vive em /farmacias/participar: a home
+                mantém só a chamada, para não haver dois formulários com
+                campos diferentes. */}
+            <div className="mt-14 mx-auto max-w-3xl bg-brand-card rounded-[24px] border border-brand-divider/40 p-7 md:p-10 shadow-soft text-center">
+              <h3 className="text-2xl md:text-3xl font-bold text-brand-deep">
+                Quero que a minha farmácia participe
+              </h3>
+              <p className="mt-3 mb-7 text-sm text-brand-deep/60">
+                A adesão do lançamento é gratuita. Preencha os dados da farmácia num formulário
+                único e a nossa equipa entra em contacto no máximo em 72 horas.
+              </p>
+              <a href="/farmacias/participar" className="btn btn-primary btn-lg">
+                Abrir formulário de adesão
+              </a>
+            </div>
           </div>
         </section>
 

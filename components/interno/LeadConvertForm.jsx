@@ -48,9 +48,11 @@ export default function LeadConvertForm({ lead, farmacia, jaConvertido, tentativ
   const [vals, setVals] = useState({
     name: lead.pharmacy_name || '',
     municipio: municipios.includes(lead.municipio) ? lead.municipio : '',
-    address: '',
+    address: lead.address || '',
     phone: lead.phone || '',
-    whatsapp: '',
+    // O formulário de adesão pede um só contacto («Telefone / WhatsApp»):
+    // o mesmo número serve os dois campos até a equipa os separar.
+    whatsapp: lead.phone || '',
     email: lead.email || '',
     opening_hours: '',
     maps_url: '',

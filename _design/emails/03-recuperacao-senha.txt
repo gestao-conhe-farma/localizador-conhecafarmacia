@@ -1,0 +1,16 @@
+Repor a senha de Farmácia Nossa Senhora da Saúde
+
+Olá, Maria Domingos.
+
+A equipa da Conheça Farmácia enviou-lhe o caminho para escolher uma senha nova.
+A senha antiga deixa de valer assim que guardar a nova.
+
+Escolher nova senha:
+https://localizador.conhecafarmacia.com/portal/recuperar/confirmar?token=exemplo-de-token
+
+O link vale uma hora e só pode ser usado uma vez.
+Se não pediu a reposição, ignore este e-mail e avise a equipa: geral@conhecafarmacia.com.
+
+Conheça Farmácia
+https://localizador.conhecafarmacia.com
+Política de Privacidade: https://localizador.conhecafarmacia.com/privacidade

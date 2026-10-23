@@ -3,8 +3,8 @@ import { headers } from 'next/headers'
 // Fontes self-hosted (fontsource): o next/font/google baixava as fontes em
 // cada build e ficava preso sem rede — agora o build é 100% offline.
 import '@fontsource-variable/inter'
-import '@fontsource-variable/fraunces'
-import '@fontsource-variable/fraunces/full-italic.css'
+// Fraunces saiu com a paleta editorial: o portal e, agora, todo o
+// Localizador usam só a fonte de interface (Inter).
 import { Analytics } from '@vercel/analytics/next'
 import { SpeedInsights } from '@vercel/speed-insights/next'
 import ThemeProvider from '@/components/providers/ThemeProvider'
@@ -16,11 +16,6 @@ import '@/styles/loja.css'
 const inter = {
   variable: '--font-inter',
   style: { fontFamily: 'Inter Variable, ui-sans-serif, system-ui, sans-serif' },
-}
-
-const fraunces = {
-  variable: '--font-fraunces',
-  style: { fontFamily: 'Fraunces Variable, Georgia, serif' },
 }
 
 export const metadata = {
@@ -60,7 +55,7 @@ export default async function RootLayout({ children }) {
   const nonce = headersList.get('x-csp-nonce') || undefined
 
   return (
-    <html lang="pt" suppressHydrationWarning className={`${inter.variable} ${fraunces.variable}`}>
+    <html lang="pt" suppressHydrationWarning className={inter.variable}>
       <head>
         {/* Anti-FOUC: set dark class before hydration. O nonce permite que
             este script inline corra sob a CSP estrita gerada no proxy.js.

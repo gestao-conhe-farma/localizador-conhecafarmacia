@@ -5,6 +5,7 @@ import Link from 'next/link'
 import { fetchPharmacyStockClient, pharmacyFromStockRow } from '@/lib/stock'
 import { usePharmacyStockRealtime } from '@/lib/use-pharmacy-stock-realtime'
 import { openStatus } from '@/lib/opening-hours'
+import { ORIGIN_FILTERS, originGroup } from '@/lib/origin-flags'
 import { logError } from '@/lib/log'
 import ProductCard from '@/components/search/ProductCard'
 import ProductModal from '@/components/search/ProductModal'
@@ -71,6 +72,9 @@ export default function PharmacyStock({ slug, initialItems = null }) {
   const [error, setError] = useState(false)
   const [query, setQuery] = useState('')
   const [tab, setTab] = useState('Tudo')
+  // Origem: filtro local, como na pesquisa — cada linha traz a origem que a
+  // farmácia declarou ao confirmar o stock.
+  const [origin, setOrigin] = useState('')
   // Ficha em cartão sobre a prateleira: fechar devolve o cliente ao mesmo scroll.
   // Ficha aberta no URL (?produto=) — link partilhável e «voltar» a fechar.
   const { openId, open: openProduct, swap: swapProduct, close: closeProduct } = useProductSheet()
@@ -146,6 +150,7 @@ export default function PharmacyStock({ slug, initialItems = null }) {
         if (tab !== 'Tudo' && tab !== 'Críticos' && (it.drug_kind || 'medicamento') !== tab) {
           return false
         }
+        if (origin && originGroup(it.origin) !== origin) return false
         if (!q) return true
         return (
           (it.drug_name || '').toLowerCase().includes(q) ||
@@ -158,7 +163,11 @@ export default function PharmacyStock({ slug, initialItems = null }) {
           Number(b.drug_priority === 'critico') - Number(a.drug_priority === 'critico') ||
           String(a.drug_name).localeCompare(String(b.drug_name), 'pt'),
       )
-  }, [items, tab, query])
+  }, [items, tab, query, origin])
+
+  // Só oferece o filtro quando alguma linha tem origem declarada — sem
+  // isso os chips levariam sempre a uma prateleira vazia.
+  const hasOrigin = useMemo(() => (items || []).some((it) => originGroup(it.origin)), [items])
 
   const freshest = useMemo(() => {
     if (!items || items.length === 0) return null
@@ -456,6 +465,35 @@ export default function PharmacyStock({ slug, initialItems = null }) {
             ))}
           </div>
 
+          {hasOrigin && (
+            <div
+              className="sh-filters sh-origin"
+              role="group"
+              aria-label="Filtrar por origem do medicamento"
+            >
+              <span className="sh-origin-label">Origem</span>
+              <button
+                type="button"
+                className={`cf-chip${origin === '' ? ' cf-chip--on' : ''}`}
+                aria-pressed={origin === ''}
+                onClick={() => setOrigin('')}
+              >
+                Todas
+              </button>
+              {ORIGIN_FILTERS.map((o) => (
+                <button
+                  key={o.id}
+                  type="button"
+                  className={`cf-chip${origin === o.id ? ' cf-chip--on' : ''}`}
+                  aria-pressed={origin === o.id}
+                  onClick={() => setOrigin(origin === o.id ? '' : o.id)}
+                >
+                  {o.label}
+                </button>
+              ))}
+            </div>
+          )}
+
           {error && items === null && (
             <div className="sh-empty" role="alert">
               <p className="sh-empty-title">Algo falhou</p>
@@ -475,7 +513,11 @@ export default function PharmacyStock({ slug, initialItems = null }) {
           {!error && items !== null && visible.length === 0 && (
             <div className="sh-empty">
               <p className="sh-empty-title">
-                {query ? `Nada encontrado para «${query}»` : 'Nada nesta prateleira'}
+                {query
+                  ? `Nada encontrado para «${query}»`
+                  : origin
+                    ? 'Nada com esta origem'
+                    : 'Nada nesta prateleira'}
               </p>
               <p className="sh-empty-sub">
                 Experimente outro nome ou remova o filtro — pode perguntar directamente à farmácia

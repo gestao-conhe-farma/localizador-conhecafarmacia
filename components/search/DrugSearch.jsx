@@ -2,28 +2,35 @@
 
 import { useEffect, useMemo, useRef, useState } from 'react'
 import Link from 'next/link'
+import { useSearchParams } from 'next/navigation'
 import { AnimatePresence, motion, useReducedMotion } from 'framer-motion'
 import { createClient } from '@/lib/supabase/client'
-import { isOpenNow, openStatus } from '@/lib/opening-hours'
+import { isOpenNow } from '@/lib/opening-hours'
+import { ORIGIN_FILTERS, originGroup } from '@/lib/origin-flags'
 import { logError, logWarn } from '@/lib/log'
-import ProductCard from '@/components/search/ProductCard'
 import ProductModal from '@/components/search/ProductModal'
+import VariantCard from '@/components/search/VariantCard'
+import VariantSheet from '@/components/search/VariantSheet'
 import { useProductSheet } from '@/components/search/useProductSheet'
+import { useVariantSheet } from '@/components/search/useVariantSheet'
 import { useStuckBar } from '@/components/search/useStuckBar'
-import { defaultOption, freshness, priceOf, productHref, quantityText } from '@/lib/product-utils'
+import { defaultOption } from '@/lib/product-utils'
 import { fmtKzPublic as fmtKz } from '@/lib/reservation-format'
-
-const MUNICIPIOS = [
-  'Belas',
-  'Cacuaco',
-  'Cazenga',
-  'Ícolo e Bengo',
-  'Luanda',
-  'Quilamba Quiaxi',
-  'Quissama',
-  'Talatona',
-  'Viana',
-]
+import { clearStoredLocation, requestBrowserLocation } from '@/lib/geo'
+import { groupVariants, nearestDistance, sortVariants } from '@/lib/variants'
+import {
+  KIND_IDS,
+  MEDICINE_CATEGORIES,
+  PARAPHARMACY_TYPES,
+  PROVINCIAS,
+  categoriaLabel,
+  categoriasParaPesquisa,
+  kindLabel,
+  melhorCategoria,
+  municipiosDaProvincia,
+  normalizarTexto,
+  subcategoriasDe,
+} from '@/lib/constants'
 
 const ICON_SEARCH = (
   <svg
@@ -115,39 +122,96 @@ function groupByDrug(rows) {
  * pesquisa. Vive fora do componente para o efeito de arranque não depender
  * de uma função recriada a cada render.
  */
-async function fetchGroups(term, municipio) {
+async function fetchGroups(term, municipio, provincia) {
   const supabase = createClient()
   let req = supabase
     .from('stock_confirmed')
     .select('*')
     .order('drug_name')
     .order('pharmacy_name')
-    .limit(200)
+    .limit(500)
   if (term) {
     req = req.or(`drug_name.ilike.%${term}%,drug_molecule.ilike.%${term}%,brand.ilike.%${term}%`)
   }
+  // Província é o primeiro filtro: sem município escolhido, restringe à
+  // lista de municípios dela. Com município, o `eq` é mais estreito.
   if (municipio) req = req.eq('pharmacy_municipio', municipio)
+  else if (provincia) req = req.in('pharmacy_municipio', municipiosDaProvincia(provincia))
   const { data, error } = await req
   if (error) throw error
   return groupByDrug(data)
 }
 
 export default function DrugSearch() {
-  const [query, setQuery] = useState('')
+  // A homepage entrega o termo no URL (?q=) e as categorias em ?tipo=.
+  // Ler aqui é o que faz o link «paracetamol» da homepage cair já com
+  // resultados, em vez de uma página vazia à espera de ser escrita.
+  const params = useSearchParams()
+  const initialQuery = (params.get('q') || '').trim()
+  const tipoParam = params.get('tipo') || ''
+  const categoriaParam = params.get('categoria') || ''
+  const subParam = params.get('sub') || ''
+  // Um termo que é uma categoria (?q=febre) entra logo como filtro: não é
+  // uma pesquisa por nome. Resolve-se no primeiro render para o efeito de
+  // arranque não ter de chamar setState.
+  const grupoInicial = initialQuery ? melhorCategoria(initialQuery) : null
+  const tipoInicial =
+    (KIND_IDS.includes(tipoParam) ? tipoParam : '') ||
+    (grupoInicial?.tipo === 'tipo' ? grupoInicial.id : '') ||
+    (grupoInicial?.tipo === 'sub' ? grupoInicial.kind : '') ||
+    ''
+  const categoriaInicial =
+    categoriaParam || (grupoInicial?.tipo === 'categoria' ? grupoInicial.id : '')
+  const subInicial = subParam || (grupoInicial?.tipo === 'sub' ? grupoInicial.id : '')
+  const [query, setQuery] = useState(grupoInicial ? '' : initialQuery)
   const [suggestions, setSuggestions] = useState([])
   const [showSuggest, setShowSuggest] = useState(false)
   const [activeIdx, setActiveIdx] = useState(-1)
+  const [provincia, setProvincia] = useState('')
   const [municipio, setMunicipio] = useState('')
   const [groups, setGroups] = useState(null)
   const [loading, setLoading] = useState(false)
   const [error, setError] = useState('')
   const [onlyOpen, setOnlyOpen] = useState(false)
+  // Categoria vinda da homepage: filtro local, como «abertas agora».
+  const [kind, setKind] = useState(tipoInicial)
+  // Área clínica (medicamentos) e subcategoria (parafarmácia) — também
+  // vindas do URL, para os cards da homepage abrirem já filtrados.
+  const [categoria, setCategoria] = useState(categoriaInicial)
+  const [sub, setSub] = useState(subInicial)
+  // Nada é pedido à base de dados até haver uma acção (pesquisar, filtrar
+  // ou escolher uma sugestão): em 3G a entrada na página é instantânea.
+  const [started, setStarted] = useState(
+    Boolean(initialQuery) || Boolean(tipoInicial) || Boolean(categoriaInicial) || Boolean(subInicial),
+  )
+  // Origem do medicamento: filtro local ('' = todas). Cada farmácia declara
+  // a origem no portal, por isso o mesmo produto pode aparecer em grupos
+  // diferentes — filtra-se ao nível da linha, não do medicamento.
+  const [origin, setOrigin] = useState('')
+  // Os filtros vivem num painel: a barra mostra só «Filtros» (com o número
+  // de activos), a ordem e os chips do que está aplicado.
+  const [filtersOpen, setFiltersOpen] = useState(false)
+  const [sort, setSort] = useState('nome')
+  // Posição do cliente — permite mostrar a distância no card e ordenar as
+  // farmácias por proximidade. Começa vazia para o HTML do servidor e o do
+  // browser coincidirem; só é preenchida depois de um gesto («Perto de mim»).
+  const [location, setLocation] = useState(null)
+  const [locating, setLocating] = useState(false)
+  const [locationError, setLocationError] = useState('')
   // Modo pesquisa: o texto do hero recolhe e a caixa+filtros ficam no centro,
   // para os resultados terem o palco. Voltamos ao hero quando se limpa.
-  const [searchMode, setSearchMode] = useState(false)
+  const [searchMode, setSearchMode] = useState(Boolean(initialQuery))
   // Ficha aberta em cartão sobre a lista — o id vive no URL (?produto=),
   // por isso o link é partilhável e o «voltar» do browser fecha o cartão.
   const { openId, open: openSheet, swap: swapSheet, close: closeSheet } = useProductSheet()
+  // Lista de farmácias de uma variante (marca + dosagem) — passo anterior à
+  // ficha do item concreto, com URL própria para o «voltar» funcionar.
+  const {
+    drugId: varianteId,
+    brandKey: marcaAberta,
+    open: openVariantSheet,
+    close: closeVariantSheet,
+  } = useVariantSheet()
   const boxRef = useRef(null)
   const inputRef = useRef(null)
   const debounceRef = useRef(null)
@@ -163,6 +227,18 @@ export default function DrugSearch() {
     if (q.length < 2) return
     clearTimeout(debounceRef.current)
     debounceRef.current = setTimeout(async () => {
+      // Categorias primeiro e SEM esperar pela base de dados: escrever
+      // «febre» ou «bebé» tem de dar sugestão mesmo numa rede lenta —
+      // é uma lista local.
+      const needle = normalizarTexto(q)
+      const grupos = categoriasParaPesquisa()
+        .filter((c) => normalizarTexto(c.label).includes(needle))
+        .slice(0, 4)
+        .map((c) => ({ suggestionKind: 'grupo', ...c }))
+      if (grupos.length > 0) {
+        setSuggestions(grupos)
+        setActiveIdx(-1)
+      }
       try {
         const supabase = createClient()
         const [{ data: drugs }, { data: brands }] = await Promise.all([
@@ -178,11 +254,17 @@ export default function DrugSearch() {
           .filter(Boolean)
           .slice(0, 4)
           .map((b) => ({ kind: 'brand', name: b }))
-        setSuggestions([...brandList, ...(drugs || []).map((d) => ({ kind: 'drug', ...d }))])
+        setSuggestions([
+          ...grupos,
+          ...brandList,
+          ...(drugs || []).map((d) => ({ kind: 'drug', ...d })),
+        ])
         setActiveIdx(-1)
       } catch (err) {
         logWarn('drug-search', 'Autocomplete falhou', { message: err?.message })
-        setSuggestions([])
+        // Falha de rede não pode apagar a sugestão de categoria que já
+        // está no ecrã.
+        if (grupos.length === 0) setSuggestions([])
       }
     }, 250)
     return () => clearTimeout(debounceRef.current)
@@ -196,11 +278,12 @@ export default function DrugSearch() {
     return () => document.removeEventListener('click', onClick)
   }, [])
 
-  const load = async (term, muni = municipio) => {
+  const load = async (term, muni = municipio, prov = provincia) => {
     setLoading(true)
+    setStarted(true)
     setError('')
     try {
-      setGroups(await fetchGroups(String(term ?? '').trim(), muni))
+      setGroups(await fetchGroups(String(term ?? '').trim(), muni, prov))
     } catch (err) {
       logError('drug-search', 'Pesquisa falhou', { message: err?.message })
       setError('Não foi possível concluir a pesquisa. Verifique a ligação e tente novamente.')
@@ -210,13 +293,45 @@ export default function DrugSearch() {
     }
   }
 
-  const runSearch = async (term, muni = municipio) => {
+  // Filtro vindo de uma categoria (chip ou sugestão): não é uma pesquisa
+  // por texto — é o mesmo filtro local que os cards da homepage usam.
+  const aplicarGrupo = (c) => {
+    userActed.current = true
+    setShowSuggest(false)
+    setSuggestions([])
+    setActiveIdx(-1)
+    setQuery('')
+    setSearchMode(true)
+    if (c.tipo === 'categoria') {
+      setCategoria(c.id)
+      setKind('')
+      setSub('')
+    } else if (c.tipo === 'tipo') {
+      setKind(c.id)
+      setCategoria('')
+      setSub('')
+    } else {
+      setKind(c.kind || '')
+      setCategoria('')
+      setSub(c.id)
+    }
+    // Sem dados carregados ainda é preciso ir buscá-los uma vez; com
+    // dados, o filtro é aplicado no sítio.
+    if (!started) load('', municipio, provincia)
+  }
+
+  const runSearch = async (term, muni = municipio, prov = provincia) => {
     const q = String(term ?? query).trim()
+    const grupo = melhorCategoria(q)
+    if (grupo) {
+      aplicarGrupo(grupo)
+      return
+    }
     userActed.current = true
     setShowSuggest(false)
     inputRef.current?.blur()
     setSearchMode(Boolean(q))
-    await load(q, muni)
+    await load(q, muni, prov)
   }
 
   // Limpar devolve o hero e a lista do que está confirmado agora — sem
@@ -228,7 +343,7 @@ export default function DrugSearch() {
     setShowSuggest(false)
     setActiveIdx(-1)
     setSearchMode(false)
-    await load('', municipio)
+    await load('', municipio, provincia)
   }
 
   // O ecrã acompanha a recolha/volta do hero: sem isto, quem pesquisa a
@@ -238,18 +353,27 @@ export default function DrugSearch() {
     heroRef.current?.scrollIntoView({ behavior: reduced ? 'auto' : 'smooth', block: 'start' })
   }, [searchMode, reduced])
 
-  // Primeira visita: mostra o que está confirmado agora, em vez de uma
-  // página vazia à espera que o cliente escreva.
+  // Única carga automática: quando a homepage (ou um link partilhado)
+  // traz o termo em ?q=. Sem termo não há pedido nenhum — a página fica
+  // com a caixa e o convite a pesquisar, o que poupa a query a quem só
+  // está de passagem numa rede lenta.
   useEffect(() => {
+    // Categoria vinda da homepage também é uma acção: os resultados do
+    // tipo escolhido têm de aparecer, mesmo sem termo escrito.
+    if (!initialQuery && !tipoInicial && !categoriaInicial && !subInicial) return
+    // Categoria no URL: os filtros já arrancaram no useState, por isso o
+    // pedido é só o do stock; o filtro é aplicado no sítio.
+    const grupo = initialQuery ? melhorCategoria(initialQuery) : null
+    const termo = grupo ? '' : initialQuery
     let alive = true
     ;(async () => {
       try {
-        const initial = await fetchGroups('', '')
-        if (alive) setGroups(initial)
+        const rows = await fetchGroups(termo, '', '')
+        if (alive) setGroups(rows)
       } catch (err) {
         logError('drug-search', 'Carga inicial falhou', { message: err?.message })
         if (alive) {
-          setError('Não foi possível carregar os produtos confirmados. Tente novamente.')
+          setError('Não foi possível concluir a pesquisa. Verifique a ligação e tente novamente.')
           setGroups([])
         }
       }
@@ -257,11 +381,17 @@ export default function DrugSearch() {
     return () => {
       alive = false
     }
-  }, [])
+  }, [initialQuery, tipoInicial, categoriaInicial, subInicial])
+
+  const chooseProvincia = (p) => {
+    setProvincia(p)
+    setMunicipio('')
+    load(query, '', p)
+  }
 
   const chooseMunicipio = (m) => {
     setMunicipio(m)
-    load(query, m)
+    load(query, m, provincia)
   }
 
   const openProduct = (id) => {
@@ -294,26 +424,130 @@ export default function DrugSearch() {
     }
   }
 
-  // Filtro local: "abertas agora" não pede novo fetch (o horário já veio).
-  const visible = useMemo(() => {
+  // Filtros locais: "abertas agora" e origem não pedem novo fetch (o
+  // horário e a origem já vieram em cada linha).
+  const filteredItems = useMemo(() => {
     if (!groups) return null
-    if (!onlyOpen) return groups
-    return groups
-      .map((g) => {
-        const live = summarize(g.items.filter((it) => isOpenNow(it.pharmacy_opening_hours)))
-        return live.items.length === 0 ? null : { ...g, ...live }
-      })
-      .filter(Boolean)
-  }, [groups, onlyOpen])
+    const items = groups.flatMap((g) => g.items)
+    if (!onlyOpen && !origin && !kind && !categoria && !sub) return items
+    return items.filter(
+      (it) =>
+        (!onlyOpen || isOpenNow(it.pharmacy_opening_hours)) &&
+        (!origin || originGroup(it.origin) === origin) &&
+        (!kind || (it.drug_kind || 'medicamento') === kind) &&
+        (!categoria || it.drug_category === categoria) &&
+        (!sub || it.drug_category === sub),
+    )
+  }, [groups, onlyOpen, origin, kind, categoria, sub])
 
-  const totalPharmacies = (visible || []).reduce((n, g) => n + g.items.length, 0)
+  // Um card por medicamento + marca. A ordem é escolhida pelo cliente; a
+  // predefinição é nome A–Z (previsível para quem já sabe o que procura).
+  const variants = useMemo(
+    () => (filteredItems ? sortVariants(groupVariants(filteredItems), sort) : null),
+    [filteredItems, sort],
+  )
+
+  const filtered =
+    onlyOpen || Boolean(origin) || Boolean(kind) || Boolean(categoria) || Boolean(sub)
+
+  const totalPharmacies = filteredItems
+    ? new Set(filteredItems.map((it) => it.pharmacy_id)).size
+    : 0
+
+  // Variante aberta no URL (medicamento + marca). Vive nos resultados já
+  // filtrados: os filtros globais continuam a mandar na lista.
+  const openVariant = varianteId
+    ? variants?.find(
+        (v) => v.drug_id === varianteId && v.brandKey === (marcaAberta || ''),
+      ) || null
+    : null
   const title = query.trim()
     ? query.trim().charAt(0).toUpperCase() + query.trim().slice(1)
-    : 'Confirmado agora'
+    : categoria
+      ? categoriaLabel(categoria) || 'Confirmado agora'
+      : kind
+        ? kindLabel(kind)
+        : 'Confirmado agora'
+
+  // Escolher «Dor e febre» e não ver nada não é um filtro mal aplicado: é
+  // stock que passou a janela de confirmação. A mensagem tem de dizer isso,
+  // em vez de mandar «desactivar filtros» a quem não ligou nenhum.
+  const grupoLabel =
+    (categoria && categoriaLabel(categoria)) ||
+    (kind && kindLabel(kind)) ||
+    (sub && categoriaLabel(sub)) ||
+    ''
+  const otherFilters = onlyOpen || Boolean(origin)
+  const emptyTitle = filtered
+    ? grupoLabel && !otherFilters
+      ? `Sem stock confirmado em ${grupoLabel} agora`
+      : 'Nenhuma farmácia corresponde a estes filtros'
+    : `Sem stock confirmado para «${query.trim() || municipio || provincia}»`
+  const emptySub = filtered
+    ? grupoLabel && !otherFilters
+      ? 'Os medicamentos precisam de confirmação das últimas 72 horas, a parafarmácia dos últimos 30 dias. O produto pode existir sem confirmação — ligue para a farmácia antes de sair.'
+      : 'Desactive os filtros para ver todas as farmácias — ou confirme por WhatsApp antes de sair.'
+    : 'Medicamentos confirmados nas últimas 72 h e parafarmácia nos últimos 30 dias. Experimente o princípio activo sem dosagem, ou veja as farmácias da rede.'
+
+  const activeCount =
+    Number(Boolean(categoria)) +
+    Number(Boolean(kind)) +
+    Number(Boolean(sub)) +
+    Number(Boolean(origin)) +
+    Number(Boolean(onlyOpen)) +
+    Number(Boolean(provincia)) +
+    Number(Boolean(municipio))
+
+  const clearFilters = () => {
+    setCategoria('')
+    setKind('')
+    setSub('')
+    setOrigin('')
+    setOnlyOpen(false)
+    // Limpar província/município exige nova query (o servidor filtrava).
+    if (provincia || municipio) chooseProvincia('')
+  }
+
+  // Pedida só a partir de um gesto («Perto de mim»). Devolve as coordenadas
+  // para quem abriu o pedido (a folha da variante) poder ordenar por perto.
+  const askLocation = async () => {
+    setLocating(true)
+    setLocationError('')
+    try {
+      const coords = await requestBrowserLocation()
+      setLocation(coords)
+      return coords
+    } catch (err) {
+      const code = err?.code
+      setLocationError(
+        code === 'PERMISSAO'
+          ? 'Permita o acesso à localização no browser para ver as farmácias mais perto.'
+          : code === 'TEMPO'
+            ? 'O browser demorou a responder. Tente outra vez.'
+            : 'Não foi possível obter a localização neste dispositivo.',
+      )
+      return null
+    } finally {
+      setLocating(false)
+    }
+  }
+
+  const toggleLocation = async () => {
+    if (location) {
+      clearStoredLocation()
+      setLocation(null)
+      setLocationError('')
+      return
+    }
+    await askLocation()
+  }
 
   return (
     <>
-      <section className={`shop-hero${searchMode ? ' shop-hero--searching' : ''}`} ref={heroRef}>
+      <section
+        className={`shop-hero shop-hero--tools${searchMode ? ' shop-hero--searching' : ''}`}
+        ref={heroRef}
+      >
         <div className="cf-wrap">
           <AnimatePresence initial={false}>
             {!searchMode && (
@@ -336,6 +570,10 @@ export default function DrugSearch() {
                   <br />
                   Nós dizemos <em>quem o tem.</em>
                 </h1>
+                <p className="shop-hero-sub">
+                  Diga o que precisa e veja as farmácias de Luanda e Ícolo e Bengo que confirmam
+                  stock nas últimas 72 horas.
+                </p>
               </motion.div>
             )}
           </AnimatePresence>
@@ -394,22 +632,38 @@ export default function DrugSearch() {
                 <div className="suggest" role="listbox">
                   {suggestions.map((s, i) => (
                     <button
-                      key={s.kind === 'brand' ? `brand-${s.name}` : s.id}
+                      key={
+                        s.suggestionKind === 'grupo'
+                          ? `grupo-${s.tipo}-${s.id}-${s.kind || ''}`
+                          : s.kind === 'brand'
+                            ? `brand-${s.name}`
+                            : s.id
+                      }
                       type="button"
                       role="option"
                       aria-selected={i === activeIdx}
                       className={`suggest-item${i === activeIdx ? ' suggest-item--on' : ''}`}
                       onMouseDown={(e) => e.preventDefault()}
                       onClick={() => {
+                        if (s.suggestionKind === 'grupo') {
+                          aplicarGrupo(s)
+                          return
+                        }
                         setQuery(s.name)
                         runSearch(s.name)
                       }}
                     >
-                      <span className="suggest-name">{s.name}</span>
+                      <span className="suggest-name">{s.label || s.name}</span>
                       <span className="suggest-meta">
-                        {s.kind === 'brand'
-                          ? 'marca'
-                          : [s.form, s.dosage].filter(Boolean).join(' · ') || 'produto'}
+                        {s.suggestionKind === 'grupo'
+                          ? s.tipo === 'sub'
+                            ? `subcategoria · ${kindLabel(s.kind)}`
+                            : s.tipo === 'tipo'
+                              ? 'parafarmácia'
+                              : 'categoria'
+                          : s.kind === 'brand'
+                            ? 'marca'
+                            : [s.form, s.dosage].filter(Boolean).join(' · ') || 'produto'}
                       </span>
                     </button>
                   ))}
@@ -417,25 +671,301 @@ export default function DrugSearch() {
               )}
             </div>
 
-            <div className="sh-toolbar" role="group" aria-label="Filtrar por município">
+            {/* Filtros e ordem: uma barra só. O painel guarda as listas
+                longas (categorias, províncias, origem); os filtros activos
+                ficam visíveis como chips removíveis por baixo. */}
+            <div className="sh-controls">
               <button
                 type="button"
-                className={`cf-chip${municipio === '' ? ' cf-chip--on' : ''}`}
-                onClick={() => chooseMunicipio('')}
+                className={`sh-filter-btn${activeCount ? ' sh-filter-btn--on' : ''}`}
+                aria-expanded={filtersOpen}
+                aria-controls="sh-filter-panel"
+                onClick={() => setFiltersOpen((v) => !v)}
               >
-                Todos
-              </button>
-              {MUNICIPIOS.map((m) => (
-                <button
-                  key={m}
-                  type="button"
-                  className={`cf-chip${municipio === m ? ' cf-chip--on' : ''}`}
-                  onClick={() => chooseMunicipio(m)}
+                <svg
+                  width="16"
+                  height="16"
+                  viewBox="0 0 24 24"
+                  fill="none"
+                  stroke="currentColor"
+                  strokeWidth="2"
+                  strokeLinecap="round"
+                  aria-hidden="true"
                 >
-                  {m}
-                </button>
-              ))}
+                  <path d="M4 7h16M7 12h10M10 17h4" />
+                </svg>
+                Filtros
+                {activeCount ? <span className="sh-filter-badge">{activeCount}</span> : null}
+              </button>
+
+              <label className="sh-sort">
+                <span className="sh-sort-label">Ordenar</span>
+                <select
+                  className="sh-sort-select"
+                  value={sort}
+                  onChange={(e) => setSort(e.target.value)}
+                  aria-label="Ordenar resultados"
+                >
+                  <option value="nome">Nome A–Z</option>
+                  <option value="farmacias">Mais farmácias</option>
+                  <option value="preco">Preço mais baixo</option>
+                  <option value="recente">Confirmação recente</option>
+                </select>
+              </label>
             </div>
+
+            {activeCount > 0 ? (
+              <div className="sh-filters" role="group" aria-label="Filtros activos">
+                {categoria ? (
+                  <button
+                    type="button"
+                    className="cf-chip cf-chip--on"
+                    onClick={() => setCategoria('')}
+                    aria-label={`Remover a categoria ${categoriaLabel(categoria)}`}
+                  >
+                    {categoriaLabel(categoria)} ×
+                  </button>
+                ) : null}
+                {kind ? (
+                  <button
+                    type="button"
+                    className="cf-chip cf-chip--on"
+                    onClick={() => {
+                      setKind('')
+                      setSub('')
+                    }}
+                    aria-label={`Remover a categoria ${kindLabel(kind)}`}
+                  >
+                    {kindLabel(kind)} ×
+                  </button>
+                ) : null}
+                {sub ? (
+                  <button
+                    type="button"
+                    className="cf-chip cf-chip--on"
+                    onClick={() => setSub('')}
+                    aria-label={`Remover a subcategoria ${categoriaLabel(sub)}`}
+                  >
+                    {categoriaLabel(sub)} ×
+                  </button>
+                ) : null}
+                {origin ? (
+                  <button
+                    type="button"
+                    className="cf-chip cf-chip--on"
+                    onClick={() => setOrigin('')}
+                    aria-label="Remover o filtro de origem"
+                  >
+                    Origem: {origin} ×
+                  </button>
+                ) : null}
+                {onlyOpen ? (
+                  <button
+                    type="button"
+                    className="cf-chip cf-chip--on"
+                    onClick={() => setOnlyOpen(false)}
+                    aria-label="Mostrar também as farmácias fechadas"
+                  >
+                    Abertas agora ×
+                  </button>
+                ) : null}
+                {provincia ? (
+                  <button
+                    type="button"
+                    className="cf-chip cf-chip--on"
+                    onClick={() => chooseProvincia('')}
+                    aria-label={`Remover a província ${provincia}`}
+                  >
+                    {provincia} ×
+                  </button>
+                ) : null}
+                {municipio ? (
+                  <button
+                    type="button"
+                    className="cf-chip cf-chip--on"
+                    onClick={() => chooseMunicipio('')}
+                    aria-label={`Remover o município ${municipio}`}
+                  >
+                    {municipio} ×
+                  </button>
+                ) : null}
+                <button type="button" className="cf-chip" onClick={clearFilters}>
+                  Limpar tudo
+                </button>
+              </div>
+            ) : null}
+
+            {filtersOpen ? (
+              <div className="sh-filter-panel" id="sh-filter-panel">
+                <div className="sh-filter-group">
+                  <span className="sh-toolbar-label">Categoria</span>
+                  <div className="sh-filter-chips">
+                    <button
+                      type="button"
+                      className={`cf-chip${!categoria && !kind ? ' cf-chip--on' : ''}`}
+                      onClick={() => {
+                        setCategoria('')
+                        setKind('')
+                        setSub('')
+                      }}
+                    >
+                      Todas
+                    </button>
+                    {MEDICINE_CATEGORIES.map((c) => (
+                      <button
+                        key={c.id}
+                        type="button"
+                        className={`cf-chip${categoria === c.id ? ' cf-chip--on' : ''}`}
+                        aria-pressed={categoria === c.id}
+                        onClick={() => aplicarGrupo({ tipo: 'categoria', id: c.id })}
+                      >
+                        {c.label}
+                      </button>
+                    ))}
+                    {PARAPHARMACY_TYPES.map((t) => (
+                      <button
+                        key={t.id}
+                        type="button"
+                        className={`cf-chip${kind === t.id ? ' cf-chip--on' : ''}`}
+                        aria-pressed={kind === t.id}
+                        onClick={() => aplicarGrupo({ tipo: 'tipo', id: t.id })}
+                      >
+                        {t.label}
+                      </button>
+                    ))}
+                  </div>
+                </div>
+
+                {kind && subcategoriasDe(kind).length > 0 ? (
+                  <div className="sh-filter-group">
+                    <span className="sh-toolbar-label">Subcategoria</span>
+                    <div className="sh-filter-chips">
+                      <button
+                        type="button"
+                        className={`cf-chip${sub === '' ? ' cf-chip--on' : ''}`}
+                        onClick={() => setSub('')}
+                      >
+                        Todas
+                      </button>
+                      {subcategoriasDe(kind).map((s) => (
+                        <button
+                          key={s.id}
+                          type="button"
+                          className={`cf-chip${sub === s.id ? ' cf-chip--on' : ''}`}
+                          aria-pressed={sub === s.id}
+                          onClick={() => setSub(sub === s.id ? '' : s.id)}
+                        >
+                          {s.label}
+                        </button>
+                      ))}
+                    </div>
+                  </div>
+                ) : null}
+
+                <div className="sh-filter-group">
+                  <span className="sh-toolbar-label">Província</span>
+                  <div className="sh-filter-chips">
+                    <button
+                      type="button"
+                      className={`cf-chip${provincia === '' ? ' cf-chip--on' : ''}`}
+                      onClick={() => chooseProvincia('')}
+                    >
+                      Todas
+                    </button>
+                    {PROVINCIAS.map((p) => (
+                      <button
+                        key={p.nome}
+                        type="button"
+                        className={`cf-chip${provincia === p.nome ? ' cf-chip--on' : ''}`}
+                        aria-pressed={provincia === p.nome}
+                        onClick={() => chooseProvincia(p.nome)}
+                      >
+                        {p.nome}
+                      </button>
+                    ))}
+                  </div>
+                </div>
+
+                {provincia ? (
+                  <div className="sh-filter-group">
+                    <span className="sh-toolbar-label">Município</span>
+                    <div className="sh-filter-chips">
+                      <button
+                        type="button"
+                        className={`cf-chip${municipio === '' ? ' cf-chip--on' : ''}`}
+                        onClick={() => chooseMunicipio('')}
+                      >
+                        Todos
+                      </button>
+                      {municipiosDaProvincia(provincia).map((m) => (
+                        <button
+                          key={m}
+                          type="button"
+                          className={`cf-chip${municipio === m ? ' cf-chip--on' : ''}`}
+                          aria-pressed={municipio === m}
+                          onClick={() => chooseMunicipio(m)}
+                        >
+                          {m}
+                        </button>
+                      ))}
+                    </div>
+                  </div>
+                ) : null}
+
+                <div className="sh-filter-group">
+                  <span className="sh-toolbar-label">Origem</span>
+                  <div className="sh-filter-chips">
+                    <button
+                      type="button"
+                      className={`cf-chip${origin === '' ? ' cf-chip--on' : ''}`}
+                      onClick={() => setOrigin('')}
+                    >
+                      Todas
+                    </button>
+                    {ORIGIN_FILTERS.map((o) => (
+                      <button
+                        key={o.id}
+                        type="button"
+                        className={`cf-chip${origin === o.id ? ' cf-chip--on' : ''}`}
+                        aria-pressed={origin === o.id}
+                        onClick={() => setOrigin(origin === o.id ? '' : o.id)}
+                      >
+                        {o.label}
+                      </button>
+                    ))}
+                  </div>
+                </div>
+
+                <div className="sh-filter-group sh-filter-group--row">
+                  <button
+                    type="button"
+                    className={`cf-chip${onlyOpen ? ' cf-chip--on' : ''}`}
+                    aria-pressed={onlyOpen}
+                    onClick={() => setOnlyOpen((v) => !v)}
+                  >
+                    Abertas agora
+                  </button>
+                  <button
+                    type="button"
+                    className={`cf-chip${location ? ' cf-chip--on' : ''}`}
+                    aria-pressed={Boolean(location)}
+                    onClick={toggleLocation}
+                    disabled={locating}
+                  >
+                    {locating ? 'A obter posição…' : location ? 'Esquecer localização' : 'Perto de mim'}
+                  </button>
+                  <button type="button" className="cf-chip" onClick={clearFilters}>
+                    Limpar filtros
+                  </button>
+                </div>
+
+                {locationError ? (
+                  <p className="sh-filter-note" role="status">
+                    {locationError}
+                  </p>
+                ) : null}
+              </div>
+            ) : null}
           </motion.div>
         </div>
       </section>
@@ -488,7 +1018,7 @@ export default function DrugSearch() {
               </button>
             </div>
             <span className="sh-quick-count">
-              {visible === null
+              {variants === null
                 ? 'a procurar…'
                 : `${totalPharmacies} farmácia${totalPharmacies === 1 ? '' : 's'}`}
             </span>
@@ -502,30 +1032,18 @@ export default function DrugSearch() {
             <div className="sh-bar-l">
               <h2>{title}</h2>
               <span className="sh-bar-sub">
-                {visible === null
-                  ? 'a carregar…'
-                  : `${totalPharmacies} farmácia${totalPharmacies === 1 ? ' confirma' : 's confirmam'} · ${
-                      visible.length
-                    } apresenta${visible.length === 1 ? 'ção' : 'ções'}`}
-                {municipio ? ` · ${municipio}` : ''}
+                {!started
+                  ? 'escreva o medicamento ou escolha um filtro'
+                  : variants === null
+                    ? 'a carregar…'
+                    : `${totalPharmacies} farmácia${totalPharmacies === 1 ? ' confirma' : 's confirmam'} · ${
+                        variants.length
+                      } apresenta${variants.length === 1 ? 'ção' : 'ções'}`}
+                {municipio ? ` · ${municipio}` : provincia ? ` · ${provincia}` : ''}
+                {kind ? ` · ${kindLabel(kind)}` : ''}
+                {categoria ? ` · ${categoriaLabel(categoria)}` : ''}
+                {sub ? ` · ${categoriaLabel(sub)}` : ''}
               </span>
-            </div>
-            <div className="sh-filters" role="group" aria-label="Filtros">
-              <button
-                type="button"
-                className={`cf-chip${!onlyOpen ? ' cf-chip--on' : ''}`}
-                onClick={() => setOnlyOpen(false)}
-              >
-                Todas
-              </button>
-              <button
-                type="button"
-                className={`cf-chip${onlyOpen ? ' cf-chip--on' : ''}`}
-                aria-pressed={onlyOpen}
-                onClick={() => setOnlyOpen((o) => !o)}
-              >
-                Abertas agora
-              </button>
             </div>
           </div>
 
@@ -536,25 +1054,32 @@ export default function DrugSearch() {
             </div>
           )}
 
-          {!error && visible === null && (
+          {!error && variants === null && !started && (
+            <div className="sh-empty">
+              <p className="sh-empty-title">Procure o medicamento</p>
+              <p className="sh-empty-sub">
+                Escreva o nome ou a marca e carregue em Enter. Só aparece o que as farmácias
+                parceiras confirmaram — 72 horas para medicamentos, 30 dias para parafarmácia.
+              </p>
+              <p style={{ marginTop: 16 }}>
+                <Link className="cf-btn cf-btn--ghost" href="/farmacia">
+                  Ver farmácias da rede
+                </Link>
+              </p>
+            </div>
+          )}
+
+          {!error && variants === null && started && (
             <div className="sh-empty" role="status">
               <div className="sh-spinner" />
               <p className="sh-empty-sub">A procurar stock confirmado…</p>
             </div>
           )}
 
-          {!error && visible !== null && visible.length === 0 && (
+          {!error && variants !== null && variants.length === 0 && (
             <div className="sh-empty">
-              <p className="sh-empty-title">
-                {onlyOpen
-                  ? 'Nenhuma destas farmácias está aberta agora'
-                  : `Sem stock confirmado para «${query.trim() || municipio}»`}
-              </p>
-              <p className="sh-empty-sub">
-                {onlyOpen
-                  ? 'Desactive o filtro para ver todas — ou confirme por WhatsApp antes de sair.'
-                  : 'Medicamentos confirmados nas últimas 72 h e parafarmácia nos últimos 30 dias. Experimente o princípio activo sem dosagem, ou veja as farmácias da rede.'}
-              </p>
+              <p className="sh-empty-title">{emptyTitle}</p>
+              <p className="sh-empty-sub">{emptySub}</p>
               <p style={{ marginTop: 16 }}>
                 <Link className="cf-btn cf-btn--ghost" href="/farmacia">
                   Ver farmácias
@@ -563,71 +1088,15 @@ export default function DrugSearch() {
             </div>
           )}
 
-          {!error && visible !== null && visible.length > 0 && (
-            <div className="e-groups">
-              {visible.map((g) => (
-                <article key={g.drug_id} className="e-group">
-                  <div>
-                    <ProductCard
-                      item={g.cheapest}
-                      flat
-                      ctaLabel="Ver ficha completa"
-                      priceLabel={g.priceLabel || undefined}
-                      onOpen={openProduct}
-                    />
-                    {g.drug_requires_rx ? (
-                      <p className="e-summary">Sujeito a receita médica.</p>
-                    ) : null}
-                  </div>
-
-                  <div className="e-rows">
-                    <div className="e-head">
-                      <span>Farmácia</span>
-                      <span>Horário</span>
-                      <span>Confirmação</span>
-                      <span style={{ textAlign: 'right' }}>Preço</span>
-                      <span />
-                    </div>
-                    {g.items.map((it) => {
-                      const st = openStatus(it.pharmacy_opening_hours)
-                      const price = priceOf(it)
-                      return (
-                        <div key={it.stock_item_id} className="e-row">
-                          <div className="e-who">
-                            <b>{it.pharmacy_name}</b>
-                            <span>
-                              {[it.pharmacy_municipio, quantityText(it)]
-                                .filter(Boolean)
-                                .join(' · ')}
-                            </span>
-                          </div>
-                          <span className="e-hrs">
-                            <i className={`cf-dot${st && !st.open ? ' cf-dot--off' : ''}`} />
-                            {st ? st.label : it.pharmacy_opening_hours || 'Horário não indicado'}
-                          </span>
-                          <span className="e-fresh">
-                            <i className="cf-dot" />
-                            {freshness(it.confirmed_at) || 'agora'}
-                          </span>
-                          <span className="e-price price">{price.label}</span>
-                          <span className="e-go">
-                            <Link
-                              className="cf-btn cf-btn--ghost"
-                              href={productHref(it.stock_item_id)}
-                              onClick={(e) => {
-                                if (e.metaKey || e.ctrlKey || e.shiftKey || e.altKey) return
-                                e.preventDefault()
-                                openProduct(it.stock_item_id)
-                              }}
-                            >
-                              {it.reservable === false ? 'Ver ficha' : 'Reservar'}
-                            </Link>
-                          </span>
-                        </div>
-                      )
-                    })}
-                  </div>
-                </article>
+          {!error && variants !== null && variants.length > 0 && (
+            <div className="variant-grid">
+              {variants.map((v) => (
+                <VariantCard
+                  key={v.key}
+                  variant={v}
+                  distance={nearestDistance(v, location)}
+                  onOpen={openVariantSheet}
+                />
               ))}
             </div>
           )}
@@ -647,6 +1116,19 @@ export default function DrugSearch() {
           </div>
         </div>
       </section>
+
+      {varianteId && !openId && openVariant ? (
+        <VariantSheet
+          key={openVariant.key}
+          variant={openVariant}
+          location={location}
+          onRequestLocation={askLocation}
+          locating={locating}
+          locationError={locationError}
+          onClose={closeVariantSheet}
+          onOpenItem={openProduct}
+        />
+      ) : null}
 
       {openId && <ProductModal stockItemId={openId} onClose={closeSheet} onOpenItem={swapSheet} />}
     </>

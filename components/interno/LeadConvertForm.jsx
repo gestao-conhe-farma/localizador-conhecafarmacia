@@ -1,6 +1,7 @@
 'use client'
 
 import { useState, useTransition } from 'react'
+import { PROVINCIAS } from '@/lib/constants'
 import Link from 'next/link'
 import { useRouter } from 'next/navigation'
 import { convertLead } from '@/lib/actions/leads'
@@ -194,10 +195,14 @@ export default function LeadConvertForm({ lead, farmacia, jaConvertido, tentativ
               onChange={set('municipio')}
             >
               <option value="">Escolher…</option>
-              {municipios.map((m) => (
-                <option key={m} value={m}>
-                  {m}
-                </option>
+              {PROVINCIAS.map((p) => (
+                <optgroup key={p.nome} label={p.nome}>
+                  {p.municipios.map((m) => (
+                    <option key={m} value={m}>
+                      {m}
+                    </option>
+                  ))}
+                </optgroup>
               ))}
             </select>
             {erroDe('municipio') && <span className="interno-error">{erroDe('municipio')}</span>}

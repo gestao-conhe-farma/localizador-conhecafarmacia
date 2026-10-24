@@ -935,17 +935,404 @@ html.dark .cf-rx {
   color: var(--cf-muted-2);
 }
 
+/* Barra única da pesquisa: «Filtros» à esquerda, «Ordenar» à direita. */
+.sh-controls {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 10px;
+  flex-wrap: wrap;
+  margin-top: 22px;
+}
+
+.sh-filter-btn {
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+  padding: 9px 14px;
+  border: 1px solid var(--cf-line);
+  border-radius: 999px;
+  background: var(--cf-card);
+  color: var(--cf-ink);
+  font: inherit;
+  font-size: 13px;
+  font-weight: 600;
+  cursor: pointer;
+  transition: border-color 0.15s ease;
+}
+
+.sh-filter-btn:hover {
+  border-color: var(--cf-muted-2);
+}
+
+.sh-filter-btn--on {
+  border-color: var(--cf-green);
+}
+
+.sh-filter-badge {
+  display: grid;
+  place-items: center;
+  min-width: 18px;
+  height: 18px;
+  padding: 0 5px;
+  border-radius: 999px;
+  background: var(--cf-green);
+  color: var(--cf-on-green);
+  font-size: 10.5px;
+  font-weight: 700;
+  line-height: 1;
+}
+
+.sh-sort {
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+}
+
+.sh-sort-label {
+  font-size: 9.5px;
+  letter-spacing: 0.15em;
+  text-transform: uppercase;
+  color: var(--cf-muted-2);
+  font-weight: 700;
+}
+
+.sh-sort-select {
+  appearance: none;
+  padding: 9px 34px 9px 12px;
+  border: 1px solid var(--cf-line);
+  border-radius: 999px;
+  background-color: var(--cf-card);
+  background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='12' height='12' viewBox='0 0 24 24' fill='none' stroke='%236b7a76' stroke-width='2.4' stroke-linecap='round'%3E%3Cpath d='M6 9l6 6 6-6'/%3E%3C/svg%3E");
+  background-repeat: no-repeat;
+  background-position: right 12px center;
+  color: var(--cf-ink);
+  font: inherit;
+  font-size: 13px;
+  cursor: pointer;
+}
+
+.sh-filter-panel {
+  display: grid;
+  gap: 14px;
+  margin-top: 14px;
+  padding: 16px;
+  border: 1px solid var(--cf-line);
+  border-radius: 14px;
+  background: var(--cf-card);
+}
+
+.sh-filter-group {
+  display: grid;
+  gap: 8px;
+}
+
+.sh-filter-group--row {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 6px;
+}
+
+.sh-filter-chips {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 6px;
+}
+
+.sh-filter-note {
+  font-size: 12px;
+  color: var(--cf-muted);
+}
+
 .sh-filters {
   display: flex;
   gap: 6px;
   flex-wrap: wrap;
+  margin-top: 12px;
+}
+
+/* Resultados: um card por medicamento + marca, lado a lado. */
+.variant-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(228px, 1fr));
+  gap: 14px;
+  margin-top: 22px;
+}
+
+.vcard {
+  display: flex;
+  flex-direction: column;
+  padding: 0;
+  overflow: hidden;
+  text-align: left;
+  font: inherit;
+  color: inherit;
+  background: var(--cf-card);
+  border: 1px solid var(--cf-line);
+  border-radius: 14px;
+  cursor: pointer;
+  transition: border-color 0.15s ease;
+}
+
+.vcard:hover {
+  border-color: var(--cf-muted-2);
+}
+
+.vcard:focus-visible {
+  outline: 2px solid var(--cf-accent);
+  outline-offset: 2px;
+}
+
+.vcard-media {
+  display: grid;
+  place-items: center;
+  height: 128px;
+  padding: 12px;
+  background: var(--cf-paper-2);
+  border-bottom: 1px solid var(--cf-line);
+}
+
+.vcard-photo {
+  max-width: 100%;
+  max-height: 104px;
+  object-fit: contain;
+}
+
+.vcard-pack {
+  display: flex;
+  flex-direction: column;
+  gap: 3px;
+  width: 100%;
+  max-width: 152px;
+  min-height: 96px;
+  padding: 10px;
+  background: var(--cf-card);
+  border: 1px solid var(--cf-line);
+  border-radius: 8px;
+  box-shadow: 0 6px 14px rgba(0, 25, 29, 0.06);
+}
+
+.vcard-pack-brand {
+  font-size: 8px;
+  letter-spacing: 0.12em;
+  text-transform: uppercase;
+  color: var(--cf-muted-2);
+  font-weight: 700;
+}
+
+.vcard-pack-name {
+  font-size: 13px;
+  font-weight: 700;
+  line-height: 1.2;
+}
+
+.vcard-pack-dose {
+  font-size: 9px;
+  color: var(--cf-muted);
+}
+
+.vcard-body {
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+  padding: 12px 14px 14px;
+}
+
+.vcard-eyebrow {
+  font-size: 10px;
+  letter-spacing: 0.12em;
+  text-transform: uppercase;
+  color: var(--cf-muted-2);
+  font-weight: 700;
+}
+
+.vcard-name {
+  font-size: 15px;
+  font-weight: 700;
+  line-height: 1.25;
+}
+
+.vcard-dose {
+  font-size: 12px;
+  color: var(--cf-muted);
+}
+
+.vcard-stats {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 4px 10px;
+  margin-top: 6px;
+  font-size: 11.5px;
+  color: var(--cf-muted);
+}
+
+.vcard-stat b {
+  color: var(--cf-ink);
+  font-weight: 700;
+}
+
+.vcard-stat--place {
+  color: var(--cf-muted-2);
+}
+
+.vcard .tagchip {
+  align-self: flex-start;
+  margin-top: 8px;
+}
+
+/* Folha das farmácias de uma variante (passo 1 do detalhe). */
+.vsheet-body {
+  padding: 20px 22px 26px;
+}
+
+.vsheet-head {
+  padding: 2px 0 4px;
+}
+
+.vsheet-eyebrow {
+  font-size: 10px;
+  letter-spacing: 0.14em;
+  text-transform: uppercase;
+  color: var(--cf-muted-2);
+  font-weight: 700;
+}
+
+.vsheet-head h2 {
+  margin-top: 4px;
+  font-size: 25px;
+}
+
+.vsheet-sub {
+  margin-top: 5px;
+  font-size: 13px;
+  color: var(--cf-muted);
+}
+
+.vsheet-tools {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 12px;
+  margin: 16px 0 14px;
+  padding: 12px 14px;
+  border: 1px solid var(--cf-line);
+  border-radius: 12px;
+  background: var(--cf-paper-2);
+}
+
+.vsheet-price {
+  display: grid;
+  gap: 4px;
+  flex: 1 1 220px;
+  font-size: 12px;
+  color: var(--cf-muted);
+}
+
+.vsheet-price b {
+  color: var(--cf-ink);
+}
+
+.vsheet-price input[type='range'] {
+  width: 100%;
+  accent-color: var(--cf-green);
+}
+
+.vsheet-note {
+  margin: 0 0 12px;
+  font-size: 12px;
+  color: var(--cf-muted);
+}
+
+/* A tabela começa depois dos filtros de município com respiro próprio —
+   sem isto os títulos «Farmácia / Horário / …» encostavam aos chips. */
+.vsheet-body .e-rows {
+  margin-top: 26px;
+}
+
+/* O preço e o botão partilham a coluna da direita no telemóvel: 12 px de
+   intervalo vertical para o valor não ficar colado ao «Ver ficha». */
+@media (max-width: 760px) {
+  .pdp-modal .e-row {
+    gap: 12px 14px;
+    padding: 14px 0;
+  }
+
+  .pdp-modal .e-price {
+    align-self: start;
+  }
+
+  .pdp-modal .e-go {
+    justify-self: end;
+  }
+}
+
+@media (max-width: 760px) {
+  .variant-grid {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+    gap: 10px;
+  }
+
+  .vcard-media {
+    height: 104px;
+    padding: 8px;
+  }
+
+  .vcard-body {
+    padding: 10px;
+  }
+
+  .vcard-name {
+    font-size: 13.5px;
+  }
+
+  .vcard-stats {
+    gap: 3px 8px;
+    font-size: 10.5px;
+  }
+
+  .sh-controls {
+    margin-top: 16px;
+  }
+
+  .sh-sort-label {
+    display: none;
+  }
+
+  .sh-filter-panel {
+    padding: 12px;
+  }
+
+  .vsheet-head h2 {
+    font-size: 21px;
+  }
+
+  .vsheet-body {
+    padding: 14px;
+  }
 }
 
 .sh-toolbar {
   display: flex;
   gap: 6px;
   flex-wrap: wrap;
+  align-items: center;
   margin-top: 26px;
+}
+
+/* Duas filas no hero: a província primeiro, os municípios só depois de
+   ela estar escolhida. A segunda fila fica mais perto da primeira para
+   se ler como o mesmo controlo. */
+.sh-toolbar--sub {
+  margin-top: 10px;
+}
+
+.sh-toolbar-label {
+  font-size: 9.5px;
+  letter-spacing: 0.15em;
+  text-transform: uppercase;
+  color: var(--cf-muted-2);
+  font-weight: 700;
+  margin-right: 4px;
 }
 
 /* Origem do medicamento: linha própria por baixo da barra de resultados,
@@ -962,6 +1349,232 @@ html.dark .cf-rx {
   color: var(--cf-muted-2);
   font-weight: 700;
   margin-right: 4px;
+}
+
+/* ---------- homepage: entrada do Localizador ----------
+   A homepage deixou de ser a página de apresentação (vive em /sobre):
+   agora é caixa de pesquisa + o que as farmácias confirmaram. As classes
+   `.home-*` são só desta página. */
+.home-hero h1 {
+  font-size: 44px;
+  max-width: 16ch;
+}
+
+.home-hero .shop-search {
+  margin-top: 22px;
+}
+
+/* Esta caixa não tem lupa à esquerda: o texto começa na margem. */
+.home-search .cf-field {
+  padding-left: 18px;
+}
+
+.home-head h2 {
+  font-size: 24px;
+}
+
+.home-head p {
+  margin-top: 5px;
+  font-size: 13.5px;
+  color: var(--cf-muted);
+}
+
+/* Fila de cards: scroll lateral no desktop (o dedo/cursor percorre),
+   grelha de 3 por fila no telemóvel. */
+.home-row {
+  display: flex;
+  gap: 12px;
+  margin-top: 18px;
+  overflow-x: auto;
+  scroll-snap-type: x proximity;
+  overscroll-behavior-x: contain;
+  /* Scroll intencional mas invisível: sem barra a competir com os cards.
+     O corte do último card à vista é a pista de que há mais ao lado. */
+  scrollbar-width: none;
+  scrollbar-color: transparent transparent;
+  -ms-overflow-style: none;
+}
+
+.home-row::-webkit-scrollbar {
+  display: none;
+  width: 0;
+  height: 0;
+  background: transparent;
+}
+
+.home-row > * {
+  flex: 0 0 244px;
+  scroll-snap-align: start;
+}
+
+.home-card {
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+  min-height: 256px;
+  background: var(--cf-card);
+  border: 1px solid var(--cf-line);
+  border-radius: 14px;
+  padding: 14px;
+  transition: border-color 0.15s ease;
+}
+
+/* Área de imagem do card: o desenho respira num tile próprio, em vez de
+   flutuar solto ao lado do título. */
+.home-card-art {
+  display: grid;
+  place-items: center;
+  height: 112px;
+  margin-bottom: 6px;
+  border: 1px solid var(--cf-line);
+  border-radius: 10px;
+  background: var(--cf-paper-2);
+}
+
+.home-card-img {
+  width: 84px;
+  height: 84px;
+  object-fit: contain;
+}
+
+.home-card:hover {
+  border-color: var(--cf-muted-2);
+}
+
+.home-card-title {
+  font-size: 15.5px;
+  font-weight: 600;
+  line-height: 1.3;
+}
+
+.home-card-meta {
+  font-size: 12.5px;
+  color: var(--cf-muted);
+}
+
+.home-card-subs {
+  margin-top: 2px;
+  font-size: 11.5px;
+  line-height: 1.5;
+  color: var(--cf-muted-2);
+}
+
+.home-mini {
+  display: flex;
+  flex-direction: column;
+  gap: 3px;
+  background: var(--cf-card);
+  border: 1px solid var(--cf-line);
+  border-radius: 12px;
+  padding: 12px 14px;
+  transition: border-color 0.15s ease;
+}
+
+.home-mini:hover {
+  border-color: var(--cf-muted-2);
+}
+
+.home-mini-title {
+  font-size: 13.5px;
+  font-weight: 600;
+  line-height: 1.3;
+}
+
+.home-mini-meta {
+  font-size: 11.5px;
+  color: var(--cf-muted);
+}
+
+.home-strip {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  justify-content: space-between;
+  gap: 22px;
+  background: var(--cf-card);
+  border: 1px solid var(--cf-line);
+  border-radius: 18px;
+  padding: 26px 28px;
+}
+
+.home-strip h2 {
+  font-size: 21px;
+}
+
+.home-strip p {
+  margin-top: 6px;
+  max-width: 52ch;
+  font-size: 13.5px;
+  color: var(--cf-muted);
+}
+
+.home-strip-links {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px;
+}
+
+@media (max-width: 760px) {
+  .home-hero h1 {
+    font-size: 30px;
+  }
+
+  /* Três por fila: os cards encolhem e as subcategorias saem (o card do
+     tipo abre a lista completa na pesquisa). */
+  .home-row {
+    display: grid;
+    grid-template-columns: repeat(3, 1fr);
+    gap: 8px;
+    overflow: visible;
+    padding-bottom: 0;
+  }
+
+  .home-row > * {
+    flex: none;
+  }
+
+  .home-card,
+  .home-mini {
+    padding: 10px;
+    border-radius: 10px;
+  }
+
+  .home-card {
+    min-height: 168px;
+    padding: 8px;
+  }
+
+  .home-card-art {
+    height: 68px;
+    margin-bottom: 4px;
+    border-radius: 8px;
+  }
+
+  .home-card-img {
+    width: 44px;
+    height: 44px;
+  }
+
+  .home-card-title {
+    font-size: 12px;
+  }
+
+  .home-mini-title {
+    font-size: 11.5px;
+  }
+
+  .home-card-meta,
+  .home-mini-meta {
+    font-size: 10px;
+  }
+
+  .home-card-subs {
+    display: none;
+  }
+
+  .home-strip {
+    padding: 20px;
+  }
 }
 
 .sh-section {
@@ -2090,8 +2703,11 @@ html.dark .cf-rx {
 }
 
 .alt-row {
-  display: flex;
-  justify-content: space-between;
+  /* Colunas fixas para o preço e o botão: com flex + space-between cada
+     linha distribuía-se pelo seu conteúdo e os valores ficavam em sítios
+     diferentes conforme o nome da farmácia. */
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) 110px 64px;
   gap: 14px;
   align-items: center;
   padding: 9px 0;
@@ -2117,6 +2733,17 @@ html.dark .cf-rx {
   font-size: 11px;
   color: var(--cf-muted);
   text-align: right;
+}
+
+.alt-row .cf-btn {
+  justify-self: end;
+}
+
+@media (max-width: 560px) {
+  .alt-row {
+    grid-template-columns: minmax(0, 1fr) 96px 58px;
+    gap: 10px;
+  }
 }
 
 .alt-row .where b {

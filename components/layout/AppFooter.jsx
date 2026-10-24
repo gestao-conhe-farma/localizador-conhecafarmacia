@@ -16,7 +16,7 @@ export default function AppFooter() {
       <div className="app-footer-in">
         {/* Linha 1: logo + links */}
         <div className="app-footer-top">
-          <Link href="/pesquisa" className="app-footer-logo">
+          <Link href="/" className="app-footer-logo">
             <Image src="/logo/3.png" alt="Conheça Farmácia" width={88} height={30} priority />
             <span className="app-footer-product">Localizador</span>
           </Link>

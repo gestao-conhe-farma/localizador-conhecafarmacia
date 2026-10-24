@@ -143,6 +143,7 @@ const SORTS = [
 export const ORIGINS = [
   'Portugal',
   'Índia',
+  'Rússia',
   'China',
   'Alemanha',
   'França',

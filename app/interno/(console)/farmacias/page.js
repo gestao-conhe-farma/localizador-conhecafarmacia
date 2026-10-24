@@ -1,7 +1,7 @@
 import Link from 'next/link'
 import { requirePlatformPage } from '@/lib/platform/session'
 import { listPharmacies } from '@/lib/actions/platform-pharmacies'
-import { MUNICIPIOS } from '@/lib/constants'
+import { PROVINCIAS } from '@/lib/constants'
 import { PLAN_ORDER, planInfo } from '@/lib/plans'
 import SemPermissao from '@/components/interno/SemPermissao'
 import Falha from '@/components/interno/Falha'
@@ -115,10 +115,14 @@ export default async function FarmaciasPage({ searchParams }) {
                   defaultValue={filtros.municipio}
                 >
                   <option value="">Todos</option>
-                  {MUNICIPIOS.map((m) => (
-                    <option key={m} value={m}>
-                      {m}
-                    </option>
+                  {PROVINCIAS.map((p) => (
+                    <optgroup key={p.nome} label={p.nome}>
+                      {p.municipios.map((m) => (
+                        <option key={m} value={m}>
+                          {m}
+                        </option>
+                      ))}
+                    </optgroup>
                   ))}
                 </select>
               </label>

@@ -3,7 +3,7 @@
 import { useState } from 'react'
 import Link from 'next/link'
 import { useRouter } from 'next/navigation'
-import { MUNICIPIOS } from '@/lib/constants'
+import { PROVINCIAS } from '@/lib/constants'
 import Notice from '@/components/ui/Notice'
 
 /**
@@ -152,16 +152,18 @@ export default function PharmacyApplicationForm() {
 
       <div>
         <label htmlFor="license" className="form-label">
-          Alvará / licença *
+          Licença ARMED / alvará
         </label>
         <input
           id="license"
           name="license"
-          required
           maxLength={80}
           className="form-input"
-          placeholder="Número do alvará de funcionamento"
+          placeholder="Número da licença de exercício (opcional)"
         />
+        <span className="form-note">
+          Opcional. A equipa confirma a licença no ARMED durante a adesão.
+        </span>
       </div>
 
       <div className="apply-section form-full">
@@ -241,10 +243,14 @@ export default function PharmacyApplicationForm() {
         </label>
         <select id="municipio" name="municipio" required className="form-select" defaultValue="">
           <option value="">Selecione…</option>
-          {MUNICIPIOS.map((m) => (
-            <option key={m} value={m}>
-              {m}
-            </option>
+          {PROVINCIAS.map((p) => (
+            <optgroup key={p.nome} label={p.nome}>
+              {p.municipios.map((m) => (
+                <option key={m} value={m}>
+                  {m}
+                </option>
+              ))}
+            </optgroup>
           ))}
         </select>
       </div>

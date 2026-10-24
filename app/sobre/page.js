@@ -95,7 +95,7 @@ export default function SobrePage() {
                       40 minutos&raquo;.
                     </p>
                     <ul className="legal-list">
-                      <li>Pesquisa por nome ou molécula, com filtros por município de Luanda.</li>
+                      <li>Pesquisa por nome ou molécula, com filtros por província e município.</li>
                       <li>
                         Preço, morada, telefone e WhatsApp directos da farmácia — sem
                         intermediários.

@@ -63,7 +63,7 @@ export default async function ParticiparObrigadoPage({ searchParams }) {
                 <li>Se o pedido avançar, combinamos os próximos passos da adesão ao Localizador.</li>
               </ol>
 
-              <ApplicationRecap />
+              <ApplicationRecap enviado={!emailFalhou} />
 
               {!emailFalhou && (
                 <p className="apply-success-note">

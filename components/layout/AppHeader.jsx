@@ -48,7 +48,7 @@ export default function AppHeader() {
         }}
       >
       <div className="app-header-inner">
-        <Link href="/pesquisa" className="app-header-logo" aria-label="Localizador — início">
+        <Link href="/" className="app-header-logo" aria-label="Localizador — início">
           <Image src="/logo/3.png" alt="Conheça Farmácia" width={104} height={35} priority />
           <span className="app-header-product">Localizador</span>
         </Link>

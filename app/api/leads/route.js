@@ -136,7 +136,6 @@ export async function POST(request) {
   if (
     !payload.pharmacy_name ||
     !payload.nif ||
-    !payload.license ||
     !payload.contact_name ||
     !payload.role ||
     !payload.email ||
@@ -147,7 +146,7 @@ export async function POST(request) {
     return NextResponse.json(
       {
         error:
-          'Preencha os campos obrigatórios: farmácia, NIF, alvará, responsável, cargo, e-mail, telefone, município e morada.',
+          'Preencha os campos obrigatórios: farmácia, NIF, responsável, cargo, e-mail, telefone, município e morada.',
       },
       { status: 400 },
     )

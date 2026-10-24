@@ -1,354 +1,198 @@
-import Header from '@/components/layout/Header'
-import Footer from '@/components/layout/Footer'
+import Link from 'next/link'
+import AppHeader from '@/components/layout/AppHeader'
+import AppFooter from '@/components/layout/AppFooter'
+import HomeSearch from '@/components/home/HomeSearch'
+import { getHomeSuggestions } from '@/lib/home-suggestions'
+import {
+  MEDICINE_CATEGORIES,
+  PARAPHARMACY_TYPES,
+  categoriaImagem,
+  subcategoriasDe,
+} from '@/lib/constants'
 
-const CONTACT_PHONE = '+244 925 696 002'
-const CONTACT_EMAIL = 'geral@conhecafarmacia.com'
-const MAIN_SITE = 'https://conhecafarmacia.com'
+// A homepage deixou de ser a página de apresentação do projecto: esse
+// conteúdo vive em /sobre. Aqui entra-se directo no Localizador — uma
+// pergunta, a caixa, e o que as farmácias parceiras confirmaram.
+// As sugestões vêm do stock real (lib/home-suggestions.js), por isso a
+// página é renderizada por pedido; o cache de 10 minutos evita uma query
+// por visita. Os ícones dos cards são linha simples na cor da marca, em
+// public/categorias/ — um por área clínica e um por tipo de parafarmácia.
 
-export default function Home() {
+export const metadata = {
+  title: 'Encontre o medicamento em Luanda e Ícolo e Bengo',
+  description:
+    'Pesquise o medicamento e veja em segundos quais as farmácias que o têm em stock, com confirmação das últimas 72 horas. Gratuito, sem vendas online.',
+}
+
+function plural(n, singular, plural_) {
+  return `${n} ${n === 1 ? singular : plural_}`
+}
+
+export default async function Home() {
+  const { categories, products, para } = await getHomeSuggestions()
+  // Os cards são a taxonomia fixa: um stock que expira (72 h para
+  // medicamentos) não pode fazer desaparecer a navegação da homepage. O
+  // stock só decide a contagem que cada card mostra.
+  const medicineLive = new Map(categories.map((c) => [c.id, c]))
+  const paraLive = new Map(para.map((k) => [k.id, k]))
+
   return (
     <>
-      <Header />
-      <main>
-        {/* ============ HERO ============ */}
-        <section className="hero">
-          <div className="hero-container">
-            <div className="hero-content">
-              <span className="hero-eyebrow">Uma ideia da Conheça Farmácia</span>
-              <h1 className="hero-title">
-                Encontre o seu medicamento em Luanda — <span className="highlight">sem dar voltas</span>
-              </h1>
-              <p className="hero-subtitle">
-                Um website gratuito onde qualquer pessoa pesquisa o medicamento e vê, em
-                segundos, quais as farmácias de Luanda que o têm em stock — com informação
-                confirmada pela própria farmácia.
-              </p>
-              <div className="hero-actions">
-                <a href="/farmacias/participar" className="btn btn-primary btn-lg">
-                  Sou farmácia e quero participar
-                </a>
-                <a href="#como-funciona" className="btn btn-secondary btn-lg">
-                  Como funciona
-                </a>
+      <AppHeader />
+      <main className="cf-shop">
+        <section className="shop-hero home-hero">
+          <div className="cf-wrap">
+            <h1>O que está à procura?</h1>
+            <HomeSearch />
+          </div>
+        </section>
+
+        {categories.length > 0 && (
+          <section className="sh-section">
+            <div className="cf-wrap">
+              <div className="home-head">
+                <h2>Categorias</h2>
+                <p>Medicamentos confirmados pelas farmácias parceiras, por área.</p>
+              </div>
+              <div className="home-row" role="list">
+                {MEDICINE_CATEGORIES.map((c) => {
+                  const live = medicineLive.get(c.id)
+                  return (
+                    <Link
+                      key={c.id}
+                      role="listitem"
+                      className="home-card"
+                      href={`/pesquisa?categoria=${c.id}`}
+                    >
+                      <span className="home-card-art">
+                        <img
+                          className="home-card-img"
+                          src={categoriaImagem(c.id)}
+                          alt=""
+                          width={96}
+                          height={96}
+                          loading="lazy"
+                        />
+                      </span>
+                      <b className="home-card-title">{c.label}</b>
+                      <span className="home-card-meta">
+                        {live
+                          ? `${plural(live.products, 'produto', 'produtos')} · ${plural(
+                              live.pharmacies,
+                              'farmácia',
+                              'farmácias',
+                            )}`
+                          : 'Sem stock confirmado agora'}
+                      </span>
+                    </Link>
+                  )
+                })}
               </div>
             </div>
+          </section>
+        )}
 
-            <div className="hero-animated" aria-hidden="true">
-              <div className="hero-animated-card">
-                <div className="hero-animated-icon">
-                  {/* Ícone pílula */}
-                  <svg width="34" height="34" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
-                    <path d="M10.5 20.5 3.5 13.5a4.95 4.95 0 1 1 7-7l7 7a4.95 4.95 0 1 1-7 7Z" />
-                    <path d="m8.5 8.5 7 7" />
-                  </svg>
-                </div>
-                <div className="hero-animated-text">Insulina · disponível</div>
+        {products.length > 0 && (
+          <section className="sh-section">
+            <div className="cf-wrap">
+              <div className="home-head">
+                <h2>Procurados agora</h2>
+                <p>O que as farmácias confirmaram nas últimas horas.</p>
               </div>
-              <div className="hero-ticker-text hero-ticker-text--prominent mt-3">
-                Stock confirmado pela farmácia
+              <div className="home-row home-row--mini" role="list">
+                {products.map((p) => (
+                  <Link
+                    key={p.id}
+                    role="listitem"
+                    className="home-mini"
+                    href={`/pesquisa?q=${encodeURIComponent(p.name)}`}
+                  >
+                    <b className="home-mini-title">{p.name}</b>
+                    <span className="home-mini-meta">
+                      {plural(p.pharmacies, 'farmácia', 'farmácias')}
+                    </span>
+                  </Link>
+                ))}
               </div>
-              <div className="hero-ticker-text">Actualizado nas últimas 72 horas</div>
+            </div>
+          </section>
+        )}
+
+        <section className="sh-section">
+          <div className="cf-wrap">
+            <div className="home-head">
+              <h2>Parafarmácia</h2>
+              <p>Bebé, higiene, beleza e outros cuidados — também confirmados.</p>
+            </div>
+            <div className="home-row" role="list">
+              {PARAPHARMACY_TYPES.map((k) => {
+                const live = paraLive.get(k.id)
+                const subs = subcategoriasDe(k.id)
+                return (
+                  <Link
+                    key={k.id}
+                    role="listitem"
+                    className="home-card"
+                    href={`/pesquisa?tipo=${k.id}`}
+                  >
+                    <span className="home-card-art">
+                      <img
+                        className="home-card-img"
+                        src={categoriaImagem(k.id)}
+                        alt=""
+                        width={96}
+                        height={96}
+                        loading="lazy"
+                      />
+                    </span>
+                    <b className="home-card-title">{k.label}</b>
+                    <span className="home-card-meta">
+                      {live
+                        ? `${plural(live.products, 'produto', 'produtos')} · ${plural(
+                            live.pharmacies,
+                            'farmácia',
+                            'farmácias',
+                          )}`
+                        : 'Sem stock confirmado agora'}
+                    </span>
+                    {subs.length > 0 && (
+                      <span className="home-card-subs">
+                        {subs.map((s) => s.label).join(' · ')}
+                      </span>
+                    )}
+                  </Link>
+                )
+              })}
             </div>
           </div>
         </section>
 
-        {/* ============ O PROBLEMA ============ */}
-        <section className="section-padding">
-          <div className="container-center">
-            <div className="section-head">
-              <span className="section-eyebrow">O problema</span>
-              <h2 className="section-title">Uma caça ao tesouro que não devia existir</h2>
-              <p className="section-subtitle">
-                Quem precisa de uma insulina, de um anticonvulsivante ou de um medicamento
-                oncológico oral anda de farmácia em farmácia — gastando dinheiro de
-                transporte, horas do dia e, muitas vezes, chegando tarde.
-              </p>
-            </div>
-            <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
-              <div className="loc-card">
-                <div className="loc-card-icon">
-                  {/* telefone */}
-                  <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
-                    <path d="M22 16.92v3a2 2 0 0 1-2.18 2 19.79 19.79 0 0 1-8.63-3.07 19.5 19.5 0 0 1-6-6 19.79 19.79 0 0 1-3.07-8.67A2 2 0 0 1 4.11 2h3a2 2 0 0 1 2 1.72 12.84 12.84 0 0 0 .7 2.81 2 2 0 0 1-.45 2.11L8.09 9.91a16 16 0 0 0 6 6l1.27-1.27a2 2 0 0 1 2.11-.45 12.84 12.84 0 0 0 2.81.7A2 2 0 0 1 22 16.92z" />
-                  </svg>
-                </div>
-                <h3>Informação espalhada</h3>
+        <section className="sh-section">
+          <div className="cf-wrap">
+            <div className="home-strip">
+              <div>
+                <h2>Só o que a farmácia confirmou</h2>
                 <p>
-                  A informação existe, mas está dispersa por telefonemas, conhecimentos e
-                  grupos de WhatsApp. Ninguém sabe onde procurar primeiro.
+                  Medicamentos confirmados nas últimas 72 horas, parafarmácia nos últimos 30 dias.
+                  Não vendemos medicamentos nem cobramos nada ao público.
                 </p>
               </div>
-              <div className="loc-card">
-                <div className="loc-card-icon">
-                  {/* relógio */}
-                  <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
-                    <circle cx="12" cy="12" r="10" />
-                    <polyline points="12 6 12 12 16 14" />
-                  </svg>
-                </div>
-                <h3>Tempo e dinheiro perdidos</h3>
-                <p>
-                  Horas de deslocação e custos de transporte para, ao balcão, descobrir que
-                  o medicamento não está disponível.
-                </p>
-              </div>
-              <div className="loc-card">
-                <div className="loc-card-icon">
-                  {/* alerta */}
-                  <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
-                    <path d="m21.73 18-8-14a2 2 0 0 0-3.48 0l-8 14A2 2 0 0 0 4 21h16a2 2 0 0 0 1.73-3Z" />
-                    <path d="M12 9v4" />
-                    <path d="M12 17h.01" />
-                  </svg>
-                </div>
-                <h3>Casos urgentes chegam tarde</h3>
-                <p>
-                  Para os medicamentos mais comuns, a dúvida é outra: <em>quem tem, a que
-                  preço e a que horário?</em> A resposta demora — e às vezes custa caro.
-                </p>
-              </div>
-            </div>
-          </div>
-        </section>
-
-        {/* ============ A SOLUÇÃO / COMO FUNCIONA ============ */}
-        <section id="como-funciona" className="section-padding bg-brand-bg-alt">
-          <div className="container-center">
-            <div className="section-head">
-              <span className="section-eyebrow">A ideia, em uma frase</span>
-              <h2 className="section-title">
-                Pesquisa. Vê. <span className="text-brand-primary">Reserva.</span>
-              </h2>
-              <p className="section-subtitle">
-                Para quem procura um medicamento, o processo é simples e gratuito:
-              </p>
-            </div>
-            <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
-              <div className="loc-card">
-                <div className="step-num">1</div>
-                <h3>Pesquisa</h3>
-                <p>Escreve o nome do medicamento no site, no telemóvel ou no computador.</p>
-              </div>
-              <div className="loc-card">
-                <div className="step-num">2</div>
-                <h3>Vê as farmácias com stock</h3>
-                <p>
-                  Com morada, horário e contacto — e com a data em que a farmácia confirmou
-                  o stock. Passadas 72 horas sem actualização, deixa de aparecer como
-                  &laquo;confirmado&raquo;.
-                </p>
-              </div>
-              <div className="loc-card">
-                <div className="step-num">3</div>
-                <h3>Reserva e vai ao balcão</h3>
-                <p>
-                  Reserva directamente no site ou combina a entrega com a farmácia. O
-                  pagamento acontece sempre no balcão, ao preço da farmácia.
-                </p>
-              </div>
-            </div>
-          </div>
-        </section>
-
-        {/* ============ PARA FARMÁCIAS ============ */}
-        <section id="farmacias" className="section-padding">
-          <div className="container-center">
-            <div className="section-head">
-              <span className="section-eyebrow">Para as farmácias parceiras</span>
-              <h2 className="section-title">Seja encontrado por quem mais precisa — grátis</h2>
-              <p className="section-subtitle">
-                Uma actualização de 5 minutos, 2–3 vezes por semana, num ecrã simples de
-                botões &laquo;temos / não temos&raquo;, no telemóvel. Sem instalar nada.
-              </p>
-            </div>
-            <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
-              <div className="loc-card">
-                <div className="loc-card-icon">
-                  {/* users */}
-                  <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
-                    <path d="M16 21v-2a4 4 0 0 0-4-4H6a4 4 0 0 0-4 4v2" />
-                    <circle cx="9" cy="7" r="4" />
-                    <path d="M22 21v-2a4 4 0 0 0-3-3.87" />
-                    <path d="M16 3.13a4 4 0 0 1 0 7.75" />
-                  </svg>
-                </div>
-                <h3>Clientes novos, sem custo</h3>
-                <p>
-                  Doentes que procuram activamente o medicamento que a sua farmácia tem — e
-                  que hoje não a encontram. Sem comissão nem qualquer quantia.
-                </p>
-              </div>
-              <div className="loc-card">
-                <div className="loc-card-icon">
-                  {/* clipboard-check */}
-                  <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
-                    <rect width="8" height="4" x="8" y="2" rx="1" ry="1" />
-                    <path d="M16 4h2a2 2 0 0 1 2 2v14a2 2 0 0 1-2 2H6a2 2 0 0 1-2-2V6a2 2 0 0 1 2-2h2" />
-                    <path d="m9 14 2 2 4-4" />
-                  </svg>
-                </div>
-                <h3>Reservas organizadas</h3>
-                <p>
-                  O doente pede a reserva pelo site; a farmácia confirma no painel e o
-                  cliente vem ao balcão — ou recebe em casa, decisão sempre da farmácia.
-                </p>
-              </div>
-              <div className="loc-card">
-                <div className="loc-card-icon">
-                  {/* badge-check */}
-                  <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
-                    <path d="M3.85 8.62a4 4 0 0 1 4.78-4.77 4 4 0 0 1 6.74 0 4 4 0 0 1 4.78 4.78 4 4 0 0 1 0 6.74 4 4 0 0 1-4.77 4.78 4 4 0 0 1-6.75 0 4 4 0 0 1-4.78-4.77 4 4 0 0 1 0-6.76Z" />
-                    <path d="m9 12 2 2 4-4" />
-                  </svg>
-                </div>
-                <h3>Perfil público verificado</h3>
-                <p>
-                  Página da farmácia com morada, horário, mapa e selo &laquo;stock
-                  confirmado&raquo;, no maior site de educação farmacêutica de Angola.
-                </p>
-              </div>
-            </div>
-
-            {/* O formulário completo vive em /farmacias/participar: a home
-                mantém só a chamada, para não haver dois formulários com
-                campos diferentes. */}
-            <div className="mt-14 mx-auto max-w-3xl bg-brand-card rounded-[24px] border border-brand-divider/40 p-7 md:p-10 shadow-soft text-center">
-              <h3 className="text-2xl md:text-3xl font-bold text-brand-deep">
-                Quero que a minha farmácia participe
-              </h3>
-              <p className="mt-3 mb-7 text-sm text-brand-deep/60">
-                A adesão do lançamento é gratuita. Preencha os dados da farmácia num formulário
-                único e a nossa equipa entra em contacto no máximo em 72 horas.
-              </p>
-              <a href="/farmacias/participar" className="btn btn-primary btn-lg">
-                Abrir formulário de adesão
-              </a>
-            </div>
-          </div>
-        </section>
-
-        {/* ============ COMPROMISSOS ============ */}
-        <section className="commit-section">
-          <div className="container-center">
-            <div className="section-head">
-              <span className="section-eyebrow">Os nossos compromissos</span>
-              <h2 className="section-title">Três regras que fazem isto funcionar</h2>
-            </div>
-            <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
-              <div className="commit-item">
-                <h3 className="text-lg font-bold text-brand-deep mb-3">Informação com data</h3>
-                <p className="text-sm text-brand-deep/70 leading-relaxed">
-                  Cada stock publicado tem hora de confirmação. Passadas 72 horas sem
-                  actualização, deixa de aparecer como &laquo;confirmado&raquo;. Melhor
-                  poucos medicamentos com informação fiável do que muitos com informação
-                  errada.
-                </p>
-              </div>
-              <div className="commit-item">
-                <h3 className="text-lg font-bold text-brand-deep mb-3">
-                  Não vendemos medicamentos
-                </h3>
-                <p className="text-sm text-brand-deep/70 leading-relaxed">
-                  A Conheça Farmácia é uma organização de educação em saúde. Indicamos onde
-                  está disponível e encaminhamos; a venda e a entrega são sempre
-                  responsabilidade da farmácia. O pagamento acontece no balcão.
-                </p>
-              </div>
-              <div className="commit-item">
-                <h3 className="text-lg font-bold text-brand-deep mb-3">
-                  Privacidade desde o dia um
-                </h3>
-                <p className="text-sm text-brand-deep/70 leading-relaxed">
-                  O contacto do cliente serve apenas para a reserva e é visível apenas à
-                  farmácia escolhida. Nunca é partilhado com terceiros.
-                </p>
-              </div>
-            </div>
-          </div>
-        </section>
-
-        {/* ============ FAQ ============ */}
-        <section className="section-padding">
-          <div className="container-center">
-            <div className="section-head">
-              <span className="section-eyebrow">FAQ</span>
-              <h2 className="section-title">Perguntas que já adivinhamos</h2>
-            </div>
-            <div className="grid grid-cols-1 md:grid-cols-2 gap-5 max-w-5xl mx-auto">
-              <div className="faq-item">
-                <p className="faq-q">Como é que sabem o que cada farmácia tem em stock?</p>
-                <p className="faq-a">
-                  As próprias farmácias parceiras actualizam o seu stock num painel simples,
-                  e a nossa equipa acompanha e valida regularmente, especialmente no início.
-                  Só publicamos o que a farmácia confirmou.
-                </p>
-              </div>
-              <div className="faq-item">
-                <p className="faq-q">E se a informação estiver desactualizada?</p>
-                <p className="faq-a">
-                  Toda a informação de stock tem data de confirmação visível. Passadas 72
-                  horas sem actualização, deixa de aparecer como &laquo;confirmado&raquo;.
-                  Mesmo assim, recomendamos sempre confirmar por telefone nos casos
-                  urgentes — a honestidade é parte do serviço.
-                </p>
-              </div>
-              <div className="faq-item">
-                <p className="faq-q">Vocês vendem medicamentos?</p>
-                <p className="faq-a">
-                  Não. Somos uma organização de educação em saúde. Mostramos onde o
-                  medicamento está disponível e encaminhamos o cliente; a farmácia fica
-                  responsável por atender o pedido. A compra faz-se sempre na farmácia.
-                </p>
-              </div>
-              <div className="faq-item">
-                <p className="faq-q">Isto vai custar às farmácias?</p>
-                <p className="faq-a">
-                  O lançamento é gratuito — para farmácias e para utilizadores. No futuro, a
-                  sustentabilidade virá de parcerias institucionais e de serviços às
-                  farmácias parceiras, nunca de comissão sobre medicamentos.
-                </p>
-              </div>
-              <div className="faq-item">
-                <p className="faq-q">E os medicamentos sujeitos a receita médica?</p>
-                <p className="faq-a">
-                  Funcionam da mesma forma: a pessoa pode reservar, mas o levantamento no
-                  balcão exige a apresentação da receita, conforme a lei angolana. O site
-                  deixa isso sempre claro.
-                </p>
-              </div>
-              <div className="faq-item">
-                <p className="faq-q">O que fazem com os meus dados?</p>
-                <p className="faq-a">
-                  O telefone do cliente é usado apenas para a reserva e é visível apenas à
-                  farmácia escolhida. Não partilhamos dados com terceiros e não usamos
-                  contactos para marketing sem autorização.
-                </p>
-              </div>
-              <div className="faq-item">
-                <p className="faq-q">Porque começam só com alguns medicamentos e só em Luanda?</p>
-                <p className="faq-a">
-                  Porque preferimos dez medicamentos com informação fiável a mil com
-                  informação errada. Luanda concentra a nossa rede inicial de farmácias.
-                  Quando o modelo estiver validado, expandimos.
-                </p>
-              </div>
-              <div className="faq-item">
-                <p className="faq-q">Quando arranca?</p>
-                <p className="faq-a">
-                  Estamos na fase de parcerias com as primeiras farmácias de Luanda. Se é
-                  farmácia, junte-se às parceiras do lançamento — ficam em destaque na
-                  página principal.
-                </p>
+              <div className="home-strip-links">
+                <Link className="cf-btn cf-btn--ghost" href="/farmacia">
+                  Farmácias da rede
+                </Link>
+                <Link className="cf-btn cf-btn--ghost" href="/sobre">
+                  Sobre o projecto
+                </Link>
+                <Link className="cf-btn cf-btn--ghost" href="/farmacias/participar">
+                  É farmácia?
+                </Link>
               </div>
             </div>
           </div>
         </section>
       </main>
-      <Footer
-        contactPhone={CONTACT_PHONE}
-        contactEmail={CONTACT_EMAIL}
-        mainSite={MAIN_SITE}
-      />
+      <AppFooter />
     </>
   )
 }

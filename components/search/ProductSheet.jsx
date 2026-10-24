@@ -3,7 +3,7 @@
 import { useEffect, useMemo, useRef, useState, useSyncExternalStore } from 'react'
 import Link from 'next/link'
 import { createReservation } from '@/lib/actions/reservations'
-import { openStatus } from '@/lib/opening-hours'
+import { openStatus, openingWeek } from '@/lib/opening-hours'
 import { monthYear } from '@/lib/expiry'
 import { formatOptionLabel, packStructureText, perBasePrice, unitLabel } from '@/lib/sale-options'
 import { fmtKzPublic as fmtKz } from '@/lib/reservation-format'
@@ -39,12 +39,23 @@ const DAY_MS = 24 * 60 * 60 * 1000
 const pad2 = (n) => String(n).padStart(2, '0')
 const isoDay = (d) => `${d.getFullYear()}-${pad2(d.getMonth() + 1)}-${pad2(d.getDate())}`
 
-/** Janelas sugeridas de cada dia — o cliente pode sempre escrever outra hora. */
+/** Padrão quando a farmácia não tem horas legíveis (10:00–20:00). */
+const DEFAULT_OPEN = 10 * 60
+const DEFAULT_CLOSE = 20 * 60
+
+/**
+ * Âncoras do dia: manhã, tarde e fim da tarde. São o esqueleto que o
+ * cliente reconhece — e ele pode sempre escrever outra hora no campo.
+ * Cada uma é depois encaixada no horário da farmácia.
+ */
 const WINDOWS = [
-  ['10:00', '12:00'],
-  ['14:00', '16:00'],
-  ['18:00', '20:00'],
+  [10, 12],
+  [14, 16],
+  [18, 20],
 ]
+
+/** 840 → «14:00». */
+const clockText = (min) => `${pad2(Math.floor(min / 60) % 24)}:${pad2(min % 60)}`
 
 /** «Hoje» / «Amanhã» / «27 out» — o dia tal como o cliente o lê. */
 function dayLabel(iso, now = new Date()) {
@@ -59,16 +70,57 @@ function dayLabel(iso, now = new Date()) {
 }
 
 /**
- * Janelas do dia escolhido. As de hoje que já fecharam (ou fecham em menos
- * de 15 min) continuam à vista, mas desactivadas — o cliente vê que o dia
- * tem opções e que aquela já passou, em vez de a lista parecer só amanhã.
+ * Janelas do dia escolhido.
+ *
+ * Hoje a lista é INTELIGENTE: a primeira sugestão começa na hora cheia
+ * seguinte (nunca antes de a farmácia abrir) — às 10:00 sugere 11:00–13:00
+ * e às 11:25 sugere 12:00–14:00. No fim do dia a janela encolhe até ao
+ * fecho (às 18:30, numa farmácia aberta até às 20:00, sugere 19:00–20:00).
+ *
+ * Tudo dentro do HORÁRIO DA FARMÁCIA (`opening_hours`): as âncoras são
+ * encaixadas na janela de funcionamento, as que ficariam fora dela
+ * desaparecem e um dia de fecho (ex.: domingo num «Seg–Sáb») não tem
+ * sugestões nenhumas. Sem horas legíveis usa-se o padrão 10:00–20:00. O
+ * que já começou deixa de aparecer: uma sugestão que já passou não é
+ * sugestão (para uma hora fora da lista, o campo «Hora» continua livre).
  */
-function windowsFor(iso, now = new Date()) {
-  const today = isoDay(now)
-  return WINDOWS.map(([from, to]) => {
-    const end = new Date(`${iso}T${to}:00`)
-    return { from, to, past: iso === today && end.getTime() <= now.getTime() + 15 * 60 * 1000 }
-  })
+function windowsFor(iso, now = new Date(), openingHours = '') {
+  const week = openingWeek(openingHours)
+  const weekday = new Date(`${iso}T00:00:00`).getDay()
+  const day = week ? week[weekday] : null
+  if (week && !day) return [] // farmácia fechada nesse dia
+  const openMin = day ? day.open : DEFAULT_OPEN
+  const closeMin = day ? day.close : DEFAULT_CLOSE
+  const today = iso === isoDay(now)
+  const nowMin = now.getHours() * 60 + now.getMinutes()
+
+  // Primeira janela: a hora cheia seguinte — 09:30 → 10:00 · 10:00 → 11:00
+  // · 11:25 → 12:00 — nunca antes de a farmácia abrir. Num dia futuro é a
+  // hora de abertura (ou as 10:00, se abrir antes).
+  const firstStart = Math.max(
+    Math.ceil(openMin / 60) * 60,
+    today ? Math.ceil((nowMin + 1) / 60) * 60 : DEFAULT_OPEN,
+  )
+  const firstEnd = Math.min(firstStart + 120, closeMin)
+  const head =
+    firstEnd - firstStart >= 60
+      ? [{ from: clockText(firstStart), to: clockText(firstEnd) }]
+      : []
+
+  // Âncoras encaixadas no horário e só depois da primeira janela — sem
+  // sobreposições nem horas em que a farmácia está fechada.
+  const after = head.length ? firstEnd : null
+  const tail = WINDOWS.map(([from, to]) => ({
+    from: Math.max(from * 60, openMin),
+    to: Math.min(to * 60, closeMin),
+  }))
+    .filter((w) => w.to - w.from >= 60) // menos de 1h não é janela
+    .filter((w) => (after != null ? w.from >= after : w.from > nowMin || !today))
+    .map((w) => ({ from: clockText(w.from), to: clockText(w.to) }))
+
+  // Três sugestões cabem na grelha; mais do que isso empurraria o
+  // formulário para baixo sem acrescentar escolha real.
+  return [...head, ...tail].slice(0, 3)
 }
 
 /** Rótulo do levantamento + se a hora já passou (15 min de tolerância). */
@@ -86,18 +138,30 @@ const EMPTY_BOUNDS = { min: '', max: '' }
 
 /**
  * Primeiro levantamento possível: hoje, se ainda houver janela aberta;
- * senão amanhã na primeira janela. Corre só no cliente.
+ * senão o primeiro dia (aberto) com janelas — um domingo de fecho não
+ * recebe uma sugestão que a farmácia não conseguiria cumprir. Corre só no
+ * cliente.
  */
-function initialPickup(now = new Date()) {
-  const today = isoDay(now)
-  const firstToday = windowsFor(today, now).find((w) => !w.past)
-  const date = firstToday ? today : isoDay(new Date(now.getTime() + DAY_MS))
-  const time = firstToday ? firstToday.from : WINDOWS[0][0]
-  const end = firstToday ? firstToday.to : ''
-  return {
-    pickup: { date, time, end, ...describePickup(date, time, end, now) },
-    bounds: { min: today, max: isoDay(new Date(now.getTime() + 14 * DAY_MS)) },
+function initialPickup(now = new Date(), openingHours = '') {
+  const bounds = {
+    min: isoDay(now),
+    max: isoDay(new Date(now.getTime() + 14 * DAY_MS)),
   }
+  for (let i = 0; i < 14; i++) {
+    const iso = isoDay(new Date(now.getTime() + i * DAY_MS))
+    const first = windowsFor(iso, now, openingHours)[0]
+    if (!first) continue
+    return {
+      pickup: {
+        date: iso,
+        time: first.from,
+        end: first.to,
+        ...describePickup(iso, first.from, first.to, now),
+      },
+      bounds,
+    }
+  }
+  return { pickup: EMPTY_PICKUP, bounds }
 }
 
 const NO_SUBSCRIBE = () => () => {}
@@ -162,11 +226,27 @@ export default function ProductSheet({
   // HTML do servidor não divergir do cliente. O dia começa em hoje (ou
   // amanhã, se as janelas de hoje já fecharam).
   const mounted = useMounted()
-  const auto = useMemo(() => (mounted ? initialPickup() : null), [mounted])
+  const auto = useMemo(
+    () => (mounted ? initialPickup(new Date(), item.pharmacy_opening_hours) : null),
+    [mounted, item.pharmacy_opening_hours],
+  )
   const pickup = picked || auto?.pickup || EMPTY_PICKUP
   const bounds = auto?.bounds || EMPTY_BOUNDS
   // As janelas seguem sempre o dia escolhido — derivadas, sem estado próprio.
-  const slots = pickup.date ? windowsFor(pickup.date) : []
+  const slots = pickup.date ? windowsFor(pickup.date, new Date(), item.pharmacy_opening_hours) : []
+
+  // Fechada agora e a primeira sugestão já não é hoje (fecho do dia, dia de
+  // descanso): a ficha explica porque é que o levantamento não pode ser já.
+  const closedNote =
+    status?.open === false && auto?.pickup.date && auto.pickup.date !== auto.bounds.min
+      ? auto.pickup
+      : null
+
+  // Dia escolhido sem funcionamento (ex.: domingo num «Seg–Sáb»).
+  const week = openingWeek(item.pharmacy_opening_hours)
+  const closedDay = Boolean(
+    week && pickup.date && !week[new Date(`${pickup.date}T00:00:00`).getDay()],
+  )
 
   const chooseDate = (iso) => {
     if (!iso) return
@@ -176,7 +256,6 @@ export default function ProductSheet({
   }
 
   const chooseWindow = (w) => {
-    if (w.past) return
     const next = { date: pickup.date, time: w.from, end: w.to }
     setPicked({ ...next, ...describePickup(next.date, next.time, next.end) })
   }
@@ -657,8 +736,20 @@ export default function ProductSheet({
                   </label>
                 </div>
 
-                {/* Janelas do DIA escolhido — hoje incluído. As que já
-                    fecharam ficam à vista mas desactivadas. */}
+                {closedNote && (
+                  <p className="res-closed">
+                    <b>A farmácia está fechada agora.</b> A primeira sugestão é{' '}
+                    {dayLabel(closedNote.date)} —{' '}
+                    <span className="cf-num">
+                      {closedNote.time}
+                      {closedNote.end ? `–${closedNote.end}` : ''}
+                    </span>
+                    .
+                  </p>
+                )}
+
+                {/* Janelas do DIA escolhido — hoje começam na hora cheia
+                    seguinte. */}
                 <div className="res-slots">
                   {slots.map((w) => {
                     const on = pickup.time === w.from && pickup.end === w.to
@@ -668,30 +759,39 @@ export default function ProductSheet({
                         type="button"
                         className={`res-slot${on ? ' res-slot--on' : ''}`}
                         aria-pressed={on}
-                        disabled={w.past}
                         onClick={() => chooseWindow(w)}
                       >
-                        <span className="res-tag">{w.past ? 'Já passou' : 'Sugestão'}</span>
+                        <span className="res-tag">Sugestão</span>
                         <b className="cf-num">
                           {w.from}–{w.to}
                         </b>
-                        {w.past ? 'Escolha outra hora' : 'A farmácia confirma ao responder'}
+                        A farmácia confirma ao responder
                       </button>
                     )
                   })}
-                  {slots.length === 0 && (
+                  {/* Dia de fecho: a nota abaixo já explica; a grelha não
+                      precisa de repetir a mesma frase. */}
+                  {slots.length === 0 && !closedDay && (
                     <p className="sh-empty-sub" style={{ gridColumn: '1 / -1' }}>
-                      A preparar as janelas do dia…
+                      {pickup.date
+                        ? 'As janelas de hoje já fecharam — escolha amanhã ou escreva a hora no campo acima.'
+                        : 'A preparar as janelas do dia…'}
                     </p>
                   )}
                 </div>
 
-                <p className={`res-when-note${pickup.past ? ' res-when-note--bad' : ''}`}>
-                  {pickup.past
-                    ? 'Essa hora já passou — escolha outra.'
-                    : pickup.label
-                      ? `Marcado: ${pickup.label}`
-                      : 'Escolha o dia e a hora a que passa pela farmácia.'}
+                <p
+                  className={`res-when-note${
+                    pickup.past || closedDay ? ' res-when-note--bad' : ''
+                  }`}
+                >
+                  {closedDay
+                    ? 'A farmácia não abre nesse dia — escolha outro dia.'
+                    : pickup.past
+                      ? 'Essa hora já passou — escolha outra.'
+                      : pickup.label
+                        ? `Marcado: ${pickup.label}`
+                        : 'Escolha o dia e a hora a que passa pela farmácia.'}
                 </p>
 
                 <div className="res-summary">
@@ -703,7 +803,7 @@ export default function ProductSheet({
                     type="button"
                     className="cf-btn cf-btn--primary"
                     onClick={() => setMode('contacto')}
-                    disabled={!pickup.label || pickup.past}
+                    disabled={!pickup.label || pickup.past || closedDay}
                   >
                     Continuar
                   </button>

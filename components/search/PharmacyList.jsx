@@ -7,18 +7,7 @@ import { openStatus } from '@/lib/opening-hours'
 import { logError, logWarn } from '@/lib/log'
 import { useUserLocation } from '@/lib/use-user-location'
 import { distanceKm, formatDistance, pharmacyPosition, sortByDistance } from '@/lib/geo'
-
-const MUNICIPIOS = [
-  'Belas',
-  'Cacuaco',
-  'Cazenga',
-  'Ícolo e Bengo',
-  'Luanda',
-  'Quilamba Quiaxi',
-  'Quissama',
-  'Talatona',
-  'Viana',
-]
+import { PROVINCIAS, municipiosDaProvincia } from '@/lib/constants'
 
 const ICON_SEARCH = (
   <svg
@@ -45,6 +34,15 @@ const ICON_SEARCH = (
 function StoreCard({ pharmacy, count, distance, approximate = false }) {
   const status = openStatus(pharmacy.opening_hours)
   const open = status?.open
+  // Dia de descanso: «Fechada hoje» é mais útil do que um «Fechada» que
+  // sugere apenas que já passou das horas.
+  const statusLabel = !status
+    ? 'Horário'
+    : open
+      ? 'Aberta'
+      : status.closedToday
+        ? 'Fechada hoje'
+        : 'Fechada'
   const distLabel = distance != null ? formatDistance(distance) : null
   return (
     <Link
@@ -88,7 +86,7 @@ function StoreCard({ pharmacy, count, distance, approximate = false }) {
           </div>
           <span className="pcard-fresh">
             <i className={`cf-dot${status && !open ? ' cf-dot--off' : ''}`} />
-            {status ? (open ? 'Aberta' : 'Fechada') : 'Horário'}
+            {statusLabel}
           </span>
         </div>
 
@@ -119,6 +117,7 @@ function StoreCard({ pharmacy, count, distance, approximate = false }) {
 export default function PharmacyList() {
   const [pharmacies, setPharmacies] = useState(null)
   const [counts, setCounts] = useState({})
+  const [provincia, setProvincia] = useState('')
   const [municipio, setMunicipio] = useState('')
   const [onlyOpen, setOnlyOpen] = useState(false)
   const [query, setQuery] = useState('')
@@ -175,9 +174,13 @@ export default function PharmacyList() {
   const visible = useMemo(() => {
     if (!pharmacies) return []
     const q = query.trim().toLowerCase()
+    // Província é o primeiro filtro; o município, quando escolhido, é mais
+    // estreito. Sem nenhum dos dois, entra a rede toda.
+    const daProvincia = provincia ? municipiosDaProvincia(provincia) : null
     const list = pharmacies.filter(
       (p) =>
         (!municipio || p.municipio === municipio) &&
+        (!daProvincia || daProvincia.includes(p.municipio)) &&
         (!onlyOpen || openStatus(p.opening_hours)?.open === true) &&
         (!q ||
           p.name.toLowerCase().includes(q) ||
@@ -191,7 +194,7 @@ export default function PharmacyList() {
     // «Perto de mim» ganha à ordem por stock: quem pediu distância quer a
     // mais próxima primeiro, mesmo que tenha menos produtos.
     return nearMe && location ? sortByDistance(byStock, location, pharmacyPosition) : byStock
-  }, [pharmacies, counts, municipio, onlyOpen, query, nearMe, location])
+  }, [pharmacies, counts, provincia, municipio, onlyOpen, query, nearMe, location])
 
   const toggleNear = async () => {
     if (nearMe) {
@@ -210,27 +213,109 @@ export default function PharmacyList() {
 
   return (
     <>
-      <section className="shop-hero">
+      <section className="shop-hero shop-hero--tools">
         <div className="cf-wrap shop-hero-grid shop-hero-grid--solo">
           <div>
             <p className="cf-kicker">A rede</p>
             <h1>
-              Farmácias que dizem <em>o que têm.</em>
+              Farmácias que
+              <br />
+              dizem <em>o que têm.</em>
             </h1>
+            <p className="shop-hero-sub">
+              As farmácias parceiras que confirmam o stock no portal — e o que está disponível
+              agora.
+            </p>
+
+            {/* Pesquisa e municípios no cabeçalho, como em /pesquisa: a
+                caixa e os chips vivem no hero, não na barra da lista. */}
+            <div className="shop-search shop-search--live">
+              <div className="cf-field-wrap">
+                <span className="cf-ico" aria-hidden="true">
+                  {ICON_SEARCH}
+                </span>
+                <label className="cf-sr" htmlFor="q-store">
+                  Procurar farmácia
+                </label>
+                <input
+                  id="q-store"
+                  className="cf-field"
+                  type="search"
+                  placeholder="Nome, município ou morada"
+                  value={query}
+                  onChange={(e) => setQuery(e.target.value)}
+                  autoComplete="off"
+                />
+              </div>
+            </div>
+            <div className="sh-toolbar" role="group" aria-label="Filtrar por província">
+              <span className="sh-toolbar-label">Província</span>
+              <button
+                type="button"
+                className={`cf-chip${provincia === '' ? ' cf-chip--on' : ''}`}
+                onClick={() => {
+                  setProvincia('')
+                  setMunicipio('')
+                }}
+              >
+                Todas
+              </button>
+              {PROVINCIAS.map((p) => (
+                <button
+                  key={p.nome}
+                  type="button"
+                  className={`cf-chip${provincia === p.nome ? ' cf-chip--on' : ''}`}
+                  onClick={() => {
+                    setProvincia(provincia === p.nome ? '' : p.nome)
+                    setMunicipio('')
+                  }}
+                >
+                  {p.nome}
+                </button>
+              ))}
+            </div>
+
+            {/* Os municípios só aparecem depois de escolher a província. */}
+            {provincia ? (
+              <div
+                className="sh-toolbar sh-toolbar--sub"
+                role="group"
+                aria-label="Filtrar por município"
+              >
+                <span className="sh-toolbar-label">Município</span>
+                <button
+                  type="button"
+                  className={`cf-chip${municipio === '' ? ' cf-chip--on' : ''}`}
+                  onClick={() => setMunicipio('')}
+                >
+                  Todos
+                </button>
+                {municipiosDaProvincia(provincia).map((m) => (
+                  <button
+                    key={m}
+                    type="button"
+                    className={`cf-chip${municipio === m ? ' cf-chip--on' : ''}`}
+                    onClick={() => setMunicipio(municipio === m ? '' : m)}
+                  >
+                    {m}
+                  </button>
+                ))}
+              </div>
+            ) : null}
           </div>
         </div>
       </section>
 
       <section className="sh-section">
         <div className="cf-wrap">
-          <div className="sh-bar" style={{ marginTop: 0 }}>
+          <div className="sh-bar">
             <div className="sh-bar-l">
               <h2>Prateleiras da rede</h2>
               <span className="sh-bar-sub">
                 {pharmacies === null
                   ? 'a carregar…'
                   : `${visible.length} farmácia${visible.length === 1 ? '' : 's'}${
-                      municipio ? ` em ${municipio}` : ' em Luanda'
+                      municipio ? ` em ${municipio}` : provincia ? ` em ${provincia}` : ' na rede'
                     } · ${withStock} com stock confirmado agora`}
               </span>
             </div>
@@ -285,45 +370,6 @@ export default function PharmacyList() {
             </p>
           )}
 
-          <div className="shelf-head" style={{ borderBottom: 0, marginTop: 18 }}>
-            <div className="cf-field-wrap">
-              <span className="cf-ico" aria-hidden="true">
-                {ICON_SEARCH}
-              </span>
-              <label className="cf-sr" htmlFor="q-store">
-                Procurar farmácia
-              </label>
-              <input
-                id="q-store"
-                className="cf-field"
-                type="search"
-                placeholder="Nome, município ou morada"
-                value={query}
-                onChange={(e) => setQuery(e.target.value)}
-                autoComplete="off"
-              />
-            </div>
-            <div className="sh-filters">
-              <button
-                type="button"
-                className={`cf-chip${municipio === '' ? ' cf-chip--on' : ''}`}
-                onClick={() => setMunicipio('')}
-              >
-                Todos os municípios
-              </button>
-              {MUNICIPIOS.map((m) => (
-                <button
-                  key={m}
-                  type="button"
-                  className={`cf-chip${municipio === m ? ' cf-chip--on' : ''}`}
-                  onClick={() => setMunicipio(municipio === m ? '' : m)}
-                >
-                  {m}
-                </button>
-              ))}
-            </div>
-          </div>
-
           {error && (
             <div className="sh-empty" role="alert">
               <p className="sh-empty-title">Algo falhou</p>
@@ -344,8 +390,10 @@ export default function PharmacyList() {
             <div className="sh-empty">
               <p className="sh-empty-title">
                 {onlyOpen
-                  ? `Nenhuma farmácia aberta agora${municipio ? ` em ${municipio}` : ''}`
-                  : `Ainda não há farmácias em ${municipio || 'Luanda'}`}
+                  ? `Nenhuma farmácia aberta agora${
+                      municipio ? ` em ${municipio}` : provincia ? ` em ${provincia}` : ''
+                    }`
+                  : `Ainda não há farmácias em ${municipio || provincia || 'Luanda'}`}
               </p>
               <p className="sh-empty-sub">
                 {onlyOpen
@@ -380,7 +428,7 @@ export default function PharmacyList() {
                 de imediato — gratuitamente. O Localizador é um serviço da Conheça Farmácia.
               </p>
             </div>
-            <Link className="cf-btn cf-btn--primary" href="/#farmacias">
+            <Link className="cf-btn cf-btn--primary" href="/farmacias/participar">
               Quero participar
             </Link>
           </div>

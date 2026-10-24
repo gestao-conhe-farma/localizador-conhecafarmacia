@@ -26,7 +26,7 @@ export const MENSAGENS_LEAD = {
   FARMACIA_JA_CRIADA:
     'A farmácia deste lead já foi criada (o convite não chegou a sair). Repita a conversão para terminar — não vai criar uma segunda farmácia.',
   NOME_INVALIDO: 'O nome tem de ter pelo menos duas letras — é o que o cliente vê no Localizador.',
-  MUNICIPIO_INVALIDO: 'Escolha um município da lista (o directório só cobre estes nove).',
+  MUNICIPIO_INVALIDO: 'Escolha um dos municípios da lista (Luanda ou Ícolo e Bengo).',
   TELEFONE_INVALIDO: 'O telefone é obrigatório — é por onde a equipa fala com a farmácia.',
   EMAIL_INVALIDO: 'O e-mail de contacto da farmácia não parece válido.',
   EMAIL_DONO_INVALIDO: 'O e-mail do dono é obrigatório — é para lá que vai o convite.',

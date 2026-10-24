@@ -1835,15 +1835,34 @@ html.dark .form-note {
      usa .footer e não é afectado.
      ============================================ */
   /* Respiro entre o conteúdo e o rodapé nas páginas do Localizador.
-     Sem isto o rodapé encostava ao último cartão/secção. */
+     O espaço pertence à última faixa do conteúdo — um bloco transparente
+     no fim dela — para herdar a cor da faixa: cinza em /pesquisa,
+     /farmacia e /sobre, branco nas páginas que acabam em cartão. Com
+     `margin-top` no rodapé o intervalo caía fora da faixa cinza e
+     mostrava sempre o branco do body. */
   .app-footer {
     @apply border-t border-brand-line bg-brand-bg;
-    margin-top: 96px;
+    margin-top: 0;
+  }
+
+  /* Na página da farmácia o último bloco é um <div>. Quando a barra fixa
+     da prateleira entra (também um <div>, no fim de <main>), o conteúdo
+     deixa de ser o último do seu tipo e o respiro caía na barra — que é
+     fixa, logo invisível. Por isso o bloco a seguir à faixa é alvo
+     explícito, independentemente do que vier depois. */
+  .cf-shop > .sh-section:last-of-type::after,
+  .cf-shop > .cf-wrap:last-of-type::after,
+  .cf-shop > .store-band + .cf-wrap::after {
+    content: '';
+    display: block;
+    height: 96px;
   }
 
   @media (max-width: 640px) {
-    .app-footer {
-      margin-top: 56px;
+    .cf-shop > .sh-section:last-of-type::after,
+    .cf-shop > .cf-wrap:last-of-type::after,
+    .cf-shop > .store-band + .cf-wrap::after {
+      height: 56px;
     }
   }
 

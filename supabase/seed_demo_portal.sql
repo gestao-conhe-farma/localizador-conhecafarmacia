@@ -17,7 +17,7 @@ insert into public.pharmacies (slug, name, municipio, address, phone, whatsapp, 
 values (
   'farmacia-demo-central',
   'Farmácia Demonstração Central',
-  'Luanda',
+  'Ingombota',
   'Rua Rainha Ginga 45, Ingombota',
   '+244925696002',
   '244925696002',

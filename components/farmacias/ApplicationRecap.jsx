@@ -32,7 +32,7 @@ function ler() {
   }
 }
 
-export default function ApplicationRecap() {
+export default function ApplicationRecap({ enviado = true }) {
   const guardado = useSyncExternalStore(subscrever, ler, () => null)
 
   let resumo = null
@@ -52,6 +52,8 @@ export default function ApplicationRecap() {
 
   if (linhas.length === 0) return null
 
+  const email = String(resumo.email || '').trim()
+
   return (
     <section className="apply-recap" aria-label="Resumo do pedido enviado">
       <h3>O que recebemos</h3>
@@ -64,8 +66,15 @@ export default function ApplicationRecap() {
         ))}
       </dl>
       <p>
-        É o mesmo resumo que segue no e-mail de confirmação. Se algum dado estiver errado, responda a
-        esse e-mail ou fale connosco antes de as 72 horas terminarem.
+        {email && (
+          <>
+            {enviado ? 'A confirmação seguiu para ' : 'A confirmação deveria seguir para '}
+            <b>{email}</b>
+            {enviado ? '. ' : ', mas não chegou a sair. '}
+          </>
+        )}
+        É o mesmo resumo que segue nesse e-mail. Se algum dado estiver errado, responda-lhe ou fale
+        connosco antes de as 72 horas terminarem.
       </p>
     </section>
   )

@@ -20,11 +20,11 @@ delete from public.pharmacies where slug = 'farmacia-demostracao';
 -- ------------------------------------------------------------
 insert into public.pharmacies (slug, name, municipio, address, phone, whatsapp, opening_hours, verified, active) values
   ('farmacia-nossa-senhora-da-muxima',
-   'Farmácia Nossa Senhora da Muxima', 'Luanda',
+   'Farmácia Nossa Senhora da Muxima', 'Ingombota',
    'Rua Amílcar Cabral, nº 45, Ingombota',
    '+244 923 111 405', '+244 923 111 405', 'Seg–Sáb · 07:30–19:00', true, true),
   ('farmacia-hospital-central',
-   'Farmácia do Hospital Central', 'Luanda',
+   'Farmácia do Hospital Central', 'Ingombota',
    'Av. 4 de Fevereiro, Ingombota',
    '+244 926 205 318', '+244 926 205 318', 'Todos os dias · 24 horas', true, true),
   ('farmacia-vida-nova-viana',

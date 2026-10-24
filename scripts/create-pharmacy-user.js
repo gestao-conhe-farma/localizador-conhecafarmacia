@@ -70,10 +70,14 @@ const PASSWORD = args.password
 const DISPLAY_NAME = args.name || 'Utilizador Farmácia'
 const SLUG = args['pharmacy-slug'].trim().toLowerCase()
 const MUNICIPIOS_VALIDOS = [
-  'Belas', 'Cacuaco', 'Cazenga', 'Ícolo e Bengo', 'Luanda',
-  'Quilamba Quiaxi', 'Quissama', 'Talatona', 'Viana',
+  // Luanda — 16 municípios
+  'Belas', 'Cacuaco', 'Camama', 'Cazenga', 'Hoji ya Henda', 'Ingombota',
+  'Kilamba', 'Kilamba Kiaxi', 'Maianga', 'Mulenvos', 'Mussulo', 'Rangel',
+  'Samba', 'Sambizanga', 'Talatona', 'Viana',
+  // Ícolo e Bengo — 7 municípios
+  'Bom Jesus', 'Cabiri', 'Cabo Ledo', 'Calumbo', 'Catete', 'Quiçama', 'Sequele',
 ]
-const MUNICIPIO = args['pharmacy-municipio'] || 'Luanda'
+const MUNICIPIO = args['pharmacy-municipio'] || 'Ingombota'
 if (!MUNICIPIOS_VALIDOS.includes(MUNICIPIO)) {
   console.error(`ERRO: município "${MUNICIPIO}" inválido. Válidos: ${MUNICIPIOS_VALIDOS.join(', ')}`)
   process.exit(1)

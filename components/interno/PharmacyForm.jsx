@@ -3,12 +3,12 @@
 import { useActionState, useEffect } from 'react'
 import { useRouter } from 'next/navigation'
 import { updatePharmacy } from '@/lib/actions/platform-pharmacies'
-import { MUNICIPIOS } from '@/lib/constants'
+import { PROVINCIAS } from '@/lib/constants'
 import Notice from '@/components/ui/Notice'
 
 const ERROS = {
   NOME_INVALIDO: 'O nome tem de ter pelo menos duas letras — é o que o cliente vê no Localizador.',
-  MUNICIPIO_INVALIDO: 'Escolha um município da lista (o directório só cobre estes nove).',
+  MUNICIPIO_INVALIDO: 'Escolha um dos municípios da lista (Luanda ou Ícolo e Bengo).',
   EMAIL_INVALIDO: 'O e-mail não parece válido.',
   URL_INVALIDO: 'O link do mapa tem de começar por http:// ou https://.',
   ID_INVALIDO: 'Pedido inválido.',
@@ -93,10 +93,14 @@ export default function PharmacyForm({ id, valores, onClose }) {
                   name="municipio"
                   defaultValue={valores.municipio}
                 >
-                  {MUNICIPIOS.map((m) => (
-                    <option key={m} value={m}>
-                      {m}
-                    </option>
+                  {PROVINCIAS.map((p) => (
+                    <optgroup key={p.nome} label={p.nome}>
+                      {p.municipios.map((m) => (
+                        <option key={m} value={m}>
+                          {m}
+                        </option>
+                      ))}
+                    </optgroup>
                   ))}
                 </select>
                 {erroDe('municipio') && (

@@ -13,7 +13,7 @@ import { useProductSheet } from '@/components/search/useProductSheet'
 import { useStuckBar } from '@/components/search/useStuckBar'
 import MiniMap from '@/components/search/MiniMap'
 import { useUserLocation } from '@/lib/use-user-location'
-import { distanceKm, formatDistance, pharmacyPosition } from '@/lib/geo'
+import { distanceKm, formatDistance, geolocationErrorMessage, pharmacyPosition } from '@/lib/geo'
 import { directionsHref, freshness, kindLabel, whatsappHref } from '@/lib/product-utils'
 
 const ICON_SEARCH = (
@@ -79,7 +79,12 @@ export default function PharmacyStock({ slug, initialItems = null }) {
   // Ficha aberta no URL (?produto=) — link partilhável e «voltar» a fechar.
   const { openId, open: openProduct, swap: swapProduct, close: closeProduct } = useProductSheet()
   // Posição do visitante: só é pedida quando ele carrega no botão.
-  const { location, status: locStatus, request: requestLocation } = useUserLocation()
+  const {
+    location,
+    status: locStatus,
+    permission: geoPermission,
+    request: requestLocation,
+  } = useUserLocation()
   // A caixa «Procurar aqui» fica presa ao topo quando se rola a prateleira:
   // o cliente filtra sem voltar atrás. O ref é da caixa original.
   const shelfSearchRef = useRef(null)
@@ -342,9 +347,14 @@ export default function PharmacyStock({ slug, initialItems = null }) {
           </div>
           {locStatus === 'PERMISSAO' && (
             <p className="location-note">
-              Sem permissão de localização — autorize nas definições do browser para ver a
-              distância. A sua posição nunca é enviada para o servidor.
+              {geolocationErrorMessage(locStatus, geoPermission)} A sua posição nunca é enviada para
+              o servidor.
             </p>
+          )}
+          {(locStatus === 'INDISPONIVEL' ||
+            locStatus === 'TEMPO' ||
+            locStatus === 'SEM_SUPORTE') && (
+            <p className="location-note">{geolocationErrorMessage(locStatus)}</p>
           )}
 
           <div className="store-badges">

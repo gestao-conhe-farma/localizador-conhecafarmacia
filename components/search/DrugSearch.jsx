@@ -16,7 +16,7 @@ import { useVariantSheet } from '@/components/search/useVariantSheet'
 import { useStuckBar } from '@/components/search/useStuckBar'
 import { defaultOption } from '@/lib/product-utils'
 import { fmtKzPublic as fmtKz } from '@/lib/reservation-format'
-import { clearStoredLocation, requestBrowserLocation } from '@/lib/geo'
+import { clearStoredLocation, geolocationErrorMessage, requestBrowserLocation } from '@/lib/geo'
 import { groupVariants, nearestDistance, sortVariants } from '@/lib/variants'
 import {
   KIND_IDS,
@@ -182,7 +182,10 @@ export default function DrugSearch() {
   // Nada é pedido à base de dados até haver uma acção (pesquisar, filtrar
   // ou escolher uma sugestão): em 3G a entrada na página é instantânea.
   const [started, setStarted] = useState(
-    Boolean(initialQuery) || Boolean(tipoInicial) || Boolean(categoriaInicial) || Boolean(subInicial),
+    Boolean(initialQuery) ||
+      Boolean(tipoInicial) ||
+      Boolean(categoriaInicial) ||
+      Boolean(subInicial),
   )
   // Origem do medicamento: filtro local ('' = todas). Cada farmácia declara
   // a origem no portal, por isso o mesmo produto pode aparecer em grupos
@@ -457,9 +460,7 @@ export default function DrugSearch() {
   // Variante aberta no URL (medicamento + marca). Vive nos resultados já
   // filtrados: os filtros globais continuam a mandar na lista.
   const openVariant = varianteId
-    ? variants?.find(
-        (v) => v.drug_id === varianteId && v.brandKey === (marcaAberta || ''),
-      ) || null
+    ? variants?.find((v) => v.drug_id === varianteId && v.brandKey === (marcaAberta || '')) || null
     : null
   const title = query.trim()
     ? query.trim().charAt(0).toUpperCase() + query.trim().slice(1)
@@ -518,14 +519,7 @@ export default function DrugSearch() {
       setLocation(coords)
       return coords
     } catch (err) {
-      const code = err?.code
-      setLocationError(
-        code === 'PERMISSAO'
-          ? 'Permita o acesso à localização no browser para ver as farmácias mais perto.'
-          : code === 'TEMPO'
-            ? 'O browser demorou a responder. Tente outra vez.'
-            : 'Não foi possível obter a localização neste dispositivo.',
-      )
+      setLocationError(geolocationErrorMessage(err?.code, err?.permission))
       return null
     } finally {
       setLocating(false)
@@ -952,7 +946,11 @@ export default function DrugSearch() {
                     onClick={toggleLocation}
                     disabled={locating}
                   >
-                    {locating ? 'A obter posição…' : location ? 'Esquecer localização' : 'Perto de mim'}
+                    {locating
+                      ? 'A obter posição…'
+                      : location
+                        ? 'Esquecer localização'
+                        : 'Perto de mim'}
                   </button>
                   <button type="button" className="cf-chip" onClick={clearFilters}>
                     Limpar filtros

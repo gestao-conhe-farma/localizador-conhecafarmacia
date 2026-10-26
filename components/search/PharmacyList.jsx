@@ -6,7 +6,13 @@ import { createClient } from '@/lib/supabase/client'
 import { openStatus } from '@/lib/opening-hours'
 import { logError, logWarn } from '@/lib/log'
 import { useUserLocation } from '@/lib/use-user-location'
-import { distanceKm, formatDistance, pharmacyPosition, sortByDistance } from '@/lib/geo'
+import {
+  distanceKm,
+  formatDistance,
+  geolocationErrorMessage,
+  pharmacyPosition,
+  sortByDistance,
+} from '@/lib/geo'
 import { PROVINCIAS, municipiosDaProvincia } from '@/lib/constants'
 
 const ICON_SEARCH = (
@@ -123,7 +129,12 @@ export default function PharmacyList() {
   const [query, setQuery] = useState('')
   const [error, setError] = useState(false)
   // Posição do visitante (só depois de ele pedir) e o filtro «perto de mim».
-  const { location, status: locStatus, request: requestLocation } = useUserLocation()
+  const {
+    location,
+    status: locStatus,
+    permission: geoPermission,
+    request: requestLocation,
+  } = useUserLocation()
   const [nearMe, setNearMe] = useState(false)
 
   useEffect(() => {
@@ -350,16 +361,15 @@ export default function PharmacyList() {
 
           {locStatus === 'PERMISSAO' && (
             <p className="location-note">
-              Sem permissão de localização — a lista continua ordenada por stock. Pode autorizar nas
-              definições do browser e tentar de novo.
+              {geolocationErrorMessage(locStatus, geoPermission)} A lista continua ordenada por
+              stock.
             </p>
           )}
           {(locStatus === 'INDISPONIVEL' ||
             locStatus === 'TEMPO' ||
             locStatus === 'SEM_SUPORTE') && (
             <p className="location-note">
-              Não foi possível obter a localização neste dispositivo. A rede continua disponível por
-              ordem de stock.
+              {geolocationErrorMessage(locStatus)} A rede continua disponível por ordem de stock.
             </p>
           )}
           {nearMe && location && (

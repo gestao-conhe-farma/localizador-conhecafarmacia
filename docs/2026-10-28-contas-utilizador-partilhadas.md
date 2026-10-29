@@ -334,7 +334,7 @@ proxy.js                                                                     # i
 
 ## Phase 1 — Pré-voo e rede de segurança
 
-- [ ] **Task 1.1:** Confirmar que os dois projectos estão na mesma conta de utilizador Supabase (ou convidar a conta de gestão para a organização `bryemnhg…`), para que o corte não dependa de dois logins. — **Verificado a 29/10: não está feito, e não se resolve por API.** Os projectos vivem em organizações diferentes — `bryemnhgcbnjgmbmvjfi` (`CFarma Project`, `tbqs…`) e `amccyijwimhmvhqwpsou` (`conhe-farma-localizador`, `mxqh…`) — e cada um só aparece na listagem do seu token. Os dois tokens são **project-scoped**: `/v1/organizations`, `/v1/profile` e os membros da organização respondem 403 («This endpoint requires a user-scoped access token»), portanto não há convite nem transferência por este caminho. Falta um gesto no painel: convidar a conta dona de `amccyijw…` para `bryemnhg…`, ou transferir o projecto antigo para a organização principal. Enquanto isso, o segundo login só é preciso para a Task 7.5 — nada do que está em produção depende dele.
+- [x] **Task 1.1:** *(fechada por deixar de existir o segundo projecto — ver o fim da task)* Confirmar que os dois projectos estão na mesma conta de utilizador Supabase (ou convidar a conta de gestão para a organização `bryemnhg…`), para que o corte não dependa de dois logins. — **Verificado a 29/10: não está feito, e não se resolve por API.** Os projectos vivem em organizações diferentes — `bryemnhgcbnjgmbmvjfi` (`CFarma Project`, `tbqs…`) e `amccyijwimhmvhqwpsou` (`conhe-farma-localizador`, `mxqh…`) — e cada um só aparece na listagem do seu token. Os dois tokens são **project-scoped**: `/v1/organizations`, `/v1/profile` e os membros da organização respondem 403 («This endpoint requires a user-scoped access token»), portanto não há convite nem transferência por este caminho. Falta um gesto no painel: convidar a conta dona de `amccyijw…` para `bryemnhg…`, ou transferir o projecto antigo para a organização principal. Enquanto isso, o segundo login só era preciso para a Task 7.5. **Resolvida a 29/10 sem convite nenhum**: o projecto antigo foi pausado nesse dia (ver 7.5), e pausar+apagar elimina o segundo login em vez de o gerir. Com um projecto só, a organização única deixa de ser um requisito — abrir uma transferência agora seria mover um projecto morto entre organizações.
 - [ ] **Task 1.2:** Exportar as duas bases antes de tocar em nada:
       `pg_dump "$URL_LOCALIZADOR" -Fc -f backup-localizador-2026-10-28.dump`
       `pg_dump "$URL_PRINCIPAL" -Fc -f backup-principal-2026-10-28.dump`
@@ -447,7 +447,7 @@ proxy.js                                                                     # i
 - [ ] **Task 7.2:** Congelar escritas no Localizador antigo (modo manutenção no Vercel, ou `alter database … allow_connections`), correr a cópia delta final (`pg_dump --data-only` das tabelas que mudaram) e comparar contagens.
 - [x] **Task 7.3:** Trocar as variáveis nos dois projectos Vercel e fazer redeploy. (Localizador feito a 29/10; o site principal já estava no `tbqs…`.) Ordem: Localizador primeiro, site principal depois (o site principal não pode ficar à espera do schema novo).
 - [ ] **Task 7.4:** Smoke test em produção, por esta ordem: pesquisa → produto → farmácia → reserva pública → login do portal → stock → realtime → `/interno` (MFA) → registo de utente → confirmação por e-mail → `conta.*/perfil` → guardados → reserva com sessão → sessão partilhada nos três hosts.
-- [ ] **Task 7.5:** Deixar o projecto antigo **pausado, não apagado**, durante 30 dias. Só depois `delete project`.
+- [x] **Task 7.5:** Deixar o projecto antigo **pausado, não apagado**, durante 30 dias. Só depois `delete project`. — **Feito a 29/10, 17:2x.** Antes de pausar: dump final completo (`pg_dump -Fc` de tudo, 1,1 MB, `mxqh-final-2026-10-29.dump`, sha256 a começar em `e0b7fd50`) guardado em `_temp/backups/` — pasta ignorada pelo git, **tem de sair da máquina** para servir de arquivo. Verificado que o arquivo abre, tem as 27 tabelas de `public` (as do Localizador, que naquela base viviam em `public`), as 27 de `auth`, as 8 de `storage` e 72 entradas de dados; e que nada no código (`scripts/`, `lib/`, `app/`, `.github/`) aponta para o projecto antigo. Pausa pedida pela API: `PAUSING` → **`INACTIVE`**; a base já recusa ligações («tenant/user not found») e o `rest/v1/` não responde. Os três hosts de produção ficaram a 200/308 durante e depois. **Apagar só depois de 29/11.**
 - [ ] **Task 7.6:** Rollback (se necessário): repor as variáveis antigas nos dois Vercel, redeploy, e reactivar o projecto antigo. As escritas feitas no destino durante a janela perdem-se — é a razão de o corte ser feito com o site em manutenção.
 
 **Verificação:** os sete passos do Task 7.4 a verde em produção, e `cron.job_run_details` a mostrar as duas execuções do dia sem erro.
@@ -631,3 +631,22 @@ Os cinco da antiga estão **todos** na nova, um a um, zero em falta — os 3 cop
 **Recomendação: pausar agora, apagar depois dos 30 dias.** A antiga serve como fotografia congelada para o rollback da Task 7.6 — não como sistema vivo. Deixá-la activa tem três custos concretos: continua a aceitar escritas (qualquer coisa que ainda lhe aponte diverge em silêncio), mantém expostas as chaves antigas que estão em `credenciais.txt`, e é mais um sítio com o mesmo RLS para manter em dia.
 
 Antes de pausar: correr um dump final para fora do repositório, confirmar que nenhuma variável de ambiente da Vercel aponta para lá, e só então pausar. O apagar é que é definitivo.
+
+---
+
+## 16. Quem envia cada e-mail, depois da fusão (verificado a 29/10/2026)
+
+A fusão juntou as bases, não os transportes: os dois provedores continuam onde estavam, e cada um serve um tipo de mensagem. Verificado no projecto principal, não na memória:
+
+| Mensagem | Quem entrega | Onde vive |
+| --- | --- | --- |
+| Auth: confirmação, reposição, convite, mudança de e-mail, códigos | **Brevo** (`smtp-relay.brevo.com`, remetente «Conheça Farmácia», `noreplay@conhecafarmacia.com`) | Configuração de auth do `tbqs…` |
+| Site: inscrição, validação, newsletter | **Brevo** por Edge Functions | `tbqs…` — `send-inscription-email`, `validate-inscription`, `send-newsletter-email`, todas `ACTIVE` |
+| Localizador: convites a farmácias, leads, avisos da equipa | **Resend** (HTTP a partir do código) | `lib/email.js` + `RESEND_API_KEY`/`RESEND_FROM` na Vercel |
+
+Duas consequências que valem a pena saber:
+
+- **Os e-mails de conta saem pelo Brevo, não pelo Resend.** A reposição de 29/10 foi disparada contra o `tbqs…` e saiu pelo SMTP do Brevo. O Resend só é usado pelo código do Localizador, para o que ele mesmo compõe.
+- **A base antiga não tinha nada disto.** `mxqh…` não tinha Edge Functions e usava o remetente interno da Supabase (2 mensagens/hora, só para endereços da equipa). Ou seja: o corte melhorou esta parte, não a pôs em risco.
+
+Os modelos de texto dos e-mails de auth vivem em `scripts/auth-emails.mjs` (§6.11).

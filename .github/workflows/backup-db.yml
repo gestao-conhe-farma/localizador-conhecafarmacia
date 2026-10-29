@@ -9,9 +9,12 @@
 #
 # Correr à mão: Actions → «backup-db» → Run workflow.
 #
-# O dump é `pg_dump -Fc`: formato personalizado e comprimido, com o esquema
-# `public` e o `localizador`. O cliente é o 17 do PGDG porque o servidor é
-# PostgreSQL 17 — o cliente 16 do Ubuntu recusa com «server version mismatch».
+# O dump é `pg_dump -Fc`: formato personalizado e comprimido, e só com os
+# esquemas `public` e `localizador` (os que a aplicação possui). Os esquemas
+# geridos pela Supabase — `auth`, `storage`, `realtime`, `extensions` — ficam
+# de fora de propósito: são da plataforma e não se restauram à mão. O cliente
+# é o 17 do PGDG porque o servidor é PostgreSQL 17 — o cliente 16 do Ubuntu
+# recusa com «server version mismatch».
 #
 # O artefacto guarda-se 90 dias, que é a retenção máxima no GitHub: o dump
 # mais antigo que existe tem, no máximo, 90 dias.
@@ -20,15 +23,32 @@
 # do artefacto (Tasks 1.5 e 1.6 do plano):
 #
 #   pg_restore -l backup-<data>.dump                          # o índice abre
-#   pg_restore -l backup-<data>.dump | grep -c 'TABLE localizador'   # 25
-#   pg_restore --clean --if-exists -d "$TARGET_DB_URL" backup-<data>.dump
+#   pg_restore -l backup-<data>.dump | grep -c 'TABLE localizador'   # 26
+#   pg_restore -l backup-<data>.dump | grep -c 'TABLE public'        # 64
+#   pg_restore --clean --if-exists --no-owner --no-privileges \
+#     -d "$TARGET_DB_URL" backup-<data>.dump
 #
 # Um backup que nunca foi restaurado não é um backup: o `--clean --if-exists`
-# faz o restauro correr sobre uma base já usada, que é o caso real.
+# faz o restauro correr sobre uma base já usada, que é o caso real. O
+# `--no-owner` evita que o restauro tente devolver as tabelas a `postgres`
+# quando corre numa base onde esse papel não existe.
 #
 # Segredo necessário: SUPABASE_DB_URL (Settings → Secrets and variables →
-# Actions), com a connection string directa do projecto, incluindo a palavra-
-# passe da base. Sem ele o job falha na primeira verificação, de propósito.
+# Actions), com a connection string do session pooler e o papel de backup.
+# Sem ele o job falha na primeira verificação, de propósito.
+#
+# Porque não é a connection string directa nem a password do `postgres`:
+#
+#   * `db.<ref>.supabase.co` só responde em IPv6 e os runners do GitHub não
+#     têm IPv6. O caminho que funciona é o pooler em modo sessão — porta 5432
+#     e não 6543, porque o `pg_dump` precisa de uma sessão inteira e o 6543 é
+#     transaction mode.
+#   * O papel é `backup_dumper` (LOGIN, `pg_read_all_data`, BYPASSRLS), criado
+#     para este efeito: só lê, não pode escrever, e o dia em que a password do
+#     `postgres` rodar o backup continua a correr. A password do `postgres`
+#     nunca sai da Supabase.
+#
+#   postgresql://backup_dumper.<ref>:<password>@aws-0-eu-west-1.pooler.supabase.com:5432/postgres
 # =============================================================================
 
 name: backup-db
@@ -82,19 +102,31 @@ jobs:
           stamp="$(date -u +%Y-%m-%d)"
           echo "DUMP_NAME=backup-${stamp}.dump" >> "$GITHUB_ENV"
           echo "ARTIFACT_NAME=localizador-db-${stamp}" >> "$GITHUB_ENV"
-          pg_dump "$SUPABASE_DB_URL" -Fc -f "backup-${stamp}.dump"
+          pg_dump "$SUPABASE_DB_URL" -Fc \
+            --schema=public --schema=localizador \
+            -f "backup-${stamp}.dump"
           ls -lh "backup-${stamp}.dump"
 
-      - name: Verificar que o dump abre e tem as 25 tabelas
+      - name: Verificar que o dump abre e tem as tabelas dos dois esquemas
         run: |
           set -euo pipefail
           pg_restore -l "$DUMP_NAME" > /dev/null
           # `awk` e não `grep -c`: o `grep -c` devolve 1 quando não há
           # correspondências e o `set -e` abortava antes da mensagem legível.
-          tabelas="$(pg_restore -l "$DUMP_NAME" | awk '/TABLE localizador/ { n++ } END { print n + 0 }')"
+          conta='TABLE localizador'
+          tabelas="$(pg_restore -l "$DUMP_NAME" | awk -v alvo="$conta" 'index($0, alvo) { n++ } END { print n + 0 }')"
           echo "Tabelas no schema localizador: ${tabelas}"
           if [ "${tabelas}" -lt 25 ]; then
-            echo "::error::O dump só tem ${tabelas} tabelas no schema localizador (esperadas 25). Não subir este artefacto como backup válido."
+            echo "::error::O dump só tem ${tabelas} tabelas no schema localizador (esperadas 26). Não subir este artefacto como backup válido."
+            exit 1
+          fi
+          # O `public` é a conta e o site: se ficar de fora, o backup é do
+          # catálogo e não da base. 64 tabelas à data do dump de referência.
+          conta='TABLE public'
+          tabelas="$(pg_restore -l "$DUMP_NAME" | awk -v alvo="$conta" 'index($0, alvo) { n++ } END { print n + 0 }')"
+          echo "Tabelas no schema public: ${tabelas}"
+          if [ "${tabelas}" -lt 50 ]; then
+            echo "::error::O dump só tem ${tabelas} tabelas no schema public (esperadas 64). Não subir este artefacto como backup válido."
             exit 1
           fi
 

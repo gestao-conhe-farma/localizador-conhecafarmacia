@@ -341,10 +341,16 @@ proxy.js                                                                     # i
       Guardar fora do repositório.
 - [ ] **Task 1.3:** Medir a deriva entre o repositório e a base viva do Localizador (25 tabelas + 2 views vs. as 44 migrações). O que existir em produção e não estiver nas migrações entra no baseline da Phase 2.
 - [ ] **Task 1.4:** Confirmar no painel do projecto principal: extensões `pg_cron` e `pg_trgm` activáveis; `localizador` pode ser acrescentado aos *Exposed schemas* (limite de schemas do PostgREST).
-- [x] **Task 1.5 (a rede que fica para sempre):** criar `.github/workflows/backup-db.yml` — **feito a 29/10** (`0 3 * * 0`, artefacto de 90 dias, falha sem o segredo). Continua a faltar o segredo `SUPABASE_DB_URL` no GitHub. — `schedule` semanal (domingo, 03:00) + `workflow_dispatch`, `pg_dump -Fc` para artefacto com retenção de 90 dias, usando o segredo `SUPABASE_DB_URL`. É o único backup que existe no plano gratuito (§9.1).
-- [ ] **Task 1.6:** Testar o restauro **antes** de confiar nele: correr o workflow uma vez e restaurar o dump num Postgres local (`pg_restore` num contentor) ou no projecto antigo depois do corte.
+- [x] **Task 1.5 (a rede que fica para sempre):** criar `.github/workflows/backup-db.yml` — **feito a 29/10** (`0 3 * * 0`, artefacto de 90 dias, falha sem o segredo). — `schedule` semanal (domingo, 03:00) + `workflow_dispatch`, `pg_dump -Fc` de `public` + `localizador` para artefacto com retenção de 90 dias. É o único backup que existe no plano gratuito (§9.1).
+      **A ligação** (29/10) é o *session pooler* em `aws-0-eu-west-1.pooler.supabase.com:5432` com o papel `backup_dumper` — não a connection string directa, que só responde em IPv6 e os runners não têm IPv6, e não a password do `postgres`. O papel foi criado para isto: `LOGIN` + `pg_read_all_data` + `BYPASSRLS`, sem `CREATEDB`, sem escrita; sobrevive à rotação da password do `postgres`. O URL está em `credenciais.txt` (fora do git).
+      **Continua a faltar só o segredo:** `SUPABASE_DB_URL` em Settings → Secrets and variables → Actions. Não se cria por CLI daqui (o `gh` não autentica nesta máquina); é um copiar-colar de uma linha.
+- [x] **Task 1.6:** Testar o restauro **antes** de confiar nele — **feito a 29/10**, num dump real do projecto principal (2,7 MB):
+      `pg_restore --no-owner --no-privileges -d <scratch> backup.dump` → **64 tabelas de `public` e 26 de `localizador`** criadas, dados carregados, 20 erros de três espécies, nenhum deles um defeito do dump:
+      1. `schema "public" already exists` — o destino já tem o esquema; inofensivo.
+      2. `schema "supabase_functions"`, `operator class public.gin_trgm_ops` — schemas geridos pela Supabase que não fazem parte do dump, de propósito.
+      3. **17 × `violates foreign key constraint … _user_id_fkey`** (`favorites`, `saved_items`, `admin_users`, `quiz_attempts`, `platform_audit_log`, …) — as linhas cujo dono é um utilizador referenciam `auth.users`, que **não está no backup**. Isto é a limitação real e fica registada: **o restauro tem de ser para dentro de um projecto Supabase e as linhas de `auth.users` têm de lá estar antes**; num Postgres nu, essas 17 tabelas ficam com o esquema criado e sem as linhas dos utilizadores. Para o cenário que o backup serve — desfazer uma migração má — chega; para o cenário «o projecto morreu» não chega, e é uma decisão em aberto se `auth.users` passa a entrar no dump (§9.2).
 
-**Verificação:** os dois `.dump` abrem com `pg_restore -l` e listam as tabelas esperadas; o workflow correu uma vez e o artefacto restaurou sem erros num Postgres limpo.
+**Verificação:** os dois `.dump` abrem com `pg_restore -l` e listam as tabelas esperadas (26 de `localizador` e 64 de `public`); o dump do projecto principal foi restaurado num esquema limpo com o resultado descrito na Task 1.6. O que **não** está provado: o workflow a correr no GitHub (falta o segredo) e o restauro contra `auth.users` povoado.
 
 ---
 
@@ -484,6 +490,7 @@ Depois da fusão há **um** par de chaves para os dois sites. Ordem para não ha
 | Link de confirmação aberto noutro dispositivo           | Limitação do PKCE; mensagem clara + reenvio                                                             |
 | Sessões antigas invalidadas no corte                    | Aviso interno; é um logout único                                                                        |
 | Deriva entre migrações e base viva                      | Task 1.3 antes de tudo; o baseline vem da base, não das migrações                                       |
+| `auth.users` fora do dump                               | O backup actual (`public` + `localizador`) restaura tudo menos as 17 tabelas com FK a `auth.users`: num projecto novo, essas linhas são recusadas (Task 1.6). Serve para desfazer uma migração má; **não** serve para «o projecto morreu». Decidir se `auth.users` passa a entrar no dump |
 | Duas equipas, uma base                                  | Regra §3.1: cada repo é dono do seu schema; nenhum `db push` cruzado                                    |
 
 ---
@@ -583,16 +590,22 @@ Feito no projecto Supabase principal (`tbqs…`) e no repositório do Localizado
 - `conta.*` redesenhado: fora o cabeçalho de produto, barra neutra com a marca e dois destinos, e o hub passou a listar os guardados com «ver no site» (só quando há monografia) e «ver farmácias». Commit `4c2b3a1`, no branch `security/i18n-audit-fixes` do `conheca-farmacia-NEXT` — **ainda não está no `main`**: o `main` local está 419 commits atrás do `origin/main` e o merge pede resolução manual em `proxy.js` e `styles/globals.css`.
 - `/medicamento/<id>` no Localizador (commit `22fab67`, em produção): destino do «ver farmácias» e primeira página do produto cujo URL não depende de um item de stock.
 
+**Fechado a 29/10, ao fim do dia**
+
+- **Task 6.10** — `site_url` em `https://conta.conhecafarmacia.com`; `uri_allow_list` com as 10 entradas, incluindo `https://localizador.conhecafarmacia.com/**` e os `localhost:3000/3001`. Commit `ec126af`.
+- **Task 6.7** — `X-Robots-Tag: noindex, nofollow` em `/entrar`, `/registar`, `/recuperar`, `/perfil`, `/perfil/:path*` e `/auth/:path*` (`vercel.json`, mesmo commit).
+- **Tasks 1.5 e 1.6** — backup semanal *e* restauro testado; detalhe e limites na Task 1.6. Papel `backup_dumper` criado no `tbqs…` (só leitura). **Falta só o segredo `SUPABASE_DB_URL` no GitHub** e definir quem recebe o alerta de falha (§11.3).
+- **Tasks 5.5, 5.7 e 5.8** — Localizador: `AccountEntry` no cabeçalho e na gaveta, `FavoritesProvider` + `FavoriteButton` na ficha, no cartão e na farmácia, reserva pré-preenchida e «ver as minhas reservas». O `VariantCard` ficou de fora de propósito: o cartão inteiro é um `<button>` e um botão dentro de outro não é HTML válido.
+- **Task 5.9** — secção 12 da privacidade e secção 9 dos termos, com índices renumerados.
+- **O merge para o `main` do `conheca-farmacia-NEXT`** — feito por `git push HEAD:main`, fast-forward `afeb780..ec126af`. Não houve conflito: o `origin/main` era ancestral do branch (0 commits de atraso), ao contrário do que o §14 dizia. O `main` local também ficou em `ec126af`.
+
 **Por fazer, por ordem sugerida**
 
-1. **Task 6.10 (parcial)** — o `uri_allow_list` já tem `https://conta.conhecafarmacia.com/**`, mas **não** tem `https://localizador.conhecafarmacia.com/**` nem os `localhost`; e o `site_url` continua `http://www.conhecafarmacia.com` (http, e não a casa da conta).
-2. **Task 6.7 (parcial)** — o `X-Robots-Tag` só cobre `/:lang/admin/(.*)`; as rotas de `(identidade)` têm `noindex` na metadata mas não no cabeçalho.
-3. **Tasks 1.5 e 1.6** — workflow semanal de `pg_dump` e restauro testado. O §9.1 trata isto como o único backup que existe no plano gratuito; falta o segredo `SUPABASE_DB_URL` no GitHub (e definir quem recebe o alerta de falha, §11.3).
-4. **Tasks 5.5, 5.7 e 5.8** — no Localizador: entrada de conta no cabeçalho e no menu móvel; botão «Guardar» em `ProductCard`, `ProductSheet`, `VariantCard` e na ficha da farmácia (o `toggleFavorito` já existe, falta a UI); pré-preenchimento da reserva a partir de `user_metadata` e bloco «as suas reservas» quando há sessão.
-5. **Task 5.9** — cláusulas de conta na privacidade e nos termos, com o caminho para `conta.*/perfil/seguranca`.
-6. **Task 6.6** — 308 das páginas de conta antigas do site. Continua consciente e por fazer (§12, desvio 2): `/[lang]/perfil` e `/[lang]/perfil/definicoes` mantêm-se enquanto o hub não tiver as estatísticas do estudante.
-7. **Tasks 6.11 e 6.12** — texto dos e-mails de confirmação/reposição sem prometer funcionalidades de um só site, e aviso interno de que a sessão antiga (*host-only*) deixa de valer.
-8. **Tasks 7.1, 7.2, 7.4 e 7.5** — o smoke test de produção de hoje cobriu as páginas públicas, o redirect de `/guardados`, os webhooks e o worker a 200; **não** cobriu entrar, guardar com sessão, reservar com sessão nem o realtime do portal. E o projecto antigo continua por pausar.
+1. **Task 6.6** — 308 das páginas de conta antigas do site. Continua consciente e por fazer (§12, desvio 2): `/[lang]/perfil` e `/[lang]/perfil/definicoes` mantêm-se enquanto o hub não tiver as estatísticas do estudante.
+2. **Tasks 6.11 e 6.12** — texto dos e-mails de confirmação/reposição sem prometer funcionalidades de um só site, e aviso interno de que a sessão antiga (*host-only*) deixa de valer.
+3. **Tasks 7.1, 7.2, 7.4 e 7.5** — o smoke test de produção de hoje cobriu as páginas públicas, o redirect de `/guardados`, os webhooks e o worker a 200; **não** cobriu entrar, guardar com sessão, reservar com sessão nem o realtime do portal. E o projecto antigo continua por pausar.
+4. **Decisão nova: `auth.users` entra no dump?** — o restauro mostrou que as linhas com dono ficam de fora sem `auth.users` (Task 1.6). Como o backup serve hoje para desfazer uma migração má, não faz falta; se passar a servir para «o projecto morreu», tem de entrar. Decidir antes de precisar dele.
+5. **Build do `conheca-farmacia-NEXT` por verificar nesta máquina** — o `next build` falha aqui só em `next/font/google` (sem rede para `fonts.googleapis.com`), que é anterior a estas alterações; o `eslint` dos ficheiros tocados está limpo. A Vercel tem rede e é quem julga.
 
 **Catálogo do site ↔ catálogo do Localizador (§10 revisto a 29/10)**
 

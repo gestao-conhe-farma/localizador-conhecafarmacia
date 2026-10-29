@@ -10,6 +10,9 @@ import { SpeedInsights } from '@vercel/speed-insights/next'
 import ThemeProvider from '@/components/providers/ThemeProvider'
 import FavoritesProvider from '@/components/conta/FavoritesProvider'
 import '@/styles/globals.css'
+// Chassi das páginas de conta — o mesmo ficheiro é importado pelo site
+// principal, para a conta ter uma só cara nos três hosts.
+import '@/styles/conta.css'
 // Linguagem de loja das páginas públicas do Localizador (Modelos B/D/E/F).
 // Scoped em `.cf-shop` para não tocar no portal nem no site principal.
 import '@/styles/loja.css'

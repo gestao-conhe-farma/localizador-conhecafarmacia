@@ -179,6 +179,35 @@ const NAV_PATHS = {
       <path d="M13.5 10.5a4 4 0 0 0-5.7 0l-2.1 2.1a4 4 0 0 0 5.7 5.7l1.1-1.1" />
     </>
   ),
+  // Guardados da conta — marcador.
+  guardados: (
+    <>
+      <path d="M6 4h12v17l-6-4-6 4V4z" />
+    </>
+  ),
+  // Segurança — escudo com visto.
+  seguranca: (
+    <>
+      <path d="M12 3l8 3v6c0 5-3.5 8-8 9-4.5-1-8-4-8-9V6l8-3z" />
+      <path d="m9 12 2 2 4-4" />
+    </>
+  ),
+  // Perfil de estudante — barrete de formatura.
+  estudante: (
+    <>
+      <path d="M2 9l10-4 10 4-10 4L2 9z" />
+      <path d="M6 11v5c0 1.5 3 3 6 3s6-1.5 6-3v-5" />
+    </>
+  ),
+  // Definições — três deslizadores.
+  definicoes: (
+    <>
+      <path d="M4 6h10M18 6h2M4 12h2M10 12h10M4 18h8M16 18h4" />
+      <circle cx="16" cy="6" r="2" />
+      <circle cx="8" cy="12" r="2" />
+      <circle cx="14" cy="18" r="2" />
+    </>
+  ),
   // Equipa (só gerente) — dois perfis lado a lado.
   equipa: (
     <>

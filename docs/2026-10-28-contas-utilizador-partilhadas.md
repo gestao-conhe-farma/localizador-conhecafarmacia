@@ -435,7 +435,7 @@ proxy.js                                                                     # i
 - [x] **Task 6.10:** Supabase → URL Configuration: `https://conta.conhecafarmacia.com/**`, `https://localizador.conhecafarmacia.com/**`, `https://www.conhecafarmacia.com/**`, `http://localhost:3000/**`, `http://localhost:3001/**`. Mudar `site_url` para `https://conta.conhecafarmacia.com` depois de confirmar que todos os fluxos passam `emailRedirectTo` explícito.
 - [x] **Task 6.11:** Templates de confirmação/recuperação: texto neutro («a sua conta Conheça Farmácia»), sem prometer funcionalidades de um só site. — **Feito a 29/10.** A confirmação prometia «anotações em qualquer página do site» e «acompanhar progresso no teu perfil pessoal» — funcionalidades de um produto para quem se registou pelo outro. Passou a três promessas que valem para a marca inteira: uma conta para o site **e** para o Localizador, guardar para consultar depois, e o estado das reservas. E os sete modelos que saíam em inglês (mudança de e-mail, convite, reautenticação e os quatro avisos de segurança) estão em português, com a mesma moldura dos restantes.
       O texto vive no serviço de auth, não na base — por isso passou a estar em `scripts/auth-emails.mjs`, que aplica os 13 modelos pela Management API (`SUPABASE_ACCESS_TOKEN` + `SUPABASE_PROJECT_REF`; sem token só imprime o que faria). A cópia fica revisível no `git diff` em vez de existir apenas no painel.
-- [ ] **Task 6.12:** Aviso interno: a sessão antiga (*host-only*) deixa de valer — todos voltam a entrar uma vez, e agora por `conta.*`.
+- [x] **Task 6.12:** Aviso interno: a sessão antiga (*host-only*) deixa de valer — todos voltam a entrar uma vez, e agora por `conta.*`. — **Feito a 29/10**: o texto está em `docs/2026-10-29-aviso-sessao-conta.md`, pronto a circular (WhatsApp / e-mail interno), com o que dizer a quem se queixar de ter sido desligado e o que **não** prometer. O envio em si é um gesto humano — não há canal de comunicação interna ligado a este sistema.
 
 **Verificação:** registar em `conta.*` e confirmar pelo e-mail; repor senha a partir do link; apagar conta; `www/entrar` e `localizador/entrar` levam a `conta.*` e o `next` devolve ao sítio certo (testar também um `next` externo e confirmar que é recusado); abrir `conta.*/perfil` vindo do Localizador já autenticado; sair no Localizador e confirmar que os três hosts ficaram sem sessão; nenhuma rota de conta indexável (`curl -I` mostra `X-Robots-Tag`).
 
@@ -604,7 +604,7 @@ Feito no projecto Supabase principal (`tbqs…`) e no repositório do Localizado
 
 1. **Task 1.1** — os dois projectos continuam em organizações diferentes, e os access tokens são project-scoped, por isso o convite/transferência só se faz no painel (ver a task).
 2. **Task 6.9, metade do site** — a variável está em Production/Preview no projecto do Localizador; o projecto Vercel do site não está na equipa que o CLI alcança.
-3. **Task 6.12** — aviso interno de que a sessão antiga (*host-only*) deixa de valer; todos voltam a entrar uma vez, agora por `conta.*`. É comunicação, não código. (A 6.11, os e-mails, está fechada.)
+3. **Task 7.5** — o aviso interno (6.12) já está escrito; falta **pausar** o projecto antigo, que continua activo e a aceitar escritas.
 4. **Tasks 7.1, 7.2, 7.4 e 7.5** — o smoke test de produção de hoje cobriu as páginas públicas, o redirect de `/guardados`, os webhooks e o worker a 200; **não** cobriu entrar, guardar com sessão, reservar com sessão nem o realtime do portal. E o projecto antigo continua por pausar.
 5. **Decisão nova: `auth.users` entra no dump?** — o restauro mostrou que as linhas com dono ficam de fora sem `auth.users` (Task 1.6). Como o backup serve hoje para desfazer uma migração má, não faz falta; se passar a servir para «o projecto morreu», tem de entrar. Decidir antes de precisar dele.
 6. **Build do `conheca-farmacia-NEXT` por verificar nesta máquina** — o `next build` falha aqui só em `next/font/google` (sem rede para `fonts.googleapis.com`), que é anterior a estas alterações; o `eslint` dos ficheiros tocados está limpo. A Vercel tem rede e é quem julga.
@@ -612,3 +612,22 @@ Feito no projecto Supabase principal (`tbqs…`) e no repositório do Localizado
 **Catálogo do site ↔ catálogo do Localizador (§10 revisto a 29/10)**
 
 Deixa de estar «fora de âmbito». Fica decidido usar o **ATC** — que já existe nos 364 medicamentos do site — como chave de correspondência, e **deixar a parafarmácia de fora**, por não ter monografia. Próximo passo: `localizador.drug_links` (site_drug_id, catalogue_drug_id, atc_code, confidence, source) com seed por ATC e nome normalizado, e revisão humana dos 18 casamentos que hoje existem por nome.
+
+---
+
+## 15. Contas e a base antiga — estado verificado (29/10/2026)
+
+**As contas já não vivem na base antiga.** Comparadas as duas, por endereço:
+
+| Projecto | Utilizadores | Com e-mail | Confirmados |
+| --- | --- | --- | --- |
+| Nova (`tbqsazriorqzexjwhekw`) | 30 | 9 | 8 |
+| Antiga (`mxqhmtpshlpnbkninawt`) | 5 | 5 | 4 |
+
+Os cinco da antiga estão **todos** na nova, um a um, zero em falta — os 3 copiados com o mesmo `id` e o mesmo hash bcrypt, e os 2 que já existiam no site principal e ficaram com a conta daqui (§13). Produção autentica contra a nova desde o corte; a antiga não serve login a ninguém.
+
+**A antiga como «segunda opção» de login: não.** Cada projecto Supabase é um emissor de identidade próprio — chaves JWT, hashes de palavra-passe, segredos TOTP e sessões separados. Um «fallback» obrigaria a aplicação a tentar dois projectos, guardar dois conjuntos de cookies e decidir qual manda quando os dois respondem; e a mesma pessoa passaria a ter **duas contas diferentes com o mesmo e-mail**, com guardados e reservas divididos entre elas. É pior do que o problema que tenta resolver.
+
+**Recomendação: pausar agora, apagar depois dos 30 dias.** A antiga serve como fotografia congelada para o rollback da Task 7.6 — não como sistema vivo. Deixá-la activa tem três custos concretos: continua a aceitar escritas (qualquer coisa que ainda lhe aponte diverge em silêncio), mantém expostas as chaves antigas que estão em `credenciais.txt`, e é mais um sítio com o mesmo RLS para manter em dia.
+
+Antes de pausar: correr um dump final para fora do repositório, confirmar que nenhuma variável de ambiente da Vercel aponta para lá, e só então pausar. O apagar é que é definitivo.

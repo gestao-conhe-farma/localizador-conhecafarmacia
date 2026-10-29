@@ -1,21 +1,30 @@
 import { NextResponse } from 'next/server'
+import { createServerClient } from '@supabase/ssr'
 
 /**
  * Proxy (middleware) do Localizador de Medicamentos.
  *
- * Landing pública, PT-only — sem sessões de utilizador nesta fase. O papel
- * aqui é exclusivamente de segurança: gerar um nonce por pedido para a CSP
- * (o script anti-FOUC no layout usa-o) e aplicar a Content-Security-Policy
- * em todas as rotas. Quando o portal da farmácia arrancar (fase 2), a
- * protecção de rotas /admin entra aqui, como no site principal
- * (conheca-farmacia-NEXT/proxy.js).
+ * Duas responsabilidades, ambas nos GET (documentos):
+ *
+ *  1. Renovar a sessão partilhada do Supabase. O cookie é do domínio pai
+ *     (`.conhecafarmacia.com`), por isso a mesma sessão que nasce em
+ *     `conta.*` serve este sítio. Server Components não podem escrever
+ *     cookies; é aqui que o `setAll` grava o token renovado.
+ *  2. Gerar um nonce por pedido para a CSP (o script anti-FOUC no layout
+ *     usa-o) e aplicar a Content-Security-Policy em todas as rotas.
+ *
+ * Os POST (Server Actions — login do portal, stock, guardados) continuam a
+ * sair cedo e sem headers: reconstruir o request aqui podia deixar cair o
+ * Set-Cookie da action, e é nele que vive a sessão.
  */
+
+/** Cookie de sessão no domínio pai, para valer nos três hosts. */
+const cookieDomain = process.env.NEXT_PUBLIC_COOKIE_DOMAIN || undefined
+
+/** Só vale a pena ir ao Supabase se houver cookie de sessão para renovar. */
+const hasAuthCookie = (cookies) => cookies.some((c) => c.name.startsWith('sb-'))
+
 export async function proxy(request) {
-  // Server Actions (POST — login, guardamentos do portal): responder SEM
-  // reconstruir o request nem anexar headers. O NextResponse.next({ request })
-  // abaixo podia deixar cair o Set-Cookie da action — e é nele que vivem as
-  // cookies de sessão do Supabase. A CSP/nonce só importa em documentos
-  // renderizados (GET).
   if (request.method !== 'GET') return NextResponse.next()
 
   // Nonce por pedido: o layout injecta-o no script inline anti-FOUC e a CSP
@@ -24,7 +33,7 @@ export async function proxy(request) {
   const nonce = Buffer.from(crypto.randomUUID()).toString('base64')
 
   // Em desenvolvimento o React precisa de 'unsafe-eval' (React Refresh/HMR e
-  // reconstrução de callstacks — "React requires eval() in development mode").
+  // reconstrução de callstacks — “React requires eval() in development mode”).
   // Em produção a CSP mantém-se estrita, sem unsafe-eval.
   const isDev = process.env.NODE_ENV === 'development'
 
@@ -51,13 +60,45 @@ export async function proxy(request) {
   const requestHeaders = new Headers(request.headers)
   requestHeaders.set('x-csp-nonce', nonce)
 
-  return NextResponse.next({
-    request: { headers: requestHeaders },
-    headers: {
-      'Content-Security-Policy': csp,
-      'x-csp-nonce': nonce,
-    },
-  })
+  let response = NextResponse.next({ request: { headers: requestHeaders } })
+
+  if (hasAuthCookie(request.cookies.getAll())) {
+    const supabase = createServerClient(
+      process.env.NEXT_PUBLIC_SUPABASE_URL,
+      process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY,
+      {
+        db: { schema: 'localizador' },
+        cookies: {
+          getAll: () => request.cookies.getAll(),
+          setAll: (cookiesToSet) => {
+            // O request tem de ver o token novo para esta renderização…
+            for (const { name, value } of cookiesToSet) {
+              request.cookies.set(name, value)
+            }
+            response = NextResponse.next({ request: { headers: requestHeaders } })
+            // …e o browser recebê-lo com o Domain do pai, senão a renovação
+            // só valia neste host e a sessão partia ao saltar para conta.*.
+            for (const { name, value, options } of cookiesToSet) {
+              response.cookies.set(
+                name,
+                value,
+                cookieDomain ? { ...options, domain: cookieDomain } : options,
+              )
+            }
+          },
+        },
+      },
+    )
+
+    // getUser (e não getSession) valida o JWT no servidor e é o que força a
+    // renovação. Um erro aqui não bloqueia a página: o utilizador aparece
+    // como anónimo e o cabeçalho mostra «Entrar».
+    await supabase.auth.getUser()
+  }
+
+  response.headers.set('Content-Security-Policy', csp)
+  response.headers.set('x-csp-nonce', nonce)
+  return response
 }
 
 export const config = {

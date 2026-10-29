@@ -7,10 +7,11 @@ import { useCallback, useEffect, useRef, useState } from 'react'
 import { getPendingReservationsCount, getAttentionCount } from '@/lib/actions/pharmacy-portal'
 import { getUnreadAnnouncementCount } from '@/lib/actions/pharmacy-announcements'
 import { leaveStaffProfile } from '@/lib/actions/pharmacy-staff'
-import { createClient } from '@/lib/supabase/client'
+import { createClient, DB_SCHEMA } from '@/lib/supabase/client'
 import { getRestockAck } from '@/lib/restock'
 import { logWarn } from '@/lib/log'
 import { ChevronIcon, CloseIcon, LockIcon, NavIcon } from '@/components/ui/Icon'
+import PortalLogout from '@/components/portal/PortalLogout'
 import ThemeToggle from '@/components/ui/ThemeToggle'
 import { plural } from '@/lib/texto'
 
@@ -224,7 +225,7 @@ export default function PortalSidebar({
     const supabase = createClient()
     const channel = supabase
       .channel('portal-sidebar-reservations')
-      .on('postgres_changes', { event: '*', schema: 'public', table: 'reservations' }, () => {
+      .on('postgres_changes', { event: '*', schema: DB_SCHEMA, table: 'reservations' }, () => {
         refreshCount()
         // Uma reserva concluída pode criar um aviso de reposição —
         // a contagem de atenção acompanha o sino.
@@ -384,6 +385,18 @@ export default function PortalSidebar({
                   Sair do perfil
                 </button>
               </form>
+
+              {/* O segundo grupo fecha a CONTA (auth), não o turno: era
+                  só em /portal/sessao, a vários cliques daqui. Fica
+                  separado por um cabeçalho para ninguém confundir os
+                  dois «sair» — um troca de farmacêutico, o outro
+                  termina a sessão neste navegador. */}
+              <span className="portal-foot-menu-h">Conta</span>
+              <PortalLogout
+                className="portal-foot-menu-i"
+                label="Terminar sessão"
+                role="menuitem"
+              />
             </div>
           )}
         </div>

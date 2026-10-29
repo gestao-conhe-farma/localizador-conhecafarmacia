@@ -3,7 +3,7 @@
 import { useCallback, useEffect, useMemo, useState } from 'react'
 import { useSearchParams } from 'next/navigation'
 import { AnimatePresence } from 'motion/react'
-import { createClient } from '@/lib/supabase/client'
+import { createClient, DB_SCHEMA } from '@/lib/supabase/client'
 import {
   getMyReservations,
   setReservationStatus,
@@ -269,7 +269,7 @@ export default function ReservationsQueue() {
     let timer = null
     const channel = supabase
       .channel('portal-reservations-queue')
-      .on('postgres_changes', { event: '*', schema: 'public', table: 'reservations' }, () => {
+      .on('postgres_changes', { event: '*', schema: DB_SCHEMA, table: 'reservations' }, () => {
         clearTimeout(timer)
         timer = setTimeout(load, 500)
       })

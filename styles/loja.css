@@ -3983,3 +3983,292 @@ p.sh-empty-sub {
     flex: 1 1 auto;
   }
 }
+
+/* ==========================================================================
+   Conta do utilizador — /guardados e /reservas
+
+   Duas listas e nada mais: são as únicas páginas de conta deste
+   repositório (o perfil e a segurança vivem em conta.*). A linguagem é a
+   mesma da loja — cartão branco, hairline, verde na acção — porque quem
+   chega aqui vem do cabeçalho do Localizador, não de outro produto.
+   ========================================================================== */
+
+.acct-wrap {
+  padding-top: 26px;
+  padding-bottom: 64px;
+}
+
+.acct-nav {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  flex-wrap: wrap;
+  border-bottom: 1px solid var(--cf-line);
+  padding-bottom: 12px;
+}
+
+.acct-nav-link {
+  font-size: 13px;
+  font-weight: 600;
+  color: var(--cf-muted);
+  padding: 7px 13px;
+  border-radius: 999px;
+  border: 1px solid transparent;
+  transition:
+    color 0.16s ease,
+    background 0.16s ease,
+    border-color 0.16s ease;
+}
+
+.acct-nav-link:hover {
+  color: var(--cf-ink);
+  background: var(--cf-paper-2);
+}
+
+.acct-nav-link--on,
+.acct-nav-link--on:hover {
+  color: var(--cf-on-green);
+  background: var(--cf-green);
+}
+
+.acct-nav-link--out {
+  margin-left: auto;
+  display: inline-flex;
+  align-items: center;
+  gap: 5px;
+  color: var(--cf-accent);
+}
+
+.acct-title {
+  font-family: var(--font-display);
+  font-size: 26px;
+  font-weight: 600;
+  color: var(--cf-ink);
+  letter-spacing: -0.01em;
+}
+
+.acct-sec {
+  margin-top: 26px;
+}
+
+.acct-sec-title {
+  display: flex;
+  align-items: center;
+  gap: 9px;
+  font-size: 13px;
+  font-weight: 700;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+  color: var(--cf-muted);
+  margin-bottom: 12px;
+}
+
+.acct-sec-count {
+  font-size: 11px;
+  letter-spacing: 0;
+  color: var(--cf-ink);
+  background: var(--cf-paper-2);
+  border: 1px solid var(--cf-line);
+  border-radius: 999px;
+  padding: 2px 8px;
+}
+
+.acct-grid {
+  display: grid;
+  grid-template-columns: repeat(3, 1fr);
+  gap: 16px;
+}
+
+.acct-card {
+  display: flex;
+  flex-direction: column;
+  justify-content: space-between;
+  background: var(--cf-card);
+  border: 1px solid var(--cf-line);
+  border-radius: 16px;
+  box-shadow: 0 4px 20px rgba(0, 42, 50, 0.05);
+  overflow: hidden;
+}
+
+.acct-card-body {
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+  padding: 16px 18px 12px;
+}
+
+.acct-card-kicker {
+  font-size: 9.5px;
+  font-weight: 700;
+  letter-spacing: 0.09em;
+  text-transform: uppercase;
+  color: var(--cf-accent);
+}
+
+.acct-card-title {
+  font-size: 16px;
+  font-weight: 600;
+  color: var(--cf-ink);
+  line-height: 1.3;
+}
+
+a.acct-card-title:hover {
+  color: var(--cf-accent);
+}
+
+.acct-card-meta {
+  font-size: 12.5px;
+  color: var(--cf-muted);
+}
+
+.acct-card-note {
+  font-size: 11.5px;
+  color: var(--cf-muted-2);
+  margin-top: 6px;
+}
+
+.acct-card-foot {
+  border-top: 1px solid var(--cf-line);
+  padding: 8px 12px;
+  display: flex;
+  justify-content: flex-end;
+}
+
+.acct-remove {
+  font-size: 12.5px;
+  font-weight: 600;
+  color: var(--cf-muted);
+  padding: 6px 10px;
+  border-radius: 8px;
+  background: none;
+  border: 0;
+  cursor: pointer;
+  transition:
+    color 0.16s ease,
+    background 0.16s ease;
+}
+
+.acct-remove:hover {
+  color: #a3231f;
+  background: rgba(163, 35, 31, 0.07);
+}
+
+.acct-empty-acts {
+  display: flex;
+  justify-content: center;
+  flex-wrap: wrap;
+  gap: 8px;
+  margin-top: 18px;
+}
+
+.acct-rows {
+  list-style: none;
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+  margin-top: 18px;
+}
+
+.acct-row {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 18px;
+  background: var(--cf-card);
+  border: 1px solid var(--cf-line);
+  border-radius: 14px;
+  padding: 14px 16px;
+}
+
+.acct-row-main {
+  display: flex;
+  flex-direction: column;
+  gap: 3px;
+  min-width: 0;
+}
+
+.acct-row-title {
+  font-size: 15px;
+  font-weight: 600;
+  color: var(--cf-ink);
+}
+
+.acct-row-pres {
+  font-weight: 500;
+  color: var(--cf-muted);
+}
+
+.acct-row-meta {
+  font-size: 12.5px;
+  color: var(--cf-muted);
+}
+
+.acct-row-hint {
+  font-size: 12px;
+  color: var(--cf-muted-2);
+}
+
+.acct-row-acts {
+  display: flex;
+  align-items: center;
+  gap: 4px;
+  flex-shrink: 0;
+}
+
+.acct-pill {
+  align-self: flex-start;
+  font-size: 10px;
+  font-weight: 700;
+  letter-spacing: 0.07em;
+  text-transform: uppercase;
+  padding: 3px 9px;
+  border-radius: 999px;
+  margin-bottom: 4px;
+}
+
+.acct-pill--pend {
+  color: #8a5a00;
+  background: rgba(196, 132, 0, 0.12);
+}
+
+.acct-pill--ok {
+  color: var(--cf-accent);
+  background: rgba(10, 132, 79, 0.12);
+}
+
+.acct-pill--muted {
+  color: var(--cf-muted);
+  background: var(--cf-paper-2);
+}
+
+.acct-pill--bad {
+  color: #a3231f;
+  background: rgba(163, 35, 31, 0.1);
+}
+
+@media (max-width: 980px) {
+  .acct-grid {
+    grid-template-columns: repeat(2, 1fr);
+  }
+}
+
+@media (max-width: 640px) {
+  .acct-wrap {
+    padding-top: 18px;
+    padding-bottom: 44px;
+  }
+
+  .acct-grid {
+    grid-template-columns: 1fr;
+  }
+
+  .acct-row {
+    flex-direction: column;
+    align-items: flex-start;
+    gap: 10px;
+  }
+
+  .acct-nav-link--out {
+    margin-left: 0;
+  }
+}

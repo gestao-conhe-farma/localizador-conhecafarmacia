@@ -10,6 +10,7 @@ import {
   quantityText,
 } from '@/lib/product-utils'
 import { formatOptionLabel, unitLabel } from '@/lib/sale-options'
+import CategoryPhoto from '@/components/search/CategoryPhoto'
 
 /**
  * Cartão de produto (Modelo D) — o mesmo na prateleira da farmácia, na
@@ -68,15 +69,17 @@ export default function ProductCard({ item, flat = false, ctaLabel, priceLabel, 
             loading="lazy"
           />
         ) : (
-          <div className="pack">
-            <span className="pack-brand">{item.brand || item.pharmacy_name}</span>
-            <span className="pack-name">{item.drug_name}</span>
-            {item.drug_form && <span className="pack-dose">{item.drug_form}</span>}
-            <span className="pack-foot">
-              <span>{presentation(item) || kindLabel(kind)}</span>
-              <span>{qty || 'Confirmado'}</span>
-            </span>
-          </div>
+          <CategoryPhoto item={item} className="cf-photo">
+            <div className="pack">
+              <span className="pack-brand">{item.brand || item.pharmacy_name}</span>
+              <span className="pack-name">{item.drug_name}</span>
+              {item.drug_form && <span className="pack-dose">{item.drug_form}</span>}
+              <span className="pack-foot">
+                <span>{presentation(item) || kindLabel(kind)}</span>
+                <span>{qty || 'Confirmado'}</span>
+              </span>
+            </div>
+          </CategoryPhoto>
         )}
       </div>
 

@@ -20,6 +20,7 @@ import {
   quantityText,
   whatsappHref,
 } from '@/lib/product-utils'
+import CategoryPhoto from '@/components/search/CategoryPhoto'
 
 const ERRORES = {
   NOME_INVALIDO: 'Escreva o seu nome (pelo menos 2 letras).',
@@ -103,9 +104,7 @@ function windowsFor(iso, now = new Date(), openingHours = '') {
   )
   const firstEnd = Math.min(firstStart + 120, closeMin)
   const head =
-    firstEnd - firstStart >= 60
-      ? [{ from: clockText(firstStart), to: clockText(firstEnd) }]
-      : []
+    firstEnd - firstStart >= 60 ? [{ from: clockText(firstStart), to: clockText(firstEnd) }] : []
 
   // Âncoras encaixadas no horário e só depois da primeira janela — sem
   // sobreposições nem horas em que a farmácia está fechada.
@@ -364,20 +363,22 @@ export default function ProductSheet({
             alt={`Embalagem de ${item.drug_name} — ${item.pharmacy_name}`}
           />
         ) : (
-          <div className="pack">
-            <span className="pack-brand">{item.brand || item.pharmacy_name}</span>
-            <span className="pack-name">{item.drug_name}</span>
-            {item.drug_form && <span className="pack-dose">{item.drug_form}</span>}
-            <span className="pack-foot">
-              <span>{item.drug_dosage || kindLabel(item.drug_kind)}</span>
-              <span>{unit}</span>
-            </span>
-          </div>
+          <CategoryPhoto key={item.stock_item_id} item={item} className="cf-photo">
+            <div className="pack">
+              <span className="pack-brand">{item.brand || item.pharmacy_name}</span>
+              <span className="pack-name">{item.drug_name}</span>
+              {item.drug_form && <span className="pack-dose">{item.drug_form}</span>}
+              <span className="pack-foot">
+                <span>{item.drug_dosage || kindLabel(item.drug_kind)}</span>
+                <span>{unit}</span>
+              </span>
+            </div>
+          </CategoryPhoto>
         )}
         <p className="pack-cap">
           {photo
             ? 'Fotografia enviada pela farmácia.'
-            : 'Embalagem representada por tipografia — a farmácia ainda não fotografou este produto.'}
+            : 'A farmácia ainda não fotografou este produto.'}
         </p>
 
         {(item.brand || item.origin) && (

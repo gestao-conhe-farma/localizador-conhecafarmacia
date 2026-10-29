@@ -9,12 +9,17 @@ import { createClient } from '@/lib/supabase/client'
  * `label`/`className` deixam a página /portal/sessão usar o mesmo
  * botão com a forma das outras acções (btn-secondary).
  */
-export default function PortalLogout({ label = 'Sair', className = 'btn-mini portal-logout' }) {
+export default function PortalLogout({
+  label = 'Sair',
+  className = 'btn-mini portal-logout',
+  role,
+}) {
   const router = useRouter()
   return (
     <button
       type="button"
       className={className}
+      role={role}
       onClick={async () => {
         await createClient().auth.signOut()
         router.replace('/portal/login')

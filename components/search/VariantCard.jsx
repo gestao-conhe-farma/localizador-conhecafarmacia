@@ -4,6 +4,7 @@ import { drugImageUrl } from '@/lib/product-utils'
 import { fmtKzPublic as fmtKz } from '@/lib/reservation-format'
 import { formatDistance } from '@/lib/geo'
 import { mainMunicipality } from '@/lib/variants'
+import CategoryPhoto from '@/components/search/CategoryPhoto'
 
 function placeLabel(variant, distance) {
   if (distance != null) return `a ${formatDistance(distance)}`
@@ -41,11 +42,13 @@ export default function VariantCard({ variant, distance = null, onOpen }) {
         {photo ? (
           <img className="vcard-photo" src={photo} alt="" loading="lazy" />
         ) : (
-          <span className="vcard-pack">
-            <span className="vcard-pack-brand">{variant.brand || 'Sem marca'}</span>
-            <span className="vcard-pack-name">{variant.drug_name}</span>
-            {dose ? <span className="vcard-pack-dose">{dose}</span> : null}
-          </span>
+          <CategoryPhoto item={variant} className="vcard-photo">
+            <span className="vcard-pack">
+              <span className="vcard-pack-brand">{variant.brand || 'Sem marca'}</span>
+              <span className="vcard-pack-name">{variant.drug_name}</span>
+              {dose ? <span className="vcard-pack-dose">{dose}</span> : null}
+            </span>
+          </CategoryPhoto>
         )}
       </span>
 

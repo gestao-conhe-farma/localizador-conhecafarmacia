@@ -1,5 +1,6 @@
 import { NextResponse } from 'next/server'
 import { createServerClient } from '@supabase/ssr'
+import { cookieDomainFor } from '@/lib/cookie-domain'
 
 /**
  * Proxy (middleware) do Localizador de Medicamentos.
@@ -18,14 +19,19 @@ import { createServerClient } from '@supabase/ssr'
  * Set-Cookie da action, e é nele que vive a sessão.
  */
 
-/** Cookie de sessão no domínio pai, para valer nos três hosts. */
-const cookieDomain = process.env.NEXT_PUBLIC_COOKIE_DOMAIN || undefined
+/**
+ * Cookie de sessão no domínio pai, para valer nos três hosts. Olha para o
+ * host do pedido: em `localhost` e nas previews `*.vercel.app` o domínio pai
+ * não se aplica e o browser recusava a cookie.
+ */
 
 /** Só vale a pena ir ao Supabase se houver cookie de sessão para renovar. */
 const hasAuthCookie = (cookies) => cookies.some((c) => c.name.startsWith('sb-'))
 
 export async function proxy(request) {
   if (request.method !== 'GET') return NextResponse.next()
+
+  const cookieDomain = cookieDomainFor(request.headers.get('host'))
 
   // Nonce por pedido: o layout injecta-o no script inline anti-FOUC e a CSP
   // só confia em scripts que o transportem. Sem 'unsafe-inline' nem

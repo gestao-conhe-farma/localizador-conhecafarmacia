@@ -60,10 +60,9 @@ Feito a 29/10/2026 pelo CLI (Vercel + Management API do Supabase).
    Os dois valores têm de continuar iguais — para os verificar, comparar
    `md5(decrypted_secret)` com a hash do valor da Vercel.
 
-3. **Falta: o deploy.** Até haver um deployment novo, produção serve a base
-   antiga com o `CRON_SECRET` antigo, e o job `webhook-deliveries` regista
-   **401** por minuto (é o esperado; pára no deploy). Se o corte for adiado
-   mais de um dia, desagendar até lá: `select cron.unschedule('webhook-deliveries');`
+3. **Deploy — feito a 29/10/2026** (commit `6ade639`, build da Vercel a partir
+   do `main`). O job `webhook-deliveries` passou de 401 a **200**
+   (`{"ok":true,"worker":"pg_cron"}`) no minuto seguinte ao deploy.
 
 4. Testar, por esta ordem: `/pesquisa` → `/produto/<id>` → `/farmacia/<slug>` →
    reserva pública → login do portal → `/portal/stock` → realtime →
@@ -94,11 +93,13 @@ select count(*) from localizador.pharmacies where logo_url like '%mxqhmtpsh%';
   (reservas) e `actor_user_id` (movimentos) são o remapeamento deliberado de
   contas — ver `_temp/fusao/id-map.json` (as 2 contas que já existiam no site).
 - `confirmed_at` é a única coisa que se move sozinha: a reconfirmação diária
-  (03:00) reescreve-o. No dia do corte, 238 das 246 linhas da base nova ficaram
-  com o valor de 29/10 03:23 (uma passagem de reconfirmação correu contra ela),
-  enquanto na origem 237 dessas linhas ainda tinham 28/10 03:23. A linha que a
-  origem reconfirmou depois da cópia (`d383e4ca…`) foi sincronizada à mão para
-  o valor da origem.
+  (03:00) reescreve-o. No dia do corte, 238 das 246 linhas da base nova
+  estavam com o valor de 29/10 03:23 (uma passagem de reconfirmação correu
+  contra ela) enquanto a origem tinha 28/10 03:23. As 238 foram alinhadas com
+  os valores da origem, linha a linha; a comparação campo a campo das 5
+  tabelas de catálogo dá agora **0 diferenças** — só o remapeamento de contas
+  em `reservations.user_id`, `stock_movements.actor_user_id` e
+  `stock_items.updated_by` difere, de propósito.
 
 ## Rollback
 

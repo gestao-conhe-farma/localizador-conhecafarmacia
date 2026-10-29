@@ -11309,6 +11309,14 @@ html.dark .interno-tema-rotulo--lua {
   padding: 1.125rem 1.25rem;
 }
 
+/* Alertas de sistema (0048): uma pilha de avisos acima dos números. O
+   espaço é do contentor e não de cada aviso, para dois alertas abertos não
+   ficarem colados um ao outro. */
+.interno-alertas {
+  display: grid;
+  gap: 0.75rem;
+}
+
 .interno-box-note {
   padding: 0.875rem 1.25rem;
 }

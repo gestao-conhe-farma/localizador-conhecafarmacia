@@ -3,8 +3,10 @@ import { requirePlatformPage } from '@/lib/platform/session'
 import { can } from '@/lib/platform/permissions'
 import { listPharmacies } from '@/lib/actions/platform-pharmacies'
 import { getLeadsResumo } from '@/lib/actions/leads'
+import { getSystemAlerts } from '@/lib/actions/system-alerts'
 import SemPermissao from '@/components/interno/SemPermissao'
 import Falha from '@/components/interno/Falha'
+import AlertasSistema from '@/components/interno/AlertasSistema'
 import InternoKpis from '@/components/interno/Kpis'
 import { haQuanto, pillPlano, textoPlano } from '@/components/interno/formatos'
 import { plural } from '@/lib/texto'
@@ -32,9 +34,13 @@ export default async function InternoPainelPage() {
   // `faturacao`) continua a ver o painel das farmácias, sem o número que
   // não lhe pertence.
   const podeVerLeads = can(g.session?.role, 'lead.read')
-  const [res, leads] = await Promise.all([
+  // Os alertas de sistema entram na mesma vaga: são uma leitura barata e
+  // são a única coisa desta página que pode dizer que o backup parou —
+  // por isso não podem ficar à espera das farmácias.
+  const [res, leads, alertas] = await Promise.all([
     listPharmacies({}),
     podeVerLeads ? getLeadsResumo() : Promise.resolve(null),
+    getSystemAlerts(),
   ])
   if (!res.ok) {
     return (
@@ -45,6 +51,10 @@ export default async function InternoPainelPage() {
             <p className="interno-sub">Estado do directório e do que precisa de atenção.</p>
           </div>
         </div>
+        <AlertasSistema
+          alertas={alertas?.ok ? alertas.rows : []}
+          falhou={Boolean(alertas && !alertas.ok)}
+        />
         <Falha titulo="Não foi possível ler as farmácias" erro={res.error} detalhe={res.detail} />
       </div>
     )
@@ -183,6 +193,12 @@ export default async function InternoPainelPage() {
           </Link>
         </div>
       </div>
+
+      {/* Antes dos números: se o backup parou, é a primeira coisa a ler. */}
+      <AlertasSistema
+        alertas={alertas?.ok ? alertas.rows : []}
+        falhou={Boolean(alertas && !alertas.ok)}
+      />
 
       <InternoKpis items={kpis} />
 

@@ -74,6 +74,9 @@ jobs:
     timeout-minutes: 30
     env:
       SUPABASE_DB_URL: ${{ secrets.SUPABASE_DB_URL }}
+      # Onde o alarme toca. O /interno é o sítio que a equipa já abre todos
+      # os dias — um e-mail para uma caixa que ninguém lê não é um alarme.
+      ALERTA_URL: https://localizador.conhecafarmacia.com/api/interno/alertas
 
     steps:
       - name: Confirmar o segredo
@@ -137,3 +140,48 @@ jobs:
           path: ${{ env.DUMP_NAME }}
           retention-days: 90
           if-no-files-found: error
+
+      # O alarme não toca sozinho. Quando o job falha, esta chamada põe o
+      # aviso no painel /interno; a de baixo fecha-o quando tudo corre bem.
+      # O `if: failure()` apanha também a falha do primeiro passo (o segredo
+      # em falta), que é justamente o caso em que ninguém saberia de nada.
+      - name: Abrir alerta no /interno
+        if: failure()
+        env:
+          ALERTA_SEGREDO: ${{ secrets.INTERNO_ALERT_SECRET }}
+        run: |
+          if [ -z "${ALERTA_SEGREDO:-}" ]; then
+            echo "::warning::Sem o segredo INTERNO_ALERT_SECRET o /interno não fica a saber que o backup falhou."
+            exit 0
+          fi
+          corpo="$(jq -n \
+            --arg kind backup \
+            --arg state failed \
+            --arg title 'O backup semanal falhou' \
+            --arg body "A execução de $(date -u +%d/%m/%Y) não chegou ao fim. Enquanto este aviso estiver aberto, a base não tem backup desta semana." \
+            --arg url "$GITHUB_SERVER_URL/$GITHUB_REPOSITORY/actions/runs/$GITHUB_RUN_ID" \
+            --arg dedupe "$GITHUB_RUN_ID" \
+            '{kind:$kind, state:$state, title:$title, body:$body, url:$url, dedupe:$dedupe}')"
+          curl -fsS -m 20 -X POST "$ALERTA_URL" \
+            -H "Authorization: Bearer $ALERTA_SEGREDO" \
+            -H 'Content-Type: application/json' \
+            --data-binary "$corpo" \
+            || echo "::warning::O /interno não recebeu o alerta — o painel vai continuar calado."
+
+      # A execução verde fecha o aviso, e é a única coisa que o fecha: ninguém
+      # tem de se lembrar de o apagar. Se a chamada falhar, o aviso fica
+      # aberto de mais e não de menos — o erro é o lado seguro.
+      - name: Fechar o alerta no /interno
+        if: success()
+        env:
+          ALERTA_SEGREDO: ${{ secrets.INTERNO_ALERT_SECRET }}
+        run: |
+          if [ -z "${ALERTA_SEGREDO:-}" ]; then
+            echo "::warning::Sem o segredo INTERNO_ALERT_SECRET não há alerta para fechar."
+            exit 0
+          fi
+          curl -fsS -m 20 -X POST "$ALERTA_URL" \
+            -H "Authorization: Bearer $ALERTA_SEGREDO" \
+            -H 'Content-Type: application/json' \
+            -d '{"kind":"backup","state":"ok"}' \
+            || echo "::warning::O /interno não recebeu o fecho do alerta."

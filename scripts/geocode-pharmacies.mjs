@@ -110,6 +110,9 @@ if (!URL_BASE || !SERVICE_KEY) {
 }
 
 const admin = createClient(URL_BASE, SERVICE_KEY, {
+  // Um projecto, dois schemas desde a fusão: as farmácias estão em
+  // `localizador`, não em `public`.
+  db: { schema: 'localizador' },
   auth: { autoRefreshToken: false, persistSession: false },
 })
 

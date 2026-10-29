@@ -376,7 +376,7 @@ proxy.js                                                                     # i
       psql "$URL_PRINCIPAL" -f localizador_dados.sql
 
 - [x] **Task 3.2:** Repor sequências (`setval`) e comparar contagens tabela a tabela entre origem e destino (9 farmácias, 246 stock_items, 42 drugs, 28 reservas, 48 lotes, 63 movimentos, 8 opções de venda, 9 subscrições, 2 leads, 2 chaves de API, 3 perfis de balcão).
-- [ ] **Task 3.3:** Recriar os 2 cron jobs (`expire-stale-reservations` `*/15 * * * *`; `webhook-deliveries` `* * * * *`) com os comandos a apontar para `localizador.*`. **Não copiar `cron.job` do dump** — recriar à mão para garantir o schema certo. Confirmar `cron.job_run_details` a verde depois do corte.
+- [x] **Task 3.3:** Recriar os 2 cron jobs (`expire-stale-reservations` `*/15 * * * *`; `webhook-deliveries` `* * * * *`) com os comandos a apontar para `localizador.*`. **Não copiar `cron.job` do dump** — recriar à mão para garantir o schema certo. Confirmar `cron.job_run_details` a verde depois do corte.
 - [x] **Task 3.4:** As 5 contas de teste. Preservar o `id` (as linhas de `admin_users` e de `pharmacy_staff` dependem dele) e o hash bcrypt:
       criar em `auth.users` do projecto principal as 5 linhas (id, `encrypted_password`, `email_confirmed_at`, `raw_app_meta_data`, `aud`) + `auth.identities` correspondentes; alternativamente `auth.admin.createUser` e `update localizador.admin_users set user_id = …`. Como são contas de teste, qualquer dos caminhos serve; o primeiro é o que mantém as senhas actuais e não pára o desenvolvimento. Registar no runbook que foi feito assim e que **não é o caminho para contas reais**.
 - [x] **Task 3.5:** Storage: criar o bucket `drug-images` (público) no projecto principal. Está vazio (0 objectos) — não há URLs para reescrever. Confirmar que nenhuma coluna de `localizador.*` guarda URLs do antigo projecto (`select count(*) from localizador.drug_brand_images where image_url like '%mxqhmtpsh%'` → 0).
@@ -391,9 +391,9 @@ proxy.js                                                                     # i
 - [x] **Task 4.1:** As três fábricas de cliente (`lib/supabase/client.js`, `server.js`, `admin.js`) recebem `db: { schema: 'localizador' }`. O `server.js` passa a acrescentar `domain` no `setAll`.
 - [x] **Task 4.2:** `proxy.js` — renovação de sessão nos GET, sem perder o nonce da CSP nem o early-return dos POST.
 - [x] **Task 4.3:** As 3 subscrições Realtime passam a `schema: 'localizador'`.
-- [ ] **Task 4.4:** Variáveis de ambiente (`.env.local` e Vercel → Production + Preview): URL/anon/service-role do projecto principal, `NEXT_PUBLIC_COOKIE_DOMAIN=.conhecafarmacia.com` (vazio em dev), `SUPABASE_DB_URL` novo para os scripts. Manter `RESEND_*` e `STAFF_COOKIE_SECRET`.
+- [ ] **Task 4.4:** Variáveis de ambiente (`.env.local` e Vercel → Production + Preview): URL/anon/service-role do projecto principal, `NEXT_PUBLIC_COOKIE_DOMAIN=.conhecafarmacia.com` (vazio em dev), `SUPABASE_DB_URL` novo para os scripts. Manter `RESEND_*` e `STAFF_COOKIE_SECRET`. — **Feito, menos o `SUPABASE_DB_URL`**, que continua por definir.
 - [ ] **Task 4.5:** Testar no portátil contra o projecto novo: pesquisa, ficha de produto, página de farmácia, reserva pública por token, login do portal, stock, fila de reservas em tempo real, equipa/PIN, `/interno`.
-- [ ] **Task 4.6:** Verificação estática: `npm run lint`, `npm run build`, e um `grep` final por `public.` em SQL/migrações novas e por `schema: 'public'` no código.
+- [x] **Task 4.6:** Verificação estática: `npm run lint`, `npm run build`, e um `grep` final por `public.` em SQL/migrações novas e por `schema: 'public'` no código.
 
 **Verificação:** o portal faz login com uma conta de teste, o sino de reservas recebe um evento realtime, e `/interno` continua a exigir MFA.
 
@@ -417,14 +417,14 @@ proxy.js                                                                     # i
 
 ## Phase 6 — Casa da conta (`conta.`) e sessão partilhada
 
-- [ ] **Task 6.1:** Vercel → projecto `conheca-farmacia` → Settings → Domains: adicionar `conta.conhecafarmacia.com` e criar o CNAME no DNS. **Não** criar projecto novo: mesmo deploy, mesmo `.env`, mesma CSP.
+- [x] **Task 6.1:** Vercel → projecto `conheca-farmacia` → Settings → Domains: adicionar `conta.conhecafarmacia.com` e criar o CNAME no DNS. **Não** criar projecto novo: mesmo deploy, mesmo `.env`, mesma CSP.
 - [ ] **Task 6.2:** `app/(identidade)/` — rotas na raiz (`entrar`, `registar`, `recuperar`, `repor-senha`, `perfil`, `perfil/seguranca`, `auth/confirm`) como invólucros finos sobre os componentes que já existem (`entrarClient.jsx`, `registoClient.jsx`, `esqueciClient.jsx`, `reporClient.jsx`, `perfilClient.jsx`, `definicoesPageClient.jsx`), com `LangContext` fixo em `pt`. Passam a ser **os únicos** formulários de autenticação do sistema. O `/perfil` recebe o hub: ligações para `/guardados` do Localizador, `/[lang]/guardados` do site, `/reservas` e `/perfil/seguranca`.
-- [ ] **Task 6.3:** `saveNext()` — validação do `next` (só caminhos relativos e hosts `*.conhecafarmacia.com`), usada no `/entrar`, no `/registar` e no `/auth/confirm`. É a defesa contra *open redirect* agora que o parâmetro atravessa domínios.
-- [ ] **Task 6.4:** `proxy.js` — o ramo `if (!SUPPORTED_LANGS.includes(lang)) return NextResponse.next()` passa a: (a) renovar a sessão também nas rotas de `(identidade)`; (b) no host `conta.*`, mandar `/` para `/perfil` (ou `/entrar` sem sessão) e 308 qualquer outro caminho para `https://www.conhecafarmacia.com/<path>`; (c) nos outros hosts, 308 as rotas de conta para `https://conta.conhecafarmacia.com/<path>`. O ramo `/[lang]` e o nonce da CSP não se tocam — é a parte do ficheiro que serve o site todo.
-- [ ] **Task 6.5:** `app/(identidade)/auth/confirm/route.js` — `exchangeCodeForSession(code)` e `redirect(saveNext(next) || '/perfil')`; erro → `/entrar?motivo=LINK_INVALIDO`.
+- [x] **Task 6.3:** `saveNext()` — validação do `next` (só caminhos relativos e hosts `*.conhecafarmacia.com`), usada no `/entrar`, no `/registar` e no `/auth/confirm`. É a defesa contra *open redirect* agora que o parâmetro atravessa domínios.
+- [x] **Task 6.4:** `proxy.js` — o ramo `if (!SUPPORTED_LANGS.includes(lang)) return NextResponse.next()` passa a: (a) renovar a sessão também nas rotas de `(identidade)`; (b) no host `conta.*`, mandar `/` para `/perfil` (ou `/entrar` sem sessão) e 308 qualquer outro caminho para `https://www.conhecafarmacia.com/<path>`; (c) nos outros hosts, 308 as rotas de conta para `https://conta.conhecafarmacia.com/<path>`. O ramo `/[lang]` e o nonce da CSP não se tocam — é a parte do ficheiro que serve o site todo.
+- [x] **Task 6.5:** `app/(identidade)/auth/confirm/route.js` — `exchangeCodeForSession(code)` e `redirect(saveNext(next) || '/perfil')`; erro → `/entrar?motivo=LINK_INVALIDO`.
 - [ ] **Task 6.6:** Redireccionar as páginas de conta antigas do site: `/[lang]/entrar`, `/[lang]/registo`, `/[lang]/esqueci-palavra-passe`, `/[lang]/repor-palavra-passe`, `/[lang]/conta-criada`, `/[lang]/perfil`, `/[lang]/perfil/definicoes` → 308 para `conta.*`. Em `/[lang]/perfil/definicoes` manter o antigo caminho a apontar para `/perfil/seguranca` (não partir marcadores). `/[lang]/guardados` e `/[lang]/anotacoes` ficam.
-- [ ] **Task 6.7:** `noindex` em todas as rotas de `(identidade)` (`robots` na metadata + `X-Robots-Tag` em `vercel.json`).
-- [ ] **Task 6.8:** `lib/supabase/client.js` com `cookieOptions.domain`; `server.js` e `server-anon.js` com `domain` no `setAll`; `proxy.js` idem na renovação.
+- [ ] **Task 6.7:** `noindex` em todas as rotas de `(identidade)` (`robots` na metadata + `X-Robots-Tag` em `vercel.json`). — **Metade feita:** a metadata tem `noindex` em todas; o `X-Robots-Tag` do `vercel.json` só cobre `/:lang/admin/(.*)`, por isso `curl -I conta.*` ainda não o mostra.
+- [x] **Task 6.8:** `lib/supabase/client.js` com `cookieOptions.domain`; `server.js` e `server-anon.js` com `domain` no `setAll`; `proxy.js` idem na renovação.
 - [ ] **Task 6.9:** `NEXT_PUBLIC_COOKIE_DOMAIN=.conhecafarmacia.com` em Production/Preview (vazio em dev, onde `localhost` partilha cookie entre portas).
 - [ ] **Task 6.10:** Supabase → URL Configuration: `https://conta.conhecafarmacia.com/**`, `https://localizador.conhecafarmacia.com/**`, `https://www.conhecafarmacia.com/**`, `http://localhost:3000/**`, `http://localhost:3001/**`. Mudar `site_url` para `https://conta.conhecafarmacia.com` depois de confirmar que todos os fluxos passam `emailRedirectTo` explícito.
 - [ ] **Task 6.11:** Templates de confirmação/recuperação: texto neutro («a sua conta Conheça Farmácia»), sem prometer funcionalidades de um só site.
@@ -438,7 +438,7 @@ proxy.js                                                                     # i
 
 - [ ] **Task 7.1:** Janela combinada (1–2 h, pouco uso). Anunciar no portal («manutenção breve»).
 - [ ] **Task 7.2:** Congelar escritas no Localizador antigo (modo manutenção no Vercel, ou `alter database … allow_connections`), correr a cópia delta final (`pg_dump --data-only` das tabelas que mudaram) e comparar contagens.
-- [ ] **Task 7.3:** Trocar as variáveis nos dois projectos Vercel e fazer redeploy. Ordem: Localizador primeiro, site principal depois (o site principal não pode ficar à espera do schema novo).
+- [x] **Task 7.3:** Trocar as variáveis nos dois projectos Vercel e fazer redeploy. (Localizador feito a 29/10; o site principal já estava no `tbqs…`.) Ordem: Localizador primeiro, site principal depois (o site principal não pode ficar à espera do schema novo).
 - [ ] **Task 7.4:** Smoke test em produção, por esta ordem: pesquisa → produto → farmácia → reserva pública → login do portal → stock → realtime → `/interno` (MFA) → registo de utente → confirmação por e-mail → `conta.*/perfil` → guardados → reserva com sessão → sessão partilhada nos três hosts.
 - [ ] **Task 7.5:** Deixar o projecto antigo **pausado, não apagado**, durante 30 dias. Só depois `delete project`.
 - [ ] **Task 7.6:** Rollback (se necessário): repor as variáveis antigas nos dois Vercel, redeploy, e reactivar o projecto antigo. As escritas feitas no destino durante a janela perdem-se — é a razão de o corte ser feito com o site em manutenção.
@@ -544,7 +544,7 @@ Por fazer (não é código):
 
 ## 13. Estado da fusão no Localizador (29/10/2026)
 
-Feito no projecto Supabase principal (`tbqs…`) e no repositório do Localizador. O corte de tráfego **não** foi feito: produção continua na base antiga até se trocarem as variáveis na Vercel (Task 7.3).
+Feito no projecto Supabase principal (`tbqs…`) e no repositório do Localizador. **O corte foi feito** no mesmo dia (Task 7.3): produção serve a base nova desde o commit `6ade639`.
 
 **Base**
 
@@ -564,8 +564,36 @@ Feito no projecto Supabase principal (`tbqs…`) e no repositório do Localizado
 
 **Verificado localmente** (dev server contra a base nova): `/guardados` e `/reservas` redireccionam para `conta.*/entrar?next=…` sem sessão; com sessão de uma conta de teste, `/guardados` lista produto e farmácia e `/reservas` mostra a reserva com estado e link de acompanhamento; RLS recusa insert sem `user_id = auth.uid()`; remover o favorito volta ao vazio.
 
-**Falta para o corte**
+**Corte — feito a 29/10/2026**
 
-1. Vercel → projecto do Localizador: `NEXT_PUBLIC_SUPABASE_URL`, `NEXT_PUBLIC_SUPABASE_ANON_KEY`, `SUPABASE_SERVICE_ROLE_KEY` do projecto principal, `NEXT_PUBLIC_COOKIE_DOMAIN=.conhecafarmacia.com`, `NEXT_PUBLIC_CONTA_URL=https://conta.conhecafarmacia.com`; redeploy. `NEXT_PUBLIC_*` é inlined no build — só conta no deploy seguinte.
-2. Recriar os 2 cron jobs (Task 3.3) **no momento do corte**, com `localizador.reservations` e `localizador.*` nos comandos. Não foram criados antes de propósito: apontam para o endpoint de produção, que ainda serve a base antiga, e duplicariam o processamento de webhooks.
-3. `SUPABASE_DB_URL` novo disponível para os scripts e para o futuro backup semanal (Task 1.5).
+1. Vercel → projecto do Localizador (`localizador-conhecafarmacia`, Production e Preview): URL/anon/service-role do `tbqs…`, `NEXT_PUBLIC_CONTA_URL` e `NEXT_PUBLIC_COOKIE_DOMAIN` (só Production). Feito pelo CLI, verificado com `vercel env pull`.
+2. Os 2 cron jobs (Task 3.3) criados no `tbqs…` com `localizador.*` nos comandos. O segredo do job de webhooks **não existia** no Vault do projecto antigo — o job de lá devolvia `0 rows` desde sempre. Em vez de copiar, gerou-se um novo e ficou nos dois lados (`CRON_SECRET` na Vercel + `cron_webhook_secret` no Vault).
+3. Deploy por push do `main`; `/pesquisa`, `/produto/<id>`, `/farmacia/<slug>`, `/medicamento/<id>`, `/sobre`, `/portal/login` a 200 com dados da base nova; `/guardados` e `/reservas` a mandar para `conta.*/entrar`; `net._http_response` a 200 em cada minuto.
+4. Bug apanhado no corte: `getProductServer`, `getPharmacyStockServer` e as sugestões da homepage criavam o cliente cru do `supabase-js` e procuravam a view `stock_confirmed` em `public` — a ficha e a prateleira saíam vazias no HTML inicial. Corrigido em `lib/stock.js`, `lib/home-suggestions.js` e `scripts/geocode-pharmacies.mjs` (commit `969ce4b`).
+5. `confirmed_at` alinhado com a origem nas 238 linhas que a reconfirmação diária tinha mexido; comparação campo a campo das 5 tabelas de catálogo: 0 diferenças, fora o remapeamento de contas.
+
+**Falta fora do plano de código:** `SUPABASE_DB_URL` novo para os scripts e para o backup semanal (Task 1.5) e pausar o projecto antigo (Task 7.5).
+
+---
+
+## 14. Estado a 29/10/2026, fim do dia — o que falta do plano
+
+**Concluído depois do §13**
+
+- `conta.*` redesenhado: fora o cabeçalho de produto, barra neutra com a marca e dois destinos, e o hub passou a listar os guardados com «ver no site» (só quando há monografia) e «ver farmácias». Commit `4c2b3a1`, no branch `security/i18n-audit-fixes` do `conheca-farmacia-NEXT` — **ainda não está no `main`**: o `main` local está 419 commits atrás do `origin/main` e o merge pede resolução manual em `proxy.js` e `styles/globals.css`.
+- `/medicamento/<id>` no Localizador (commit `22fab67`, em produção): destino do «ver farmácias» e primeira página do produto cujo URL não depende de um item de stock.
+
+**Por fazer, por ordem sugerida**
+
+1. **Task 6.10 (parcial)** — o `uri_allow_list` já tem `https://conta.conhecafarmacia.com/**`, mas **não** tem `https://localizador.conhecafarmacia.com/**` nem os `localhost`; e o `site_url` continua `http://www.conhecafarmacia.com` (http, e não a casa da conta).
+2. **Task 6.7 (parcial)** — o `X-Robots-Tag` só cobre `/:lang/admin/(.*)`; as rotas de `(identidade)` têm `noindex` na metadata mas não no cabeçalho.
+3. **Tasks 1.5 e 1.6** — workflow semanal de `pg_dump` e restauro testado. O §9.1 trata isto como o único backup que existe no plano gratuito; falta o segredo `SUPABASE_DB_URL` no GitHub (e definir quem recebe o alerta de falha, §11.3).
+4. **Tasks 5.5, 5.7 e 5.8** — no Localizador: entrada de conta no cabeçalho e no menu móvel; botão «Guardar» em `ProductCard`, `ProductSheet`, `VariantCard` e na ficha da farmácia (o `toggleFavorito` já existe, falta a UI); pré-preenchimento da reserva a partir de `user_metadata` e bloco «as suas reservas» quando há sessão.
+5. **Task 5.9** — cláusulas de conta na privacidade e nos termos, com o caminho para `conta.*/perfil/seguranca`.
+6. **Task 6.6** — 308 das páginas de conta antigas do site. Continua consciente e por fazer (§12, desvio 2): `/[lang]/perfil` e `/[lang]/perfil/definicoes` mantêm-se enquanto o hub não tiver as estatísticas do estudante.
+7. **Tasks 6.11 e 6.12** — texto dos e-mails de confirmação/reposição sem prometer funcionalidades de um só site, e aviso interno de que a sessão antiga (*host-only*) deixa de valer.
+8. **Tasks 7.1, 7.2, 7.4 e 7.5** — o smoke test de produção de hoje cobriu as páginas públicas, o redirect de `/guardados`, os webhooks e o worker a 200; **não** cobriu entrar, guardar com sessão, reservar com sessão nem o realtime do portal. E o projecto antigo continua por pausar.
+
+**Catálogo do site ↔ catálogo do Localizador (§10 revisto a 29/10)**
+
+Deixa de estar «fora de âmbito». Fica decidido usar o **ATC** — que já existe nos 364 medicamentos do site — como chave de correspondência, e **deixar a parafarmácia de fora**, por não ter monografia. Próximo passo: `localizador.drug_links` (site_drug_id, catalogue_drug_id, atc_code, confidence, source) com seed por ATC e nome normalizado, e revisão humana dos 18 casamentos que hoje existem por nome.

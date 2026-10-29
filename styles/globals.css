@@ -1090,7 +1090,9 @@ html.dark .form-note {
     @apply flex items-start gap-3 rounded-lg border p-2.5 cursor-pointer;
     border-color: var(--color-brand-line);
     background: #fff;
-    transition: border-color 0.15s ease, background 0.15s ease;
+    transition:
+      border-color 0.15s ease,
+      background 0.15s ease;
   }
 
   .stock-image-opt.is-on {
@@ -1343,6 +1345,62 @@ html.dark .form-note {
 
   .app-header-external:hover {
     @apply text-brand-accent;
+  }
+
+  /* Entrada de conta. Este sítio não tem formulários de autenticação: sem
+     sessão isto é um link para conta.*; com sessão é o avatar com as duas
+     listas e a saída. */
+  .acct-entry {
+    @apply inline-flex items-center rounded-full border border-brand-divider px-3 py-1.5 text-sm font-medium text-brand-deep/70;
+    transition:
+      color 0.15s ease,
+      border-color 0.15s ease;
+  }
+
+  .acct-entry:hover {
+    @apply border-brand-accent/50 text-brand-accent;
+  }
+
+  .acct-menu {
+    @apply relative;
+  }
+
+  .acct-menu > summary {
+    list-style: none;
+  }
+
+  .acct-menu > summary::-webkit-details-marker {
+    display: none;
+  }
+
+  .acct-avatar {
+    @apply flex h-9 w-9 cursor-pointer items-center justify-center rounded-full bg-brand-accent/10 text-sm font-semibold text-brand-accent;
+  }
+
+  .acct-menu-panel {
+    @apply absolute right-0 z-50 mt-2 w-56 overflow-hidden rounded-xl border border-brand-divider bg-brand-card p-1 shadow-lg;
+  }
+
+  .acct-menu-mail {
+    @apply truncate px-3 py-2 text-xs text-brand-deep/50;
+  }
+
+  .acct-menu-item {
+    @apply block w-full px-3 py-2 text-left text-sm text-brand-deep/80;
+  }
+
+  .acct-menu-item:hover {
+    @apply bg-brand-deep/5;
+  }
+
+  .acct-menu-leave {
+    @apply text-brand-deep/60;
+  }
+
+  .acct-drawer-leave {
+    @apply w-full py-2.5 text-left font-medium text-brand-deep/70;
+    background: none;
+    border: 0;
   }
 
   .app-header-mobile {
@@ -9172,15 +9230,26 @@ html.dark .form-note {
     border-radius: 1rem;
     padding: 1.125rem;
     background:
-      radial-gradient(circle at 100% 0, color-mix(in srgb, var(--cmp-color, var(--color-brand-accent)) 12%, transparent), transparent 48%),
+      radial-gradient(
+        circle at 100% 0,
+        color-mix(in srgb, var(--cmp-color, var(--color-brand-accent)) 12%, transparent),
+        transparent 48%
+      ),
       var(--color-brand-card);
     box-shadow: 0 0.5rem 1.5rem rgb(0 44 33 / 0.055);
-    transition: transform 0.2s ease, box-shadow 0.2s ease, border-color 0.2s ease;
+    transition:
+      transform 0.2s ease,
+      box-shadow 0.2s ease,
+      border-color 0.2s ease;
   }
 
   .portal-cmp-card:hover {
     transform: translateY(-2px);
-    border-color: color-mix(in srgb, var(--cmp-color, var(--color-brand-accent)) 45%, var(--color-brand-divider));
+    border-color: color-mix(
+      in srgb,
+      var(--cmp-color, var(--color-brand-accent)) 45%,
+      var(--color-brand-divider)
+    );
     box-shadow: 0 0.875rem 2rem rgb(0 44 33 / 0.09);
   }
 
@@ -9196,7 +9265,11 @@ html.dark .form-note {
 
   html.dark .portal-cmp-card {
     background:
-      radial-gradient(circle at 100% 0, color-mix(in srgb, var(--cmp-color, var(--color-brand-accent)) 12%, transparent), transparent 48%),
+      radial-gradient(
+        circle at 100% 0,
+        color-mix(in srgb, var(--cmp-color, var(--color-brand-accent)) 12%, transparent),
+        transparent 48%
+      ),
       var(--color-brand-card);
     box-shadow: 0 0.5rem 1.5rem rgb(0 0 0 / 0.12);
   }
@@ -9213,8 +9286,7 @@ html.dark .form-note {
     height: 0.625rem;
     border-radius: 50%;
     background: var(--cmp-color, var(--chart-1));
-    box-shadow: 0 0 0 0.25rem
-      color-mix(in srgb, var(--cmp-color, var(--chart-1)) 13%, transparent);
+    box-shadow: 0 0 0 0.25rem color-mix(in srgb, var(--cmp-color, var(--chart-1)) 13%, transparent);
   }
 
   .portal-cmp-card-remove {
@@ -9252,8 +9324,7 @@ html.dark .form-note {
     gap: 0.25rem;
     min-height: 10rem;
     padding: 1rem;
-    border: 1px dashed
-      color-mix(in srgb, var(--color-brand-accent) 40%, var(--color-brand-divider));
+    border: 1px dashed color-mix(in srgb, var(--color-brand-accent) 40%, var(--color-brand-divider));
     border-radius: 1rem;
     background: color-mix(in srgb, var(--color-brand-accent) 4%, transparent);
     color: var(--color-brand-deep);
@@ -9594,13 +9665,20 @@ html.dark .form-note {
     position: absolute;
     inset: 0;
     content: '';
-    background: linear-gradient(100deg, transparent 20%, var(--skeleton-shine) 48%, transparent 76%);
+    background: linear-gradient(
+      100deg,
+      transparent 20%,
+      var(--skeleton-shine) 48%,
+      transparent 76%
+    );
     transform: translateX(-100%);
     animation: portal-skeleton-shimmer 1.5s ease-in-out infinite;
   }
 
   @keyframes portal-skeleton-shimmer {
-    to { transform: translateX(100%); }
+    to {
+      transform: translateX(100%);
+    }
   }
 
   @media (prefers-reduced-motion: reduce) {
@@ -9646,9 +9724,17 @@ html.dark .form-note {
     height: 0.8rem;
   }
 
-  .portal-skeleton-line--label { width: 55%; }
-  .portal-skeleton-line--number { width: 45%; height: 1.65rem; }
-  .portal-skeleton-line--sub { width: 78%; height: 0.625rem; }
+  .portal-skeleton-line--label {
+    width: 55%;
+  }
+  .portal-skeleton-line--number {
+    width: 45%;
+    height: 1.65rem;
+  }
+  .portal-skeleton-line--sub {
+    width: 78%;
+    height: 0.625rem;
+  }
 
   .portal-skeleton-panels {
     display: grid;
@@ -9678,8 +9764,14 @@ html.dark .form-note {
     margin-bottom: 1rem;
   }
 
-  .portal-skeleton-title { width: 11rem; height: 1rem; }
-  .portal-skeleton-control { width: 5.5rem; height: 1.75rem; }
+  .portal-skeleton-title {
+    width: 11rem;
+    height: 1rem;
+  }
+  .portal-skeleton-control {
+    width: 5.5rem;
+    height: 1.75rem;
+  }
 
   .portal-skeleton-rows {
     display: grid;
@@ -9693,11 +9785,25 @@ html.dark .form-note {
     border-bottom: 1px solid var(--color-brand-divider);
   }
 
-  .portal-skeleton-row:last-child { border-bottom: 0; }
-  .portal-skeleton-avatar { flex: 0 0 2rem; height: 2rem; border-radius: 50%; }
-  .portal-skeleton-row-text { display: grid; flex: 1; gap: 0.5rem; }
-  .portal-skeleton-row-text .portal-skeleton-line { width: 68%; }
-  .portal-skeleton-row-text .portal-skeleton-line--sub { width: 42%; }
+  .portal-skeleton-row:last-child {
+    border-bottom: 0;
+  }
+  .portal-skeleton-avatar {
+    flex: 0 0 2rem;
+    height: 2rem;
+    border-radius: 50%;
+  }
+  .portal-skeleton-row-text {
+    display: grid;
+    flex: 1;
+    gap: 0.5rem;
+  }
+  .portal-skeleton-row-text .portal-skeleton-line {
+    width: 68%;
+  }
+  .portal-skeleton-row-text .portal-skeleton-line--sub {
+    width: 42%;
+  }
 
   .portal-skeleton-chart {
     position: relative;
@@ -9707,13 +9813,34 @@ html.dark .form-note {
     overflow: hidden;
   }
 
-  .portal-skeleton-chart-line { width: 100%; height: 1px; }
-  .portal-skeleton-chart-line--short { width: 82%; }
+  .portal-skeleton-chart-line {
+    width: 100%;
+    height: 1px;
+  }
+  .portal-skeleton-chart-line--short {
+    width: 82%;
+  }
   .portal-skeleton-chart-plot {
     position: absolute;
     inset: 2.5rem 0 0.25rem;
-    background: linear-gradient(160deg, transparent 48%, var(--skeleton-base) 49%, var(--skeleton-base) 64%, transparent 65%);
-    clip-path: polygon(0 80%, 16% 55%, 32% 68%, 52% 25%, 68% 49%, 86% 12%, 100% 30%, 100% 100%, 0 100%);
+    background: linear-gradient(
+      160deg,
+      transparent 48%,
+      var(--skeleton-base) 49%,
+      var(--skeleton-base) 64%,
+      transparent 65%
+    );
+    clip-path: polygon(
+      0 80%,
+      16% 55%,
+      32% 68%,
+      52% 25%,
+      68% 49%,
+      86% 12%,
+      100% 30%,
+      100% 100%,
+      0 100%
+    );
     opacity: 0.75;
   }
 
@@ -9726,7 +9853,9 @@ html.dark .form-note {
     .portal-skeleton-panels--performance .portal-skeleton-panel:last-child {
       grid-column: auto;
     }
-    .portal-skeleton-action { width: 7.5rem; }
+    .portal-skeleton-action {
+      width: 7.5rem;
+    }
   }
 }
 
@@ -9914,7 +10043,6 @@ html.dark .form-note {
 .portal-drawer-card--stock-edit {
   width: min(38rem, 100%);
 }
-
 
 .portal-restock-form {
   gap: 1rem;

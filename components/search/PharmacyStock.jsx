@@ -8,6 +8,7 @@ import { openStatus } from '@/lib/opening-hours'
 import { ORIGIN_FILTERS, originGroup } from '@/lib/origin-flags'
 import { logError } from '@/lib/log'
 import ProductCard from '@/components/search/ProductCard'
+import FavoriteButton from '@/components/conta/FavoriteButton'
 import ProductModal from '@/components/search/ProductModal'
 import { useProductSheet } from '@/components/search/useProductSheet'
 import { useStuckBar } from '@/components/search/useStuckBar'
@@ -231,6 +232,12 @@ export default function PharmacyStock({ slug, initialItems = null }) {
                   Farmácia parceira{pharmacy.municipio ? ` · ${pharmacy.municipio}` : ''}
                 </p>
                 <h1>{pharmacy.name}</h1>
+                <FavoriteButton
+                  kind="pharmacy"
+                  id={pharmacy.id}
+                  label="Guardar farmácia"
+                  className="band-fav"
+                />
                 <p className="addr">
                   {[pharmacy.address, pharmacy.municipio].filter(Boolean).join(' · ') || 'Luanda'}
                 </p>

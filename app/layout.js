@@ -8,6 +8,7 @@ import '@fontsource-variable/inter'
 import { Analytics } from '@vercel/analytics/next'
 import { SpeedInsights } from '@vercel/speed-insights/next'
 import ThemeProvider from '@/components/providers/ThemeProvider'
+import FavoritesProvider from '@/components/conta/FavoritesProvider'
 import '@/styles/globals.css'
 // Linguagem de loja das páginas públicas do Localizador (Modelos B/D/E/F).
 // Scoped em `.cf-shop` para não tocar no portal nem no site principal.
@@ -71,7 +72,11 @@ export default async function RootLayout({ children }) {
       </head>
       <body>
         <ThemeProvider>
-          <Suspense fallback={null}>{children}</Suspense>
+          {/* Uma leitura de favoritos por página: o cabeçalho, os cartões e a
+              ficha partilham o mesmo conjunto. */}
+          <FavoritesProvider>
+            <Suspense fallback={null}>{children}</Suspense>
+          </FavoritesProvider>
           <Analytics />
           <SpeedInsights />
         </ThemeProvider>

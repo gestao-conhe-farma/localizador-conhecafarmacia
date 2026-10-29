@@ -4272,3 +4272,83 @@ a.acct-card-title:hover {
     margin-left: 0;
   }
 }
+
+/* ---------- guardar (Task 5.7) ----------
+   O cartão passou a ser um invólucro com o link dentro, para o botão de
+   guardar poder ser irmão do link: um <button> dentro de um <a> não é HTML
+   válido nem deixa o teclado escolher entre abrir a ficha e guardar. O
+   desenho do cartão continua em `.pcard`, por isso nada mais mudou.
+   ---------------------------------------------------------------------- */
+
+.pcard-link {
+  display: flex;
+  flex: 1;
+  flex-direction: column;
+  min-height: 100%;
+  color: inherit;
+  text-decoration: none;
+}
+
+.pcard-fav {
+  position: absolute;
+  top: 10px;
+  right: 10px;
+  z-index: 3;
+}
+
+.fav-btn {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  padding: 7px 12px;
+  border: 1px solid var(--cf-line);
+  border-radius: 999px;
+  background: var(--cf-paper);
+  color: var(--cf-ink);
+  font: inherit;
+  font-size: 12.5px;
+  font-weight: 600;
+  cursor: pointer;
+  transition:
+    border-color 0.15s,
+    background 0.15s,
+    color 0.15s;
+}
+
+.fav-btn:hover {
+  border-color: var(--cf-accent);
+  color: var(--cf-accent);
+}
+
+.fav-btn--on,
+.fav-btn--on:hover {
+  border-color: var(--cf-green);
+  background: var(--cf-green);
+  color: var(--cf-on-green);
+}
+
+.fav-btn--compact {
+  width: 32px;
+  height: 32px;
+  justify-content: center;
+  padding: 0;
+  box-shadow: 0 2px 8px rgba(0, 25, 29, 0.14);
+}
+
+.pdp-fav {
+  margin: 8px 0 2px;
+}
+
+.band-fav {
+  margin: 10px 0 4px;
+}
+
+.res-account {
+  margin-top: 10px;
+  font-size: 13.5px;
+}
+
+.res-account a {
+  color: var(--cf-accent);
+  text-decoration: underline;
+}

@@ -3,6 +3,7 @@
 import { useEffect, useMemo, useRef, useState, useSyncExternalStore } from 'react'
 import Link from 'next/link'
 import { createReservation } from '@/lib/actions/reservations'
+import FavoriteButton from '@/components/conta/FavoriteButton'
 import { openStatus, openingWeek } from '@/lib/opening-hours'
 import { monthYear } from '@/lib/expiry'
 import { formatOptionLabel, packStructureText, perBasePrice, unitLabel } from '@/lib/sale-options'
@@ -183,6 +184,7 @@ export default function ProductSheet({
   alternatives = [],
   modal = false,
   onOpenItem = null,
+  profile = null,
 }) {
   const [mode, setMode] = useState('ficha') // ficha → quando → contacto → feito
   const [quantity, setQuantity] = useState(1)
@@ -195,8 +197,11 @@ export default function ProductSheet({
   // escolha do cliente. Os valores automáticos são DERIVADOS do relógio
   // no render (mounted), nunca escritos num efeito de montagem.
   const [picked, setPicked] = useState(null)
-  const [name, setName] = useState('')
-  const [phone, setPhone] = useState('')
+  // Pré-preenchimento a partir da conta (Task 5.8): o contacto já dado em
+  // conta.* poupa dois campos. Continua a ser editável por reserva — o que é
+  // gravado é o que estiver no formulário, não o perfil.
+  const [name, setName] = useState(profile?.name || '')
+  const [phone, setPhone] = useState(profile?.phone || '')
   const [note, setNote] = useState('')
   const [busy, setBusy] = useState(false)
   const [error, setError] = useState('')
@@ -433,6 +438,7 @@ export default function ProductSheet({
             <h2 className="pdp-title" tabIndex={-1}>
               {item.drug_name}
             </h2>
+            <FavoriteButton kind="drug" id={item.drug_id} className="pdp-fav" />
             <p className="pdp-form">
               {[item.drug_form, item.drug_dosage].filter(Boolean).join(' · ') ||
                 kindLabel(item.drug_kind)}
@@ -927,6 +933,13 @@ export default function ProductSheet({
               A {created.pharmacyName} recebeu o pedido e vai responder pelo telefone. Guarde o link
               de acompanhamento — é por ele que vê o estado da reserva.
             </p>
+
+            {profile && (
+              <p className="res-account">
+                Esta reserva fica na sua conta. <Link href="/reservas">Ver as minhas reservas</Link>
+                .
+              </p>
+            )}
 
             <div className="res-link">
               <span>Link de acompanhamento</span>

@@ -11,6 +11,7 @@ import {
 } from '@/lib/product-utils'
 import { formatOptionLabel, unitLabel } from '@/lib/sale-options'
 import CategoryPhoto from '@/components/search/CategoryPhoto'
+import FavoriteButton from '@/components/conta/FavoriteButton'
 
 /**
  * Cartão de produto (Modelo D) — o mesmo na prateleira da farmácia, na
@@ -43,74 +44,81 @@ export default function ProductCard({ item, flat = false, ctaLabel, priceLabel, 
       }
     : null
 
+  // O cartão é um <a> e o botão de guardar vive ao lado, não dentro: um botão
+  // dentro de um link nem é HTML válido nem deixa o teclado escolher entre
+  // abrir a ficha e guardar. `.pcard` fica no invólucro, para o desenho e os
+  // hovers não mudarem.
   return (
-    <Link
-      href={productHref(item.stock_item_id)}
-      className={`pcard${flat ? ' pcard--flat' : ''}`}
-      aria-label={`${item.drug_name} — ${label}`}
-      {...openProps}
-    >
-      <div className="pcard-media">
-        <div className="pcard-flags">
-          {showKind && <span className="tagchip">{kindLabel(kind)}</span>}
-          {item.drug_requires_rx ? (
-            <span className="tagchip tagchip--rx">Receita</span>
+    <div className={`pcard${flat ? ' pcard--flat' : ''}`}>
+      <FavoriteButton kind="drug" id={item.drug_id} compact className="pcard-fav" />
+      <Link
+        href={productHref(item.stock_item_id)}
+        className="pcard-link"
+        aria-label={`${item.drug_name} — ${label}`}
+        {...openProps}
+      >
+        <div className="pcard-media">
+          <div className="pcard-flags">
+            {showKind && <span className="tagchip">{kindLabel(kind)}</span>}
+            {item.drug_requires_rx ? (
+              <span className="tagchip tagchip--rx">Receita</span>
+            ) : (
+              <span className="tagchip">Venda livre</span>
+            )}
+            {item.reservable === false && <span className="tagchip">Balcão</span>}
+          </div>
+
+          {photo ? (
+            <img
+              className="cf-photo"
+              src={photo}
+              alt={`Embalagem de ${item.drug_name} — ${item.pharmacy_name}`}
+              loading="lazy"
+            />
           ) : (
-            <span className="tagchip">Venda livre</span>
+            <CategoryPhoto item={item} className="cf-photo">
+              <div className="pack">
+                <span className="pack-brand">{item.brand || item.pharmacy_name}</span>
+                <span className="pack-name">{item.drug_name}</span>
+                {item.drug_form && <span className="pack-dose">{item.drug_form}</span>}
+                <span className="pack-foot">
+                  <span>{presentation(item) || kindLabel(kind)}</span>
+                  <span>{qty || 'Confirmado'}</span>
+                </span>
+              </div>
+            </CategoryPhoto>
           )}
-          {item.reservable === false && <span className="tagchip">Balcão</span>}
         </div>
 
-        {photo ? (
-          <img
-            className="cf-photo"
-            src={photo}
-            alt={`Embalagem de ${item.drug_name} — ${item.pharmacy_name}`}
-            loading="lazy"
-          />
-        ) : (
-          <CategoryPhoto item={item} className="cf-photo">
-            <div className="pack">
-              <span className="pack-brand">{item.brand || item.pharmacy_name}</span>
-              <span className="pack-name">{item.drug_name}</span>
-              {item.drug_form && <span className="pack-dose">{item.drug_form}</span>}
-              <span className="pack-foot">
-                <span>{presentation(item) || kindLabel(kind)}</span>
-                <span>{qty || 'Confirmado'}</span>
-              </span>
-            </div>
-          </CategoryPhoto>
-        )}
-      </div>
-
-      <div className="pcard-body">
-        <span className="pcard-name">{item.drug_name}</span>
-        <span className="pcard-meta">
-          {[cardMeta(item), qty].filter(Boolean).join(' · ') || item.pharmacy_name}
-        </span>
-
-        <div className="pcard-pricerow">
-          <div>
-            <span className="price">{priceLabel || price.label}</span>
-            {price.per && <div className="pcard-unit">{price.per}</div>}
-          </div>
-          <span className="pcard-fresh">
-            <i className="cf-dot" />
-            {freshness(item.confirmed_at) || 'agora'}
+        <div className="pcard-body">
+          <span className="pcard-name">{item.drug_name}</span>
+          <span className="pcard-meta">
+            {[cardMeta(item), qty].filter(Boolean).join(' · ') || item.pharmacy_name}
           </span>
+
+          <div className="pcard-pricerow">
+            <div>
+              <span className="price">{priceLabel || price.label}</span>
+              {price.per && <div className="pcard-unit">{price.per}</div>}
+            </div>
+            <span className="pcard-fresh">
+              <i className="cf-dot" />
+              {freshness(item.confirmed_at) || 'agora'}
+            </span>
+          </div>
+
+          {opts.length > 1 && (
+            <div className="pcard-unit" style={{ marginTop: 4 }}>
+              {opts
+                .map((o) => formatOptionLabel(o, unitLabel(opts.find((x) => x.is_default)?.unit)))
+                .join(' · ')}
+            </div>
+          )}
         </div>
 
-        {opts.length > 1 && (
-          <div className="pcard-unit" style={{ marginTop: 4 }}>
-            {opts
-              .map((o) => formatOptionLabel(o, unitLabel(opts.find((x) => x.is_default)?.unit)))
-              .join(' · ')}
-          </div>
-        )}
-      </div>
-
-      <span className="pcard-cta">{label}</span>
-    </Link>
+        <span className="pcard-cta">{label}</span>
+      </Link>
+    </div>
   )
 }
 

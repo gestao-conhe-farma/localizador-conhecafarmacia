@@ -5,6 +5,7 @@ import Link from 'next/link'
 import Image from 'next/image'
 import { usePathname } from 'next/navigation'
 import ThemeToggle from '@/components/ui/ThemeToggle'
+import AccountEntry from '@/components/conta/AccountEntry'
 
 const LINKS = [
   { href: '/pesquisa', label: 'Pesquisar', path: 'pesquisa' },
@@ -41,13 +42,16 @@ export default function MobileDrawer({ open, onClose }) {
   return (
     <>
       <div className={`drawer-overlay${open ? ' active' : ''}`} onClick={onClose} />
-      <nav
-        className={`mobile-drawer${open ? ' open' : ''}`}
-        aria-label="Menu"
-        inert={!open}
-      >
+      <nav className={`mobile-drawer${open ? ' open' : ''}`} aria-label="Menu" inert={!open}>
         <button className="drawer-close" onClick={onClose} aria-label="Fechar menu">
-          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+          <svg
+            viewBox="0 0 24 24"
+            fill="none"
+            stroke="currentColor"
+            strokeWidth="2"
+            strokeLinecap="round"
+            strokeLinejoin="round"
+          >
             <line x1="18" y1="6" x2="6" y2="18" />
             <line x1="6" y1="6" x2="18" y2="18" />
           </svg>
@@ -79,6 +83,7 @@ export default function MobileDrawer({ open, onClose }) {
               </Link>
             </li>
           ))}
+          <AccountEntry variant="drawer" onNavigate={onClose} />
           <li>
             <a
               href="https://conhecafarmacia.com"

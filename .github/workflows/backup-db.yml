@@ -1,0 +1,107 @@
+# =============================================================================
+# Backup semanal da base de dados do Localizador
+#
+# ESTE É O ÚNICO BACKUP QUE EXISTE. O projecto Supabase está no plano
+# gratuito, que não tem backups automáticos nem recuperação point-in-time
+# (§9.1 de docs/2026-10-28-contas-utilizador-partilhadas.md). Se este
+# workflow parar de correr, ou se o dump nunca tiver sido restaurado, uma
+# migração mal aplicada passa a ser perda definitiva.
+#
+# Correr à mão: Actions → «backup-db» → Run workflow.
+#
+# O dump é `pg_dump -Fc`: formato personalizado e comprimido, com o esquema
+# `public` e o `localizador`. O cliente é o 17 do PGDG porque o servidor é
+# PostgreSQL 17 — o cliente 16 do Ubuntu recusa com «server version mismatch».
+#
+# O artefacto guarda-se 90 dias, que é a retenção máxima no GitHub: o dump
+# mais antigo que existe tem, no máximo, 90 dias.
+#
+# PROVA DE RESTAURO — repetir uma vez por trimestre, com o ficheiro descarregado
+# do artefacto (Tasks 1.5 e 1.6 do plano):
+#
+#   pg_restore -l backup-<data>.dump                          # o índice abre
+#   pg_restore -l backup-<data>.dump | grep -c 'TABLE localizador'   # 25
+#   pg_restore --clean --if-exists -d "$TARGET_DB_URL" backup-<data>.dump
+#
+# Um backup que nunca foi restaurado não é um backup: o `--clean --if-exists`
+# faz o restauro correr sobre uma base já usada, que é o caso real.
+#
+# Segredo necessário: SUPABASE_DB_URL (Settings → Secrets and variables →
+# Actions), com a connection string directa do projecto, incluindo a palavra-
+# passe da base. Sem ele o job falha na primeira verificação, de propósito.
+# =============================================================================
+
+name: backup-db
+
+on:
+  schedule:
+    # Domingo, 03:00 UTC. Escolhido por ser a hora de menor uso em Luanda
+    # (04:00 local) e por não colidir com o cron diário da reconfirmação.
+    - cron: '0 3 * * 0'
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+concurrency:
+  group: backup-db
+  cancel-in-progress: false
+
+jobs:
+  dump:
+    name: pg_dump da base
+    runs-on: ubuntu-latest
+    timeout-minutes: 30
+    env:
+      SUPABASE_DB_URL: ${{ secrets.SUPABASE_DB_URL }}
+
+    steps:
+      - name: Confirmar o segredo
+        run: |
+          set -euo pipefail
+          if [ -z "${SUPABASE_DB_URL:-}" ]; then
+            echo "::error::Falta o segredo SUPABASE_DB_URL. Sem ele não há backup nenhum — configura-o em Settings → Secrets and variables → Actions."
+            exit 1
+          fi
+
+      - name: Instalar o cliente PostgreSQL 17
+        run: |
+          set -euo pipefail
+          sudo install -d /usr/share/postgresql-common/pgdg
+          sudo curl -fsSL -o /usr/share/postgresql-common/pgdg/apt.postgresql.org.asc \
+            https://www.postgresql.org/media/keys/ACCC4CF8.asc
+          echo "deb [signed-by=/usr/share/postgresql-common/pgdg/apt.postgresql.org.asc] https://apt.postgresql.org/pub/repos/apt $(lsb_release -cs)-pgdg main" \
+            | sudo tee /etc/apt/sources.list.d/pgdg.list
+          sudo apt-get update
+          sudo apt-get install -y --no-install-recommends postgresql-client-17
+          pg_dump --version
+
+      - name: Dump
+        run: |
+          set -euo pipefail
+          stamp="$(date -u +%Y-%m-%d)"
+          echo "DUMP_NAME=backup-${stamp}.dump" >> "$GITHUB_ENV"
+          echo "ARTIFACT_NAME=localizador-db-${stamp}" >> "$GITHUB_ENV"
+          pg_dump "$SUPABASE_DB_URL" -Fc -f "backup-${stamp}.dump"
+          ls -lh "backup-${stamp}.dump"
+
+      - name: Verificar que o dump abre e tem as 25 tabelas
+        run: |
+          set -euo pipefail
+          pg_restore -l "$DUMP_NAME" > /dev/null
+          # `awk` e não `grep -c`: o `grep -c` devolve 1 quando não há
+          # correspondências e o `set -e` abortava antes da mensagem legível.
+          tabelas="$(pg_restore -l "$DUMP_NAME" | awk '/TABLE localizador/ { n++ } END { print n + 0 }')"
+          echo "Tabelas no schema localizador: ${tabelas}"
+          if [ "${tabelas}" -lt 25 ]; then
+            echo "::error::O dump só tem ${tabelas} tabelas no schema localizador (esperadas 25). Não subir este artefacto como backup válido."
+            exit 1
+          fi
+
+      - name: Guardar o artefacto (90 dias)
+        uses: actions/upload-artifact@v4
+        with:
+          name: ${{ env.ARTIFACT_NAME }}
+          path: ${{ env.DUMP_NAME }}
+          retention-days: 90
+          if-no-files-found: error

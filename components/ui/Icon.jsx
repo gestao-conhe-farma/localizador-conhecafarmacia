@@ -208,6 +208,29 @@ const NAV_PATHS = {
       <circle cx="14" cy="18" r="2" />
     </>
   ),
+  // Preferências — deslizadores (o mesmo desenho do site, traço mais fino).
+  preferencias: (
+    <>
+      <path d="M4 6h10M18 6h2M4 12h2M10 12h10M4 18h8M16 18h4" />
+      <circle cx="16" cy="6" r="2" />
+      <circle cx="8" cy="12" r="2" />
+      <circle cx="14" cy="18" r="2" />
+    </>
+  ),
+  // Privacidade — cadeado fechado.
+  privacidade: (
+    <>
+      <rect x="4.5" y="10.5" width="15" height="9.5" rx="2" />
+      <path d="M8 10.5V7.5a4 4 0 0 1 8 0v3" />
+      <path d="M12 14.5v2" />
+    </>
+  ),
+  // Atividade — pulso.
+  atividade: (
+    <>
+      <path d="M3 12h4l2.5-6 4 12 2.5-6h5" />
+    </>
+  ),
   // Equipa (só gerente) — dois perfis lado a lado.
   equipa: (
     <>

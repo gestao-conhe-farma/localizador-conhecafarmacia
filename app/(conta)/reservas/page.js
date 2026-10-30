@@ -48,7 +48,7 @@ export default async function ReservasPage() {
   const { data, error } = await supabase
     .from('reservations')
     .select(
-      'id, status, created_at, quantity, confirmed_quantity, access_token, drugs(name, form, dosage), pharmacies(name, slug), stock_sale_options(unit, pack_size)',
+      'id, status, created_at, quantity, confirmed_quantity, requester_municipio, access_token, drugs(name, form, dosage), pharmacies(name, slug), stock_sale_options(unit, pack_size)',
     )
     .eq('user_id', user.id)
     .order('created_at', { ascending: false })
@@ -121,7 +121,12 @@ export default async function ReservasPage() {
                       {presentation && <span className="acct-row-pres"> · {presentation}</span>}
                     </span>
                     <span className="conta-row-meta">
-                      {[r.pharmacies?.name, quantityDesc(r), fmtDate(r.created_at)]
+                      {[
+                        r.pharmacies?.name,
+                        r.requester_municipio,
+                        quantityDesc(r),
+                        fmtDate(r.created_at),
+                      ]
                         .filter(Boolean)
                         .join(' · ')}
                     </span>

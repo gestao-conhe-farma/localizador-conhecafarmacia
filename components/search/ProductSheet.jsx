@@ -3,6 +3,7 @@
 import { useEffect, useMemo, useRef, useState, useSyncExternalStore } from 'react'
 import Link from 'next/link'
 import { createReservation } from '@/lib/actions/reservations'
+import { createClient } from '@/lib/supabase/client'
 import FavoriteButton from '@/components/conta/FavoriteButton'
 import { openStatus, openingWeek } from '@/lib/opening-hours'
 import { monthYear } from '@/lib/expiry'
@@ -202,6 +203,39 @@ export default function ProductSheet({
   // gravado é o que estiver no formulário, não o perfil.
   const [name, setName] = useState(profile?.name || '')
   const [phone, setPhone] = useState(profile?.phone || '')
+  const [municipality, setMunicipality] = useState(profile?.municipality || '')
+
+  // Conta iniciada em qualquer porta de entrada (rota /produto ou ficha em
+  // cartão): se o nome/telefone não vieram do servidor, vão buscar-se aos
+  // metadados da sessão quando o formulário de reserva abre. Continua tudo
+  // editável — o que fica na reserva é o que estiver no formulário.
+  const prefilled = useRef(false)
+  useEffect(() => {
+    if (mode === 'ficha' || prefilled.current) return
+    prefilled.current = true
+    let alive = true
+    ;(async () => {
+      try {
+        const supabase = createClient()
+        const {
+          data: { user },
+        } = await supabase.auth.getUser()
+        const meta = user?.user_metadata || {}
+        if (!alive) return
+        const savedName = meta.full_name || meta.display_name || ''
+        const savedPhone = meta.phone || meta.inscricao?.telefone || ''
+        const savedMunicipio = meta.municipality || ''
+        if (!name && savedName) setName(savedName)
+        if (!phone && savedPhone) setPhone(savedPhone)
+        if (!municipality && savedMunicipio) setMunicipality(savedMunicipio)
+      } catch {
+        // Sem sessão legível o formulário fica como está.
+      }
+    })()
+    return () => {
+      alive = false
+    }
+  }, [mode, name, phone, municipality])
   const [note, setNote] = useState('')
   const [busy, setBusy] = useState(false)
   const [error, setError] = useState('')
@@ -343,6 +377,7 @@ export default function ProductSheet({
       stockItemId: item.stock_item_id,
       name,
       phone,
+      municipality,
       quantity,
       notes,
       saleOptionId: option?.id || null,
@@ -848,6 +883,16 @@ export default function ProductSheet({
                     value={phone}
                     onChange={(e) => setPhone(e.target.value)}
                     aria-label="Telemóvel"
+                  />
+                  <input
+                    className="cf-field cf-field--square"
+                    type="text"
+                    placeholder="Município (ex.: Luanda)"
+                    autoComplete="address-level2"
+                    value={municipality}
+                    maxLength={80}
+                    onChange={(e) => setMunicipality(e.target.value)}
+                    aria-label="Município"
                   />
                 </div>
 

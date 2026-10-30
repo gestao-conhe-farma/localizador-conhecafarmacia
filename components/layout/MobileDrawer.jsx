@@ -76,6 +76,7 @@ export default function MobileDrawer({ open, onClose }) {
             height={40}
             className="drawer-logo-dark"
           />
+          <span className="drawer-eyebrow">Localizador de medicamentos</span>
         </div>
 
         <ul className="drawer-links">

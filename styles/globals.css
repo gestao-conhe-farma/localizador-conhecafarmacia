@@ -1542,8 +1542,8 @@ html.dark .form-note {
   .drawer-auth-links {
     display: flex;
     flex-direction: column;
-    align-items: center;
-    gap: 0.5rem;
+    align-items: stretch;
+    gap: 0.25rem;
     width: 100%;
     margin-bottom: 1rem;
   }
@@ -1552,27 +1552,30 @@ html.dark .form-note {
     width: 100%;
   }
 
+  /* Sem contorno: a linha de conta alinha com as opções de navegação
+     (ícone + etiqueta à esquerda, mesmo ritmo vertical). */
   .drawer-auth-link {
     display: flex;
     align-items: center;
-    justify-content: center;
-    gap: 0.5rem;
+    justify-content: flex-start;
+    gap: 0.625rem;
     width: 100%;
-    padding: 0.625rem 1rem;
-    border-radius: 0.75rem;
+    padding: 0.7rem 0.75rem;
+    border-radius: 10px;
     font-family: inherit;
-    font-size: 0.875rem;
-    font-weight: 600;
+    font-size: 0.9375rem;
+    font-weight: 500;
     color: var(--color-brand-deep);
-    border: 1.5px solid var(--color-brand-line);
+    border: 0;
     text-decoration: none;
     background: none;
     cursor: pointer;
-    transition: background-color 0.2s, color 0.2s, border-color 0.2s;
+    transition: background-color 0.2s, color 0.2s;
   }
 
   .drawer-auth-link:hover {
     background-color: var(--color-brand-bg-alt);
+    color: var(--color-brand-primary);
   }
 
   .drawer-auth-logout {
@@ -2250,16 +2253,28 @@ html.dark .form-note {
     height: 22px;
   }
 
+  /* Lockup à esquerda: logótipo e, por baixo, a linha que diz qual dos dois
+     produtos é este (a única diferença entre as gavetas dos dois sites). */
   .drawer-logo {
     display: flex;
-    justify-content: center;
-    padding-top: 0.5rem;
-    padding-bottom: 1.375rem;
+    flex-direction: column;
+    align-items: flex-start;
+    gap: 0.5rem;
+    padding: 0.5rem 0.25rem 1.375rem;
   }
 
   .drawer-logo img {
-    height: 44px;
+    height: 40px;
     width: auto;
+  }
+
+  .drawer-eyebrow {
+    font-size: 0.59375rem;
+    font-weight: 600;
+    letter-spacing: 0.16em;
+    text-transform: uppercase;
+    color: var(--color-brand-deep);
+    opacity: 0.5;
   }
 
   /* Alterna logo claro/branco conforme o tema (o branco só existe no escuro) */
@@ -2273,6 +2288,19 @@ html.dark .form-note {
 
   html.dark .drawer-logo-dark {
     display: block;
+  }
+
+  /* Separador entre a navegação e o bloco de conta */
+  .drawer-sep {
+    list-style: none;
+    height: 1px;
+    margin: 0.75rem 0.25rem;
+    padding: 0;
+    background: var(--color-brand-line);
+  }
+
+  html.dark .drawer-sep {
+    background: var(--color-brand-divider);
   }
 
   .drawer-links {

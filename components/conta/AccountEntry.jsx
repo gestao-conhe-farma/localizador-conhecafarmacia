@@ -114,6 +114,9 @@ export default function AccountEntry({ variant = 'header', onNavigate = null }) 
   if (variant === 'drawer-links') {
     return (
       <>
+        {/* Separa a navegação do site das opções da conta; só aparece a quem
+            tem sessão, porque é aqui que o bloco existe. */}
+        <li className="drawer-sep" aria-hidden="true" />
         <li>
           <Link href="/guardados" onClick={onNavigate}>
             Os meus guardados

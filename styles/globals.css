@@ -1347,6 +1347,14 @@ html.dark .form-note {
     @apply text-brand-accent;
   }
 
+  /* Toggle de tema no header: escondido no telemóvel — com sessão iniciada,
+     o avatar e o toggle apertavam a barra. Na gaveta continua disponível. */
+  @media (max-width: 767px) {
+    .app-header-theme {
+      display: none;
+    }
+  }
+
   /* Entrada de conta. Este sítio não tem formulários de autenticação: sem
      sessão isto é um link para conta.*; com sessão é o avatar com as duas
      listas e a saída. */
@@ -1401,6 +1409,186 @@ html.dark .form-note {
     @apply w-full py-2.5 text-left font-medium text-brand-deep/70;
     background: none;
     border: 0;
+  }
+
+  /* Dropdown de perfil — a mesma peça e o mesmo comportamento do site
+     principal: avatar com anel, cartão com nome/e-mail e acções. */
+  .profile-wrapper {
+    position: relative;
+  }
+
+  .profile-btn {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    width: 2.25rem;
+    height: 2.25rem;
+    border-radius: 50%;
+    border: 2px solid var(--color-brand-accent);
+    cursor: pointer;
+    overflow: hidden;
+    background: transparent;
+    padding: 0;
+    transition: box-shadow 0.2s, transform 0.2s;
+  }
+
+  .profile-btn:hover {
+    box-shadow: 0 0 0 3px var(--color-brand-accent);
+    transform: scale(1.05);
+  }
+
+  .profile-avatar {
+    width: 100%;
+    height: 100%;
+    object-fit: cover;
+    border-radius: 50%;
+  }
+
+  .profile-avatar-placeholder {
+    width: 100%;
+    height: 100%;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    background: var(--color-brand-accent);
+    color: #ffffff;
+    border-radius: 50%;
+  }
+
+  .profile-dropdown {
+    position: absolute;
+    top: calc(100% + 0.5rem);
+    right: 0;
+    min-width: 220px;
+    background: var(--color-brand-card);
+    border: 1px solid var(--color-brand-divider);
+    border-radius: 0.75rem;
+    box-shadow: var(--shadow-md-soft);
+    opacity: 0;
+    visibility: hidden;
+    transform: translateY(-8px);
+    transition: opacity 0.2s, transform 0.2s, visibility 0.2s;
+    z-index: 50;
+    overflow: hidden;
+  }
+
+  .profile-dropdown.is-open {
+    opacity: 1;
+    visibility: visible;
+    transform: translateY(0);
+  }
+
+  .profile-dropdown-header {
+    padding: 0.875rem 1rem;
+    display: flex;
+    flex-direction: column;
+    gap: 0.125rem;
+  }
+
+  .profile-dropdown-name {
+    font-weight: 600;
+    font-size: 0.875rem;
+    color: var(--color-brand-deep);
+  }
+
+  .profile-dropdown-email {
+    font-size: 0.75rem;
+    color: var(--color-brand-deep);
+    opacity: 0.5;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+  }
+
+  .profile-dropdown-divider {
+    height: 1px;
+    background: var(--color-brand-divider);
+  }
+
+  .profile-dropdown-item {
+    display: flex;
+    align-items: center;
+    gap: 0.625rem;
+    padding: 0.625rem 1rem;
+    font-family: inherit;
+    font-size: 0.875rem;
+    color: var(--color-brand-deep);
+    text-decoration: none;
+    background: none;
+    border: none;
+    width: 100%;
+    cursor: pointer;
+    transition: background-color 0.15s;
+  }
+
+  .profile-dropdown-item:hover {
+    background: var(--color-brand-bg-alt);
+  }
+
+  .profile-dropdown-logout {
+    color: #dc2626;
+  }
+
+  .profile-dropdown-logout:hover {
+    background: rgba(220, 38, 38, 0.08);
+  }
+
+  html.dark .profile-dropdown-item:hover {
+    background: var(--color-brand-bg-alt);
+  }
+
+  /* Acções de conta no rodapé da gaveta — o mesmo par de botões do site
+     principal (contorno, ícone e saída em vermelho), sobre a gaveta clara. */
+  .drawer-auth-links {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    gap: 0.5rem;
+    width: 100%;
+    margin-bottom: 1rem;
+  }
+
+  .drawer-auth-form {
+    width: 100%;
+  }
+
+  .drawer-auth-link {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    gap: 0.5rem;
+    width: 100%;
+    padding: 0.625rem 1rem;
+    border-radius: 0.75rem;
+    font-family: inherit;
+    font-size: 0.875rem;
+    font-weight: 600;
+    color: var(--color-brand-deep);
+    border: 1.5px solid var(--color-brand-line);
+    text-decoration: none;
+    background: none;
+    cursor: pointer;
+    transition: background-color 0.2s, color 0.2s, border-color 0.2s;
+  }
+
+  .drawer-auth-link:hover {
+    background-color: var(--color-brand-bg-alt);
+  }
+
+  .drawer-auth-logout {
+    color: #dc2626;
+    border-color: rgba(220, 38, 38, 0.45);
+  }
+
+  .drawer-auth-logout:hover {
+    background-color: #dc2626;
+    color: #ffffff;
+    border-color: #dc2626;
+  }
+
+  html.dark .drawer-auth-logout {
+    color: #fca5a5;
+    border-color: rgba(252, 165, 165, 0.5);
   }
 
   .app-header-mobile {

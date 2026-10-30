@@ -147,6 +147,13 @@ export default function AccountShell({ user = {}, surface = 'localizador', lang 
     return () => window.removeEventListener('keydown', onKey)
   }, [navOpen])
 
+  // Com a gaveta aberta, o conteúdo por trás não desliza.
+  useEffect(() => {
+    if (!navOpen) return undefined
+    document.body.classList.add('conta-nav-open')
+    return () => document.body.classList.remove('conta-nav-open')
+  }, [navOpen])
+
   async function sair() {
     try {
       await createClient().auth.signOut()

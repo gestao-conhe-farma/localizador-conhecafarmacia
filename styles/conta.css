@@ -933,11 +933,20 @@ html.dark .conta-alert--bad {
   display: none;
 }
 
+/* Com a gaveta aberta o conteúdo por trás não desliza. */
+body.conta-nav-open {
+  overflow: hidden;
+}
+
 @media (max-width: 60rem) {
+  /* Mesma largura da gaveta do site principal e do Localizador (78%,
+     máx. 380px) — uma só medida nos três sítios. */
   .conta-sidebar {
     position: fixed;
     left: 0;
     top: 0;
+    width: 78%;
+    max-width: 380px;
     z-index: 60;
     transform: translateX(-100%);
     transition: transform 0.25s cubic-bezier(0.22, 1, 0.36, 1);

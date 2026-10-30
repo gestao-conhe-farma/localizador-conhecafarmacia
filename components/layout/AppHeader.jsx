@@ -91,7 +91,11 @@ export default function AppHeader() {
                 <path d="M7 7h10v10" />
               </svg>
             </a>
-            <ThemeToggle />
+            {/* No telemóvel o toggle sai do header (vai para a gaveta): com
+                sessão iniciada, o avatar e o toggle apertavam a barra. */}
+            <span className="app-header-theme">
+              <ThemeToggle />
+            </span>
             <button
               className="hamburger"
               onClick={() => setNavOpen((o) => !o)}

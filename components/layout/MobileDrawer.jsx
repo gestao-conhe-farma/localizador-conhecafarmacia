@@ -83,7 +83,7 @@ export default function MobileDrawer({ open, onClose }) {
               </Link>
             </li>
           ))}
-          <AccountEntry variant="drawer" onNavigate={onClose} />
+          <AccountEntry variant="drawer-links" onNavigate={onClose} />
           <li>
             <a
               href="https://conhecafarmacia.com"
@@ -97,6 +97,8 @@ export default function MobileDrawer({ open, onClose }) {
         </ul>
 
         <div className="drawer-footer">
+          {/* Mesmo par de botões do drawer do site principal. */}
+          <AccountEntry variant="drawer" onNavigate={onClose} />
           <div className="drawer-footer-row">
             <a
               className="drawer-brand-mini"

@@ -40,6 +40,7 @@ screenshots/
 # credenciais locais (nunca commitar — contém tokens)
 credenciais.txt
 .env*
+.vercel-account
 
 .vercel
 

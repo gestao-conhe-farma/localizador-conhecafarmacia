@@ -44,9 +44,17 @@ export default function FavoritesProvider({ children }) {
         .eq('user_id', user.id)
 
       if (!vivo) return
+      // O nome e a fotografia vivem em `user_metadata` (é lá que o hub da
+      // conta grava o upload). Sem eles, o header do Localizador caía sempre
+      // no avatar de iniciais e a fotografia só aparecia no site principal.
       setState({
         ready: true,
-        user: { id: user.id, email: user.email || '' },
+        user: {
+          id: user.id,
+          email: user.email || '',
+          name: user.user_metadata?.full_name || user.user_metadata?.display_name || '',
+          avatarUrl: user.user_metadata?.avatar_url || '',
+        },
         keys: (data || [])
           .map((row) =>
             row.drug_id ? chave('drug', row.drug_id) : chave('pharmacy', row.pharmacy_id),

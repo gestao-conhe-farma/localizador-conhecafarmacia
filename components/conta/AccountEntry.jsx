@@ -52,10 +52,14 @@ export default function AccountEntry({ variant = 'header', onNavigate = null }) 
   const utilizador = favoritos.user
   const entrar = entrarHref(aqui || undefined)
   const email = (utilizador?.email || '').trim()
-  const nomeConta = email ? email.split('@')[0] : 'A minha conta'
-  const avatar = email
-    ? `https://www.gravatar.com/avatar/${encodeURIComponent(email.toLowerCase())}?d=identicon&s=64`
-    : null
+  const nomeConta = utilizador?.name || (email ? email.split('@')[0] : 'A minha conta')
+  // A fotografia carregada na conta manda; o identicon é só o recurso para
+  // quem ainda não tem uma — a mesma prioridade do site principal.
+  const avatar =
+    utilizador?.avatarUrl ||
+    (email
+      ? `https://www.gravatar.com/avatar/${encodeURIComponent(email.toLowerCase())}?d=identicon&s=64`
+      : null)
 
   if (!utilizador) {
     if (variant === 'drawer') {

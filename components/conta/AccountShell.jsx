@@ -53,6 +53,14 @@ const NAV = [
         icon: 'reservas',
       },
       {
+        key: 'eventos',
+        surface: 'conta',
+        href: `${ACCOUNT_URL}/perfil/eventos`,
+        path: '/perfil/eventos',
+        label: 'Eventos',
+        icon: 'reservas',
+      },
+      {
         key: 'seguranca',
         surface: 'conta',
         href: `${ACCOUNT_URL}/perfil/seguranca`,

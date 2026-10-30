@@ -5,7 +5,7 @@
    É a mesma composição do portal v2: sidebar branca de altura total com
    hairline à direita, números estruturais e ícones; top-bar fina dentro da
    coluna de conteúdo; drawer em ecrã estreito. O conteúdo vive em painéis
-   de raio pequeno (0,75rem), com listas em linhas separadas por hairline —
+   de raio 1rem, com listas em linhas separadas por hairline —
    nada de cartões grandes centrados.
 
    Fica num ficheiro próprio porque é importado tanto pelo Localizador como
@@ -423,7 +423,7 @@ html.dark .conta-topbar {
 .conta-panel {
   background: var(--color-brand-card);
   border: 1px solid var(--color-brand-divider);
-  border-radius: 0.75rem;
+  border-radius: 1rem;
   overflow: hidden;
 }
 
@@ -692,7 +692,7 @@ html.dark .conta-avatar {
   grid-template-columns: repeat(4, minmax(0, 1fr));
   background: var(--color-brand-card);
   border: 1px solid var(--color-brand-divider);
-  border-radius: 0.75rem;
+  border-radius: 1rem;
   overflow: hidden;
   margin-top: 1rem;
 }
@@ -745,17 +745,44 @@ html.dark .conta-avatar {
   align-items: start;
 }
 
+/* Perfil de estudante: separar os grupos de cartões e manter as métricas
+   adaptáveis em ecrãs estreitos. */
+.conta-profile > .conta-panel,
+.conta-profile > .conta-stats,
+.conta-profile > .conta-profile-grid,
+.conta-profile > .conta-panel + .conta-panel {
+  margin-top: 1.25rem;
+}
+
+.conta-profile .conta-profile-grid {
+  gap: 1.25rem;
+}
+
+.conta-profile-stack {
+  display: grid;
+  gap: 1.25rem;
+  align-content: start;
+}
+
+.conta-profile .conta-stats--3 {
+  grid-template-columns: repeat(3, minmax(0, 1fr));
+}
+
+.conta-profile .conta-stats--4 {
+  grid-template-columns: repeat(4, minmax(0, 1fr));
+}
+
 /* ---------- botões e campos (partilhados pelos formulários) ---------- */
 .conta-btn {
   display: inline-flex;
   align-items: center;
   justify-content: center;
-  gap: 0.4rem;
-  padding: 0.55rem 0.9rem;
+  gap: 0.5rem;
+  padding: 0.5rem 1rem;
   border: 1px solid transparent;
   border-radius: 0.5rem;
   background: transparent;
-  font-size: 0.8125rem;
+  font-size: 0.875rem;
   font-weight: 600;
   line-height: 1.2;
   color: var(--color-brand-deep);
@@ -770,6 +797,23 @@ html.dark .conta-avatar {
 .conta-btn--primary {
   background: var(--color-brand-primary);
   color: #fff;
+}
+
+/* A regra de links do Localizador tem mais especificidade que a classe
+   simples do botão; preservar a tinta de acção em todas as páginas de conta. */
+.cf-shop a.conta-btn.conta-btn--primary,
+.cf-shop a.conta-btn.conta-btn--primary:hover {
+  color: #fff;
+  text-decoration: none;
+}
+
+.cf-shop a.conta-btn.conta-btn--ghost {
+  color: var(--conta-ink-60);
+  text-decoration: none;
+}
+
+.cf-shop a.conta-btn.conta-btn--ghost:hover {
+  color: var(--color-brand-deep);
 }
 
 .conta-btn--primary:hover {
@@ -814,13 +858,14 @@ html.dark .conta-avatar {
 
 .conta-field {
   width: 100%;
-  padding: 0.55rem 0.7rem;
+  padding: 0.625rem 0.875rem;
   border: 1px solid var(--color-brand-divider);
   border-radius: 0.5rem;
   background: var(--color-brand-bg);
   color: var(--color-brand-deep);
   font: inherit;
   font-size: 0.875rem;
+  transition: border-color 0.2s ease;
 }
 
 .conta-field:focus {
@@ -933,11 +978,24 @@ html.dark .conta-alert--bad {
   .conta-grid2 {
     grid-template-columns: minmax(0, 1fr);
   }
+
+  .conta-profile .conta-profile-grid {
+    gap: 1.25rem;
+  }
 }
 
 @media (max-width: 40rem) {
   .conta-stats {
     grid-template-columns: repeat(2, minmax(0, 1fr));
+  }
+
+  .conta-profile .conta-stats--3,
+  .conta-profile .conta-stats--4 {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+  }
+
+  .conta-profile .conta-stat:last-child {
+    border-right: 0;
   }
 
   .conta-stat:nth-child(2n) {

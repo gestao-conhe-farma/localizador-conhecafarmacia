@@ -53,13 +53,14 @@ export default function AccountEntry({ variant = 'header', onNavigate = null }) 
   const entrar = entrarHref(aqui || undefined)
   const email = (utilizador?.email || '').trim()
   const nomeConta = utilizador?.name || (email ? email.split('@')[0] : 'A minha conta')
-  // A fotografia carregada na conta manda; o identicon é só o recurso para
-  // quem ainda não tem uma — a mesma prioridade do site principal.
-  const avatar =
-    utilizador?.avatarUrl ||
-    (email
-      ? `https://www.gravatar.com/avatar/${encodeURIComponent(email.toLowerCase())}?d=identicon&s=64`
-      : null)
+  // A fotografia carregada na conta manda. Sem ela, as iniciais — o
+  // identicon do Gravatar parecia uma imagem que não carregou.
+  const avatar = utilizador?.avatarUrl || null
+  const iniciais = (() => {
+    const parts = String(utilizador?.name || email || '').trim().split(/\s+/).filter(Boolean)
+    if (parts.length === 0) return 'U'
+    return (parts[0][0] + (parts[1]?.[0] || '')).toUpperCase()
+  })()
 
   if (!utilizador) {
     if (variant === 'drawer') {
@@ -127,8 +128,12 @@ export default function AccountEntry({ variant = 'header', onNavigate = null }) 
         {avatar ? (
           <img src={avatar} alt="" className="profile-avatar" width={32} height={32} />
         ) : (
-          <div className="profile-avatar-placeholder">
-            <User size={18} aria-hidden="true" />
+          <div
+            className="profile-avatar-placeholder"
+            style={{ fontSize: '0.6875rem', fontWeight: 700, letterSpacing: '0.02em' }}
+            aria-hidden="true"
+          >
+            {iniciais}
           </div>
         )}
       </button>

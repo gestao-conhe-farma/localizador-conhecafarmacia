@@ -73,6 +73,30 @@ export default async function AuditoriaPage({ searchParams }) {
     if (res.error === 'SEM_PERMISSAO' || res.error === 'SEM_SESSAO') {
       return <SemPermissao acao={res.acao} rotulo={g.session?.roleLabel} />
     }
+    // A trilha exige segundo factor (0052 + matriz). Em vez de uma tabela
+    // vazia sem explicação, diz-se o que falta e onde se resolve.
+    if (res.error === 'MFA_NECESSARIO') {
+      return (
+        <div className="interno-page">
+          <div className="interno-head">
+            <div>
+              <h1 className="interno-title">Auditoria</h1>
+              <p className="interno-sub">A trilha só é legível com o segundo factor confirmado.</p>
+            </div>
+          </div>
+          <div className="interno-box interno-box--pad">
+            <p className="interno-hint">
+              Esta sessão entrou só com a palavra-passe. A leitura da trilha passou a exigir uma
+              sessão <b>aal2</b> — o código do autenticador confirmado nesta sessão. Se já tem o
+              autenticador ativo, termine a sessão e volte a entrar para introduzir o código.
+            </p>
+            <p className="interno-hint" style={{ marginTop: 12 }}>
+              <Link href="/interno/mfa">Ver o estado do segundo factor</Link>
+            </p>
+          </div>
+        </div>
+      )
+    }
     return (
       <div className="interno-page">
         <div className="interno-head">

@@ -2,6 +2,7 @@ import Link from 'next/link'
 import { requireActiveStaff } from '@/lib/staff-session'
 import { getPharmacySession } from '@/lib/pharmacy-session'
 import { leaveStaffProfile } from '@/lib/actions/pharmacy-staff'
+import PortalMfaDisable from '@/components/portal/PortalMfaDisable'
 import ChangePinDrawer from '@/components/portal/ChangePinDrawer'
 import PortalLogout from '@/components/portal/PortalLogout'
 import PortalSettingsNav from '@/components/portal/PortalSettingsNav'
@@ -157,6 +158,30 @@ export default async function StaffSessionPage() {
               </p>
               <div className="sess-card-act">
                 <ChangePinDrawer />
+              </div>
+            </div>
+          </SettingsSection>
+
+          <SettingsSection
+            title="Segundo factor"
+            hint="da conta da farmácia"
+            className="sess-card"
+            cardClassName="settings-card--pad"
+          >
+            <div className="sess-card-body">
+              <p className="sess-card-text">
+                {session?.mfa?.currentLevel === 'aal2'
+                  ? 'Confirmado nesta sessão com o autenticador. O perfil de gerente exige este passo para entrar no portal.'
+                  : 'Opcional para o dono da conta — necessário para quem entra como gerente, que só vê o portal depois de confirmar o código.'}
+              </p>
+              <div className="sess-card-act">
+                {session?.mfa?.currentLevel === 'aal2' ? (
+                  <PortalMfaDisable />
+                ) : (
+                  <Link href="/portal/mfa" className="btn btn-primary">
+                    {session?.mfa?.nextLevel === 'aal2' ? 'Confirmar código' : 'Ativar autenticador'}
+                  </Link>
+                )}
               </div>
             </div>
           </SettingsSection>

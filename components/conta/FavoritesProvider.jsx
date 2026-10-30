@@ -53,7 +53,9 @@ export default function FavoritesProvider({ children }) {
           id: user.id,
           email: user.email || '',
           name: user.user_metadata?.full_name || user.user_metadata?.display_name || '',
-          avatarUrl: user.user_metadata?.avatar_url || '',
+          // `avatar_url_upload` é o upload da conta; `avatar_url` é a foto do
+          // Google, que o login reescreve.
+          avatarUrl: user.user_metadata?.avatar_url_upload || user.user_metadata?.avatar_url || '',
         },
         keys: (data || [])
           .map((row) =>

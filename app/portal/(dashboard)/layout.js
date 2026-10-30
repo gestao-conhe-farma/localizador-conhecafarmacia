@@ -35,6 +35,13 @@ export default async function PortalLayout({ children }) {
   const staff = await getActiveStaff(session)
   if (!staff) redirect('/portal/perfis')
 
+  // SEC-ATH-06: o GERENTE só entra com o segundo factor confirmado nesta
+  // sessão. `/portal/mfa` vive fora deste route group, por isso não há ciclo
+  // de redirect; o dono da conta (farmacia) decide se ativa o TOTP.
+  if (staff.role === 'gerente' && session.mfa?.currentLevel !== 'aal2') {
+    redirect('/portal/mfa')
+  }
+
   // Plano da farmácia (0028): lido UMA vez aqui e passado ao shell, que o
   // mostra no chip da sidebar e marca com cadeado os itens fora do plano.
   // Só dados serializáveis seguem para os componentes cliente — e

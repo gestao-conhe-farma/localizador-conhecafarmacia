@@ -2367,6 +2367,8 @@ html.dark .form-note {
   }
 
   /* Linha de rodapé do drawer: marca + toggle de tema */
+  /* A linha de fecho passou para baixo do par Perfil / Terminar Sessão
+     (.drawer-footer-row), como no site principal. */
   .drawer-footer {
     display: flex;
     flex-direction: column;
@@ -2374,11 +2376,10 @@ html.dark .form-note {
     gap: 1rem;
     padding-top: 1.25rem;
     padding-bottom: 0.75rem;
-    border-top: 1px solid var(--color-brand-line);
     margin-top: auto;
   }
 
-  html.dark .drawer-footer {
+  html.dark .drawer-footer-row {
     border-top-color: var(--color-brand-divider);
   }
 
@@ -2387,11 +2388,16 @@ html.dark .form-note {
     align-items: center;
     justify-content: space-between;
     width: 100%;
+    border-top: 1px solid var(--color-brand-line);
+    padding-top: 0.875rem;
   }
 
   /* É o link para o site principal: sem sublinhado, com sublinhado fino no
      hover para se perceber que se pode tocar. */
   .drawer-brand-mini {
+    display: inline-flex;
+    align-items: center;
+    gap: 0.35rem;
     font-size: 0.625rem;
     font-weight: 600;
     letter-spacing: 0.2em;

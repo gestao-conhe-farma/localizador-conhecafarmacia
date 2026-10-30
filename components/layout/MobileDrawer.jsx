@@ -4,6 +4,7 @@ import { useEffect } from 'react'
 import Link from 'next/link'
 import Image from 'next/image'
 import { usePathname } from 'next/navigation'
+import { ArrowUpRight } from 'lucide-react'
 import ThemeToggle from '@/components/ui/ThemeToggle'
 import AccountEntry from '@/components/conta/AccountEntry'
 
@@ -101,6 +102,7 @@ export default function MobileDrawer({ open, onClose }) {
               rel="noopener noreferrer"
             >
               Conheça Farmácia
+              <ArrowUpRight size={12} aria-hidden="true" />
             </a>
             <ThemeToggle className="drawer-theme-toggle" />
           </div>

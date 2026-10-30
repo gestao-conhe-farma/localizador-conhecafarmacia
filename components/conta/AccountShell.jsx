@@ -37,44 +37,12 @@ const NAV = [
         icon: 'inicio',
       },
       {
-        key: 'guardados',
-        surface: 'localizador',
-        href: `${LOCATOR_URL}/guardados`,
-        path: '/guardados',
-        label: 'Guardados',
-        icon: 'guardados',
-      },
-      {
-        key: 'reservas',
-        surface: 'localizador',
-        href: `${LOCATOR_URL}/reservas`,
-        path: '/reservas',
-        label: 'Reservas',
-        icon: 'reservas',
-      },
-      {
-        key: 'eventos',
-        surface: 'conta',
-        href: `${ACCOUNT_URL}/perfil/eventos`,
-        path: '/perfil/eventos',
-        label: 'Eventos',
-        icon: 'reservas',
-      },
-      {
         key: 'preferencias',
         surface: 'conta',
         href: `${ACCOUNT_URL}/perfil/preferencias`,
         path: '/perfil/preferencias',
         label: 'Preferências',
         icon: 'preferencias',
-      },
-      {
-        key: 'atividade',
-        surface: 'conta',
-        href: `${ACCOUNT_URL}/perfil/atividade`,
-        path: '/perfil/atividade',
-        label: 'Atividade',
-        icon: 'atividade',
       },
       {
         key: 'privacidade',
@@ -91,6 +59,53 @@ const NAV = [
         path: '/perfil/seguranca',
         label: 'Segurança',
         icon: 'seguranca',
+      },
+    ],
+  },
+  {
+    // O que acontece com a conta fora das definições: inscrições em eventos
+    // e o registo do que já fez. Fica separado da «Conta» porque é conteúdo,
+    // não configuração.
+    group: 'Participação',
+    items: [
+      {
+        key: 'eventos',
+        surface: 'conta',
+        href: `${ACCOUNT_URL}/perfil/eventos`,
+        path: '/perfil/eventos',
+        label: 'Eventos',
+        icon: 'reservas',
+      },
+      {
+        key: 'atividade',
+        surface: 'conta',
+        href: `${ACCOUNT_URL}/perfil/atividade`,
+        path: '/perfil/atividade',
+        label: 'Atividade',
+        icon: 'atividade',
+      },
+    ],
+  },
+  {
+    // O que a pessoa fez no Localizador. Vive noutro host, por isso o grupo
+    // existe também para o cérebro saber onde está antes de saltar.
+    group: 'Localizador',
+    items: [
+      {
+        key: 'guardados',
+        surface: 'localizador',
+        href: `${LOCATOR_URL}/guardados`,
+        path: '/guardados',
+        label: 'Guardados',
+        icon: 'guardados',
+      },
+      {
+        key: 'reservas',
+        surface: 'localizador',
+        href: `${LOCATOR_URL}/reservas`,
+        path: '/reservas',
+        label: 'Reservas',
+        icon: 'reservas',
       },
     ],
   },

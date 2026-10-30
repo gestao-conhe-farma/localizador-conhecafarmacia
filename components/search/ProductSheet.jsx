@@ -203,6 +203,8 @@ export default function ProductSheet({
   // gravado é o que estiver no formulário, não o perfil.
   const [name, setName] = useState(profile?.name || '')
   const [phone, setPhone] = useState(profile?.phone || '')
+  // Honeypot: invisível para pessoas, irresistível para bots.
+  const [honeypot, setHoneypot] = useState('')
   const [municipality, setMunicipality] = useState(profile?.municipality || '')
 
   // Conta iniciada em qualquer porta de entrada (rota /produto ou ficha em
@@ -381,6 +383,7 @@ export default function ProductSheet({
       quantity,
       notes,
       saleOptionId: option?.id || null,
+      honeypot,
     })
     setBusy(false)
     if (res.ok) {
@@ -863,6 +866,24 @@ export default function ProductSheet({
               </>
             ) : (
               <>
+                {/* Fora do ecrã e fora da ordem de tabulação: só um bot o
+                    encontra. A recusa é feita no servidor. */}
+                <input
+                  type="text"
+                  name="website_hp"
+                  tabIndex={-1}
+                  autoComplete="off"
+                  value={honeypot}
+                  onChange={(e) => setHoneypot(e.target.value)}
+                  style={{
+                    position: 'absolute',
+                    left: '-9999px',
+                    width: 1,
+                    height: 1,
+                    opacity: 0,
+                  }}
+                />
+
                 <span className="res-label">Os seus dados</span>
                 <div className="res-fields">
                   <input

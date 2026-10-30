@@ -1,3 +1,4 @@
+import { timingSafeEqual } from 'node:crypto'
 import { NextResponse } from 'next/server'
 import { createAdminClient } from '@/lib/supabase/admin'
 import { logError } from '@/lib/log'
@@ -36,7 +37,11 @@ const LIMITES = {
 function autorizado(request) {
   const secret = process.env.INTERNO_ALERT_SECRET
   if (!secret) return false
-  return request.headers.get('authorization') === `Bearer ${secret}`
+  // Tempo constante, como o cron dos webhooks: `===` aborta no primeiro byte
+  // diferente e entrega a distância de Hamming a quem medir a resposta.
+  const a = Buffer.from(request.headers.get('authorization') || '')
+  const b = Buffer.from(`Bearer ${secret}`)
+  return a.length === b.length && timingSafeEqual(a, b)
 }
 
 /** Texto aparado e cortado ao limite, ou `null` quando não veio nada. */

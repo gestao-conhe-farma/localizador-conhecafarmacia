@@ -56,9 +56,13 @@ export default function AccountEntry({ variant = 'header', onNavigate = null }) 
     }
   }, [aberto])
 
-  if (!favoritos?.ready) return null
-
-  const utilizador = favoritos.user
+  // A sessão só é conhecida no cliente, dentro de um efeito. Devolver `null`
+  // até lá deixava o servidor sem este nó e, quando o efeito corria a meio da
+  // hidratação, o cliente já desenhava o link — o nó extra empurrava o resto do
+  // cabeçalho e a React acusava desencontro (#418, home do Localizador). Até
+  // estar pronta, a entrada lê-se como «sem sessão»: é o que o servidor
+  // também desenha, e quem tem sessão vê o avatar entrar logo a seguir.
+  const utilizador = favoritos?.ready ? favoritos.user : null
   const entrar = entrarHref(aqui || undefined)
   const email = (utilizador?.email || '').trim()
   const nomeConta = utilizador?.name || (email ? email.split('@')[0] : 'A minha conta')

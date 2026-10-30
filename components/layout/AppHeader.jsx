@@ -25,6 +25,10 @@ export default function AppHeader() {
   // A pílula de vidro mede a aba ativa em relação ao contentor das pills.
   const pillsetRef = useRef(null)
   const activeLinkRef = useRef(null)
+  // Este header é montado página a página, por isso a pílula é recriada a cada
+  // navegação e só saberia da aba nova depois do carregamento. O ref permite
+  // movê-la no instante do clique (ver GlassNavPill).
+  const pillRef = useRef(null)
 
   // Fecha o menu mobile em cada navegação — ajuste durante o render
   // (padrão «You Might Not Need An Effect»): setState síncrono no
@@ -36,6 +40,11 @@ export default function AppHeader() {
   }
 
   const isActive = (href) => pathname === href || pathname.startsWith(href + '/')
+
+  // Em fichas (medicamento, produto, termos…) nenhuma aba está ativa: sem
+  // âncora a pílula tem de ficar escondida, não herdar a posição da página
+  // anterior.
+  const comAbaAtiva = NAV.some((item) => isActive(item.href))
 
   // O drawer TEM de viver FORA do <header>: o efeito push aplica um transform
   // ao header, e um ancestral com transform faz os filhos position:fixed
@@ -64,9 +73,11 @@ export default function AppHeader() {
           <nav className="app-header-nav" aria-label="Navegação principal">
             <div className="pillset" ref={pillsetRef}>
               <GlassNavPill
+                ref={pillRef}
                 containerRef={pillsetRef}
                 anchorRef={activeLinkRef}
                 signature={pathname}
+                comAbaAtiva={comAbaAtiva}
               />
               {NAV.map((item) => {
                 const active = isActive(item.href)
@@ -77,6 +88,7 @@ export default function AppHeader() {
                     href={item.href}
                     aria-current={active ? 'page' : undefined}
                     className={`app-header-link${active ? ' app-header-link--active' : ''}`}
+                    onClick={(e) => pillRef.current?.saltarPara(e.currentTarget)}
                   >
                     {item.label}
                   </Link>

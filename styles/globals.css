@@ -1314,6 +1314,15 @@ html.dark .form-note {
 
   .app-header-nav .pillset {
     @apply flex items-center gap-1 p-1 rounded-full bg-brand-bg-alt;
+    position: relative;
+  }
+
+  /* Os rótulos ficam por cima da pílula de vidro (z-index 0). O seletor é
+     restrito aos links: `> *` também apanharia a própria pílula (o
+     `.nav-glass`), que tem de permanecer absoluta. */
+  .app-header-nav .pillset > a {
+    position: relative;
+    z-index: 1;
   }
 
   .app-header-link {
@@ -1325,13 +1334,92 @@ html.dark .form-note {
     @apply text-brand-primary;
   }
 
+  /* O fundo sólido saiu: quem marca a aba ativa é a pílula de vidro
+     (GlassNavPill), que desliza entre os itens da nav. */
   .app-header-link--active {
-    @apply text-brand-primary bg-brand-card;
+    @apply text-brand-primary;
   }
 
   html.dark .app-header-link--active {
     @apply text-brand-deep;
-    background: rgba(255, 255, 255, 0.08);
+  }
+
+  /* ============================================
+     Pílula «liquid glass» das abas do header
+     Efeito portado do projeto vandilson-neto: o filtro SVG (ver
+     GlassNavPill) refrata o fundo por backdrop-filter; aqui fica o vinco
+     de vidro — gradiente, arestas internas brancas e brilho no topo.
+     ============================================ */
+  .nav-glass {
+    position: absolute;
+    left: 0;
+    top: 0;
+    z-index: 0;
+    border-radius: 999px;
+    pointer-events: none;
+    opacity: 0;
+    background: linear-gradient(
+      135deg,
+      rgba(255, 255, 255, 0.82),
+      rgba(255, 255, 255, 0.34) 52%,
+      rgba(255, 255, 255, 0.62)
+    );
+    box-shadow:
+      0 1px 2px rgba(0, 42, 50, 0.1),
+      0 4px 12px rgba(0, 42, 50, 0.07),
+      inset 1.5px 1.5px 1px -1px rgba(255, 255, 255, 0.95),
+      inset -1.5px -1.5px 1px -1px rgba(255, 255, 255, 0.7),
+      inset 0 0 6px rgba(255, 255, 255, 0.55);
+    transition:
+      transform 0.45s cubic-bezier(0.32, 0.72, 0, 1),
+      width 0.45s cubic-bezier(0.32, 0.72, 0, 1),
+      height 0.45s cubic-bezier(0.32, 0.72, 0, 1),
+      opacity 0.2s linear;
+  }
+
+  .nav-glass[data-ready] {
+    opacity: 1;
+  }
+
+  .nav-glass-refract {
+    position: absolute;
+    inset: 0;
+    border-radius: inherit;
+    overflow: hidden;
+    background: linear-gradient(180deg, rgba(255, 255, 255, 0.4), rgba(255, 255, 255, 0) 46%);
+  }
+
+  /* O SVG do filtro não ocupa espaço (não pode ser display: none). */
+  .nav-glass-defs {
+    position: absolute;
+    width: 0;
+    height: 0;
+    overflow: hidden;
+  }
+
+  html.dark .nav-glass {
+    background: linear-gradient(
+      135deg,
+      rgba(255, 255, 255, 0.16),
+      rgba(255, 255, 255, 0.05) 52%,
+      rgba(255, 255, 255, 0.1)
+    );
+    box-shadow:
+      0 1px 2px rgba(0, 0, 0, 0.3),
+      0 4px 12px rgba(0, 0, 0, 0.22),
+      inset 1.5px 1.5px 1px -1px rgba(255, 255, 255, 0.42),
+      inset -1.5px -1.5px 1px -1px rgba(255, 255, 255, 0.2),
+      inset 0 0 8px rgba(255, 255, 255, 0.1);
+  }
+
+  html.dark .nav-glass-refract {
+    background: linear-gradient(180deg, rgba(255, 255, 255, 0.14), rgba(255, 255, 255, 0) 50%);
+  }
+
+  @media (prefers-reduced-motion: reduce) {
+    .nav-glass {
+      transition: none;
+    }
   }
 
   .app-header-right {

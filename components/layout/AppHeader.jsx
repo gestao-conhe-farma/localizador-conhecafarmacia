@@ -1,12 +1,13 @@
 'use client'
 
-import { useState } from 'react'
+import { useRef, useState } from 'react'
 import Link from 'next/link'
 import Image from 'next/image'
 import { usePathname } from 'next/navigation'
 import ThemeToggle from '@/components/ui/ThemeToggle'
 import MobileDrawer from '@/components/layout/MobileDrawer'
 import AccountEntry from '@/components/conta/AccountEntry'
+import GlassNavPill from '@/components/layout/GlassNavPill'
 
 const NAV = [
   // O logótipo levava ao início, mas não havia opção explícita: quem chega a
@@ -20,6 +21,10 @@ const NAV = [
 export default function AppHeader() {
   const [navOpen, setNavOpen] = useState(false)
   const pathname = usePathname()
+
+  // A pílula de vidro mede a aba ativa em relação ao contentor das pills.
+  const pillsetRef = useRef(null)
+  const activeLinkRef = useRef(null)
 
   // Fecha o menu mobile em cada navegação — ajuste durante o render
   // (padrão «You Might Not Need An Effect»): setState síncrono no
@@ -57,16 +62,26 @@ export default function AppHeader() {
           </Link>
 
           <nav className="app-header-nav" aria-label="Navegação principal">
-            <div className="pillset">
-              {NAV.map((item) => (
-                <Link
-                  key={item.href}
-                  href={item.href}
-                  className={`app-header-link${isActive(item.href) ? ' app-header-link--active' : ''}`}
-                >
-                  {item.label}
-                </Link>
-              ))}
+            <div className="pillset" ref={pillsetRef}>
+              <GlassNavPill
+                containerRef={pillsetRef}
+                anchorRef={activeLinkRef}
+                signature={pathname}
+              />
+              {NAV.map((item) => {
+                const active = isActive(item.href)
+                return (
+                  <Link
+                    key={item.href}
+                    ref={active ? activeLinkRef : null}
+                    href={item.href}
+                    aria-current={active ? 'page' : undefined}
+                    className={`app-header-link${active ? ' app-header-link--active' : ''}`}
+                  >
+                    {item.label}
+                  </Link>
+                )
+              })}
             </div>
           </nav>
 

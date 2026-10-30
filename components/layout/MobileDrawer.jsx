@@ -8,6 +8,9 @@ import ThemeToggle from '@/components/ui/ThemeToggle'
 import AccountEntry from '@/components/conta/AccountEntry'
 
 const LINKS = [
+  // Mesma ordem do cabeçalho: o início primeiro, para haver sempre um caminho
+  // de volta na gaveta.
+  { href: '/', label: 'Início', path: '' },
   { href: '/pesquisa', label: 'Pesquisar', path: 'pesquisa' },
   { href: '/farmacia', label: 'Farmácias', path: 'farmacia' },
   { href: '/sobre', label: 'Sobre', path: 'sobre' },

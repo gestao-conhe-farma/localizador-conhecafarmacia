@@ -9,6 +9,9 @@ import MobileDrawer from '@/components/layout/MobileDrawer'
 import AccountEntry from '@/components/conta/AccountEntry'
 
 const NAV = [
+  // O logótipo levava ao início, mas não havia opção explícita: quem chega a
+  // /pesquisa não tinha como voltar à home pelo cabeçalho.
+  { href: '/', label: 'Início' },
   { href: '/pesquisa', label: 'Pesquisar' },
   { href: '/farmacia', label: 'Farmácias' },
   { href: '/sobre', label: 'Sobre' },

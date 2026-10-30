@@ -2303,10 +2303,16 @@ html.dark .form-note {
     color: var(--color-brand-primary);
   }
 
+  /* Página activa: barra da cor da marca à esquerda (mesmo desenho do site
+     principal). O padding compensa a espessura da barra para o texto não
+     deslizar ao mudar de página. */
   .drawer-links li a.drawer-link-active {
     background: rgba(10, 132, 79, 0.1);
     color: var(--color-brand-primary);
     font-weight: 600;
+    border-left: 3px solid var(--color-brand-accent);
+    padding-left: calc(0.875rem - 3px);
+    border-radius: 3px 10px 10px 3px;
   }
 
   html.dark .drawer-links li a:hover {

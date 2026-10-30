@@ -24,7 +24,14 @@ import { accountT } from '@/lib/account-i18n'
  * o que evita que «Visão geral» (`/perfil` em conta.*) e «Perfil de
  * estudante» (`/pt/perfil` no site) se acendam ao mesmo tempo.
  */
-const NAV = [
+/**
+ * A lista depende do idioma (`/pt/perfil` no site), por isso é uma função e
+ * não uma constante de módulo: no topo do módulo `lang` não existe, e a
+ * avaliação do ficheiro rebentava com `ReferenceError` antes do primeiro
+ * render.
+ */
+function navGroups(lang) {
+  return [
   {
     groupKey: 'conta',
     items: [
@@ -132,7 +139,8 @@ const NAV = [
       },
     ],
   },
-]
+  ]
+}
 
 function iniciais(nome, email) {
   const parts = String(nome || '')
@@ -151,6 +159,7 @@ function iniciais(nome, email) {
 export default function AccountShell({ user = {}, surface = 'localizador', lang = 'pt', children }) {
   const pathname = usePathname() || '/'
   const t = accountT(lang)
+  const NAV = navGroups(lang)
   const [navOpen, setNavOpen] = useState(false)
 
   const prefix = surface === 'site' ? `/${lang}` : ''
@@ -273,13 +282,13 @@ export default function AccountShell({ user = {}, surface = 'localizador', lang 
                   <a key={item.key} href={item.href} {...props}>
                     <span className="conta-nav-num">{numero}</span>
                     <NavIcon name={item.icon} />
-                <span className="conta-nav-text">{t(item.labelKey)}</span>
+                    <span className="conta-nav-text">{t(item.labelKey)}</span>
                   </a>
                 ) : (
                   <Link key={item.key} href={item.href} {...props}>
                     <span className="conta-nav-num">{numero}</span>
                     <NavIcon name={item.icon} />
-                <span className="conta-nav-text">{t(item.labelKey)}</span>
+                    <span className="conta-nav-text">{t(item.labelKey)}</span>
                   </Link>
                 )
               })}

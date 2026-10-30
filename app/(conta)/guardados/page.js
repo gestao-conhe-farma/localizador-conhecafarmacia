@@ -2,6 +2,7 @@ import Link from 'next/link'
 import { requireAccount } from '@/lib/account-session'
 import { toggleFavorito } from '@/lib/actions/account'
 import { kindLabel } from '@/lib/product-utils'
+import { accountLang, accountT } from '@/lib/account-i18n'
 
 export const dynamic = 'force-dynamic'
 
@@ -11,8 +12,6 @@ export const metadata = {
 }
 
 const drugMeta = (drug) => [drug?.molecule, drug?.form, drug?.dosage].filter(Boolean).join(' · ')
-
-const plural = (n, one, many) => `${n} ${n === 1 ? one : many}`
 
 /**
  * Guardados da conta: produtos (catálogo) e farmácias.
@@ -26,9 +25,13 @@ const plural = (n, one, many) => `${n} ${n === 1 ? one : many}`
  * A apresentação é a do chassi comum: um painel por grupo, linhas
  * separadas por hairline. Os cartões grandes ficaram no passado — a lista
  * lê-se como uma tabela, que é o que ela é.
+ *
+ * O idioma vem da preferência da conta (`lib/account-i18n`), a mesma que o
+ * site e o perfil gravam — o Localizador não tem `[lang]` no URL.
  */
 export default async function GuardadosPage() {
   const { supabase, user } = await requireAccount('/guardados')
+  const t = accountT(accountLang(user))
 
   const { data, error } = await supabase
     .from('favorites')
@@ -47,39 +50,34 @@ export default async function GuardadosPage() {
     <main className="cf-shop conta-page">
       <header className="conta-page-head">
         <div>
-          <p className="conta-kicker">A minha conta</p>
-          <h1 className="conta-title">Os meus guardados</h1>
-          <p className="conta-sub">
-            Os medicamentos e as farmácias que guardou. Ficam nesta conta, nos três sítios —
-            Localizador, site e conta.
-          </p>
+          <p className="conta-kicker">{t('nav.kicker')}</p>
+          <h1 className="conta-title">{t('saved.title')}</h1>
+          <p className="conta-sub">{t('saved.sub')}</p>
         </div>
         {total > 0 && (
           <div className="conta-head-acts">
-            <span className="conta-tag">{plural(total, 'item', 'itens')}</span>
+            <span className="conta-tag">
+              {t(total === 1 ? 'saved.itemsOne' : 'saved.itemsMany', { n: total })}
+            </span>
           </div>
         )}
       </header>
 
       {error ? (
         <div className="conta-alert conta-alert--bad" role="alert">
-          Não foi possível abrir os guardados. Tente outra vez daqui a pouco. Se continuar, a sua
-          lista está segura — o problema é nosso, não dos itens que guardou.
+          {t('saved.error')}
         </div>
       ) : total === 0 ? (
         <section className="conta-panel">
           <div className="conta-empty">
-            <p className="conta-empty-title">Ainda não guardou nada</p>
-            <p className="conta-empty-sub">
-              Guarde um medicamento para o encontrar depressa quando precisar, ou uma farmácia de
-              confiança para voltar ao stock dela.
-            </p>
+            <p className="conta-empty-title">{t('saved.emptyTitle')}</p>
+            <p className="conta-empty-sub">{t('saved.emptySub')}</p>
             <p className="conta-empty-acts">
               <Link className="conta-btn conta-btn--primary" href="/pesquisa">
-                Pesquisar medicamento
+                {t('saved.searchDrug')}
               </Link>
               <Link className="conta-btn conta-btn--ghost" href="/farmacia">
-                Ver farmácias
+                {t('saved.viewPharmacies')}
               </Link>
             </p>
           </div>
@@ -90,7 +88,7 @@ export default async function GuardadosPage() {
             <section className="conta-panel" aria-labelledby="conta-produtos">
               <div className="conta-panel-head">
                 <h2 id="conta-produtos" className="conta-panel-title">
-                  Produtos
+                  {t('saved.products')}
                 </h2>
                 <span className="conta-panel-count">{drugs.length}</span>
               </div>
@@ -100,11 +98,12 @@ export default async function GuardadosPage() {
                     key={f.id}
                     kind="drug"
                     id={f.drug_id}
-                    title={f.drugs?.name || 'Produto já não disponível'}
-                    kicker={f.drugs ? kindLabel(f.drugs.kind) : 'Fora do catálogo'}
+                    title={f.drugs?.name || t('saved.unavailableProduct')}
+                    kicker={f.drugs ? kindLabel(f.drugs.kind) : t('saved.outOfCatalog')}
                     meta={drugMeta(f.drugs)}
                     href={f.drugs ? `/pesquisa?q=${encodeURIComponent(f.drugs.name)}` : null}
-                    cta="Ver onde está em stock"
+                    cta={t('saved.stockCta')}
+                    removeLabel={t('saved.remove')}
                   />
                 ))}
               </ul>
@@ -115,7 +114,7 @@ export default async function GuardadosPage() {
             <section className="conta-panel" aria-labelledby="conta-farmacias">
               <div className="conta-panel-head">
                 <h2 id="conta-farmacias" className="conta-panel-title">
-                  Farmácias
+                  {t('saved.pharmacies')}
                 </h2>
                 <span className="conta-panel-count">{pharmacies.length}</span>
               </div>
@@ -125,13 +124,17 @@ export default async function GuardadosPage() {
                     key={f.id}
                     kind="pharmacy"
                     id={f.pharmacy_id}
-                    title={f.pharmacies?.name || 'Farmácia já não disponível'}
-                    kicker={f.pharmacies ? 'Farmácia parceira' : 'Fora do Localizador'}
-                    meta={[f.pharmacies?.municipio, f.pharmacies?.verified ? 'Verificada' : null]
+                    title={f.pharmacies?.name || t('saved.unavailablePharmacy')}
+                    kicker={f.pharmacies ? t('saved.partner') : t('saved.outsideLocator')}
+                    meta={[
+                      f.pharmacies?.municipio,
+                      f.pharmacies?.verified ? t('saved.verified') : null,
+                    ]
                       .filter(Boolean)
                       .join(' · ')}
                     href={f.pharmacies ? `/farmacia/${f.pharmacies.slug}` : null}
-                    cta="Ver prateleira confirmada"
+                    cta={t('saved.shelfCta')}
+                    removeLabel={t('saved.remove')}
                   />
                 ))}
               </ul>
@@ -143,7 +146,7 @@ export default async function GuardadosPage() {
   )
 }
 
-function FavoriteRow({ kind, id, title, kicker, meta, href, cta }) {
+function FavoriteRow({ kind, id, title, kicker, meta, href, cta, removeLabel }) {
   return (
     <li className="conta-row">
       <div className="conta-row-main">
@@ -168,7 +171,7 @@ function FavoriteRow({ kind, id, title, kicker, meta, href, cta }) {
           <input type="hidden" name="kind" value={kind} />
           <input type="hidden" name="id" value={id} />
           <button className="conta-remove" type="submit">
-            Remover
+            {removeLabel}
           </button>
         </form>
       </div>

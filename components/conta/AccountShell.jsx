@@ -8,6 +8,7 @@ import { createClient } from '@/lib/supabase/client'
 import { ACCOUNT_URL, LOCATOR_URL, SITE_URL } from '@/lib/account-urls'
 import { CloseIcon, NavIcon } from '@/components/ui/Icon'
 import ThemeToggle from '@/components/ui/ThemeToggle'
+import { accountT } from '@/lib/account-i18n'
 
 /**
  * Chassi das páginas de conta — a mesma peça nos três hosts (conta.*, site
@@ -25,7 +26,7 @@ import ThemeToggle from '@/components/ui/ThemeToggle'
  */
 const NAV = [
   {
-    group: 'Conta',
+    groupKey: 'conta',
     items: [
       {
         key: 'geral',
@@ -33,7 +34,7 @@ const NAV = [
         href: `${ACCOUNT_URL}/perfil`,
         path: '/perfil',
         exact: true,
-        label: 'Visão geral',
+        labelKey: 'nav.items.overview',
         icon: 'inicio',
       },
       {
@@ -41,7 +42,7 @@ const NAV = [
         surface: 'conta',
         href: `${ACCOUNT_URL}/perfil/preferencias`,
         path: '/perfil/preferencias',
-        label: 'Preferências',
+        labelKey: 'nav.items.preferences',
         icon: 'preferencias',
       },
       {
@@ -49,7 +50,7 @@ const NAV = [
         surface: 'conta',
         href: `${ACCOUNT_URL}/perfil/privacidade`,
         path: '/perfil/privacidade',
-        label: 'Privacidade',
+        labelKey: 'nav.items.privacy',
         icon: 'privacidade',
       },
       {
@@ -57,7 +58,7 @@ const NAV = [
         surface: 'conta',
         href: `${ACCOUNT_URL}/perfil/seguranca`,
         path: '/perfil/seguranca',
-        label: 'Segurança',
+        labelKey: 'nav.items.security',
         icon: 'seguranca',
       },
     ],
@@ -66,14 +67,14 @@ const NAV = [
     // O que acontece com a conta fora das definições: inscrições em eventos
     // e o registo do que já fez. Fica separado da «Conta» porque é conteúdo,
     // não configuração.
-    group: 'Participação',
+    groupKey: 'participacao',
     items: [
       {
         key: 'eventos',
         surface: 'conta',
         href: `${ACCOUNT_URL}/perfil/eventos`,
         path: '/perfil/eventos',
-        label: 'Eventos',
+        labelKey: 'nav.items.events',
         icon: 'reservas',
       },
       {
@@ -81,7 +82,7 @@ const NAV = [
         surface: 'conta',
         href: `${ACCOUNT_URL}/perfil/atividade`,
         path: '/perfil/atividade',
-        label: 'Atividade',
+        labelKey: 'nav.items.activity',
         icon: 'atividade',
       },
     ],
@@ -89,14 +90,14 @@ const NAV = [
   {
     // O que a pessoa fez no Localizador. Vive noutro host, por isso o grupo
     // existe também para o cérebro saber onde está antes de saltar.
-    group: 'Localizador',
+    groupKey: 'localizador',
     items: [
       {
         key: 'guardados',
         surface: 'localizador',
         href: `${LOCATOR_URL}/guardados`,
         path: '/guardados',
-        label: 'Guardados',
+        labelKey: 'nav.items.saved',
         icon: 'guardados',
       },
       {
@@ -104,29 +105,29 @@ const NAV = [
         surface: 'localizador',
         href: `${LOCATOR_URL}/reservas`,
         path: '/reservas',
-        label: 'Reservas',
+        labelKey: 'nav.items.reservations',
         icon: 'reservas',
       },
     ],
   },
   {
-    group: 'Estudo',
+    groupKey: 'estudo',
     items: [
       {
         key: 'estudante',
         surface: 'site',
-        href: `${SITE_URL}/pt/perfil`,
+        href: `${SITE_URL}/${lang}/perfil`,
         path: '/perfil',
         exact: true,
-        label: 'Perfil de estudante',
+        labelKey: 'nav.items.student',
         icon: 'estudante',
       },
       {
         key: 'definicoes',
         surface: 'site',
-        href: `${SITE_URL}/pt/perfil/definicoes`,
+        href: `${SITE_URL}/${lang}/perfil/definicoes`,
         path: '/perfil/definicoes',
-        label: 'Definições',
+        labelKey: 'nav.items.settings',
         icon: 'definicoes',
       },
     ],
@@ -149,6 +150,7 @@ function iniciais(nome, email) {
 
 export default function AccountShell({ user = {}, surface = 'localizador', lang = 'pt', children }) {
   const pathname = usePathname() || '/'
+  const t = accountT(lang)
   const [navOpen, setNavOpen] = useState(false)
 
   const prefix = surface === 'site' ? `/${lang}` : ''
@@ -210,7 +212,7 @@ export default function AccountShell({ user = {}, surface = 'localizador', lang 
     window.location.href = `${ACCOUNT_URL}/entrar`
   }
 
-  const nome = user.name || user.email || 'A minha conta'
+  const nome = user.name || user.email || t('nav.kicker')
   const avatar = user.avatarUrl || null
   const inicial = iniciais(user.name, user.email)
 
@@ -223,7 +225,7 @@ export default function AccountShell({ user = {}, surface = 'localizador', lang 
           <Link
             href={`${ACCOUNT_URL}/perfil`}
             className="conta-side-logo"
-            aria-label="A minha conta — visão geral"
+            aria-label={t('nav.home')}
           >
             <Image
               src="/logo/logo-principal-verde.png"
@@ -243,21 +245,21 @@ export default function AccountShell({ user = {}, surface = 'localizador', lang 
               className="conta-logo-white"
             />
           </Link>
-          <p className="conta-side-eyebrow">A minha conta</p>
+          <p className="conta-side-eyebrow">{t('nav.kicker')}</p>
           <button
             type="button"
             className="conta-side-close"
-            aria-label="Fechar menu"
+            aria-label={t('nav.close')}
             onClick={closeNav}
           >
             <CloseIcon size={16} />
           </button>
         </div>
 
-        <nav className="conta-nav" aria-label="Secções da conta">
+        <nav className="conta-nav" aria-label={t('nav.aria')}>
           {NAV.map((group) => (
-            <div className="conta-nav-group" key={group.group}>
-              <span className="conta-nav-label">{group.group}</span>
+            <div className="conta-nav-group" key={group.groupKey}>
+              <span className="conta-nav-label">{t(`nav.groups.${group.groupKey}`)}</span>
               {group.items.map((item) => {
                 const numero = String(flat.indexOf(item) + 1).padStart(2, '0')
                 const ativo = isActive(item)
@@ -271,13 +273,13 @@ export default function AccountShell({ user = {}, surface = 'localizador', lang 
                   <a key={item.key} href={item.href} {...props}>
                     <span className="conta-nav-num">{numero}</span>
                     <NavIcon name={item.icon} />
-                    <span className="conta-nav-text">{item.label}</span>
+                <span className="conta-nav-text">{t(item.labelKey)}</span>
                   </a>
                 ) : (
                   <Link key={item.key} href={item.href} {...props}>
                     <span className="conta-nav-num">{numero}</span>
                     <NavIcon name={item.icon} />
-                    <span className="conta-nav-text">{item.label}</span>
+                <span className="conta-nav-text">{t(item.labelKey)}</span>
                   </Link>
                 )
               })}
@@ -297,7 +299,7 @@ export default function AccountShell({ user = {}, surface = 'localizador', lang 
                 {nome}
               </span>
               <button type="button" className="conta-foot-leave" onClick={sair}>
-                Sair
+                {t('nav.logout')}
               </button>
             </span>
           </div>
@@ -305,9 +307,9 @@ export default function AccountShell({ user = {}, surface = 'localizador', lang 
           {/* As duas portas de saída da conta — o mesmo par em todos os
               hosts, para ninguém ficar preso no sítio onde entrou. */}
           <div className="conta-foot-exits">
-            <a href={SITE_URL}>Site</a>
+            <a href={SITE_URL}>{t('nav.site')}</a>
             <span aria-hidden="true">·</span>
-            <a href={LOCATOR_URL}>Localizador</a>
+            <a href={LOCATOR_URL}>{t('nav.locator')}</a>
           </div>
         </div>
       </aside>
@@ -317,7 +319,7 @@ export default function AccountShell({ user = {}, surface = 'localizador', lang 
           <button
             type="button"
             className="conta-menu-btn"
-            aria-label={navOpen ? 'Fechar menu' : 'Abrir menu'}
+            aria-label={navOpen ? t('nav.close') : t('nav.open')}
             aria-expanded={navOpen}
             onClick={() => setNavOpen((v) => !v)}
           >
@@ -344,11 +346,11 @@ export default function AccountShell({ user = {}, surface = 'localizador', lang 
           </button>
 
           <p className="conta-topbar-crumb">
-            <span>A minha conta</span>
+            <span>{t('nav.kicker')}</span>
             <span className="conta-topbar-sep" aria-hidden="true">
               /
             </span>
-            <strong>{active?.label || 'Visão geral'}</strong>
+            <strong>{active ? t(active.labelKey) : t('nav.items.overview')}</strong>
           </p>
 
           <div className="conta-topbar-right">

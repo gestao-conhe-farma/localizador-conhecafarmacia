@@ -2,6 +2,7 @@ import Link from 'next/link'
 import { requireAccount } from '@/lib/account-session'
 import { trackingUrl } from '@/lib/reservation-messages'
 import { quantityDesc } from '@/lib/reservation-format'
+import { accountLang, accountLocale, accountT } from '@/lib/account-i18n'
 
 export const dynamic = 'force-dynamic'
 
@@ -13,26 +14,17 @@ export const metadata = {
 /**
  * Estados como o cliente os lê — os mesmos rótulos do acompanhamento
  * público (components/reservation/ReservationStatus.jsx), para a pessoa não
- * ver dois nomes para a mesma coisa conforme o ecrã.
+ * ver dois nomes para a mesma coisa conforme o ecrã. O texto vem do
+ * dicionário da conta, por isso segue o idioma escolhido.
  */
-const STATUS = {
-  pendente: { label: 'Recebida', tone: 'pend', hint: 'A farmácia vai responder em até 72 horas.' },
-  confirmada: { label: 'Confirmada', tone: 'ok', hint: 'A farmácia separou o produto para si.' },
-  pronta: { label: 'Pronta a levantar', tone: 'ok', hint: 'Pode passar na farmácia.' },
-  concluida: { label: 'Levantada', tone: 'muted', hint: 'Reserva concluída.' },
-  recusada: { label: 'Não atendida', tone: 'bad', hint: 'A farmácia não conseguiu atender.' },
-  expirada: { label: 'Expirada', tone: 'bad', hint: 'O prazo venceu sem resposta.' },
+const TONS = {
+  pendente: 'pend',
+  confirmada: 'ok',
+  pronta: 'ok',
+  concluida: 'muted',
+  recusada: 'bad',
+  expirada: 'bad',
 }
-
-const fmtDate = (iso) =>
-  iso
-    ? new Date(iso).toLocaleDateString('pt-PT', {
-        day: 'numeric',
-        month: 'long',
-        year: 'numeric',
-        timeZone: 'Africa/Luanda',
-      })
-    : ''
 
 /**
  * Histórico de reservas da conta.
@@ -44,6 +36,19 @@ const fmtDate = (iso) =>
  */
 export default async function ReservasPage() {
   const { supabase, user } = await requireAccount('/reservas')
+  const lang = accountLang(user)
+  const t = accountT(lang)
+  const locale = accountLocale(lang)
+
+  const fmtDate = (iso) =>
+    iso
+      ? new Date(iso).toLocaleDateString(locale, {
+          day: 'numeric',
+          month: 'long',
+          year: 'numeric',
+          timeZone: 'Africa/Luanda',
+        })
+      : ''
 
   const { data, error } = await supabase
     .from('reservations')
@@ -60,17 +65,16 @@ export default async function ReservasPage() {
     <main className="cf-shop conta-page">
       <header className="conta-page-head">
         <div>
-          <p className="conta-kicker">A minha conta</p>
-          <h1 className="conta-title">As minhas reservas</h1>
-          <p className="conta-sub">
-            O estado de cada reserva é atualizado pela farmácia. As reservas feitas sem conta
-            continuam a acompanhar-se pelo link que a farmácia envia.
-          </p>
+          <p className="conta-kicker">{t('nav.kicker')}</p>
+          <h1 className="conta-title">{t('reservations.title')}</h1>
+          <p className="conta-sub">{t('reservations.sub')}</p>
         </div>
         {reservations.length > 0 && (
           <div className="conta-head-acts">
             <span className="conta-tag">
-              {reservations.length === 1 ? '1 reserva' : `${reservations.length} reservas`}
+              {t(reservations.length === 1 ? 'reservations.one' : 'reservations.many', {
+                n: reservations.length,
+              })}
             </span>
           </div>
         )}
@@ -78,23 +82,19 @@ export default async function ReservasPage() {
 
       {error ? (
         <div className="conta-alert conta-alert--bad" role="alert">
-          Não foi possível abrir as reservas. Tente outra vez daqui a pouco. As reservas na farmácia
-          não dependem desta página — se tem um link de acompanhamento, ele continua a funcionar.
+          {t('reservations.error')}
         </div>
       ) : reservations.length === 0 ? (
         <section className="conta-panel">
           <div className="conta-empty">
-            <p className="conta-empty-title">Ainda não fez reservas com esta conta</p>
-            <p className="conta-empty-sub">
-              Quando reservar um medicamento com sessão iniciada, ele fica aqui com o estado
-              atualizado pela farmácia.
-            </p>
+            <p className="conta-empty-title">{t('reservations.emptyTitle')}</p>
+            <p className="conta-empty-sub">{t('reservations.emptySub')}</p>
             <p className="conta-empty-acts">
               <Link className="conta-btn conta-btn--primary" href="/pesquisa">
-                Pesquisar medicamento
+                {t('reservations.searchDrug')}
               </Link>
               <Link className="conta-btn conta-btn--ghost" href="/farmacia">
-                Ver farmácias
+                {t('reservations.viewPharmacies')}
               </Link>
             </p>
           </div>
@@ -103,19 +103,25 @@ export default async function ReservasPage() {
         <section className="conta-panel" aria-labelledby="conta-reservas">
           <div className="conta-panel-head">
             <h2 id="conta-reservas" className="conta-panel-title">
-              Histórico
+              {t('reservations.history')}
             </h2>
             <span className="conta-panel-count">{reservations.length}</span>
           </div>
           <ul className="conta-rows">
             {reservations.map((r) => {
-              const status = STATUS[r.status] || { label: r.status, tone: 'muted', hint: '' }
-              const drug = r.drugs?.name || 'Medicamento'
+              const tone = TONS[r.status] || 'muted'
+              // Estado desconhecido (novo no backoffice): mostra o slug em vez
+              // de uma linha vazia.
+              const label = t(`reservations.status.${r.status}.label`)
+              const hint = t(`reservations.status.${r.status}.hint`)
+              const statusLabel = label.startsWith('reservations.') ? r.status : label
+              const statusHint = hint.startsWith('reservations.') ? '' : hint
+              const drug = r.drugs?.name || t('reservations.drugFallback')
               const presentation = [r.drugs?.form, r.drugs?.dosage].filter(Boolean).join(' ')
               return (
                 <li key={r.id} className="conta-row">
                   <div className="conta-row-main">
-                    <span className={`acct-pill acct-pill--${status.tone}`}>{status.label}</span>
+                    <span className={`acct-pill acct-pill--${tone}`}>{statusLabel}</span>
                     <span className="conta-row-title">
                       {drug}
                       {presentation && <span className="acct-row-pres"> · {presentation}</span>}
@@ -130,7 +136,7 @@ export default async function ReservasPage() {
                         .filter(Boolean)
                         .join(' · ')}
                     </span>
-                    {status.hint && <span className="conta-row-note">{status.hint}</span>}
+                    {statusHint && <span className="conta-row-note">{statusHint}</span>}
                   </div>
 
                   <div className="conta-row-acts">
@@ -139,7 +145,7 @@ export default async function ReservasPage() {
                         className="conta-btn conta-btn--ghost conta-btn--sm"
                         href={trackingUrl(r.id, r.access_token)}
                       >
-                        Acompanhar
+                        {t('reservations.track')}
                       </a>
                     )}
                     {r.pharmacies?.slug && (
@@ -147,7 +153,7 @@ export default async function ReservasPage() {
                         className="conta-btn conta-btn--ghost conta-btn--sm"
                         href={`/farmacia/${r.pharmacies.slug}`}
                       >
-                        Ver farmácia
+                        {t('reservations.viewPharmacy')}
                       </Link>
                     )}
                   </div>

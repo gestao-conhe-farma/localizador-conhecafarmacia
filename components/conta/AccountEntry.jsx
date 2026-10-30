@@ -1,6 +1,6 @@
 'use client'
 
-import { useEffect, useRef, useState } from 'react'
+import { useEffect, useRef, useState, useSyncExternalStore } from 'react'
 import Link from 'next/link'
 import { Bookmark, CalendarCheck, LogOut, User } from 'lucide-react'
 import { useFavorites } from '@/components/conta/FavoritesProvider'
@@ -21,9 +21,19 @@ import { ACCOUNT_URL, entrarHref } from '@/lib/account-urls'
  * desenha as listas como linhas da gaveta e `variant="drawer"` desenha o par
  * Perfil/Terminar Sessão no rodapé, como no drawer do principal.
  */
+/** O URL não muda sem navegação, e a navegação remonta a página. */
+const subscreverNada = () => () => {}
+const urlAtual = () => window.location.href
+
 export default function AccountEntry({ variant = 'header', onNavigate = null }) {
   const favoritos = useFavorites()
   const [aberto, setAberto] = useState(false)
+  const [avatarQuebrado, setAvatarQuebrado] = useState(false)
+  // O URL de regresso só existe no cliente. Lido durante o render, o href
+  // saía diferente no servidor e no browser e a home acusava desencontro de
+  // hidratação. `useSyncExternalStore` dá '' no servidor e o URL real no
+  // cliente, sem um `setState` dentro de um efeito.
+  const aqui = useSyncExternalStore(subscreverNada, urlAtual, () => '')
   const menuRef = useRef(null)
 
   // Fecha ao clicar/tocar fora e com Escape. O `<details>` nativo não fechava
@@ -47,7 +57,6 @@ export default function AccountEntry({ variant = 'header', onNavigate = null }) 
   }, [aberto])
 
   if (!favoritos?.ready) return null
-  const aqui = typeof window === 'undefined' ? '' : window.location.href
 
   const utilizador = favoritos.user
   const entrar = entrarHref(aqui || undefined)
@@ -125,8 +134,15 @@ export default function AccountEntry({ variant = 'header', onNavigate = null }) 
         aria-haspopup="true"
         aria-label="Perfil"
       >
-        {avatar ? (
-          <img src={avatar} alt="" className="profile-avatar" width={32} height={32} />
+        {avatar && !avatarQuebrado ? (
+          <img
+            src={avatar}
+            alt=""
+            className="profile-avatar"
+            width={32}
+            height={32}
+            onError={() => setAvatarQuebrado(true)}
+          />
         ) : (
           <div
             className="profile-avatar-placeholder"

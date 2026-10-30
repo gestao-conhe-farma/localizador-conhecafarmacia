@@ -161,6 +161,8 @@ export default function AccountShell({ user = {}, surface = 'localizador', lang 
   const t = accountT(lang)
   const NAV = navGroups(lang)
   const [navOpen, setNavOpen] = useState(false)
+  // Imagem morta no rodapé: mostra as iniciais, nunca um círculo vazio.
+  const [avatarQuebrado, setAvatarQuebrado] = useState(false)
 
   const prefix = surface === 'site' ? `/${lang}` : ''
   const isActive = useCallback(
@@ -299,7 +301,9 @@ export default function AccountShell({ user = {}, surface = 'localizador', lang 
         <div className="conta-sidebar-foot">
           <div className="conta-foot-user">
             <span className="conta-foot-avatar" aria-hidden="true">
-              {avatar ? <img src={avatar} alt="" /> : (
+              {avatar && !avatarQuebrado ? (
+                <img src={avatar} alt="" onError={() => setAvatarQuebrado(true)} />
+              ) : (
                 inicial
               )}
             </span>

@@ -88,16 +88,6 @@ export default function MobileDrawer({ open, onClose }) {
             </li>
           ))}
           <AccountEntry variant="drawer-links" onNavigate={onClose} />
-          <li>
-            <a
-              href="https://conhecafarmacia.com"
-              target="_blank"
-              rel="noopener noreferrer"
-              onClick={onClose}
-            >
-              conhecafarmacia.com &rarr;
-            </a>
-          </li>
         </ul>
 
         <div className="drawer-footer">

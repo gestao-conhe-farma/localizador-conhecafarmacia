@@ -2290,13 +2290,27 @@ html.dark .form-note {
     display: block;
   }
 
-  /* Separador entre a navegação e o bloco de conta */
+  /* Separador entre a navegação e o bloco de conta. `flex: 0 0 1px` impede
+     que a coluna flex o comprima a zero quando a lista enche o ecrã. */
   .drawer-sep {
     list-style: none;
-    height: 1px;
+    flex: 0 0 1px;
+    min-height: 1px;
     margin: 0.75rem 0.25rem;
     padding: 0;
     background: var(--color-brand-line);
+  }
+
+  /* Rótulo do bloco de conta */
+  .drawer-group {
+    list-style: none;
+    padding: 0.375rem 0.75rem 0.125rem;
+    font-size: 0.59375rem;
+    font-weight: 600;
+    letter-spacing: 0.16em;
+    text-transform: uppercase;
+    color: var(--color-brand-deep);
+    opacity: 0.45;
   }
 
   html.dark .drawer-sep {
@@ -2375,6 +2389,8 @@ html.dark .form-note {
     width: 100%;
   }
 
+  /* É o link para o site principal: sem sublinhado, com sublinhado fino no
+     hover para se perceber que se pode tocar. */
   .drawer-brand-mini {
     font-size: 0.625rem;
     font-weight: 600;
@@ -2382,6 +2398,12 @@ html.dark .form-note {
     text-transform: uppercase;
     color: var(--color-brand-deep);
     opacity: 0.45;
+    text-decoration: none;
+  }
+
+  .drawer-brand-mini:hover {
+    opacity: 0.8;
+    color: var(--color-brand-primary);
   }
 
   /* ThemeToggle em versão contida dentro do drawer (vem depois de .theme-toggle

@@ -117,14 +117,15 @@ export default function AccountEntry({ variant = 'header', onNavigate = null }) 
         {/* Separa a navegação do site das opções da conta; só aparece a quem
             tem sessão, porque é aqui que o bloco existe. */}
         <li className="drawer-sep" aria-hidden="true" />
+        <li className="drawer-group" aria-hidden="true">A minha conta</li>
         <li>
           <Link href="/guardados" onClick={onNavigate}>
-            Os meus guardados
+            Guardados
           </Link>
         </li>
         <li>
           <Link href="/reservas" onClick={onNavigate}>
-            As minhas reservas
+            Reservas
           </Link>
         </li>
       </>

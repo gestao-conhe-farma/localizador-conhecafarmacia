@@ -1,6 +1,7 @@
 import { redirect } from 'next/navigation'
 import PortalShell from '@/components/portal/PortalShell'
 import PlanExpiryNotice from '@/components/portal/PlanExpiryNotice'
+import MfaSuggestion from '@/components/portal/MfaSuggestion'
 import { getPharmacySessionVerbose } from '@/lib/pharmacy-session'
 import { getActiveStaff } from '@/lib/staff-session'
 import { STATUS_LABELS, getSubscription } from '@/lib/platform/subscriptions'
@@ -82,6 +83,9 @@ export default async function PortalLayout({ children }) {
       // subscrição (módulo de servidor) e não pode entrar no bundle do
       // cliente que é o `PortalShell`.
       planAviso={<PlanExpiryNotice sub={sub} />}
+      // Sugestão de TOTP: dispensável, e só para contas sem autenticador
+      // inscrito (`nextLevel` 'aal2' quer dizer que existe factor).
+      mfaAviso={<MfaSuggestion temAutenticador={session.mfa?.nextLevel === 'aal2'} />}
       avisosPorLer={avisosPorLer}
     >
       {children}

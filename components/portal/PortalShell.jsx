@@ -41,6 +41,7 @@ export default function PortalShell({
   staff,
   plan,
   planAviso = null,
+  mfaAviso = null,
   avisosPorLer = 0,
   children,
 }) {
@@ -243,6 +244,9 @@ export default function PortalShell({
             só na visão geral. Chega pronto do layout (servidor); com o
             plano activo é `null`. */}
         {planAviso}
+
+        {/* Sugestão de segundo factor (dispensável, feita no cliente). */}
+        {mfaAviso}
 
         {children}
       </div>

@@ -1,5 +1,6 @@
 import Link from 'next/link'
 import Image from 'next/image'
+import { cookies } from 'next/headers'
 import InvitePasswordForm from '@/components/portal/InvitePasswordForm'
 import PortalRecoveryForm from '@/components/portal/PortalRecoveryForm'
 import { createServerComponentClient } from '@/lib/supabase/server'
@@ -28,13 +29,17 @@ const ERROS = {
 /**
  * Reposição de senha — dois caminhos na mesma página:
  *
- *   • COM sessão: o link do e-mail foi confirmado em
- *     `/portal/recuperar/confirmar` (gerado pela equipa CF) e falta só
- *     escolher a senha nova (`InvitePasswordForm`).
- *   • SEM sessão: auto-serviço (`PortalRecoveryForm`) — e-mail + código do
- *     autenticador + senha nova. É o caminho de quem perdeu a senha mas
- *     ainda tem o segundo factor; sem factor inscrito, a página diz que
- *     tem de pedir o link à equipa.
+ *   • Assistente (`PortalRecoveryForm`): e-mail → código do e-mail → código
+ *     do autenticador (só se a conta tiver) → senha nova. É o caminho normal
+ *     de quem perdeu a senha.
+ *   • COM sessão de um link da equipa: o token foi confirmado em
+ *     `/portal/recuperar/confirmar` e falta só escolher a senha nova
+ *     (`InvitePasswordForm`).
+ *
+ * A diferença entre os dois é o marcador `portal_recuperacao`, escrito pela
+ * Server Action quando o código do e-mail é aceite. Sem ele, uma sessão
+ * `aal1` nesta página seria tratada como link da equipa — e o assistente
+ * recomeçaria do zero no meio do fluxo, a cada recarregamento.
  *
  * Irmã de `/portal/convite`: o Route Handler é que troca o token por
  * sessão; aqui só se pergunta ao Supabase se há sessão.
@@ -52,6 +57,16 @@ export default async function RecuperarPage({ searchParams }) {
 
   const erro = ERROS[params?.erro] || null
   const confirmado = params?.repor === '1'
+
+  const emReposicao = (await cookies()).get('portal_recuperacao')?.value === '1'
+
+  // Retomar o assistente a meio (recarregar a página depois do código do
+  // e-mail): a etapa sai do estado real da sessão, não de memória do browser.
+  let etapaInicial = 'email'
+  if (user && emReposicao) {
+    const { data: aal } = await supabase.auth.mfa.getAuthenticatorAssuranceLevel()
+    etapaInicial = aal?.nextLevel === 'aal2' && aal?.currentLevel !== 'aal2' ? 'totp' : 'senha'
+  }
 
   return (
     <div className="min-h-dvh flex flex-col items-center justify-center gap-8 px-5 py-12 bg-brand-bg portal-auth">
@@ -80,7 +95,7 @@ export default async function RecuperarPage({ searchParams }) {
           {user ? 'Reposição de senha' : 'Portal da farmácia'}
         </p>
 
-        {user ? (
+        {user && !emReposicao ? (
           <>
             <h1 className="mt-2 text-3xl font-extrabold tracking-tight text-brand-deep">
               Escolher uma senha nova
@@ -97,21 +112,11 @@ export default async function RecuperarPage({ searchParams }) {
             <h1 className="mt-2 text-3xl font-extrabold tracking-tight text-brand-deep">
               {erro?.titulo || 'Repor a senha'}
             </h1>
-            {erro ? (
-              <>
-                <p className="mt-3 text-sm leading-relaxed text-brand-deep/60">{erro.texto}</p>
-                <p className="mt-4 text-sm leading-relaxed text-brand-deep/60">
-                  Se ainda tem o autenticador da conta, pode repor a senha aqui mesmo:
-                </p>
-              </>
-            ) : (
-              <p className="mt-3 text-sm leading-relaxed text-brand-deep/60">
-                Escreva o e-mail da conta, o código de 6 dígitos do autenticador e a senha nova. O
-                código prova que a conta é sua — sem ele não há reposição.
-              </p>
+            {erro && (
+              <p className="mt-3 text-sm leading-relaxed text-brand-deep/60">{erro.texto}</p>
             )}
 
-            <PortalRecoveryForm />
+            <PortalRecoveryForm etapaInicial={etapaInicial} emailInicial={user?.email || ''} />
 
             <p className="mt-6 text-center text-xs text-brand-deep/45">
               <Link href="/portal/login" className="portal-link">

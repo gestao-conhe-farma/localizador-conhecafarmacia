@@ -1,6 +1,7 @@
 import { NextResponse } from 'next/server'
 import { createServerClient } from '@supabase/ssr'
 import { cookieDomainFor } from '@/lib/cookie-domain'
+import { ehCookieAuth, nomeCookieAuth } from '@/lib/supabase/auth-cookie'
 
 /**
  * Proxy (middleware) do Localizador de Medicamentos.
@@ -25,8 +26,12 @@ import { cookieDomainFor } from '@/lib/cookie-domain'
  * não se aplica e o browser recusava a cookie.
  */
 
-/** Só vale a pena ir ao Supabase se houver cookie de sessão para renovar. */
-const hasAuthCookie = (cookies) => cookies.some((c) => c.name.startsWith('sb-'))
+/**
+ * Áreas com sessão própria (lib/supabase/auth-cookie.js). O site e o portal
+ * partilham a cookie histórica; o interno tem a sua, para os dois logins não
+ * se apagarem um ao outro. Cada uma que apareça é renovada.
+ */
+const AREAS_COM_SESSAO = ['site', 'interno']
 
 export async function proxy(request) {
   if (request.method !== 'GET') return NextResponse.next()
@@ -68,12 +73,20 @@ export async function proxy(request) {
 
   let response = NextResponse.next({ request: { headers: requestHeaders } })
 
-  if (hasAuthCookie(request.cookies.getAll())) {
+  // Cookies a gravar, das duas áreas. Ficam à espera do fim do ciclo porque
+  // cada `setAll` a meio substituía a `response` e levava consigo os
+  // Set-Cookie da área anterior.
+  const aGravar = []
+
+  for (const area of AREAS_COM_SESSAO) {
+    if (!request.cookies.getAll().some((c) => ehCookieAuth(c.name, area))) continue
+
     const supabase = createServerClient(
       process.env.NEXT_PUBLIC_SUPABASE_URL,
       process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY,
       {
         db: { schema: 'localizador' },
+        cookieOptions: { name: nomeCookieAuth(area) },
         cookies: {
           getAll: () => request.cookies.getAll(),
           setAll: (cookiesToSet) => {
@@ -81,16 +94,7 @@ export async function proxy(request) {
             for (const { name, value } of cookiesToSet) {
               request.cookies.set(name, value)
             }
-            response = NextResponse.next({ request: { headers: requestHeaders } })
-            // …e o browser recebê-lo com o Domain do pai, senão a renovação
-            // só valia neste host e a sessão partia ao saltar para conta.*.
-            for (const { name, value, options } of cookiesToSet) {
-              response.cookies.set(
-                name,
-                value,
-                cookieDomain ? { ...options, domain: cookieDomain } : options,
-              )
-            }
+            aGravar.push(...cookiesToSet)
           },
         },
       },
@@ -100,6 +104,15 @@ export async function proxy(request) {
     // renovação. Um erro aqui não bloqueia a página: o utilizador aparece
     // como anónimo e o cabeçalho mostra «Entrar».
     await supabase.auth.getUser()
+  }
+
+  if (aGravar.length) {
+    response = NextResponse.next({ request: { headers: requestHeaders } })
+    // O browser recebe os tokens com o Domain do pai, senão a renovação só
+    // valia neste host e a sessão partia ao saltar para conta.*.
+    for (const { name, value, options } of aGravar) {
+      response.cookies.set(name, value, cookieDomain ? { ...options, domain: cookieDomain } : options)
+    }
   }
 
   response.headers.set('Content-Security-Policy', csp)

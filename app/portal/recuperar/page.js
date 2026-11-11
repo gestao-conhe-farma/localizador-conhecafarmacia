@@ -1,6 +1,7 @@
 import Link from 'next/link'
 import Image from 'next/image'
 import InvitePasswordForm from '@/components/portal/InvitePasswordForm'
+import PortalRecoveryForm from '@/components/portal/PortalRecoveryForm'
 import { createServerComponentClient } from '@/lib/supabase/server'
 import { CONTACT_EMAIL } from '@/lib/constants'
 
@@ -25,13 +26,18 @@ const ERROS = {
 }
 
 /**
- * Reposição de senha (`account.reset_password`) — a página onde o dono da
- * farmácia escolhe a senha nova depois de o link do e-mail ter sido
- * confirmado em `/portal/recuperar/confirmar`.
+ * Reposição de senha — dois caminhos na mesma página:
  *
- * Irmã de `/portal/convite`: nunca verifica o token (isso é do Route
- * Handler); só pergunta ao Supabase se há sessão. Sem sessão mostra o que
- * fazer a seguir — nunca um formulário que ia falhar.
+ *   • COM sessão: o link do e-mail foi confirmado em
+ *     `/portal/recuperar/confirmar` (gerado pela equipa CF) e falta só
+ *     escolher a senha nova (`InvitePasswordForm`).
+ *   • SEM sessão: auto-serviço (`PortalRecoveryForm`) — e-mail + código do
+ *     autenticador + senha nova. É o caminho de quem perdeu a senha mas
+ *     ainda tem o segundo factor; sem factor inscrito, a página diz que
+ *     tem de pedir o link à equipa.
+ *
+ * Irmã de `/portal/convite`: o Route Handler é que troca o token por
+ * sessão; aqui só se pergunta ao Supabase se há sessão.
  *
  * Vive FORA do route group (dashboard), como o login, o convite e a
  * escolha de perfil: o layout do dashboard exige perfil de balcão activo
@@ -89,20 +95,33 @@ export default async function RecuperarPage({ searchParams }) {
         ) : (
           <>
             <h1 className="mt-2 text-3xl font-extrabold tracking-tight text-brand-deep">
-              {erro?.titulo || 'Abra o link do e-mail'}
+              {erro?.titulo || 'Repor a senha'}
             </h1>
-            <p className="mt-3 text-sm leading-relaxed text-brand-deep/60">
-              {erro?.texto ||
-                'Esta página serve para repor a senha do portal. Abra o link que a equipa enviou para o e-mail da farmácia.'}
-            </p>
-            <div className="mt-6 flex flex-col gap-3">
-              <Link href="/portal/login" className="btn btn-primary text-center">
-                Ir para o login
+            {erro ? (
+              <>
+                <p className="mt-3 text-sm leading-relaxed text-brand-deep/60">{erro.texto}</p>
+                <p className="mt-4 text-sm leading-relaxed text-brand-deep/60">
+                  Se ainda tem o autenticador da conta, pode repor a senha aqui mesmo:
+                </p>
+              </>
+            ) : (
+              <p className="mt-3 text-sm leading-relaxed text-brand-deep/60">
+                Escreva o e-mail da conta, o código de 6 dígitos do autenticador e a senha nova. O
+                código prova que a conta é sua — sem ele não há reposição.
+              </p>
+            )}
+
+            <PortalRecoveryForm />
+
+            <p className="mt-6 text-center text-xs text-brand-deep/45">
+              <Link href="/portal/login" className="portal-link">
+                Já sei a senha — voltar ao login
               </Link>
-              <a href={`mailto:${CONTACT_EMAIL}`} className="portal-hint text-center underline">
-                Pedir um novo link
+              {' · '}
+              <a href={`mailto:${CONTACT_EMAIL}`} className="portal-link">
+                Pedir ajuda
               </a>
-            </div>
+            </p>
           </>
         )}
       </div>

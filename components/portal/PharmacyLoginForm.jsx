@@ -48,6 +48,13 @@ export default function PharmacyLoginForm() {
         {pending ? 'A entrar…' : 'Entrar'}
       </button>
 
+      <p className="portal-hint" style={{ marginBottom: 0 }}>
+        <Link href="/portal/recuperar" className="portal-link">
+          Não me lembro da senha
+        </Link>{' '}
+        — repõe-se com o código do autenticador da conta.
+      </p>
+
       <p className="portal-hint">
         Não tem conta? A sua farmácia recebe as credenciais da equipa Conheça Farmácia durante o
         onboarding.{' '}

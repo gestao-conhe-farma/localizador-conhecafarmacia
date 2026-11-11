@@ -91,6 +91,24 @@ Usado em: logout do portal (`PortalLogout`), do site (`AccountShell`, `sair`), d
 
 ---
 
+## 5.1 Reposição de senha: uma área, um formulário
+
+As três áreas partilham `auth.users`, mas não partilham a porta de entrada — e a reposição tem de seguir a mesma regra. **Cada área só repõe as suas contas:**
+
+| Pedido feito em | Aceita | Recusa (sem enviar nada) |
+| --- | --- | --- |
+| Site (`conta.*/recuperar`) | contas que **não** estão em `localizador.admin_users` | farmácia e plataforma |
+| Portal (`/portal/recuperar`) | `localizador.admin_users` com `role = 'farmacia'` **e** `pharmacy_id` | contas do site e da plataforma |
+| Interno | senha definida pela plataforma (`platform-account.js`) — não há reposição por e-mail | — |
+
+O portal verifica a pertença **antes** de enviar (`idDoEmail` + `perfilDeFarmacia`, em `lib/actions/pharmacy-recovery.js`). Antes usava o `otp_disabled` do `signInWithOtp` como oráculo, e isso só provava que o e-mail existia em `auth.users` — um e-mail do site recebia o código e entrava no assistente.
+
+No site, o pedido passou a ser uma Server Action (`pedirReposicaoSenha`, em `lib/actions/auth.js`) precisamente para poder fazer esta pergunta antes do `resetPasswordForEmail`; no cliente, `auth.resetPasswordForEmail` enviava para qualquer e-mail do projecto. A resposta é sempre `{ success: true }` — o formulário do site nunca revelou se um e-mail tem conta, e um «esta conta é de outra área» seria um oráculo novo.
+
+A consequência a ter em conta: uma pessoa com conta nas duas áreas (ex.: o e-mail de serviço) repara a senha **no portal**, e a senha nova vale para as duas — é a mesma identidade. Não há reposição dupla porque não há duas contas.
+
+---
+
 ## 6. Como acrescentar uma área
 
 1. `lib/supabase/auth-cookie.js`: nada a fazer se o nome seguir o padrão (`sb-<ref>-<area>-auth-token`).

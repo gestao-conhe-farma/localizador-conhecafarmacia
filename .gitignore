@@ -40,9 +40,10 @@ screenshots/
 # credenciais locais (nunca commitar — contém tokens)
 credenciais.txt
 .env*
-.vercel-account
-
 .vercel
+.vercel-account
+# CLI autenticado localmente (contém token — nunca versionar)
+.vercel-auth
 
 # artefactos de trabalho da pasta _design (ecrãs, perfis de Chromium,
 # scripts de diagnóstico) — nunca versionar

@@ -11,6 +11,8 @@ const ERRORES = {
   SEM_SESSAO:
     'O link expirou. Abra outra vez o link do e-mail ou peça um novo à equipa Conheça Farmácia.',
   SENHA_FALHOU: 'Não foi possível guardar a senha. Tente novamente.',
+  MFA_NECESSARIO:
+    'Esta conta tem verificação em dois passos. Reponha a senha em /portal/recuperar, com o código do autenticador — o link do e-mail sozinho não chega.',
   FALHA: 'Não foi possível concluir. Tente novamente.',
 }
 

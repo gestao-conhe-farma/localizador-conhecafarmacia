@@ -66,8 +66,10 @@ export default function PortalMfaClient({ temFactor, nivel }) {
     })
   }
 
-  function submeter(e) {
-    e.preventDefault()
+  // Formulário com `action`: o React entrega o FormData e trata do submit —
+  // não há evento para `preventDefault` (fazê-lo rebentava o handler e o
+  // ecrã ficava com o erro genérico da Vercel, sem log no servidor).
+  function submeter() {
     setErro('')
     startTransition(async () => {
       const res =

@@ -35,8 +35,8 @@ export default function PortalMfaDisable() {
     )
   }
 
-  function submeter(e) {
-    e.preventDefault()
+  // `action` de formulário: recebe o FormData, não o evento.
+  function submeter() {
     setErro('')
     startTransition(async () => {
       const res = await desativarMfaPortal({ password })

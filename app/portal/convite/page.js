@@ -40,7 +40,7 @@ const ERROS = {
  */
 export default async function ConvitePage({ searchParams }) {
   const params = await searchParams
-  const supabase = await createServerComponentClient()
+  const supabase = await createServerComponentClient({ area: 'portal' })
   const {
     data: { user },
   } = await supabase.auth.getUser()

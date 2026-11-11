@@ -24,7 +24,7 @@ export default async function PortalMfaPage() {
   const session = await getPharmacySession()
   if (!session) redirect('/portal/login')
 
-  const supabase = await createServerComponentClient()
+  const supabase = await createServerComponentClient({ area: 'portal' })
   const [{ data: aal }, { data: fatores }] = await Promise.all([
     supabase.auth.mfa.getAuthenticatorAssuranceLevel(),
     supabase.auth.mfa.listFactors(),

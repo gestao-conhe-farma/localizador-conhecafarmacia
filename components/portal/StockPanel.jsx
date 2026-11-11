@@ -202,7 +202,7 @@ function StockEditModal({ item, saving, onClose, onSave, onSaveOptions, onRetire
   const [reservable, setReservable] = useState(item.reservable !== false)
   // URL público da foto actual — deriva do path no bucket (o mesmo que a
   // view stock_confirmed expõe ao Localizador).
-  const supabaseUrl = createClient().supabaseUrl
+  const supabaseUrl = createClient({ area: 'portal' }).supabaseUrl
   const imageUrl = imagePath
     ? `${supabaseUrl}/storage/v1/object/public/drug-images/${imagePath}`
     : null
@@ -532,7 +532,7 @@ function StockEditModal({ item, saving, onClose, onSave, onSaveOptions, onRetire
                           // Apaga do Storage e limpa o path. O item só perde a
                           // foto no Localizador após «Guardar» — mas remover
                           // aqui evita subir o modal para nada.
-                          await createClient()
+                          await createClient({ area: 'portal' })
                             .storage.from('drug-images')
                             .remove([imagePath])
                             .catch(() => {})

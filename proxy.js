@@ -27,11 +27,11 @@ import { ehCookieAuth, nomeCookieAuth } from '@/lib/supabase/auth-cookie'
  */
 
 /**
- * Áreas com sessão própria (lib/supabase/auth-cookie.js). O site e o portal
- * partilham a cookie histórica; o interno tem a sua, para os dois logins não
- * se apagarem um ao outro. Cada uma que apareça é renovada.
+ * Áreas com sessão própria (lib/supabase/auth-cookie.js): site, portal e
+ * interno vivem em cookies diferentes, para não se apagarem umas às outras.
+ * Cada uma que apareça no pedido é renovada.
  */
-const AREAS_COM_SESSAO = ['site', 'interno']
+const AREAS_COM_SESSAO = ['site', 'portal', 'interno']
 
 export async function proxy(request) {
   if (request.method !== 'GET') return NextResponse.next()

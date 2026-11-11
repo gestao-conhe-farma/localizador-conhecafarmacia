@@ -72,7 +72,7 @@ function kz(v) {
  */
 async function countActiveStock(pharmacyId) {
   try {
-    const supabase = await createServerComponentClient()
+    const supabase = await createServerComponentClient({ area: 'portal' })
     const { count, error } = await supabase
       .from('stock_items')
       .select('id', { count: 'exact', head: true })
@@ -92,7 +92,7 @@ async function countActiveStock(pharmacyId) {
  */
 async function countCatalog(pharmacyId) {
   try {
-    const supabase = await createServerComponentClient()
+    const supabase = await createServerComponentClient({ area: 'portal' })
     let totalRes = await supabase
       .from('drugs')
       .select('id', { count: 'exact', head: true })
@@ -148,7 +148,7 @@ const MOVIMENTO_CATEGORIA = {
  */
 async function dashboardEvents(pharmacyId) {
   try {
-    const supabase = await createServerComponentClient()
+    const supabase = await createServerComponentClient({ area: 'portal' })
     const from = new Date(Date.now() - 60 * 24 * 3600 * 1000).toISOString()
     const to = new Date(Date.now() + 90 * 24 * 3600 * 1000).toISOString()
     const [res, stock, movs] = await Promise.all([

@@ -222,7 +222,7 @@ export default function PortalSidebar({
 
   // Realtime: qualquer movimento em reservas refresca o sino
   useEffect(() => {
-    const supabase = createClient()
+    const supabase = createClient({ area: 'portal' })
     const channel = supabase
       .channel('portal-sidebar-reservations')
       .on('postgres_changes', { event: '*', schema: DB_SCHEMA, table: 'reservations' }, () => {

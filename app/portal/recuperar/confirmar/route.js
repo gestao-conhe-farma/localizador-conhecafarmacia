@@ -28,7 +28,7 @@ export async function GET(request) {
     return NextResponse.redirect(destino)
   }
 
-  const supabase = await createServerComponentClient()
+  const supabase = await createServerComponentClient({ area: 'portal' })
   const { error } = await supabase.auth.verifyOtp({ token_hash: tokenHash, type: 'recovery' })
 
   if (error) {

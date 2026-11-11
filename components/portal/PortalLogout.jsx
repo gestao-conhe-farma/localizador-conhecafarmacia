@@ -21,7 +21,7 @@ export default function PortalLogout({
       className={className}
       role={role}
       onClick={async () => {
-        await createClient().auth.signOut()
+        await createClient({ area: 'portal' }).auth.signOut()
         router.replace('/portal/login')
         router.refresh()
       }}

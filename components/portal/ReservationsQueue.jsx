@@ -265,7 +265,7 @@ export default function ReservationsQueue() {
   // Realtime: INSERT/UPDATE em reservations desta farmácia refresca a fila.
   // Debounce 500 ms — a expiração do cron pode tocar muitas linhas de uma vez.
   useEffect(() => {
-    const supabase = createClient()
+    const supabase = createClient({ area: 'portal' })
     let timer = null
     const channel = supabase
       .channel('portal-reservations-queue')

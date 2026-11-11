@@ -5,6 +5,7 @@ import Link from 'next/link'
 import { usePathname } from 'next/navigation'
 import { useCallback, useEffect, useState } from 'react'
 import { createClient } from '@/lib/supabase/client'
+import { encerrarSessao } from '@/lib/supabase/sign-out'
 import { ACCOUNT_URL, LOCATOR_URL, SITE_URL } from '@/lib/account-urls'
 import { CloseIcon, NavIcon } from '@/components/ui/Icon'
 import ThemeToggle from '@/components/ui/ThemeToggle'
@@ -215,11 +216,9 @@ export default function AccountShell({ user = {}, surface = 'localizador', lang 
   }, [navOpen])
 
   async function sair() {
-    try {
-      await createClient().auth.signOut()
-    } catch {
-      // Mesmo que o pedido falhe, a pessoa pediu para sair.
-    }
+    // Âmbito local (lib/supabase/sign-out.js): sair da conta não expulsa a
+    // mesma pessoa do portal da farmácia nem do interno.
+    await encerrarSessao(createClient())
     window.location.href = `${ACCOUNT_URL}/entrar`
   }
 

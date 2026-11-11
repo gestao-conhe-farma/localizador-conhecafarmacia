@@ -2,6 +2,7 @@
 
 import { useRouter } from 'next/navigation'
 import { createClient } from '@/lib/supabase/client'
+import { encerrarSessao } from '@/lib/supabase/sign-out'
 
 /**
  * Terminar a sessão da CONTA (auth) neste navegador — distinto de
@@ -21,7 +22,8 @@ export default function PortalLogout({
       className={className}
       role={role}
       onClick={async () => {
-        await createClient({ area: 'portal' }).auth.signOut()
+        // Âmbito local: sair do portal não deita abaixo o site nem o interno.
+        await encerrarSessao(createClient({ area: 'portal' }))
         router.replace('/portal/login')
         router.refresh()
       }}

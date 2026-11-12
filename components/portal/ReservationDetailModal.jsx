@@ -24,10 +24,11 @@ const BADGES = {
   concluida: { label: 'Concluída', cls: 'portal-badge--ok' },
   recusada: { label: 'Recusada', cls: 'portal-badge--off' },
   expirada: { label: 'Expirada', cls: 'portal-badge--off' },
+  cancelada: { label: 'Cancelada pelo cliente', cls: 'portal-badge--off' },
 }
 
 import { fmtKz, estimateTotal } from '@/lib/reservation-format'
-import { parseReservationNotes } from '@/lib/pickup'
+import { noteFromReservation, pickupFromReservation } from '@/lib/pickup'
 
 /** Data/hora completa — o modal é onde o "há 2 h" do card se abre em dia e hora. */
 function fmtDateTime(iso) {
@@ -49,6 +50,8 @@ function reasonLabel(reason) {
     zona: 'Zona não atendida',
     outro: 'Motivo',
     ttl: 'Prazo de 72 h vencido',
+    pickup_vencido: 'Hora de levantamento vencida',
+    nao_levantada: 'Não levantada',
   }
   const base = map[key.trim()] || key
   return rest.length > 0 ? `${base}: ${rest.join(':').trim()}` : base
@@ -102,9 +105,9 @@ export default function ReservationDetailModal({
   const opt = r.stock_sale_options
   const total = estimateTotal(r)
   const qty = r.confirmed_quantity ?? r.quantity
-  // O cliente escreve dia + hora no modal; ficam juntos em notes. Aqui
-  // separam-se para o atendente ver o levantamento sem ler a nota toda.
-  const { pickup, note: freeNote } = parseReservationNotes(r.notes)
+  // 0057: o levantamento vem de pickup_at (ou das notas, nas antigas).
+  const pickup = pickupFromReservation(r)
+  const freeNote = noteFromReservation(r)
 
   // Esc fecha — o mesmo comportamento do modal de stock.
   useEffect(() => {

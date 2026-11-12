@@ -109,6 +109,18 @@ const recusada = buildReservationMessage({
 })
 check('recusada NÃO leva montante', recusada?.text.includes('Kz (a confirmar') === false)
 
+const comJanela = buildReservationMessage({
+  ...base,
+  status: 'confirmada',
+  pickup_at: '2030-01-01T12:00:00Z',
+  pickup_until: '2030-01-01T14:00:00Z',
+})
+check(
+  'confirmada leva a janela de levantamento (13:00–15:00 em Luanda)',
+  /13:00\D+15:00/.test(comJanela?.text || ''),
+  comJanela?.text,
+)
+
 const legado = buildReservationMessage({
   id: base.id,
   requester_name: 'Maria',

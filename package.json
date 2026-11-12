@@ -18,14 +18,19 @@
     "lint:fix": "eslint . --fix",
     "format": "npx prettier --write .",
     "geocode": "node --disable-warning=MODULE_TYPELESS_PACKAGE_JSON --env-file=.env.local scripts/geocode-pharmacies.mjs",
-    "geocode:apply": "node --disable-warning=MODULE_TYPELESS_PACKAGE_JSON --env-file=.env.local scripts/geocode-pharmacies.mjs --apply"
+    "geocode:apply": "node --disable-warning=MODULE_TYPELESS_PACKAGE_JSON --env-file=.env.local scripts/geocode-pharmacies.mjs --apply",
+    "categorias:build": "esbuild scripts/categorias/main.jsx --bundle --format=esm --jsx=automatic --define:process.env.NODE_ENV='production' --outfile=scripts/categorias/cena.bundle.js",
+    "categorias:render": "node scripts/categorias/render-categorias.mjs"
   },
   "dependencies": {
     "@fontsource-variable/fraunces": "^5.3.0",
     "@fontsource-variable/inter": "^5.3.0",
     "@number-flow/react": "^0.6.2",
+    "@react-three/drei": "^10.7.9",
+    "@react-three/fiber": "^9.8.2",
     "@supabase/ssr": "^0.6.0",
     "@supabase/supabase-js": "^2.103.3",
+    "@types/three": "^0.187.0",
     "@vercel/analytics": "^2.0.1",
     "@vercel/speed-insights": "^2.0.0",
     "@visx/curve": "^4.0.1-alpha.0",
@@ -47,13 +52,15 @@
     "react": "19.2.4",
     "react-dom": "19.2.4",
     "tailwind-merge": "^3.7.0",
-    "tailwindcss": "^4.2.2"
+    "tailwindcss": "^4.2.2",
+    "three": "^0.170.0"
   },
   "devDependencies": {
     "@tailwindcss/postcss": "^4",
     "@types/node": "^26.6.4",
     "@types/react": "^19.3.0",
     "@types/react-dom": "^19.3.0",
+    "esbuild": "^0.25.12",
     "eslint": "^9",
     "eslint-config-next": "16.2.6",
     "prettier": "3.8.3",

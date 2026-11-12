@@ -21,14 +21,21 @@ MIGRATION_FILE = sys.argv[1] if len(sys.argv) > 1 else 'supabase/migrations/0001
 with open('credenciais.txt', 'r', encoding='utf-8') as f:
     txt = f.read()
 
-token = re.search(r'Access Token:\s*\r?\n\s*(sbp_\w+)', txt)
-url_m = re.search(r'(NEXT_PUBLIC_SUPABASE_URL=https://(\w+)\.supabase\.co)', txt)
+# O ficheiro de credenciais mudou de formato ao longo do tempo (a
+# etiqueta do token já teve texto a seguir aos dois-pontos e o valor na
+# linha seguinte): aceitar as duas formas em vez de falhar em silêncio.
+token = re.search(r'Access Token[^\n]*\n\s*(sbp_[A-Za-z0-9]+)', txt) or re.search(
+    r'(sbp_[A-Za-z0-9]{20,})', txt
+)
+url_m = re.search(
+    r'NEXT_PUBLIC_SUPABASE_URL\s*=\s*https://([a-z0-9]+)\.supabase\.co', txt
+) or re.search(r'https://([a-z0-9]{16,})\.supabase\.co', txt)
 if not token or not url_m:
     print('ERRO: token ou project ref não encontrados em credenciais.txt')
     sys.exit(1)
 
 ACCESS_TOKEN = token.group(1)
-PROJECT_REF = url_m.group(2)
+PROJECT_REF = url_m.group(1)
 
 with open(MIGRATION_FILE, 'r', encoding='utf-8') as f:
     sql = f.read()

@@ -22,6 +22,8 @@ const REJECT_LABELS = {
   zona: 'Não conseguimos atender a sua zona de levantamento.',
   outro: 'Não vamos poder atender esta reserva.',
   ttl: 'O prazo de 72 horas venceu sem resposta.',
+  pickup_vencido: 'A hora de levantamento passou antes de a farmácia responder.',
+  nao_levantada: 'Não chegou a levantar a reserva dentro do prazo.',
 }
 
 /**
@@ -48,7 +50,7 @@ function fmtDate(iso) {
 
 import { originCode } from '@/lib/origin-flags'
 import { fmtKz, estimateTotal, quantityDesc, quantityLine } from '@/lib/reservation-format'
-import { parseReservationNotes } from '@/lib/pickup'
+import { noteFromReservation, pickupFromReservation } from '@/lib/pickup'
 import { packStructureText } from '@/lib/sale-options'
 
 const UUID_RE = /^[0-9a-f-]{36}$/i
@@ -70,9 +72,20 @@ export default function ReservationStatus({ reservationId }) {
   const [zoom, setZoom] = useState(false)
   // Feedback do «Copiar mensagem».
   const [copied, setCopied] = useState(false)
+  // 0058: cancelamento pelo cliente — só em 'pendente'.
+  const [confirmCancel, setConfirmCancel] = useState(false)
+  const [canceling, setCanceling] = useState(false)
+  const [cancelError, setCancelError] = useState('')
   // Validação do link durante o render (não no efeito): setState
   // síncrono no corpo do efeito causa renders em cascata (lint).
   const linkOk = UUID_RE.test(reservationId || '') && UUID_RE.test(token || '')
+
+  // Recarregar fora do ciclo do polling (ex.: a farmácia mexeu enquanto
+  // o cliente tentava cancelar). Muda a chave; o efeito volta a correr.
+  const [reloadKey, setReloadKey] = useState(0)
+  // Instante do último fetch: o render não pode chamar Date.now()
+  // (impuro); a janela de cancelamento compara com este valor.
+  const [fetchedAt, setFetchedAt] = useState(0)
 
   useEffect(() => {
     if (!linkOk) return
@@ -103,6 +116,7 @@ export default function ReservationStatus({ reservationId }) {
         stock_sale_options: data.sale_option || null,
         stock_items: data.stock_item || null,
       })
+      setFetchedAt(Date.now())
     }
 
     fetchOnce()
@@ -113,7 +127,7 @@ export default function ReservationStatus({ reservationId }) {
       alive = false
       clearInterval(timer)
     }
-  }, [reservationId, token, linkOk])
+  }, [reservationId, token, linkOk, reloadKey])
 
   // Esc fecha o lightbox.
   useEffect(() => {
@@ -124,6 +138,43 @@ export default function ReservationStatus({ reservationId }) {
     window.addEventListener('keydown', onKey)
     return () => window.removeEventListener('keydown', onKey)
   }, [zoom])
+
+  // 0058: o RPC é a autoridade (token + FOR UPDATE). O botão só evita o
+  // clique duplo acidental; se a farmácia mexeu entretanto, recarrega
+  // em vez de mostrar um cancelamento que não aconteceu.
+  const doCancel = async () => {
+    if (canceling) return
+    setCanceling(true)
+    setCancelError('')
+    const supabase = createClient()
+    const { data, error: e } = await supabase.rpc('cancel_reservation', {
+      p_id: reservationId,
+      p_token: token,
+    })
+    setCanceling(false)
+    if (e || !data?.ok) {
+      let msg = 'Não foi possível cancelar a reserva. Tente novamente.'
+      if (data?.error === 'NAO_CANCELAVEL') {
+        msg =
+          data?.causa === 'fora_do_prazo'
+            ? 'O horário de levantamento já passou — fale com a farmácia.'
+            : 'A farmácia já actualizou esta reserva. Veja o estado abaixo.'
+      }
+      setCancelError(msg)
+      if (data?.error === 'NAO_CANCELAVEL') setReloadKey((n) => n + 1)
+      return
+    }
+    setConfirmCancel(false)
+    setR(
+      (prev) =>
+        prev && {
+          ...prev,
+          status: 'cancelada',
+          reason: 'cancelado_cliente',
+          resolved_at: new Date().toISOString(),
+        },
+    )
+  }
 
   const shownError = !linkOk
     ? 'Link de acompanhamento inválido — abra o link completo que recebeu da farmácia.'
@@ -148,13 +199,26 @@ export default function ReservationStatus({ reservationId }) {
     )
   }
 
-  // Levantamento pedido pelo cliente (dia + hora) e a nota livre ficam
-  // juntos em `notes` — aqui separam-se para cada um ter a sua linha.
-  const { pickup, note: freeNote } = parseReservationNotes(r.notes)
+  // 0057: o levantamento vem de pickup_at; reservas antigas caem para o
+  // texto «Levantamento: …» que ficou nas notas.
+  const pickup = pickupFromReservation(r)
+  const freeNote = noteFromReservation(r)
+  // 0059/0060: confirmada/pronta cancelável até ao FIM da janela
+  // escolhida (fallback `pickup_at` nas reservas antigas); depois disso
+  // a reserva é da farmácia (ou o cron fecha como não levantada).
+  // Pendente continua sempre cancelável — o RPC é a autoridade.
+  const pickupAt = r.pickup_at ? new Date(r.pickup_at) : null
+  const pickupUntil = r.pickup_until ? new Date(r.pickup_until) : null
+  const cancelCutoff = pickupUntil || pickupAt
+  const canCancel =
+    r.status === 'pendente' ||
+    ((r.status === 'confirmada' || r.status === 'pronta') &&
+      (!cancelCutoff || cancelCutoff.getTime() > fetchedAt))
 
   const stepIndex = STEPS.findIndex((s) => s.id === r.status)
   const recusada = r.status === 'recusada'
   const expirada = r.status === 'expirada'
+  const cancelada = r.status === 'cancelada'
   const waNumber = r.pharmacies?.whatsapp || r.pharmacies?.phone
   // Foto da embalagem (0013) — o mesmo ficheiro do bucket que o card do
   // Localizador e o modal de reserva mostram. URL público do Storage.
@@ -254,7 +318,18 @@ export default function ReservationStatus({ reservationId }) {
         </p>
       )}
 
-      {recusada || expirada ? (
+      {cancelada ? (
+        <div className="res-track-estado res-track-estado--neutro">
+          <b>Reserva cancelada por si</b>
+          <p>O medicamento voltou a ficar disponível. Pode reservar outra vez quando quiser.</p>
+          <a
+            href={`/pesquisa?q=${encodeURIComponent(r.drugs?.name || '')}`}
+            className="cf-btn cf-btn--primary"
+          >
+            Procurar noutras farmácias
+          </a>
+        </div>
+      ) : recusada || expirada ? (
         <div className="res-track-estado res-track-estado--ruim">
           <b>{expirada ? 'Reserva expirada' : 'Reserva não atendida'}</b>
           <p>
@@ -305,7 +380,54 @@ export default function ReservationStatus({ reservationId }) {
       )}
       {freeNote && <p className="res-track-note">A sua nota: “{freeNote}”</p>}
 
-      {waMessage && r.status !== 'concluida' && (
+      {/* 0058/0059: cancelar enquanto pendente, ou em confirmada/pronta
+          até à hora marcada. Depois de cancelada o bloco desaparece. */}
+      {canCancel && (
+        <div className="res-track-cancel">
+          {confirmCancel ? (
+            <>
+              <p className="res-track-cancel-q">
+                {r.status === 'pendente'
+                  ? 'Cancelar esta reserva? O medicamento volta a ficar disponível na farmácia.'
+                  : 'A farmácia já separou este medicamento. Se cancelar, ele volta a ficar disponível — se for só um atraso, fale com eles.'}
+              </p>
+              <div className="res-track-cancel-actions">
+                <button
+                  type="button"
+                  className="cf-btn cf-btn--primary"
+                  onClick={doCancel}
+                  disabled={canceling}
+                >
+                  {canceling ? 'A cancelar…' : 'Sim, cancelar'}
+                </button>
+                <button
+                  type="button"
+                  className="cf-btn cf-btn--ghost"
+                  onClick={() => setConfirmCancel(false)}
+                  disabled={canceling}
+                >
+                  Voltar
+                </button>
+              </div>
+            </>
+          ) : (
+            <button
+              type="button"
+              className="cf-btn cf-btn--ghost"
+              onClick={() => setConfirmCancel(true)}
+            >
+              Cancelar reserva
+            </button>
+          )}
+          {cancelError && (
+            <p className="res-track-cancel-erro" role="alert">
+              {cancelError}
+            </p>
+          )}
+        </div>
+      )}
+
+      {waMessage && !['concluida', 'cancelada'].includes(r.status) && (
         <div className="res-track-contact">
           {waLinkHref && (
             <a

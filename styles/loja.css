@@ -3574,6 +3574,35 @@ p.sh-empty-sub {
   border-radius: 0;
 }
 
+/* Cancelamento pelo cliente (0058) — acção discreta, confirmação em
+   dois passos no próprio cartão (sem diálogo do browser). */
+.cf-shop .res-track-estado--neutro {
+  background: color-mix(in srgb, var(--cf-line) 30%, transparent);
+}
+
+.cf-shop .res-track-cancel {
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+  padding-top: 4px;
+}
+
+.cf-shop .res-track-cancel-q {
+  font-size: 13px;
+  color: var(--cf-muted);
+}
+
+.cf-shop .res-track-cancel-actions {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px;
+}
+
+.cf-shop .res-track-cancel-erro {
+  font-size: 12.5px;
+  color: var(--cf-danger, #b42318);
+}
+
 .cf-shop .res-track-step b {
   color: var(--cf-ink);
 }

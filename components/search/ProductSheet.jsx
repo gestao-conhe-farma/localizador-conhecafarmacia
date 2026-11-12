@@ -9,7 +9,8 @@ import { openStatus, openingWeek } from '@/lib/opening-hours'
 import { monthYear } from '@/lib/expiry'
 import { formatOptionLabel, packStructureText, perBasePrice, unitLabel } from '@/lib/sale-options'
 import { fmtKzPublic as fmtKz } from '@/lib/reservation-format'
-import { pickupText, reservationNotes } from '@/lib/pickup'
+import { pickupText } from '@/lib/pickup'
+import { luandaDay, luandaMinutes, luandaWallToInstant, luandaWeekday } from '@/lib/luanda-time'
 import {
   activeOptions,
   defaultOption,
@@ -31,6 +32,8 @@ const ERRORES = {
   INDISPONIVEL: 'Este item já não está disponível — volte à prateleira da farmácia.',
   NAO_RESERVAVEL: 'Este produto só está disponível no balcão — passe na farmácia.',
   OPCAO_INVALIDA: 'Forma de venda já não disponível — escolha outra.',
+  HORARIO_INVALIDO: 'Escolha um dia e uma hora válidos para o levantamento.',
+  JANELA_CHEIA: 'Essa hora já está cheia — escolha outra janela.',
   LIMITE_ATINGIDO: 'Muitas reservas seguidas. Tente novamente mais tarde.',
   FALHA_CRIAR: 'Não foi possível criar a reserva. Tente novamente.',
   PAYLOAD_INVALIDO: 'Não foi possível criar a reserva. Tente novamente.',
@@ -40,7 +43,6 @@ const ERRORES = {
 
 const DAY_MS = 24 * 60 * 60 * 1000
 const pad2 = (n) => String(n).padStart(2, '0')
-const isoDay = (d) => `${d.getFullYear()}-${pad2(d.getMonth() + 1)}-${pad2(d.getDate())}`
 
 /** Padrão quando a farmácia não tem horas legíveis (10:00–20:00). */
 const DEFAULT_OPEN = 10 * 60
@@ -63,13 +65,15 @@ const clockText = (min) => `${pad2(Math.floor(min / 60) % 24)}:${pad2(min % 60)}
 /** «Hoje» / «Amanhã» / «27 out» — o dia tal como o cliente o lê. */
 function dayLabel(iso, now = new Date()) {
   if (!iso) return ''
-  const today = new Date(now)
-  today.setHours(0, 0, 0, 0)
-  const target = new Date(`${iso}T00:00:00`)
-  const diff = Math.round((target - today) / DAY_MS)
+  const today = luandaDay(now)
+  const diff = Math.round(
+    (Date.parse(`${iso}T00:00:00Z`) - Date.parse(`${today}T00:00:00Z`)) / DAY_MS,
+  )
   if (diff === 0) return 'Hoje'
   if (diff === 1) return 'Amanhã'
-  return target.toLocaleDateString('pt-PT', { day: '2-digit', month: 'short' }).replace('.', '')
+  return new Date(`${iso}T12:00:00Z`)
+    .toLocaleDateString('pt-PT', { timeZone: 'UTC', day: '2-digit', month: 'short' })
+    .replace('.', '')
 }
 
 /**
@@ -89,13 +93,13 @@ function dayLabel(iso, now = new Date()) {
  */
 function windowsFor(iso, now = new Date(), openingHours = '') {
   const week = openingWeek(openingHours)
-  const weekday = new Date(`${iso}T00:00:00`).getDay()
+  const weekday = luandaWeekday(iso)
   const day = week ? week[weekday] : null
   if (week && !day) return [] // farmácia fechada nesse dia
   const openMin = day ? day.open : DEFAULT_OPEN
   const closeMin = day ? day.close : DEFAULT_CLOSE
-  const today = iso === isoDay(now)
-  const nowMin = now.getHours() * 60 + now.getMinutes()
+  const today = iso === luandaDay(now)
+  const nowMin = luandaMinutes(now)
 
   // Primeira janela: a hora cheia seguinte — 09:30 → 10:00 · 10:00 → 11:00
   // · 11:25 → 12:00 — nunca antes de a farmácia abrir. Num dia futuro é a
@@ -127,7 +131,7 @@ function windowsFor(iso, now = new Date(), openingHours = '') {
 /** Rótulo do levantamento + se a hora já passou (15 min de tolerância). */
 function describePickup(date, time, end, now = new Date()) {
   if (!date || !time) return { label: '', past: false }
-  const at = new Date(`${date}T${time}:00`)
+  const at = luandaWallToInstant(date, time)
   return {
     label: pickupText(dayLabel(date, now), time, end),
     past: at.getTime() < now.getTime() + 15 * 60 * 1000,
@@ -145,11 +149,11 @@ const EMPTY_BOUNDS = { min: '', max: '' }
  */
 function initialPickup(now = new Date(), openingHours = '') {
   const bounds = {
-    min: isoDay(now),
-    max: isoDay(new Date(now.getTime() + 14 * DAY_MS)),
+    min: luandaDay(now),
+    max: luandaDay(new Date(now.getTime() + 14 * DAY_MS)),
   }
   for (let i = 0; i < 14; i++) {
-    const iso = isoDay(new Date(now.getTime() + i * DAY_MS))
+    const iso = luandaDay(new Date(now.getTime() + i * DAY_MS))
     const first = windowsFor(iso, now, openingHours)[0]
     if (!first) continue
     return {
@@ -242,10 +246,16 @@ export default function ProductSheet({
   const [busy, setBusy] = useState(false)
   const [error, setError] = useState('')
   const [created, setCreated] = useState(null)
+  // Vagas por janela (0060): { '14:00': 3 }. Vazio até a RPC responder.
+  const [freeByTime, setFreeByTime] = useState({})
   // «Copiar link»: confirmação curta no próprio botão (sem toast).
   const [copied, setCopied] = useState(false)
   const copyTimer = useRef(null)
   const panelRef = useRef(null)
+  // Chave de idempotência da submissão (0055): repetir o envio — duplo
+  // clique, retry depois de um timeout — devolve a mesma reserva em vez
+  // de criar outra.
+  const idempotencyKey = useRef(null)
 
   const opts = activeOptions(item)
   const option = useMemo(
@@ -255,8 +265,13 @@ export default function ProductSheet({
   const price = priceOf(item, option)
   const photo = drugImageUrl(item.image_path)
   const status = openStatus(item.pharmacy_opening_hours)
-  const qtyAvailable = Number(item.quantity)
-  const maxQty = Number.isFinite(qtyAvailable) && qtyAvailable > 0 ? Math.min(10, qtyAvailable) : 10
+  // 0054: o disponível já desconta as reservas abertas. Item sem
+  // quantidade reportada (null) mantém o limite antigo de 10.
+  const hasQty = item.available_quantity != null || item.quantity != null
+  const qtyAvailable = Number(item.available_quantity ?? item.quantity)
+  const soldOut = hasQty && Number.isFinite(qtyAvailable) && qtyAvailable <= 0
+  const maxQty =
+    hasQty && Number.isFinite(qtyAvailable) ? Math.min(10, Math.max(1, qtyAvailable)) : 10
   const packText = packStructureText(item.pack_laminas, item.pack_comprimidos)
   const unit = unitLabel(option?.unit || defaultOption(item)?.unit || 'unidade').toLowerCase()
   const estimate =
@@ -285,8 +300,52 @@ export default function ProductSheet({
   // Dia escolhido sem funcionamento (ex.: domingo num «Seg–Sáb»).
   const week = openingWeek(item.pharmacy_opening_hours)
   const closedDay = Boolean(
-    week && pickup.date && !week[new Date(`${pickup.date}T00:00:00`).getDay()],
+    week && pickup.date && !week[luandaWeekday(pickup.date)],
   )
+
+  // Lotação das janelas (0060): a capacidade da agenda é pública, mas só
+  // em contagens. Uma janela cheia desaparece como opção antes de o
+  // cliente tentar; o servidor continua a ser a autoridade no submit.
+  useEffect(() => {
+    if (!pickup.date) return
+    const day = windowsFor(pickup.date, new Date(), item.pharmacy_opening_hours)
+    const starts = day
+      .map((w) => luandaWallToInstant(pickup.date, w.from))
+      .filter((d) => !Number.isNaN(d.getTime()))
+      .map((d) => d.toISOString())
+    if (starts.length === 0) return
+    let alive = true
+    ;(async () => {
+      try {
+        const supabase = createClient()
+        const { data, error } = await supabase.rpc('pickup_availability', {
+          p_stock_item_id: item.stock_item_id,
+          p_starts: starts,
+        })
+        if (!alive || error) return
+        const next = {}
+        for (const s of Array.isArray(data) ? data : []) {
+          const at = new Date(s.at)
+          if (Number.isNaN(at.getTime())) continue
+          // A chave inclui o dia: uma resposta atrasada de ontem nunca
+          // pinta as vagas de hoje.
+          next[`${pickup.date}|${clockText(luandaMinutes(at))}`] = s.free
+        }
+        setFreeByTime(next)
+      } catch {
+        // Lotação indisponível: o formulário comporta-se como antes e o
+        // submit valida na mesma.
+      }
+    })()
+    return () => {
+      alive = false
+    }
+  }, [pickup.date, item.stock_item_id, item.pharmacy_opening_hours])
+
+  // A hora escolhida pode não ser uma sugestão (campo livre): só se
+  // bloqueia quando a lotação daquela hora é mesmo zero.
+  const selectedFree = freeByTime[`${pickup.date}|${pickup.time}`]
+  const slotFull = typeof selectedFree === 'number' && selectedFree <= 0
 
   const chooseDate = (iso) => {
     if (!iso) return
@@ -363,6 +422,9 @@ export default function ProductSheet({
 
   const startReserve = () => {
     setError('')
+    idempotencyKey.current =
+      globalThis.crypto?.randomUUID?.() ||
+      `r-${Date.now().toString(36)}-${Math.random().toString(36).slice(2, 12)}`
     setMode('quando')
   }
 
@@ -374,7 +436,21 @@ export default function ProductSheet({
     }
     setBusy(true)
     setError('')
-    const notes = reservationNotes(pickup.label || 'a combinar', note)
+    // 0057: a janela vai como pickup_at; notes fica só com a nota livre.
+    // A hora escrita é a da FARMÁCIA (Luanda), não a do browser: quem
+    // reserva de Lisboa às 10:00 tem de gravar 10:00, não 11:00.
+    // A hora escrita à mão pode estar a meio — não rebentar no toISOString.
+    const pickupDate =
+      pickup.date && pickup.time ? luandaWallToInstant(pickup.date, pickup.time) : null
+    const pickupAt =
+      pickupDate && !Number.isNaN(pickupDate.getTime()) ? pickupDate.toISOString() : null
+    // 0060: o fim da janela escolhida também é compromisso — sem isto o
+    // «14:00–16:00» morria no formulário e só o início ficava gravado.
+    const untilDate =
+      pickup.date && pickup.end ? luandaWallToInstant(pickup.date, pickup.end) : null
+    const pickupUntil =
+      untilDate && !Number.isNaN(untilDate.getTime()) ? untilDate.toISOString() : null
+    const notes = note.trim() ? note.trim().slice(0, 300) : null
     const res = await createReservation({
       stockItemId: item.stock_item_id,
       name,
@@ -384,6 +460,9 @@ export default function ProductSheet({
       notes,
       saleOptionId: option?.id || null,
       honeypot,
+      idempotencyKey: idempotencyKey.current || undefined,
+      pickupAt,
+      pickupUntil,
     })
     setBusy(false)
     if (res.ok) {
@@ -525,6 +604,17 @@ export default function ProductSheet({
                 <>
                   <span className="cf-btn cf-btn--ghost" aria-disabled="true">
                     Só disponível no balcão
+                  </span>
+                  {phoneHref && (
+                    <a className="cf-btn cf-btn--primary" href={phoneHref}>
+                      Ligar à farmácia
+                    </a>
+                  )}
+                </>
+              ) : soldOut ? (
+                <>
+                  <span className="cf-btn cf-btn--ghost" aria-disabled="true">
+                    Sem unidades livres
                   </span>
                   {phoneHref && (
                     <a className="cf-btn cf-btn--primary" href={phoneHref}>
@@ -798,19 +888,26 @@ export default function ProductSheet({
                 <div className="res-slots">
                   {slots.map((w) => {
                     const on = pickup.time === w.from && pickup.end === w.to
+                    const free = freeByTime[`${pickup.date}|${w.from}`]
+                    const full = typeof free === 'number' && free <= 0
                     return (
                       <button
                         key={w.from}
                         type="button"
                         className={`res-slot${on ? ' res-slot--on' : ''}`}
                         aria-pressed={on}
+                        disabled={full}
                         onClick={() => chooseWindow(w)}
                       >
-                        <span className="res-tag">Sugestão</span>
+                        <span className="res-tag">{full ? 'Cheio' : 'Sugestão'}</span>
                         <b className="cf-num">
                           {w.from}–{w.to}
                         </b>
-                        A farmácia confirma ao responder
+                        {typeof free === 'number'
+                          ? full
+                            ? 'Sem vagas nesta janela'
+                            : `${free} ${free === 1 ? 'lugar livre' : 'lugares livres'}`
+                          : 'A farmácia confirma ao responder'}
                       </button>
                     )
                   })}
@@ -827,16 +924,18 @@ export default function ProductSheet({
 
                 <p
                   className={`res-when-note${
-                    pickup.past || closedDay ? ' res-when-note--bad' : ''
+                    pickup.past || closedDay || slotFull ? ' res-when-note--bad' : ''
                   }`}
                 >
                   {closedDay
                     ? 'A farmácia não abre nesse dia — escolha outro dia.'
-                    : pickup.past
-                      ? 'Essa hora já passou — escolha outra.'
-                      : pickup.label
-                        ? `Marcado: ${pickup.label}`
-                        : 'Escolha o dia e a hora a que passa pela farmácia.'}
+                    : slotFull
+                      ? 'Essa janela já está cheia — escolha outra hora.'
+                      : pickup.past
+                        ? 'Essa hora já passou — escolha outra.'
+                        : pickup.label
+                          ? `Marcado: ${pickup.label}`
+                          : 'Escolha o dia e a hora a que passa pela farmácia.'}
                 </p>
 
                 <div className="res-summary">
@@ -848,7 +947,7 @@ export default function ProductSheet({
                     type="button"
                     className="cf-btn cf-btn--primary"
                     onClick={() => setMode('contacto')}
-                    disabled={!pickup.label || pickup.past || closedDay}
+                    disabled={!pickup.label || pickup.past || closedDay || slotFull}
                   >
                     Continuar
                   </button>

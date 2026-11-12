@@ -15,6 +15,8 @@ const ERRORES = {
     'O link do Google Maps deve começar por https:// — cole o link partilhado do Maps.',
   COORDENADAS_INVALIDAS:
     'Coordenadas inválidas. Latitude entre -90 e 90 e longitude entre -180 e 180 (ex.: -8,838 / 13,234).',
+  BLOCO_INVALIDO: 'O bloco de levantamento tem de ter entre 15 e 240 minutos.',
+  CAPACIDADE_INVALIDA: 'As reservas por bloco têm de estar entre 1 e 100.',
   FALHA_GUARDAR: 'Não foi possível guardar. Tente novamente.',
 }
 
@@ -68,6 +70,8 @@ export default function PharmacyProfileForm({ pharmacy, accountEmail = '' }) {
       email: fd.get('email') || '',
       whatsapp: fd.get('whatsapp') || '',
       openingHours: fd.get('openingHours') || '',
+      pickupSlotMinutes: fd.get('pickupSlotMinutes') || '',
+      pickupSlotCapacity: fd.get('pickupSlotCapacity') || '',
       mapsUrl: fd.get('mapsUrl') || '',
       lat: coords.lat,
       lng: coords.lng,
@@ -237,8 +241,8 @@ export default function PharmacyProfileForm({ pharmacy, accountEmail = '' }) {
         </div>
       </SettingsSection>
 
-      {/* Painel 3 — Horário de atendimento. */}
-      <SettingsSection title="Horário de atendimento">
+      {/* Painel 3 — Horário de atendimento e agenda de levantamento. */}
+      <SettingsSection title="Horário e agenda de levantamento">
         <div className="portal-card-body">
           <label className="portal-label" style={{ marginBottom: 0 }}>
             Horário
@@ -252,6 +256,45 @@ export default function PharmacyProfileForm({ pharmacy, accountEmail = '' }) {
               Texto livre — aparece no Localizador e alimenta a indicação <b>aberto agora</b>.
             </span>
           </label>
+
+          {/* 0057/0060: a agenda que o cliente vê ao reservar. Estes dois
+              números decidem quantas reservas cabem em cada bloco e são
+              os mesmos que o Localizador mostra como vagas. */}
+          <div className="portal-form-grid" style={{ marginTop: '1rem' }}>
+            <label className="portal-label">
+              Duração de cada bloco (min)
+              <input
+                name="pickupSlotMinutes"
+                type="number"
+                inputMode="numeric"
+                min="15"
+                max="240"
+                step="15"
+                className="portal-input"
+                defaultValue={pharmacy.pickup_slot_minutes ?? 60}
+              />
+              <span className="portal-hint">
+                Entre 15 e 240 minutos. O cliente escolhe a hora dentro do horário de
+                funcionamento.
+              </span>
+            </label>
+            <label className="portal-label">
+              Reservas por bloco
+              <input
+                name="pickupSlotCapacity"
+                type="number"
+                inputMode="numeric"
+                min="1"
+                max="100"
+                className="portal-input"
+                defaultValue={pharmacy.pickup_slot_capacity ?? 5}
+              />
+              <span className="portal-hint">
+                Quantas reservas aceita em cada bloco. Ao encher, o Localizador mostra
+                «sem vagas» e a agenda do portal marca o bloco a cheio.
+              </span>
+            </label>
+          </div>
         </div>
       </SettingsSection>
 

@@ -1,6 +1,6 @@
 'use client'
 
-import { useEffect, useState } from 'react'
+import { useState, useSyncExternalStore } from 'react'
 import Link from 'next/link'
 import Notice from '@/components/ui/Notice'
 
@@ -17,22 +17,28 @@ import Notice from '@/components/ui/Notice'
  */
 const CHAVE = 'portal.mfa.sugestao'
 
+// Sem subscrição: a decisão muda por esta instância (o X) ou na próxima
+// visita. Um aviso não precisa de reagir a outros separadores.
+const semSubscricao = () => () => {}
+
+function lerDispensado() {
+  try {
+    return window.localStorage.getItem(CHAVE) === '1'
+  } catch {
+    // Sem armazenamento (modo privado antigo): mostra-se, e o X só vale
+    // para esta página. Melhor do que rebentar o portal por causa disto.
+    return false
+  }
+}
+
 export default function MfaSuggestion({ temAutenticador = false }) {
-  // Começa fechado para não aparecer e desaparecer na hidratação.
-  const [dispensado, setDispensado] = useState(true)
+  // No servidor (e na hidratação) conta como dispensado, para o aviso não
+  // aparecer e desaparecer; no cliente lê a decisão guardada. Sem efeito
+  // nem setState no corpo — nada de renders em cascata.
+  const dispensado = useSyncExternalStore(semSubscricao, lerDispensado, () => true)
+  const [fechadoAqui, setFechadoAqui] = useState(false)
 
-  useEffect(() => {
-    let decidido = false
-    try {
-      decidido = window.localStorage.getItem(CHAVE) === '1'
-    } catch {
-      // Sem armazenamento (modo privado antigo): mostra-se, e o X só vale
-      // para esta página. Melhor do que rebentar o portal por causa disto.
-    }
-    setDispensado(decidido)
-  }, [])
-
-  if (temAutenticador || dispensado) return null
+  if (temAutenticador || fechadoAqui || dispensado) return null
 
   return (
     <div className="portal-plan-alert">
@@ -46,7 +52,7 @@ export default function MfaSuggestion({ temAutenticador = false }) {
           } catch {
             // idem: o aviso volta na próxima visita, sem estragar nada.
           }
-          setDispensado(true)
+          setFechadoAqui(true)
         }}
       >
         <p>

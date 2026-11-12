@@ -1,6 +1,6 @@
 'use client'
 
-import { useEffect, useRef, useState, useActionState } from 'react'
+import { useRef, useState, useActionState } from 'react'
 import Link from 'next/link'
 import { CONTACT_EMAIL } from '@/lib/constants'
 import { reporSenhaPortal } from '@/lib/actions/pharmacy-recovery'
@@ -44,16 +44,14 @@ export default function PortalRecoveryForm({ etapaInicial = 'email', emailInicia
     email: emailInicial,
   })
   const [email, setEmail] = useState(emailInicial)
-  // Voltar atrás («usar outro e-mail») é navegação local; o próximo envio
-  // traz uma etapa nova e o servidor volta a mandar.
-  const [etapaPedida, setEtapaPedida] = useState(null)
+  // Voltar atrás («usar outro e-mail») é navegação local. O pedido fica
+  // preso ao estado que o viu: quando chega um estado novo do servidor,
+  // deixa de se aplicar — sem efeito a limpar (e sem render em cascata).
+  const [nav, setNav] = useState(null)
   const formRef = useRef(null)
 
-  useEffect(() => {
-    setEtapaPedida(null)
-  }, [state])
-
   const emailAtual = state?.email || email
+  const etapaPedida = nav?.at === state ? nav.etapa : null
   const etapa = etapaPedida || state?.etapa || etapaInicial
 
   if (state?.feito) {
@@ -158,7 +156,7 @@ export default function PortalRecoveryForm({ etapaInicial = 'email', emailInicia
             type="button"
             className="portal-link bg-transparent p-0 underline-offset-4 hover:underline"
             onClick={() => {
-              setEtapaPedida('email')
+              setNav({ at: state, etapa: 'email' })
               setEmail(emailAtual)
             }}
           >

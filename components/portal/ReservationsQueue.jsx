@@ -8,6 +8,7 @@ import {
   getMyReservations,
   setReservationStatus,
   markClientContacted,
+  dismissPickupSlotAlerts,
 } from '@/lib/actions/pharmacy-portal'
 import { buildReservationMessage, waLink } from '@/lib/reservation-messages'
 import { logWarn } from '@/lib/log'
@@ -32,6 +33,7 @@ const BADGES = {
   concluida: { label: 'Concluída', cls: 'portal-badge--ok' },
   recusada: { label: 'Recusada', cls: 'portal-badge--off' },
   expirada: { label: 'Expirada', cls: 'portal-badge--off' },
+  cancelada: { label: 'Cancelada', cls: 'portal-badge--off' },
 }
 
 /** Estado = PONTO + palavra (disciplina v2) — mapeia status → st-*. */
@@ -42,6 +44,7 @@ const ST_BY_STATUS = {
   concluida: 'ok',
   recusada: 'mut',
   expirada: 'bad',
+  cancelada: 'mut',
 }
 
 const REJECT_REASONS = [
@@ -100,7 +103,8 @@ function concludedMessage(stock) {
 }
 
 import { fmtKz, estimateTotal, quantityDesc } from '@/lib/reservation-format'
-import { parseReservationNotes } from '@/lib/pickup'
+import { noteFromReservation, pickupFromReservation } from '@/lib/pickup'
+import { formatLuanda } from '@/lib/luanda-time'
 
 /** Motivo legível na ficha (reason é "chave" ou "chave:texto"). */
 function reasonLabel(reason) {
@@ -111,6 +115,8 @@ function reasonLabel(reason) {
     zona: 'Zona não atendida',
     outro: 'Motivo',
     ttl: 'Prazo de 72 h vencido',
+    pickup_vencido: 'Hora de levantamento vencida',
+    nao_levantada: 'Não levantada',
   }
   const base = map[key.trim()] || key
   return rest.length > 0 ? `${base}: ${rest.join(':').trim()}` : base
@@ -229,6 +235,12 @@ export default function ReservationsQueue() {
 
   // Nome da farmácia (vem com as reservas) — usado nas mensagens wa.me.
   const [pharmacyName, setPharmacyName] = useState('')
+  // Agenda (0060): bloco/capacidade configurados pela farmácia e o
+  // instante do último carregamento (o render não chama Date.now()).
+  const [pickupSlot, setPickupSlot] = useState({ minutes: 60, capacity: 5 })
+  const [nowMs, setNowMs] = useState(0)
+  // Blocos que encheram (0061): avisos por ler da farmácia.
+  const [alerts, setAlerts] = useState([])
 
   /** Mensagem de sucesso que se apaga sozinha (o mesmo toast serve de erro). */
   const flash = (msg) => {
@@ -241,8 +253,12 @@ export default function ReservationsQueue() {
     if (res.ok) {
       setRows(res.reservations)
       setPharmacyName(res.pharmacyName || '')
+      if (res.pickupSlot) setPickupSlot(res.pickupSlot)
+      setAlerts(res.alerts || [])
+      setNowMs(Date.now())
     } else {
       setRows([])
+      setAlerts([])
       setToast(ERRORES[res.error] || ERRORES.FALHA_CARREGAR)
     }
   }, [])
@@ -330,6 +346,9 @@ export default function ReservationsQueue() {
       saleUnit: r.stock_sale_options?.unit,
       salePack: r.stock_sale_options?.pack_size,
       saleUnitPrice: r.stock_sale_options?.price,
+      // 0060: a mensagem leva a janela (início e fim) combinada.
+      pickup_at: r.pickup_at,
+      pickup_until: r.pickup_until,
       saleBaseUnit: (r.item_options || []).find((o) => o.is_default && o.id !== r.sale_option_id)
         ?.unit,
       // Origem/marca (0013) — entram na mensagem ao cliente.
@@ -352,6 +371,13 @@ export default function ReservationsQueue() {
         }
       })
       .catch(() => {}) // fire-and-forget: o rasto não pode bloquear o envio
+  }
+
+  /** Fecha um aviso de bloco cheio sem o apagar (0061). */
+  const dismissAlert = async (id) => {
+    setAlerts((list) => list.filter((a) => a.id !== id))
+    const res = await dismissPickupSlotAlerts([id])
+    if (!res.ok) load() // não fechou: o aviso volta a aparecer
   }
 
   /** Confirma com ajuste de quantidade (vazio = confirmar tudo). */
@@ -403,7 +429,10 @@ export default function ReservationsQueue() {
       pendente: (r) => r.status === 'pendente',
       ativas: (r) => r.status === 'confirmada' || r.status === 'pronta',
       resolvidas: (r) =>
-        r.status === 'concluida' || r.status === 'recusada' || r.status === 'expirada',
+        r.status === 'concluida' ||
+        r.status === 'recusada' ||
+        r.status === 'expirada' ||
+        r.status === 'cancelada',
     }[filter]
     const needle = q.trim().toLowerCase()
     // Filtro do dia (?dia=): pedidas OU concluídas nesse dia.
@@ -426,6 +455,32 @@ export default function ReservationsQueue() {
       })
       .sort((a, b) => new Date(b.created_at) - new Date(a.created_at))
   }, [rows, filter, q, dia])
+
+  /**
+   * Ocupação das próximas janelas: agrupa as reservas ABERTAS pelo bloco
+   * que o Localizador usa (0060), para a farmácia ver a agenda antes de
+   * ficar sem vagas — e não só quando o cliente reclama.
+   */
+  const agenda = useMemo(() => {
+    const minutes = pickupSlot.minutes || 60
+    const capacity = pickupSlot.capacity || 5
+    const groups = new Map()
+    for (const r of rows || []) {
+      if (!r.pickup_at || !['pendente', 'confirmada', 'pronta'].includes(r.status)) continue
+      const at = new Date(r.pickup_at).getTime()
+      if (Number.isNaN(at)) continue
+      if (nowMs && at + minutes * 60000 < nowMs) continue // já passou
+      const ms = Math.floor(at / (minutes * 60000)) * minutes * 60000
+      const g = groups.get(ms) || { ms, booked: 0 }
+      g.booked += 1
+      groups.set(ms, g)
+    }
+    return {
+      minutes,
+      capacity,
+      slots: [...groups.values()].sort((a, b) => a.ms - b.ms).slice(0, 8),
+    }
+  }, [rows, pickupSlot, nowMs])
 
   /** Painel inline de confirmação (quantidade) — usado na linha e no dia. */
   const confirmPanel = (r) =>
@@ -667,7 +722,7 @@ export default function ReservationsQueue() {
   const dayStats = {
     pend: dayItems.filter((r) => r.status === 'pendente').length,
     ok: dayItems.filter((r) => ['confirmada', 'pronta', 'concluida'].includes(r.status)).length,
-    ref: dayItems.filter((r) => ['recusada', 'expirada'].includes(r.status)).length,
+    ref: dayItems.filter((r) => ['recusada', 'expirada', 'cancelada'].includes(r.status)).length,
   }
 
   const viewToggle = (
@@ -714,7 +769,7 @@ export default function ReservationsQueue() {
       inline ocupam a largura toda por baixo. */
   const renderRow = (r) => {
     const d = r.drugs || {}
-    const resolved = ['concluida', 'recusada', 'expirada'].includes(r.status)
+    const resolved = ['concluida', 'recusada', 'expirada', 'cancelada'].includes(r.status)
     const rejecting = rejectingId === r.id
     const confirming = confirmingId === r.id
     const panels = rejecting || confirming
@@ -726,6 +781,7 @@ export default function ReservationsQueue() {
       concluida: 'Concluída',
       recusada: `Recusada${reasonLabel(r.reason) ? ` · ${reasonLabel(r.reason)}` : ''}`,
       expirada: 'Expirada',
+      cancelada: 'Cancelada pelo cliente',
     }[r.status]
     /* O texto completo do estado «Pronta» não cabe na coluna: o chip
        mostra a versão curta e o resto vive no title (rato) e no
@@ -733,7 +789,8 @@ export default function ReservationsQueue() {
     const estadoFull = r.status === 'pronta' ? 'Pronta · aguarda levantamento' : null
     const kebabOpen = kebabId === r.id
     // Dia/hora que o cliente marcou + nota livre (vivem juntos em notes).
-    const { pickup, note: freeNote } = parseReservationNotes(r.notes)
+    const pickup = pickupFromReservation(r)
+    const freeNote = noteFromReservation(r)
 
     return (
       <div
@@ -946,6 +1003,96 @@ export default function ReservationsQueue() {
           </div>
         ))}
       </div>
+
+      {alerts.length > 0 && (
+        <div className="portal-box">
+          <div className="portal-sec-head">
+            <h2>Blocos de levantamento cheios</h2>
+            <span className="portal-hint">
+              O Localizador já não aceita reservas nestas janelas
+            </span>
+          </div>
+          <div
+            className="portal-card-body"
+            style={{ display: 'flex', flexDirection: 'column', gap: '0.5rem' }}
+          >
+            {alerts.map((a) => {
+              const start = new Date(a.slot).getTime()
+              const minutes = pickupSlot.minutes || 60
+              return (
+                <div
+                  key={a.id}
+                  style={{
+                    display: 'flex',
+                    alignItems: 'center',
+                    justifyContent: 'space-between',
+                    gap: '0.75rem',
+                    flexWrap: 'wrap',
+                  }}
+                >
+                  <span className="portal-chip portal-chip--active">
+                    {formatLuanda(start, {
+                      day: '2-digit',
+                      month: 'short',
+                      hour: '2-digit',
+                      minute: '2-digit',
+                    })}
+                    –{formatLuanda(start + minutes * 60000, {
+                      hour: '2-digit',
+                      minute: '2-digit',
+                    })}
+                    {' · '}
+                    {a.capacity}/{a.capacity}
+                  </span>
+                  <button type="button" className="btn-mini" onClick={() => dismissAlert(a.id)}>
+                    Marcar como visto
+                  </button>
+                </div>
+              )
+            })}
+          </div>
+        </div>
+      )}
+
+      {agenda.slots.length > 0 && (
+        <div className="portal-box">
+          <div className="portal-sec-head">
+            <h2>Agenda de levantamento</h2>
+            <span className="portal-hint">
+              Blocos de {agenda.minutes} min · {agenda.capacity} reservas por bloco
+            </span>
+          </div>
+          <div
+            className="portal-card-body"
+            style={{ display: 'flex', flexWrap: 'wrap', gap: '0.5rem' }}
+          >
+            {agenda.slots.map((s) => {
+              const full = s.booked >= agenda.capacity
+              return (
+                <span
+                  key={s.ms}
+                  className={`portal-chip${full ? ' portal-chip--active' : ''}`}
+                  title={
+                    full
+                      ? 'Bloco cheio — o Localizador já não aceita reservas nesta janela'
+                      : `${agenda.capacity - s.booked} vagas nesta janela`
+                  }
+                >
+                  {formatLuanda(s.ms, {
+                    day: '2-digit',
+                    month: 'short',
+                    hour: '2-digit',
+                    minute: '2-digit',
+                  })}
+                  –{formatLuanda(s.ms + agenda.minutes * 60000, { hour: '2-digit', minute: '2-digit' })}
+                  {' · '}
+                  {s.booked}/{agenda.capacity}
+                </span>
+              )
+            })}
+          </div>
+        </div>
+      )}
 
       {rows.length === 0 ? (
         <div className="portal-box">

@@ -3,7 +3,7 @@
 import { useEffect, useMemo, useState } from 'react'
 import { getMyReservations, setReservationStatus } from '@/lib/actions/pharmacy-portal'
 import { quantityDesc } from '@/lib/reservation-format'
-import { parseReservationNotes } from '@/lib/pickup'
+import { noteFromReservation, pickupFromReservation } from '@/lib/pickup'
 
 const REASONS = [
   { id: 'sem_stock', label: 'Sem stock' },
@@ -130,7 +130,8 @@ export default function PendingReservationsCard() {
         const d = r.drugs || {}
         const idade = agora - new Date(r.created_at).getTime()
         const stCls = idade > 48 * 3600 * 1000 ? 'bad' : 'warn'
-        const { pickup, note: freeNote } = parseReservationNotes(r.notes)
+        const pickup = pickupFromReservation(r)
+        const freeNote = noteFromReservation(r)
         const meta = [
           r.requester_name,
           r.requester_phone,

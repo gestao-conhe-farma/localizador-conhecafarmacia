@@ -2,7 +2,7 @@ import { NextResponse } from 'next/server'
 import { createAdminClient } from '@/lib/supabase/admin'
 import { emailPedidoAdesao, enviarEmail } from '@/lib/email'
 import { CONTACT_EMAIL, MUNICIPIOS } from '@/lib/constants'
-import { logError } from '@/lib/log'
+import { logError, logWarn } from '@/lib/log'
 
 // Rate limiting ATÓMICO na BD (migração 0037, `lead_rate_consume`):
 // janela fixa por IP, incremento num upsert — sobrevive a N
@@ -63,11 +63,10 @@ function normalizeSite(v) {
 }
 
 /**
- * Um segundo pedido com o mesmo e-mail ou telefone não é erro: é uma
- * pessoa a insistir. A rota devolve 409 com `duplicate: true` e NÃO grava;
- * o formulário mostra o aviso e, se a pessoa confirmar, reenvia com
- * `confirm_duplicate: true` e aí grava. Assim o aviso acontece antes de
- * existir um segundo registo, como pedido.
+ * Um segundo pedido com o mesmo e-mail ou telefone não é erro nem notícia
+ * (B6): a rota responde igual e não grava outra linha. Distinguir os casos
+ * na resposta permitia enumerar contactos que já são leads; o aviso de
+ * duplicado saiu do formulário.
  */
 async function duplicateLead(admin, email, phone) {
   if (email) {
@@ -174,19 +173,12 @@ export async function POST(request) {
   try {
     admin = createAdminClient()
 
+    // B6: mesma resposta para contacto novo e repetido. Quem sonda a lista
+    // não distingue os casos, e um pedido repetido não cria outra linha.
     const duplicate = await duplicateLead(admin, payload.email, payload.phone)
-    if (duplicate && body.confirm_duplicate !== true) {
-      return NextResponse.json(
-        {
-          error:
-            duplicate === 'email'
-              ? 'Já recebemos um pedido com este e-mail.'
-              : 'Já recebemos um pedido com este telefone.',
-          duplicate: true,
-          campo: duplicate,
-        },
-        { status: 409 },
-      )
+    if (duplicate) {
+      logWarn('leads', 'Pedido repetido ignorado', { campo: duplicate })
+      return NextResponse.json({ ok: true, emailSent: false })
     }
 
     const { error } = await admin.from('pharmacy_leads').insert({

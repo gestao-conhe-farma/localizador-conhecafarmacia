@@ -1,3 +1,15 @@
+// B2: o optimizador só pode buscar imagens ao Storage do NOSSO projecto.
+// `*.supabase.co` deixava qualquer pessoa usar o domínio como proxy e
+// cache de imagens de projectos alheios. Sem URL configurada não há
+// hosts remotos — falha fechada.
+const supabaseHost = (() => {
+  try {
+    return new URL(process.env.NEXT_PUBLIC_SUPABASE_URL).hostname
+  } catch {
+    return null
+  }
+})()
+
 /** @type {import('next').NextConfig} */
 const nextConfig = {
   poweredByHeader: false, // reduz fingerprinting
@@ -12,13 +24,15 @@ const nextConfig = {
     turbopackFileSystemCacheForDev: false,
   },
   images: {
-    remotePatterns: [
-      {
-        protocol: 'https',
-        hostname: '*.supabase.co',
-        pathname: '/storage/v1/object/public/**',
-      },
-    ],
+    remotePatterns: supabaseHost
+      ? [
+          {
+            protocol: 'https',
+            hostname: supabaseHost,
+            pathname: '/storage/v1/object/public/**',
+          },
+        ]
+      : [],
   },
   compiler: {
     removeConsole:

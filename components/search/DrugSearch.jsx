@@ -118,6 +118,21 @@ function groupByDrug(rows) {
 }
 
 /**
+ * Termo seguro para a expressão `or` do PostgREST (B1).
+ *
+ * A vírgula, os parênteses e as aspas fecham/abrem a expressão que o
+ * PostgREST interpreta; `%` e `_` são curingas do LIKE. O texto do
+ * visitante é pesquisa, não sintaxe: sai limpo e limitado.
+ */
+function orTerm(term) {
+  return String(term || '')
+    .replace(/[,()."\\%_]/g, ' ')
+    .replace(/\s+/g, ' ')
+    .trim()
+    .slice(0, 80)
+}
+
+/**
  * Query única da busca — usada na primeira visita (sem termo) e em cada
  * pesquisa. Vive fora do componente para o efeito de arranque não depender
  * de uma função recriada a cada render.
@@ -131,7 +146,13 @@ async function fetchGroups(term, municipio, provincia) {
     .order('pharmacy_name')
     .limit(500)
   if (term) {
-    req = req.or(`drug_name.ilike.%${term}%,drug_molecule.ilike.%${term}%,brand.ilike.%${term}%`)
+    const seguro = orTerm(term)
+    // Termo só com sintaxe (`?q=,,,`) não procura nada: lista vazia é
+    // melhor do que devolver o catálogo inteiro.
+    if (!seguro) return []
+    req = req.or(
+      `drug_name.ilike.%${seguro}%,drug_molecule.ilike.%${seguro}%,brand.ilike.%${seguro}%`,
+    )
   }
   // Província é o primeiro filtro: sem município escolhido, restringe à
   // lista de municípios dela. Com município, o `eq` é mais estreito.

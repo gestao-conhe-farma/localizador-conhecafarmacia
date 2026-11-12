@@ -4,7 +4,6 @@ import { useState } from 'react'
 import Link from 'next/link'
 import { useRouter } from 'next/navigation'
 import { PROVINCIAS } from '@/lib/constants'
-import Notice from '@/components/ui/Notice'
 
 /**
  * Formulário público de adesão de farmácias (/farmacias/participar).
@@ -13,24 +12,17 @@ import Notice from '@/components/ui/Notice'
  * e-mail de confirmação é enviado pela rota /api/leads depois de o lead
  * estar gravado.
  *
- * Duplicados: a rota devolve 409 com `duplicate: true` e NÃO grava. Aqui
- * mostramos o aviso e só no segundo envio — com `confirm_duplicate` — o
- * pedido é registado. É o «avisar antes de enviar» escolhido para o
- * formulário; nada é perdido se a pessoa desistir.
+ * Duplicados: a rota responde sempre com sucesso e não grava outra linha
+ * (B6). O formulário não distingue contacto novo de repetido — mostrar o
+ * aviso permitiria descobrir que contactos já são leads.
  */
 export default function PharmacyApplicationForm() {
   const router = useRouter()
   const [submitting, setSubmitting] = useState(false)
   const [erro, setErro] = useState('')
-  const [duplicate, setDuplicate] = useState(null)
-  const [pending, setPending] = useState(null)
 
   const limparAvisos = () => {
     if (erro) setErro('')
-    if (duplicate) {
-      setDuplicate(null)
-      setPending(null)
-    }
   }
 
   const enviar = async (payload) => {
@@ -43,15 +35,6 @@ export default function PharmacyApplicationForm() {
         body: JSON.stringify(payload),
       })
       const data = await res.json().catch(() => ({}))
-
-      if (res.status === 409 && data.duplicate) {
-        setDuplicate({
-          campo: data.campo || 'contacto',
-          mensagem: data.error || 'Já recebemos um pedido com este contacto.',
-        })
-        setPending(payload)
-        return
-      }
 
       if (!res.ok) {
         setErro(
@@ -106,11 +89,6 @@ export default function PharmacyApplicationForm() {
       company: fd.get('company') || '',
     }
     enviar(payload)
-  }
-
-  const confirmarDuplicado = () => {
-    if (!pending) return
-    enviar({ ...pending, confirm_duplicate: true })
   }
 
   return (
@@ -328,22 +306,6 @@ export default function PharmacyApplicationForm() {
           . Os dados são usados apenas para avaliar e acompanhar este pedido de adesão.
         </label>
       </div>
-
-      {duplicate && (
-        <Notice tone="warn" className="form-full" role="alert">
-          <p>
-            <b>{duplicate.mensagem}</b> Pode enviar mesmo assim — a equipa verá os dois registos.
-          </p>
-          <button
-            type="button"
-            className="cf-btn cf-btn--primary cf-btn--sm"
-            onClick={confirmarDuplicado}
-            disabled={submitting}
-          >
-            {submitting ? 'A enviar…' : 'Enviar mesmo assim'}
-          </button>
-        </Notice>
-      )}
 
       {erro && (
         <div className="form-status form-status--err form-full" role="alert">

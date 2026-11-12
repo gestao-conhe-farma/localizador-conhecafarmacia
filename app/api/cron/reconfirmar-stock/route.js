@@ -1,3 +1,4 @@
+import { timingSafeEqual } from 'node:crypto'
 import { NextResponse } from 'next/server'
 import { refreshDemoStock } from '@/lib/demo-stock'
 import { logError } from '@/lib/log'
@@ -13,7 +14,11 @@ function authorized(request) {
   // Sem segredo configurado, o endpoint só corre em desenvolvimento — em
   // produção recusa-se a fazer alterações à base de dados.
   if (!secret) return process.env.NODE_ENV !== 'production'
-  return request.headers.get('authorization') === `Bearer ${secret}`
+  // B3: tempo constante, como os restantes crons — `===` aborta no
+  // primeiro byte diferente e expõe a distância de Hamming a quem medir.
+  const a = Buffer.from(request.headers.get('authorization') || '')
+  const b = Buffer.from(`Bearer ${secret}`)
+  return a.length === b.length && timingSafeEqual(a, b)
 }
 
 export async function GET(request) {

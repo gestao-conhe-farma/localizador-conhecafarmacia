@@ -2,6 +2,7 @@ import Link from 'next/link'
 import { requireActiveStaff } from '@/lib/staff-session'
 import { getPharmacySession } from '@/lib/pharmacy-session'
 import { leaveStaffProfile } from '@/lib/actions/pharmacy-staff'
+import { terminarTodasSessoesPortal } from '@/lib/actions/pharmacy-portal'
 import PortalMfaDisable from '@/components/portal/PortalMfaDisable'
 import ChangePinDrawer from '@/components/portal/ChangePinDrawer'
 import PortalLogout from '@/components/portal/PortalLogout'
@@ -197,8 +198,17 @@ export default async function StaffSessionPage() {
                 Terminar a sessão fecha também o perfil activo. Para trocar de pessoa sem fechar a
                 conta, use «Trocar perfil» no cartão de cima.
               </p>
+              <p className="sess-card-text">
+                Se este dispositivo foi partilhado, use a opção de baixo: fecha a sessão em todos os
+                dispositivos e áreas — inclusive cópias do token guardadas noutro browser.
+              </p>
               <div className="sess-card-act">
                 <PortalLogout className="btn btn-secondary" label="Terminar sessão da conta" />
+                <form action={terminarTodasSessoesPortal}>
+                  <button type="submit" className="btn btn-secondary">
+                    Terminar sessão em todos os dispositivos
+                  </button>
+                </form>
               </div>
             </div>
           </SettingsSection>

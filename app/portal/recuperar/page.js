@@ -5,6 +5,7 @@ import InvitePasswordForm from '@/components/portal/InvitePasswordForm'
 import PortalRecoveryForm from '@/components/portal/PortalRecoveryForm'
 import { createServerComponentClient } from '@/lib/supabase/server'
 import { CONTACT_EMAIL } from '@/lib/constants'
+import { RECOVERY_MARKER, verifyRecoveryMarker } from '@/lib/recovery-marker'
 
 export const metadata = {
   title: 'Portal da farmácia — repor senha',
@@ -58,7 +59,11 @@ export default async function RecuperarPage({ searchParams }) {
   const erro = ERROS[params?.erro] || null
   const confirmado = params?.repor === '1'
 
-  const emReposicao = (await cookies()).get('portal_recuperacao')?.value === '1'
+  // Marcador assinado e ligado a esta conta (M7): um `'1'` escrito pelo
+  // browser não pode fazer a página acreditar que o código foi validado.
+  const emReposicao = user
+    ? verifyRecoveryMarker((await cookies()).get(RECOVERY_MARKER)?.value, user.id)
+    : false
 
   // Retomar o assistente a meio (recarregar a página depois do código do
   // e-mail): a etapa sai do estado real da sessão, não de memória do browser.

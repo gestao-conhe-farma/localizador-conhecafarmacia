@@ -125,7 +125,7 @@ function groupByDrug(rows) {
 async function fetchGroups(term, municipio, provincia) {
   const supabase = createClient()
   let req = supabase
-    .from('stock_confirmed')
+    .from('stock_public')
     .select('*')
     .order('drug_name')
     .order('pharmacy_name')
@@ -251,7 +251,7 @@ export default function DrugSearch() {
             .eq('active', true)
             .ilike('name', `%${q}%`)
             .limit(8),
-          supabase.from('stock_confirmed').select('brand').ilike('brand', `%${q}%`).limit(30),
+          supabase.from('stock_public').select('brand').ilike('brand', `%${q}%`).limit(30),
         ])
         const brandList = [...new Set((brands || []).map((b) => b.brand))]
           .filter(Boolean)

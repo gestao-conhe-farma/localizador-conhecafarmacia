@@ -1,6 +1,10 @@
 -- ============================================================
 -- SEED · Conta de demonstração do portal da farmácia (T8)
 --
+-- ⚠️ SÓ PARA AMBIENTES LOCAIS/DE DEMONSTRAÇÃO. Não aplicar em produção:
+-- este ficheiro cria uma conta com uma farmácia ligada e não deve existir
+-- na base real.
+--
 -- Cria:
 --   1. Uma farmácia de demonstração (se o slug não existir)
 --   2. Um utilizador Supabase Auth (demo@conhecafarmacia.com)
@@ -39,8 +43,11 @@ on conflict (slug) do nothing;
 --      POST {SUPABASE_URL}/auth/v1/admin/users
 --      { "email": "...", "password": "...", "email_confirm": true }
 --
--- E-mail/senha do demo: geral@conhecafarmacia.com / Demo2026!
--- O user_id é resolvido por e-mail na secção 3 — não é preciso conhecê-lo aqui.
+-- E-mail do demo: demo@conhecafarmacia.com (dedicado, nunca o
+-- institucional geral@…). Escolha a senha no momento da criação e não a
+-- escreva aqui: uma credencial publicada no repositório deixa de ser
+-- segredo (M8). O user_id é resolvido por e-mail na secção 3 — não é
+-- preciso conhecê-lo aqui.
 create extension if not exists pgcrypto;
 
 -- 3. admin_users com papel farmacia -----------------------------------------
@@ -51,7 +58,7 @@ select
   p.id,
   'Farmacêutico Demo'
 from auth.users u, public.pharmacies p
-where u.email = 'geral@conhecafarmacia.com'
+where u.email = 'demo@conhecafarmacia.com'
   and p.slug = 'farmacia-demo-central'
 on conflict (user_id) do update
   set role = 'farmacia',

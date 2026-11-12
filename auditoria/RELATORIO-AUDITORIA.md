@@ -29,6 +29,25 @@ Há um achado **grave**: as funções `SECURITY DEFINER` de stock e de webhooks 
 
 **Aprovado com correções obrigatórias antes de crescer.** A base de dados está bem fechada e os fluxos sensíveis (webhooks, ingestão, plataforma) foram escritos com cuidado. O que falta é **uniformizar a autorização no servidor**: hoje a UI é a fronteira de segurança em dois controlos importantes. G1 tem de ser confirmado ou descartado esta semana; A1 deve ser corrigido antes de a conta da farmácia ser partilhada por mais pessoas.
 
+*(Atualização de 12/11/2026: G1 confirmado e corrigido, A1 corrigido, tal como M1, M3, M4, M5, M7, M8 e M9 — ver §1.1.)*
+
+### Estado das correções (atualização de 12/11/2026)
+
+| Achado | Estado | Onde ficou |
+|---|---|---|
+| G1 | ✅ Corrigido | Migração `0062`; `scripts/test-internal-function-grants.py` (anon 401/42501, `service_role` 200) |
+| A1 | ✅ Corrigido | `05c4abf` (`lib/portal-mfa.js`); `scripts/smoke-portal-mfa.mjs` 9/9 |
+| M1 | ✅ Corrigido | `05c4abf` (`portalWriteGate`); `scripts/smoke-portal-mfa.mjs` |
+| M3 | ✅ Corrigido | Migrações `0063`, `0066`, `0067`; `scripts/test-authorization.py` |
+| M4 | ✅ Corrigido | `05c4abf` (`encerrarTodasSessoes` e opção global na página de sessão) |
+| M5 | ✅ Corrigido | Migração `0064`; `lib/auth-rate-limit.js`; limite verificado (bloqueia à 4.ª tentativa com limite 3) |
+| M7 | ✅ Corrigido | `05c4abf` (marcador assinado e verificado); `scripts/smoke-recovery-marker.mjs` 8/8 |
+| M8 | ✅ Fechado (não explorável) | Verificação em produção: conta inexistente; seed saneado |
+| M9 | ✅ Corrigido | `scripts/test-authorization.py` (30/30) |
+| M2, M6, B1–B6 | ⬜ Em aberto | — |
+
+Os testes de autorização do M9 contra a base real encontraram três buracos que a revisão estática não tinha visto e que ficaram fechados: `localizador.lead_rate_consume` continuava executável por `anon` (a `0051` só tinha revogado a cópia de `public`; corrigido na `0065`); `stock_items` e `stock_sale_options` eram legíveis directamente por `anon`, tornando inútil a view sem colunas sensíveis (corrigido na `0066`); e `post_stock_change`, `platform_pharmacy_overview` e `reservation_hold_units` tinham EXECUTE para `anon` (corrigido na `0068`).
+
 ---
 
 ## 2. Arquitetura observada
@@ -45,7 +64,9 @@ Há um achado **grave**: as funções `SECURITY DEFINER` de stock e de webhooks 
 
 ## 3. Achados
 
-### 🔴 G1 — Funções `SECURITY DEFINER` de stock e webhooks estão executáveis por `anon`
+### 🔴 G1 — Funções `SECURITY DEFINER` de stock e webhooks estão executáveis por `anon` — ✅ corrigido
+
+**Correção aplicada (12/11/2026, migração `0062`):** o EXECUTE foi revogado de `public`, `anon` e `authenticated` nas funções de stock e de webhooks, mantendo-o só em `service_role`. Verificado por `scripts/test-internal-function-grants.py` (REST anónimo devolve 401/42501; `service_role` responde 200) e pelas consultas a `pg_proc` em §7.
 
 **Onde**
 - `supabase/migrations/0045_schema_localizador_baseline.sql:523` (`log_stock_movement`), `:916` (`stock_lot_apply`), `:1014` (`stock_lot_sync_expiry`), `:1058` (`webhook_claim_due`), `:1184` (`webhook_prune`), `:1204` (`webhook_record_attempt`), `:1296` (`webhook_replay`) — o baseline **recria as funções em `localizador` sem um único `GRANT`/`REVOKE`** (o ficheiro não tem nenhuma linha `GRANT` ou `REVOKE`).
@@ -99,7 +120,9 @@ Se a consulta devolver zero linhas para `anon`, este achado fecha-se como falso 
 
 ---
 
-### 🟠 A1 — O segundo factor do gerente é verificado no layout, não nas Server Actions
+### 🟠 A1 — O segundo factor do gerente é verificado no layout, não nas Server Actions — ✅ corrigido
+
+**Correção aplicada (`05c4abf`):** `lib/portal-mfa.js` passa a exigir `aal2` do gerente em todas as escritas do portal (não só no layout), e `desativarMfaPortal` passou a exigir `aal2`. Coberto por `scripts/smoke-portal-mfa.mjs` (9/9, incluindo escrita em `aal1` recusada).
 
 **Onde**
 - `app/portal/(dashboard)/layout.js:42-43` — único sítio que exige `session.mfa.currentLevel === 'aal2'` para `staff.role === 'gerente'`.
@@ -134,7 +157,9 @@ Se a consulta devolver zero linhas para `anon`, este achado fecha-se como falso 
 
 ---
 
-### 🟡 M1 — Escritas do portal não exigem perfil de balcão (o PIN não é autorização)
+### 🟡 M1 — Escritas do portal não exigem perfil de balcão (o PIN não é autorização) — ✅ corrigido
+
+**Correção aplicada (`05c4abf`):** `portalWriteGate` exige um perfil de balcão activo em todas as escritas do portal; sem perfil, a escrita é recusada mesmo em `aal2`. Coberto por `scripts/smoke-portal-mfa.mjs`.
 
 **Onde:** `lib/actions/pharmacy-portal.js:231` (`updateStockItem`), `:1905` (`setReservationStatus`), `:757` (`addStockUnits`), `:2044` (`markClientContacted`). Todos usam `getActiveStaff(session)` apenas para atribuir `p_staff_id`; nenhum devolve erro quando não há perfil.
 
@@ -166,7 +191,9 @@ Se a consulta devolver zero linhas para `anon`, este achado fecha-se como falso 
 
 ---
 
-### 🟡 M3 — A view pública `stock_confirmed` expõe inventário exacto ao `anon`
+### 🟡 M3 — A view pública `stock_confirmed` expõe inventário exacto ao `anon` — ✅ corrigido
+
+**Correção aplicada (`0063`, `0066`, `0067`):** nova view `stock_public` sem `quantity`, `expires_at`, `source` nem `synced_at`; `anon` perde o SELECT em `stock_confirmed` e também o acesso directo a `stock_items`/`stock_sale_options` (que a revisão inicial não tinha assinalado — sem isto a view não escondia nada). `pharmacy_stock_counts` passou a `security definer` para continuar pública. A UI mostra «Stock confirmado» e validade «Não indicada» quando não recebe os campos. Coberto por `scripts/test-authorization.py`.
 
 **Onde:** definição da view em `supabase/migrations/0045_schema_localizador_baseline.sql` (~`:2145`), com `quantity`, `expires_at`, `source`, `synced_at`, `freshness_minutes`; grant de `select` a `anon` em `0001` (`:270`). O grant sobrevive às recriações da view.
 
@@ -185,7 +212,9 @@ GET /rest/v1/stock_confirmed?select=pharmacy_name,drug_name,quantity,expires_at,
 
 ---
 
-### 🟡 M4 — «Sair» não revoga o refresh token no servidor
+### 🟡 M4 — «Sair» não revoga o refresh token no servidor — ✅ corrigido
+
+**Correção aplicada (`05c4abf`):** `lib/supabase/sign-out.js` ganhou `encerrarTodasSessoes` (logout global) e a página de sessão do portal oferece «terminar sessão em todos os dispositivos».
 
 **Onde:** `lib/supabase/sign-out.js` (e os `sair` de conta, portal e plataforma) usam `scope: 'local'`; o comentário assume o risco.
 
@@ -201,7 +230,9 @@ GET /rest/v1/stock_confirmed?select=pharmacy_name,drug_name,quantity,expires_at,
 
 ---
 
-### 🟡 M5 — Login sem limite próprio e sem registo persistente de falhas
+### 🟡 M5 — Login sem limite próprio e sem registo persistente de falhas — ✅ corrigido
+
+**Correção aplicada (`0064`):** tabelas `auth_rate_windows` e `auth_failures` (hashes de e-mail/IP, RLS, sem grants) e função atómica `auth_rate_consume`, só para `service_role`. `lib/auth-rate-limit.js` aplica 10 tentativas/15 min por conta e 40/15 min por IP, grava as falhas e abre alerta em `system_alerts` após 5 falhas; os dois logins devolvem `MUITAS_TENTATIVAS`. Falha aberta se a migração não estiver aplicada. Semântica verificada: com limite 3, a 4.ª chamada devolve `allowed=false`.
 
 **Onde:** `lib/actions/pharmacy-portal.js` (`loginPharmacy`) e `lib/actions/platform-auth.js:51` (`loginPlatform`). Não há rate limit por IP/conta; as falhas vão para os logs da Vercel (`logWarn`), não para uma tabela consultável.
 
@@ -233,7 +264,9 @@ GET /rest/v1/stock_confirmed?select=pharmacy_name,drug_name,quantity,expires_at,
 
 ---
 
-### 🟡 M7 — O cookie `MARCADOR` da reposição é escrito e nunca verificado
+### 🟡 M7 — O cookie `MARCADOR` da reposição é escrito e nunca verificado — ✅ corrigido
+
+**Correção aplicada (`05c4abf`):** o marcador passou a ser assinado (`lib/recovery-marker.js`) e é verificado em `definirSenha`/`confirmarTotp`; valores expirados, antigos ou adulterados são recusados. Coberto por `scripts/smoke-recovery-marker.mjs` (8/8).
 
 **Onde:** `lib/actions/pharmacy-recovery.js:50` (`MARCADOR = 'portal_recuperacao'`), `:112` (`marcarReposicao`), `:328` e `:444`. Nenhum passo lê o valor para autorizar `definirSenha`/`confirmarTotp`.
 
@@ -249,7 +282,9 @@ GET /rest/v1/stock_confirmed?select=pharmacy_name,drug_name,quantity,expires_at,
 
 ---
 
-### 🟡 M8 — Credencial de demonstração com o email institucional (a confirmar)
+### 🟡 M8 — Credencial de demonstração com o email institucional (a confirmar) — ✅ fechado
+
+**Verificação e correção (12/11/2026):** `geral@conhecafarmacia.com` **não existe** em `auth.users` (0 linhas) e o login com `Demo2026!` devolve `400 invalid_credentials` — não era explorável. O seed passou a usar `demo@conhecafarmacia.com`, deixou de publicar a password e tem um aviso para não ser aplicado em produção.
 
 **Onde:** `supabase/seed_demo_portal.sql:42` — «E-mail/senha do demo: `geral@conhecafarmacia.com` / `Demo2026!`», e a secção 3 liga esse utilizador a uma farmácia de demonstração.
 
@@ -265,7 +300,9 @@ GET /rest/v1/stock_confirmed?select=pharmacy_name,drug_name,quantity,expires_at,
 
 ---
 
-### 🟡 M9 — Não há testes de integração para autorização, RLS e webhooks
+### 🟡 M9 — Não há testes de integração para autorização, RLS e webhooks — ✅ corrigido
+
+**Correção aplicada (12/11/2026):** `scripts/test-authorization.py` (30 verificações) cobre a view pública e as colunas escondidas, tabelas fechadas a `anon`, RPCs internas, um `authenticated` sem linhas (leituras e escrita recusada) e `service_role`. Corre contra a base real com a chave anónima e a de serviço. A varredura encontrou e fechou os buracos extra descritos em §1.1 (`0065`, `0066`, `0068`). Continua a faltar a execução em CI.
 
 **Onde:** o repositório não tem ficheiros de teste (0 detectados).
 
@@ -392,8 +429,8 @@ O único invariante assinalado é o do livro-razão: a app escreve sempre por RP
 
 ## 7. Não foi possível verificar
 
-1. **Grants e policies em produção.** Tudo o que diga respeito a `has_function_privilege`, `pg_policies` e `information_schema.role_table_grants` vive na base. O código mostra o que as migrações *pretendem*; só a consulta do ponto 3/G1 confirma o estado real. Executar antes de fechar G1.
-2. **Se a conta `geral@conhecafarmacia.com` existe em produção com a password do seed** (M8). Verificar em Authentication → Users e, se existir, rodar a password e remover o vínculo a `admin_users`.
+1. **Grants e policies em produção.** Tudo o que diga respeito a `has_function_privilege`, `pg_policies` e `information_schema.role_table_grants` vive na base. O código mostra o que as migrações *pretendem*; só a consulta do ponto 3/G1 confirma o estado real. Executar antes de fechar G1. ✅ **Resolvido em 12/11/2026:** as consultas a `pg_proc` mostraram `anon`/`authenticated` sem EXECUTE nas funções internas (`0062`), e revelaram mais três casos entretanto fechados (`0065`, `0068`).
+2. **Se a conta `geral@conhecafarmacia.com` existe em produção com a password do seed** (M8). Verificar em Authentication → Users e, se existir, rodar a password e remover o vínculo a `admin_users`. ✅ **Verificado em 12/11/2026:** não existe (0 linhas em `auth.users`) e o login devolve `400 invalid_credentials`.
 3. **Se o nonce chega aos scripts do framework em produção.** `proxy.js:72` define `x-csp-nonce` no pedido, mas a documentação do Next espera também o header `Content-Security-Policy` no pedido para propagar o nonce; não encontrei referência ao nome `x-csp-nonce` no runtime instalado. Se a hidratação funciona em produção sem violações, está resolvido; se aparecerem erros de CSP na consola, é aqui. Testar com o site publicado.
 4. **Limites e expiração do Supabase Auth** (rate limit de login, validade do refresh token). São configuração de projeto, não código.
 5. **Prova de restauro do backup.** O workflow tem os comandos e a retention, mas não há registo de um restauro real; a documentação pede um por trimestre.
@@ -403,6 +440,8 @@ O único invariante assinalado é o do livro-razão: a app escreve sempre por RP
 ---
 
 ## 8. Plano de correção
+
+*(Atualização de 12/11/2026: concluídos os pontos 1, 2, 3, 5, 6, 7, 8, 10 e 11. Em aberto: M2, M6 e B1–B6.)*
 
 ### Antes de crescer (esta semana)
 1. **G1** — Correr a consulta de confirmação e aplicar já a migração de `revoke execute ... from anon, authenticated`; não esperar pela confirmação para fechar a porta. (minutos)

@@ -9,6 +9,7 @@ const ERRORES = {
   CAMPOS_EM_FALTA: 'Preencha o e-mail e a senha.',
   SEM_ACESSO_PORTAL: 'Esta conta não tem acesso ao portal — fale com a equipa Conheça Farmácia.',
   FALHA_ENTRAR: 'Não foi possível entrar. Verifique a ligação e tente novamente.',
+  MUITAS_TENTATIVAS: 'Demasiadas tentativas. Aguarde alguns minutos antes de tentar novamente.',
 }
 
 /**

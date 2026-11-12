@@ -15,6 +15,7 @@ const ERRORES = {
   MFA_FALHA: 'Não foi possível iniciar a verificação em dois passos. Tente de novo.',
   MFA_CODIGO: 'Código incorrecto ou expirado. Escreva o código actual do autenticador.',
   FALHA_ENTRAR: 'Não foi possível entrar. Verifique a ligação e tente novamente.',
+  MUITAS_TENTATIVAS: 'Demasiadas tentativas. Aguarde alguns minutos antes de tentar novamente.',
 }
 
 /**

@@ -153,8 +153,8 @@ export default function PharmacyList() {
         if (!alive) return
 
         // Contagens via RPC (agregação no Postgres). Fallback: ler a view
-        // stock_confirmed e contar no cliente, até a migração 0003 estar
-        // aplicada no projecto Supabase.
+        // pública stock_public (M3) e contar no cliente, até a migração 0003
+        // estar aplicada no projecto Supabase.
         const c = {}
         const rpcRes = await supabase.rpc('pharmacy_stock_counts')
         if (!rpcRes.error) {
@@ -163,7 +163,7 @@ export default function PharmacyList() {
           logWarn('pharmacy-list', 'RPC pharmacy_stock_counts falhou — a usar fallback', {
             message: rpcRes.error.message,
           })
-          const stRes = await supabase.from('stock_confirmed').select('pharmacy_slug')
+          const stRes = await supabase.from('stock_public').select('pharmacy_slug')
           if (stRes.error) throw stRes.error
           for (const row of stRes.data || []) {
             c[row.pharmacy_slug] = (c[row.pharmacy_slug] || 0) + 1
